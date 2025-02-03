@@ -1,15 +1,26 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Copy, Link as LinkIcon } from "lucide-react"
+import { Copy, Link as LinkIcon, Check } from "lucide-react"
 
 export default function Home() {
   const [url, setUrl] = useState("")
   const [shortenedUrl, setShortenedUrl] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    // Reset copied state after 2 seconds
+    if (copied) {
+      const timeout = setTimeout(() => {
+        setCopied(false)
+      }, 2000)
+      return () => clearTimeout(timeout)
+    }
+  }, [copied])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,6 +65,7 @@ export default function Home() {
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(shortenedUrl)
+      setCopied(true)
     } catch (error) {
       console.error("Failed to copy:", error)
     }
@@ -76,14 +88,15 @@ export default function Home() {
                 placeholder="Enter your long URL"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="pl-10 bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
+                className="pl-10 pr-4 bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 w-full min-w-[300px]"
                 required
+                autoFocus
               />
             </div>
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-blue-600 hover:bg-blue-700 text-white whitespace-nowrap"
             >
               {isLoading ? "Chopping..." : "Chop!"}
             </Button>
@@ -96,14 +109,18 @@ export default function Home() {
         {shortenedUrl && (
           <div className="mt-8 p-4 bg-zinc-800 rounded-lg">
             <div className="flex items-center justify-between">
-              <p className="text-green-400 truncate">{shortenedUrl}</p>
+              <p className="text-green-400 truncate flex-1 mr-2">{shortenedUrl}</p>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={copyToClipboard}
-                className="hover:bg-zinc-700"
+                className="hover:bg-zinc-700 transition-all duration-200"
               >
-                <Copy className="h-4 w-4 text-zinc-400" />
+                {copied ? (
+                  <Check className="h-4 w-4 text-green-400" />
+                ) : (
+                  <Copy className="h-4 w-4 text-zinc-400" />
+                )}
               </Button>
             </div>
           </div>

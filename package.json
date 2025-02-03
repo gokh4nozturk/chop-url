@@ -12,7 +12,8 @@
     "deploy:backend": "cd packages/backend && bun run deploy",
     "deploy:frontend": "cd packages/chop-url-fe && bun run deploy",
     "publish:lib": "cd packages/chop-url-lib && bun publish --access public",
-    "dev:backend": "cd packages/backend && bun run dev"
+    "dev:backend": "cd packages/backend && bun run dev",
+    "dev:frontend": "cd packages/chop-url-fe && bun run dev"
   },
   "author": "Gokhan Ozturk",
   "license": "MIT"
