@@ -1,30 +1,44 @@
 {
   "name": "@chop-url/lib",
   "version": "1.0.0",
-  "description": "URL shortening library",
+  "description": "A TypeScript library for URL shortening functionality with Cloudflare D1 database support",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "src",
+    "README.md"
   ],
   "scripts": {
     "build": "tsc",
     "test": "jest",
     "lint": "eslint . --ext .ts",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "prepublishOnly": "npm run build",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean"
   },
   "keywords": [
     "url-shortener",
     "url",
     "shortener",
-    "typescript"
+    "typescript",
+    "cloudflare",
+    "d1-database"
   ],
-  "author": "Your Name",
-  "license": "MIT",
-  "peerDependencies": {
-    "express": "^4.x"
+  "author": {
+    "name": "Gokhan Ozturk",
+    "url": "https://github.com/gokhanozturk"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gokhanozturk/chop-url"
+  },
+  "bugs": {
+    "url": "https://github.com/gokhanozturk/chop-url/issues"
+  },
+  "homepage": "https://github.com/gokhanozturk/chop-url#readme",
+  "license": "MIT",
   "devDependencies": {
     "@types/jest": "^29.5.11",
     "@types/node": "^20.10.5",
@@ -34,5 +48,8 @@
     "jest": "^29.7.0",
     "ts-jest": "^29.1.1",
     "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
