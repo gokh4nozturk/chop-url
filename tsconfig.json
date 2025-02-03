@@ -8,7 +8,7 @@
   },
   "references": [
     { "path": "./packages/backend" },
-    { "path": "./packages/frontend" },
+    { "path": "./packages/chop-url-fe" },
     { "path": "./packages/chop-url-lib" }
   ]
 } 
