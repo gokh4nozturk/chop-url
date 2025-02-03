@@ -15,7 +15,14 @@ const app = new Hono<{ Bindings: Env }>();
 // Middleware
 app.use('*', logger());
 app.use('*', prettyJSON());
-app.use('*', cors());
+app.use('*', cors({
+  origin: ['https://chop-url.vercel.app', 'http://localhost:3000'],
+  allowMethods: ['POST', 'GET', 'OPTIONS'],
+  allowHeaders: ['Content-Type'],
+  exposeHeaders: ['Content-Length', 'X-Kuma-Revision'],
+  maxAge: 600,
+  credentials: true,
+}));
 
 // API Documentation
 app.get('/docs/openapi.json', (c) => c.json(openApiSchema));
