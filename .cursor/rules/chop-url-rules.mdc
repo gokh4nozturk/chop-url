@@ -8,3 +8,4 @@ globs:
 - Do not use ts type of any
 - Follow up eslint rules
 - Follow up express.js and nodejs modern usage
+- Use bun as workspace manager and package manager

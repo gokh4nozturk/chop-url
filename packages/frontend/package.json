@@ -5,6 +5,10 @@
   "scripts": {
     "build": "echo \"No build specified\" && exit 0",
     "test": "echo \"No test specified\" && exit 0",
-    "lint": "echo \"No lint specified\" && exit 0"
+    "lint": "echo \"No lint specified\" && exit 0",
+    "deploy": "vercel deploy --prod"
+  },
+  "devDependencies": {
+    "vercel": "latest"
   }
 } 

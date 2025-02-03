@@ -7,7 +7,11 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",
-    "lint": "npm run lint --workspaces"
+    "lint": "npm run lint --workspaces",
+    "deploy:backend": "cd packages/backend && npm run deploy",
+    "deploy:frontend": "cd packages/frontend && npm run deploy",
+    "publish:lib": "cd packages/chop-url-lib && npm publish --access public",
+    "dev:backend": "cd packages/backend && npm run dev"
   },
   "author": "Your Name",
   "license": "MIT"
