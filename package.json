@@ -7,7 +7,7 @@
     "test": "bun run test --workspace=*",
     "lint": "bun run lint --workspace=*",
     "deploy:backend": "cd packages/backend && bun run deploy",
-    "deploy:frontend": "cd packages/frontend && bun run deploy",
+    "deploy:frontend": "cd packages/chop-url-fe && bun run deploy",
     "publish:lib": "cd packages/chop-url-lib && bun publish --access public",
     "dev:backend": "cd packages/backend && bun run dev"
   },

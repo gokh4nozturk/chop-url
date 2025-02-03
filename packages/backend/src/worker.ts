@@ -16,9 +16,9 @@ const app = new Hono<{ Bindings: Env }>();
 app.use('*', logger());
 app.use('*', prettyJSON());
 app.use('*', cors({
-  origin: ['https://chop-url.vercel.app', 'http://localhost:3000'],
-  allowMethods: ['POST', 'GET', 'OPTIONS'],
-  allowHeaders: ['Content-Type'],
+  origin: '*',  // During development, allow all origins
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization', 'Accept'],
   exposeHeaders: ['Content-Length', 'X-Kuma-Revision'],
   maxAge: 600,
   credentials: true,
@@ -56,7 +56,7 @@ app.get('/docs', async (c) => {
 app.get('/health', (c) => c.json({ status: 'ok' }));
 
 // API Routes
-app.post('/api/urls', async (c) => {
+app.post('/urls', async (c) => {
   try {
     const body = await c.req.json<{ url: string }>();
     console.log('Received request body:', body);
@@ -95,7 +95,7 @@ app.post('/api/urls', async (c) => {
   }
 });
 
-app.get('/api/urls/:shortId', async (c) => {
+app.get('/urls/:shortId', async (c) => {
   const { shortId } = c.req.param();
   const chopUrl = new ChopUrl({
     baseUrl: c.env.BASE_URL,
