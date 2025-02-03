@@ -1,25 +1,38 @@
-import { Pool } from 'pg';
+import type { Pool } from 'pg';
 import { nanoid } from 'nanoid';
-import { CreateUrlResponse, UrlStats } from './types';
+import type { ICreateUrlResponse, IUrlStats } from './types';
 
-export interface ChopUrlConfig {
+interface IUrlRow {
+    id: number;
+    short_id: string;
+    original_url: string;
+    created_at: Date;
+    last_accessed_at: Date | null;
+    visit_count: number;
+}
+
+interface IVisitCountRow {
+    total_visits: string;
+}
+
+export interface IChopUrlConfig {
     pool: Pool;
     baseUrl: string;
     shortIdLength?: number;
 }
 
 export class ChopUrl {
-    private pool: Pool;
-    private baseUrl: string;
-    private shortIdLength: number;
+    private readonly pool: Pool;
+    private readonly baseUrl: string;
+    private readonly shortIdLength: number;
 
-    constructor(config: ChopUrlConfig) {
+    constructor(config: IChopUrlConfig) {
         this.pool = config.pool;
         this.baseUrl = config.baseUrl;
-        this.shortIdLength = config.shortIdLength || 8;
+        this.shortIdLength = config.shortIdLength ?? 8;
     }
 
-    async createShortUrl(originalUrl: string): Promise<CreateUrlResponse> {
+    public async createShortUrl(originalUrl: string): Promise<ICreateUrlResponse> {
         const shortId = nanoid(this.shortIdLength);
         await this.pool.query(
             'INSERT INTO urls (short_id, original_url) VALUES ($1, $2)',
@@ -33,8 +46,8 @@ export class ChopUrl {
         };
     }
 
-    async getOriginalUrl(shortId: string): Promise<string> {
-        const result = await this.pool.query(
+    public async getOriginalUrl(shortId: string): Promise<string> {
+        const result = await this.pool.query<IUrlRow>(
             'UPDATE urls SET visit_count = visit_count + 1, last_accessed_at = CURRENT_TIMESTAMP WHERE short_id = $1 RETURNING original_url',
             [shortId]
         );
@@ -46,20 +59,20 @@ export class ChopUrl {
         return result.rows[0].original_url;
     }
 
-    async logVisit(shortId: string, visitorInfo: { ip: string; userAgent?: string; referrer?: string }): Promise<void> {
-        const urlResult = await this.pool.query('SELECT id FROM urls WHERE short_id = $1', [shortId]);
+    public async logVisit(shortId: string, visitorInfo: { ip: string; userAgent?: string; referrer?: string }): Promise<void> {
+        const urlResult = await this.pool.query<IUrlRow>('SELECT id FROM urls WHERE short_id = $1', [shortId]);
         if (urlResult.rows.length === 0) {
             throw new Error('URL not found');
         }
 
         await this.pool.query(
             'INSERT INTO visits (url_id, ip_address, user_agent, referrer) VALUES ($1, $2, $3, $4)',
-            [urlResult.rows[0].id, visitorInfo.ip, visitorInfo.userAgent || null, visitorInfo.referrer || null]
+            [urlResult.rows[0].id, visitorInfo.ip, visitorInfo.userAgent ?? null, visitorInfo.referrer ?? null]
         );
     }
 
-    async getUrlStats(shortId: string): Promise<UrlStats> {
-        const result = await this.pool.query(
+    public async getUrlStats(shortId: string): Promise<IUrlStats> {
+        const result = await this.pool.query<IUrlRow>(
             'SELECT * FROM urls WHERE short_id = $1',
             [shortId]
         );
@@ -68,7 +81,7 @@ export class ChopUrl {
             throw new Error('URL not found');
         }
 
-        const visits = await this.pool.query(
+        const visits = await this.pool.query<IVisitCountRow>(
             'SELECT COUNT(*) as total_visits FROM visits WHERE url_id = $1',
             [result.rows[0].id]
         );
@@ -83,7 +96,7 @@ export class ChopUrl {
         };
     }
 
-    async initializeDatabase(): Promise<void> {
+    public async initializeDatabase(): Promise<void> {
         const schemaSQL = `
             CREATE TABLE IF NOT EXISTS urls (
                 id SERIAL PRIMARY KEY,

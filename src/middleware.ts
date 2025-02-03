@@ -1,18 +1,23 @@
-import { Request, Response, NextFunction } from 'express';
-import { ChopUrl } from './ChopUrl';
+import type { Request, Response, NextFunction } from 'express';
+import type { ChopUrl } from './ChopUrl';
 
-export interface ChopUrlMiddlewareConfig {
+export interface IChopUrlMiddlewareConfig {
     chopUrl: ChopUrl;
-    prefix?: string;
 }
 
-export function createChopUrlMiddleware(config: ChopUrlMiddlewareConfig) {
-    const { chopUrl, prefix = '' } = config;
+interface IMiddlewareHandlers {
+    createUrl(req: Request, res: Response, next: NextFunction): Promise<void>;
+    redirect(req: Request, res: Response, next: NextFunction): Promise<void>;
+    getStats(req: Request, res: Response, next: NextFunction): Promise<void>;
+}
+
+export function createChopUrlMiddleware(config: IChopUrlMiddlewareConfig): IMiddlewareHandlers {
+    const { chopUrl } = config;
 
     return {
-        createUrl: async (req: Request, res: Response, next: NextFunction) => {
+        createUrl: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
             try {
-                const { url } = req.body;
+                const { url } = req.body as { url: string };
                 if (!url) {
                     res.status(400).json({ error: 'URL is required' });
                     return;
@@ -25,14 +30,14 @@ export function createChopUrlMiddleware(config: ChopUrlMiddlewareConfig) {
             }
         },
 
-        redirect: async (req: Request, res: Response, next: NextFunction) => {
+        redirect: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
             try {
                 const { shortId } = req.params;
                 const originalUrl = await chopUrl.getOriginalUrl(shortId);
 
                 // Log visit
                 await chopUrl.logVisit(shortId, {
-                    ip: req.ip || req.socket.remoteAddress || 'unknown',
+                    ip: req.ip ?? req.socket.remoteAddress ?? 'unknown',
                     userAgent: req.get('user-agent'),
                     referrer: req.get('referrer')
                 });
@@ -47,7 +52,7 @@ export function createChopUrlMiddleware(config: ChopUrlMiddlewareConfig) {
             }
         },
 
-        getStats: async (req: Request, res: Response, next: NextFunction) => {
+        getStats: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
             try {
                 const { shortId } = req.params;
                 const stats = await chopUrl.getUrlStats(shortId);

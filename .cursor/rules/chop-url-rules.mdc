@@ -1,0 +1,10 @@
+---
+description: 
+globs: 
+---
+
+# Your rule content
+
+- Do not use ts type of any
+- Follow up eslint rules
+- Follow up express.js and nodejs modern usage

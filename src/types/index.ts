@@ -1,4 +1,4 @@
-export interface Url {
+export interface IUrl {
   id: number;
   short_id: string;
   original_url: string;
@@ -7,7 +7,7 @@ export interface Url {
   visit_count: number;
 }
 
-export interface Visit {
+export interface IVisit {
   id: number;
   url_id: number;
   visited_at: Date;
@@ -16,13 +16,13 @@ export interface Visit {
   referrer: string | null;
 }
 
-export interface CreateUrlResponse {
+export interface ICreateUrlResponse {
   shortUrl: string;
   originalUrl: string;
   shortId: string;
 }
 
-export interface UrlStats {
+export interface IUrlStats {
   shortId: string;
   originalUrl: string;
   created: Date;
