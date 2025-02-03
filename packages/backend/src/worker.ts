@@ -16,13 +16,27 @@ const app = new Hono<{ Bindings: Env }>();
 app.use('*', logger());
 app.use('*', prettyJSON());
 app.use('*', cors({
-  origin: '*',
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['*'],
-  exposeHeaders: ['*'],
-  maxAge: 600,
-  credentials: false,
+  origin: '*',  // Allow all origins
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
+  allowHeaders: ['*'],  // Allow all headers
+  exposeHeaders: ['*'],  // Expose all headers
+  credentials: false,  // Don't require credentials
+  maxAge: 86400,
 }));
+
+// Handle OPTIONS requests explicitly
+app.options('*', (c) => {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': '*',
+      'Access-Control-Allow-Headers': '*',
+      'Access-Control-Max-Age': '86400',
+      'Access-Control-Allow-Credentials': 'false',
+    },
+  });
+});
 
 // API Documentation
 app.get('/docs/openapi.json', (c) => c.json(openApiSchema));
@@ -77,7 +91,7 @@ app.post('/urls', async (c) => {
     }
 
     const chopUrl = new ChopUrl({
-      baseUrl: c.env.BASE_URL,
+      baseUrl: `https://${c.env.BASE_URL}`,
       db: c.env.DB
     });
 
@@ -98,7 +112,7 @@ app.post('/urls', async (c) => {
 app.get('/urls/:shortId', async (c) => {
   const { shortId } = c.req.param();
   const chopUrl = new ChopUrl({
-    baseUrl: c.env.BASE_URL,
+    baseUrl: `https://${c.env.BASE_URL}`,
     db: c.env.DB
   });
 
@@ -113,7 +127,7 @@ app.get('/urls/:shortId', async (c) => {
 app.get('/:shortId', async (c) => {
   const { shortId } = c.req.param();
   const chopUrl = new ChopUrl({
-    baseUrl: c.env.BASE_URL,
+    baseUrl: `https://${c.env.BASE_URL}`,
     db: c.env.DB
   });
 
