@@ -9,7 +9,14 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "composite": true,
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@chop-url/lib": ["../chop-url-lib/src"]
+    }
   },
+  "references": [
+    { "path": "../chop-url-lib" }
+  ],
   "include": ["src/**/*"]
 } 
