@@ -41,6 +41,27 @@ app.all('/auth/*', async (c) => {
       adapter: D1Adapter(c.env.DB),
       secret: c.env.AUTH_SECRET,
       trustHost: true,
+      pages: {
+        signIn: '/auth/signin',
+        signOut: '/auth/signout',
+        error: '/auth/error',
+        verifyRequest: '/auth/verify-request',
+      },
+      callbacks: {
+        async signIn({ user, account, profile }) {
+          return true;
+        },
+        async session({ session, user }) {
+          return session;
+        },
+        async jwt({ token, user, account }) {
+          return token;
+        },
+        async redirect({ url, baseUrl }) {
+          // Başarılı girişten sonra docs sayfasına yönlendir
+          return `${baseUrl}/docs`;
+        },
+      },
       providers: [
         {
           id: 'github',
@@ -55,23 +76,12 @@ app.all('/auth/*', async (c) => {
             return {
               id: profile.id.toString(),
               name: profile.name || profile.login,
-              email: profile.email,
+              email: `${profile.id}@github.com`,
               image: profile.avatar_url,
             };
           },
         },
       ],
-      callbacks: {
-        async signIn({ user, account, profile }) {
-          return true;
-        },
-        async session({ session, user }) {
-          return session;
-        },
-        async jwt({ token, user, account }) {
-          return token;
-        },
-      },
     });
 
     if (!response) {
