@@ -35,6 +35,7 @@ app.all('/auth/*', async (c) => {
   const db = createDb(c.env.DB);
   const request = c.req.raw;
   const url = new URL(request.url);
+  const origin = request.headers.get('origin') || url.origin;
 
   try {
     const response = await Auth(request, {
@@ -57,9 +58,13 @@ app.all('/auth/*', async (c) => {
         async jwt({ token, user, account }) {
           return token;
         },
-        async redirect({ url, baseUrl }) {
-          // Başarılı girişten sonra docs sayfasına yönlendir
-          return `${baseUrl}/docs`;
+        async redirect({ url: redirectUrl, baseUrl }) {
+          if (redirectUrl.startsWith('/')) {
+            return `${origin}${redirectUrl}`;
+          } else if (new URL(redirectUrl).origin === origin) {
+            return redirectUrl;
+          }
+          return origin;
         },
       },
       providers: [
@@ -89,7 +94,7 @@ app.all('/auth/*', async (c) => {
     }
 
     const headers = new Headers();
-    headers.set('Access-Control-Allow-Origin', url.origin);
+    headers.set('Access-Control-Allow-Origin', origin);
     headers.set('Access-Control-Allow-Credentials', 'true');
 
     return response;
