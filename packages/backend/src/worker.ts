@@ -16,12 +16,12 @@ const app = new Hono<{ Bindings: Env }>();
 app.use('*', logger());
 app.use('*', prettyJSON());
 app.use('*', cors({
-  origin: '*',  // During development, allow all origins
+  origin: '*',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  exposeHeaders: ['Content-Length', 'X-Kuma-Revision'],
+  allowHeaders: ['*'],
+  exposeHeaders: ['*'],
   maxAge: 600,
-  credentials: true,
+  credentials: false,
 }));
 
 // API Documentation
