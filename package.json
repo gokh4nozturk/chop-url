@@ -13,6 +13,6 @@
     "publish:lib": "cd packages/chop-url-lib && npm publish --access public",
     "dev:backend": "cd packages/backend && npm run dev"
   },
-  "author": "Your Name",
+  "author": "Gokhan Ozturk",
   "license": "MIT"
 } 

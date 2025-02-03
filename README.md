@@ -10,9 +10,9 @@ This monorepo contains the following packages:
 
 ```
 packages/
-  ├── backend/     # Backend service (Cloudflare Workers)
-  ├── frontend/    # Frontend application
-  └── chop-url-lib/# NPM package library
+  ├── backend/        # Backend service (Cloudflare Workers)
+  ├── chop-url-fe/    # Frontend application
+  └── chop-url-lib/   # NPM package library
 ```
 
 ## Development
