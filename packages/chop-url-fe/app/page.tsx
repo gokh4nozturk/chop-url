@@ -17,23 +17,35 @@ export default function Home() {
     setError("")
 
     try {
+      // Basic URL validation
+      let urlToShorten = url.trim()
+      if (!urlToShorten.startsWith('http://') && !urlToShorten.startsWith('https://')) {
+        urlToShorten = 'https://' + urlToShorten
+      }
+
+      // Don't allow shortening our own URLs
+      if (urlToShorten.includes('chop-url.vercel.app') || urlToShorten.includes('chop-url-backend.gokhaanozturk.workers.dev')) {
+        throw new Error("Cannot shorten URLs from this domain")
+      }
+
       const response = await fetch("/api/shorten", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url: urlToShorten }),
       })
 
       if (!response.ok) {
-        throw new Error("Failed to shorten URL")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to shorten URL")
       }
 
       const data = await response.json()
       setShortenedUrl(data.shortUrl)
     } catch (error) {
       console.error("Error shortening URL:", error)
-      setError("Failed to shorten URL. Please try again.")
+      setError(error instanceof Error ? error.message : "Failed to shorten URL. Please try again.")
     } finally {
       setIsLoading(false)
     }

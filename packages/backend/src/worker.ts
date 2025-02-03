@@ -57,17 +57,41 @@ app.get('/health', (c) => c.json({ status: 'ok' }));
 
 // API Routes
 app.post('/api/urls', async (c) => {
-  const { url } = await c.req.json<{ url: string }>();
-  const chopUrl = new ChopUrl({
-    baseUrl: c.env.BASE_URL,
-    db: c.env.DB
-  });
-
   try {
+    const body = await c.req.json<{ url: string }>();
+    console.log('Received request body:', body);
+
+    if (!body.url) {
+      return c.json({ error: 'URL is required' }, 400);
+    }
+
+    const url = body.url.trim();
+    console.log('Processing URL:', url);
+
+    // Basic URL validation
+    try {
+      new URL(url);
+    } catch (error) {
+      console.error('Invalid URL format:', error);
+      return c.json({ error: 'Invalid URL format' }, 400);
+    }
+
+    const chopUrl = new ChopUrl({
+      baseUrl: c.env.BASE_URL,
+      db: c.env.DB
+    });
+
+    console.log('Creating short URL with base URL:', c.env.BASE_URL);
     const shortUrl = await chopUrl.createShortUrl(url);
+    console.log('Created short URL:', shortUrl);
+    
     return c.json(shortUrl);
   } catch (error) {
-    return c.json({ error: 'Failed to create short URL' }, 500);
+    console.error('Error creating short URL:', error);
+    return c.json({ 
+      error: error instanceof Error ? error.message : 'Failed to create short URL',
+      details: error instanceof Error ? error.stack : undefined
+    }, 500);
   }
 });
 

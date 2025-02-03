@@ -28,7 +28,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// .wrangler/tmp/bundle-4E5afv/checked-fetch.js
+// .wrangler/tmp/bundle-CKuhp3/checked-fetch.js
 function checkURL(request, init) {
   const url = request instanceof URL ? request : new URL(
     (typeof request === "string" ? new Request(request, init) : request).url
@@ -46,7 +46,7 @@ function checkURL(request, init) {
 }
 var urls;
 var init_checked_fetch = __esm({
-  ".wrangler/tmp/bundle-4E5afv/checked-fetch.js"() {
+  ".wrangler/tmp/bundle-CKuhp3/checked-fetch.js"() {
     "use strict";
     urls = /* @__PURE__ */ new Set();
     __name(checkURL, "checkURL");
@@ -116,10 +116,10 @@ var require_dist = __commonJS({
   }
 });
 
-// .wrangler/tmp/bundle-4E5afv/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-CKuhp3/middleware-loader.entry.ts
 init_checked_fetch();
 
-// .wrangler/tmp/bundle-4E5afv/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-CKuhp3/middleware-insertion-facade.js
 init_checked_fetch();
 
 // src/worker.ts
@@ -2138,16 +2138,34 @@ app.get("/docs", async (c) => {
 });
 app.get("/health", (c) => c.json({ status: "ok" }));
 app.post("/api/urls", async (c) => {
-  const { url } = await c.req.json();
-  const chopUrl = new import_lib.ChopUrl({
-    baseUrl: c.env.BASE_URL,
-    db: c.env.DB
-  });
   try {
+    const body = await c.req.json();
+    console.log("Received request body:", body);
+    if (!body.url) {
+      return c.json({ error: "URL is required" }, 400);
+    }
+    const url = body.url.trim();
+    console.log("Processing URL:", url);
+    try {
+      new URL(url);
+    } catch (error) {
+      console.error("Invalid URL format:", error);
+      return c.json({ error: "Invalid URL format" }, 400);
+    }
+    const chopUrl = new import_lib.ChopUrl({
+      baseUrl: c.env.BASE_URL,
+      db: c.env.DB
+    });
+    console.log("Creating short URL with base URL:", c.env.BASE_URL);
     const shortUrl = await chopUrl.createShortUrl(url);
+    console.log("Created short URL:", shortUrl);
     return c.json(shortUrl);
   } catch (error) {
-    return c.json({ error: "Failed to create short URL" }, 500);
+    console.error("Error creating short URL:", error);
+    return c.json({
+      error: error instanceof Error ? error.message : "Failed to create short URL",
+      details: error instanceof Error ? error.stack : void 0
+    }, 500);
   }
 });
 app.get("/api/urls/:shortId", async (c) => {
@@ -2221,7 +2239,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-4E5afv/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-CKuhp3/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -2254,7 +2272,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-4E5afv/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-CKuhp3/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;
