@@ -4,10 +4,16 @@ import { logger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
 import { ChopUrl } from '@chop-url/lib';
 import { openApiSchema } from './openapi';
+import { Auth } from '@auth/core';
+import { D1Adapter } from '@auth/d1-adapter';
+import { createDb } from './db';
 
 interface Env {
   DB: D1Database;
   BASE_URL: string;
+  AUTH_SECRET: string;
+  GITHUB_ID: string;
+  GITHUB_SECRET: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();
@@ -20,9 +26,68 @@ app.use('*', cors({
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
   allowHeaders: ['*'],  // Allow all headers
   exposeHeaders: ['*'],  // Expose all headers
-  credentials: false,  // Don't require credentials
+  credentials: true,  // Require credentials
   maxAge: 86400,
 }));
+
+// Auth configuration
+app.all('/auth/*', async (c) => {
+  const db = createDb(c.env.DB);
+  const request = c.req.raw;
+  const url = new URL(request.url);
+
+  try {
+    const response = await Auth(request, {
+      adapter: D1Adapter(c.env.DB),
+      secret: c.env.AUTH_SECRET,
+      trustHost: true,
+      providers: [
+        {
+          id: 'github',
+          name: 'GitHub',
+          type: 'oauth',
+          authorization: 'https://github.com/login/oauth/authorize',
+          token: 'https://github.com/login/oauth/access_token',
+          userinfo: 'https://api.github.com/user',
+          clientId: c.env.GITHUB_ID,
+          clientSecret: c.env.GITHUB_SECRET,
+          profile(profile) {
+            return {
+              id: profile.id.toString(),
+              name: profile.name || profile.login,
+              email: profile.email,
+              image: profile.avatar_url,
+            };
+          },
+        },
+      ],
+      callbacks: {
+        async signIn({ user, account, profile }) {
+          return true;
+        },
+        async session({ session, user }) {
+          return session;
+        },
+        async jwt({ token, user, account }) {
+          return token;
+        },
+      },
+    });
+
+    if (!response) {
+      throw new Error('No response from auth');
+    }
+
+    const headers = new Headers();
+    headers.set('Access-Control-Allow-Origin', url.origin);
+    headers.set('Access-Control-Allow-Credentials', 'true');
+
+    return response;
+  } catch (error) {
+    console.error('Auth error:', error);
+    return c.json({ error: 'Authentication failed', details: error.message }, 500);
+  }
+});
 
 // Handle OPTIONS requests explicitly
 app.options('*', (c) => {
@@ -33,7 +98,7 @@ app.options('*', (c) => {
       'Access-Control-Allow-Methods': '*',
       'Access-Control-Allow-Headers': '*',
       'Access-Control-Max-Age': '86400',
-      'Access-Control-Allow-Credentials': 'false',
+      'Access-Control-Allow-Credentials': 'true',
     },
   });
 });
