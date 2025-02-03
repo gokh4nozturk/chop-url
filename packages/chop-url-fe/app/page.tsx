@@ -9,13 +9,14 @@ export default function Home() {
   const [url, setUrl] = useState("")
   const [shortenedUrl, setShortenedUrl] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError("")
 
     try {
-      // TODO: Implement API call to backend
       const response = await fetch("/api/shorten", {
         method: "POST",
         headers: {
@@ -24,10 +25,15 @@ export default function Home() {
         body: JSON.stringify({ url }),
       })
 
+      if (!response.ok) {
+        throw new Error("Failed to shorten URL")
+      }
+
       const data = await response.json()
       setShortenedUrl(data.shortUrl)
     } catch (error) {
       console.error("Error shortening URL:", error)
+      setError("Failed to shorten URL. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -70,6 +76,9 @@ export default function Home() {
               {isLoading ? "Chopping..." : "Chop!"}
             </Button>
           </div>
+          {error && (
+            <p className="text-red-500 text-sm mt-2">{error}</p>
+          )}
         </form>
 
         {shortenedUrl && (
