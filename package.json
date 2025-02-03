@@ -2,6 +2,9 @@
   "name": "chop-url-monorepo",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "build": "bun run build --workspace=*",
     "test": "bun run test --workspace=*",
