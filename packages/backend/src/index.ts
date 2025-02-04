@@ -16,8 +16,11 @@ type Variables = {
 const app = new Hono<{ Bindings: Env; Variables: Variables }>()
 
 app.use('*', cors({
-  origin: ['http://localhost:3000', 'https://app.chop-url.com'],
+  origin: '*',
   credentials: true,
+  allowHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+  exposeHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 3600
 }))
 
 app.get('/health', (c) => {

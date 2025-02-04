@@ -14,7 +14,7 @@ export interface AuthError {
   error: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace('http://', 'https://') || 'https://api.chop-url.com';
 
 // Helper function to store auth token
 export function setToken(token: string): void {
@@ -37,9 +37,12 @@ export async function register(email: string, password: string): Promise<AuthRes
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Origin': 'https://app.chop-url.com'
     },
     body: JSON.stringify({ email, password }),
-    credentials: 'include',
+    credentials: 'same-origin',
+    mode: 'cors',
   });
 
   if (!response.ok) {
@@ -58,9 +61,12 @@ export async function login(email: string, password: string): Promise<AuthRespon
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Origin': 'https://app.chop-url.com'
     },
     body: JSON.stringify({ email, password }),
-    credentials: 'include',
+    credentials: 'same-origin',
+    mode: 'cors',
   });
 
   if (!response.ok) {
@@ -83,8 +89,10 @@ export async function logout(): Promise<void> {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
+        'Origin': 'https://app.chop-url.com'
       },
-      credentials: 'include',
+      credentials: 'same-origin',
+      mode: 'cors',
     });
   } finally {
     removeToken();
@@ -100,8 +108,10 @@ export async function getCurrentUser(): Promise<User | null> {
     const response = await fetch(`${API_URL}/api/auth/me`, {
       headers: {
         'Authorization': `Bearer ${token}`,
+        'Origin': 'https://app.chop-url.com'
       },
-      credentials: 'include',
+      credentials: 'same-origin',
+      mode: 'cors',
     });
 
     if (!response.ok) {
