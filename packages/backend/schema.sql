@@ -1,26 +1,27 @@
 -- Drop existing tables
-DROP TABLE IF EXISTS visits CASCADE;
-DROP TABLE IF EXISTS urls CASCADE;
+DROP TABLE IF EXISTS visits;
+DROP TABLE IF EXISTS urls;
 
 -- Create urls table
 CREATE TABLE IF NOT EXISTS urls (
-    id SERIAL PRIMARY KEY,
-    short_id VARCHAR(7) NOT NULL UNIQUE,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    short_id TEXT UNIQUE NOT NULL,
     original_url TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    visits INTEGER NOT NULL DEFAULT 0
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_accessed_at DATETIME,
+    visit_count INTEGER DEFAULT 0
 );
 
 -- Create visits table
 CREATE TABLE IF NOT EXISTS visits (
-    id SERIAL PRIMARY KEY,
-    url_id VARCHAR(7) NOT NULL,
-    visited_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    url_id INTEGER REFERENCES urls(id),
+    visited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     ip_address TEXT,
     user_agent TEXT,
-    referrer TEXT,
-    FOREIGN KEY (url_id) REFERENCES urls(short_id)
+    referrer TEXT
 );
 
-CREATE INDEX IF NOT EXISTS idx_short_id ON urls (short_id);
-CREATE INDEX IF NOT EXISTS idx_url_id ON visits (url_id); 
+CREATE INDEX IF NOT EXISTS idx_urls_short_id ON urls(short_id);
+CREATE INDEX IF NOT EXISTS idx_visits_url_id ON visits(url_id);
+CREATE INDEX IF NOT EXISTS idx_visits_visited_at ON visits(visited_at); 

@@ -1,60 +1,64 @@
-import express, { Request, Response } from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import { Pool } from 'pg';
-import { ChopUrl, ChopUrlError } from '@chop-url/lib';
+import { Hono } from 'hono'
+import { cors } from 'hono/cors'
+import { ChopUrl } from '@chop-url/lib'
 
-dotenv.config();
+interface Env {
+  DB: D1Database;
+  BASE_URL: string;
+}
 
-const app = express();
-const port = process.env.PORT || 3000;
+const app = new Hono<{ Bindings: Env }>()
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+app.use('*', cors())
 
-// Database connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
-// Initialize ChopUrl
-const chopUrl = new ChopUrl({
-  baseUrl: process.env.BASE_URL || 'http://localhost:3000',
-  db: pool
-});
-
-// Routes
-app.post('/api/shorten', async (req: Request, res: Response) => {
+app.post('/api/shorten', async (c) => {
   try {
-    const { url } = req.body;
+    const { url } = await c.req.json()
     if (!url) {
-      return res.status(400).json({ error: 'URL is required' });
+      return c.json({ error: 'URL is required' }, 400)
     }
 
-    const urlInfo = await chopUrl.createShortUrl(url);
-    res.json(urlInfo);
-  } catch (error: unknown) {
-    console.error('Error shortening URL:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+    console.log('Creating ChopUrl instance with:', {
+      baseUrl: c.env.BASE_URL,
+      db: typeof c.env.DB
+    })
 
-app.get('/api/:shortId', async (req: Request, res: Response) => {
+    const chopUrl = new ChopUrl({
+      baseUrl: c.env.BASE_URL,
+      db: c.env.DB
+    })
+
+    console.log('Attempting to create short URL for:', url)
+    const urlInfo = await chopUrl.createShortUrl(url)
+    console.log('Successfully created short URL:', urlInfo)
+    return c.json(urlInfo)
+  } catch (error) {
+    console.error('Error shortening URL:', error)
+    if (error instanceof Error) {
+      console.error('Error details:', error.message, error.stack)
+      return c.json({ error: error.message }, 500)
+    }
+    return c.json({ error: 'Internal server error' }, 500)
+  }
+})
+
+app.get('/api/:shortId', async (c) => {
   try {
-    const { shortId } = req.params;
-    const originalUrl = await chopUrl.getOriginalUrl(shortId);
-    res.json({ url: originalUrl });
-  } catch (error: unknown) {
-    if (error instanceof ChopUrlError && error.code === 'URL_NOT_FOUND') {
-      return res.status(404).json({ error: 'URL not found' });
-    }
-    console.error('Error expanding URL:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+    const shortId = c.req.param('shortId')
+    const chopUrl = new ChopUrl({
+      baseUrl: c.env.BASE_URL,
+      db: c.env.DB
+    })
 
-// Start server
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-}); 
+    const originalUrl = await chopUrl.getOriginalUrl(shortId)
+    return c.json({ url: originalUrl })
+  } catch (error) {
+    if (error instanceof Error && error.message === 'URL not found') {
+      return c.json({ error: 'URL not found' }, 404)
+    }
+    console.error('Error expanding URL:', error)
+    return c.json({ error: 'Internal server error' }, 500)
+  }
+})
+
+export default app 
