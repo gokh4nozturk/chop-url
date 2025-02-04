@@ -2,14 +2,15 @@
   "name": "@chop-url/backend",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "dev": "wrangler dev --port 8787",
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "jest",
     "setup": "ts-node src/setup-db.ts",
-    "deploy": "wrangler deploy",
+    "deploy": "wrangler deploy --env production",
     "migrate": "wrangler d1 execute chop-url-db --file=schema.sql --remote",
     "db:reset": "wrangler d1 execute chop-url-db --file=schema.sql"
   },

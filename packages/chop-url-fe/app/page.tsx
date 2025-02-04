@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Copy, Link as LinkIcon, Check, Hash, BarChart2 } from "lucide-react"
+import { Copy, Link as LinkIcon, Check, Hash, BarChart2, Download, Share2 } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface UrlStats {
   visitCount: number;
@@ -193,18 +194,54 @@ export default function Home() {
             </div>
 
             {qrCode && (
-              <div className="p-4 bg-zinc-800 rounded-lg">
-                <p className="text-zinc-400 mb-2">QR Code</p>
-                <div className="flex justify-center">
-                  <img
-                    src={qrCode}
-                    alt="QR Code"
-                    width={200}
-                    height={200}
-                    className="rounded-lg"
-                  />
-                </div>
-              </div>
+              <Card className="bg-zinc-800 border-zinc-700">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-zinc-400 text-base font-normal flex items-center justify-between">
+                    QR Code
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          const link = document.createElement('a')
+                          link.href = qrCode
+                          link.download = 'qr-code.png'
+                          link.click()
+                        }}
+                        className="hover:bg-zinc-700 transition-all duration-200"
+                      >
+                        <Download className="h-4 w-4 text-zinc-400" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          if (navigator.share) {
+                            navigator.share({
+                              title: 'QR Code',
+                              text: 'Check out this QR code for my shortened URL!',
+                              url: shortenedUrl
+                            })
+                          }
+                        }}
+                        className="hover:bg-zinc-700 transition-all duration-200"
+                      >
+                        <Share2 className="h-4 w-4 text-zinc-400" />
+                      </Button>
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-center bg-white p-4 rounded-lg">
+                    <img
+                      src={qrCode}
+                      alt="QR Code"
+                      width={200}
+                      height={200}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {showStats && stats && (

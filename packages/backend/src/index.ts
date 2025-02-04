@@ -9,11 +9,22 @@ interface Env {
 
 const app = new Hono<{ Bindings: Env }>()
 
-app.use('*', cors())
+app.use('*', cors({
+  origin: '*',
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization'],
+  exposeHeaders: ['Content-Length', 'X-Requested-With'],
+  credentials: true,
+  maxAge: 86400,
+}))
+
+app.get('/health', (c) => {
+  return c.json({ status: 'ok', timestamp: new Date().toISOString() })
+})
 
 app.post('/api/shorten', async (c) => {
   try {
-    const { url, customSlug, expiresAt } = await c.req.json()
+    const { url, customSlug } = await c.req.json()
     if (!url) {
       return c.json({ error: 'URL is required' }, 400)
     }
@@ -28,8 +39,8 @@ app.post('/api/shorten', async (c) => {
       db: c.env.DB
     })
 
-    console.log('Attempting to create short URL for:', { url, customSlug, expiresAt })
-    const urlInfo = await chopUrl.createShortUrl(url, { customSlug, expiresAt })
+    console.log('Attempting to create short URL for:', { url, customSlug })
+    const urlInfo = await chopUrl.createShortUrl(url, { customSlug })
     
     // Generate QR code
     const qrCodeUrl = await QRCodeGenerator.toDataURL(urlInfo.shortUrl)
