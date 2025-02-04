@@ -4,9 +4,6 @@ import { logger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
 import { ChopUrl } from '@chop-url/lib';
 import { openApiSchema } from './openapi';
-import { Auth } from '@auth/core';
-import { D1Adapter } from '@auth/d1-adapter';
-import { createDb } from './db';
 
 interface Env {
   DB: D1Database;
@@ -29,80 +26,6 @@ app.use('*', cors({
   credentials: true,  // Require credentials
   maxAge: 86400,
 }));
-
-// Auth configuration
-app.all('/auth/*', async (c) => {
-  const db = createDb(c.env.DB);
-  const request = c.req.raw;
-  const url = new URL(request.url);
-  const origin = request.headers.get('origin') || url.origin;
-
-  try {
-    const response = await Auth(request, {
-      adapter: D1Adapter(c.env.DB),
-      secret: c.env.AUTH_SECRET,
-      trustHost: true,
-      pages: {
-        signIn: '/auth/signin',
-        signOut: '/auth/signout',
-        error: '/auth/error',
-        verifyRequest: '/auth/verify-request',
-      },
-      callbacks: {
-        async signIn({ user, account, profile }) {
-          return true;
-        },
-        async session({ session, user }) {
-          return session;
-        },
-        async jwt({ token, user, account }) {
-          return token;
-        },
-        async redirect({ url: redirectUrl, baseUrl }) {
-          if (redirectUrl.startsWith('/')) {
-            return `${origin}${redirectUrl}`;
-          } else if (new URL(redirectUrl).origin === origin) {
-            return redirectUrl;
-          }
-          return origin;
-        },
-      },
-      providers: [
-        {
-          id: 'github',
-          name: 'GitHub',
-          type: 'oauth',
-          authorization: 'https://github.com/login/oauth/authorize',
-          token: 'https://github.com/login/oauth/access_token',
-          userinfo: 'https://api.github.com/user',
-          clientId: c.env.GITHUB_ID,
-          clientSecret: c.env.GITHUB_SECRET,
-          profile(profile) {
-            return {
-              id: profile.id.toString(),
-              name: profile.name || profile.login,
-              email: `${profile.id}@github.com`,
-              image: profile.avatar_url,
-            };
-          },
-        },
-      ],
-    });
-
-    if (!response) {
-      throw new Error('No response from auth');
-    }
-
-    const headers = new Headers();
-    headers.set('Access-Control-Allow-Origin', origin);
-    headers.set('Access-Control-Allow-Credentials', 'true');
-
-    return response;
-  } catch (error) {
-    console.error('Auth error:', error);
-    return c.json({ error: 'Authentication failed', details: error.message }, 500);
-  }
-});
 
 // Handle OPTIONS requests explicitly
 app.options('*', (c) => {
