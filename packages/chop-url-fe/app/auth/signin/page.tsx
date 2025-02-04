@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { signIn } from "next-auth/react";
 import { Github } from "lucide-react";
 
 export default function SignIn() {
@@ -17,7 +16,9 @@ export default function SignIn() {
           <div className="flex flex-col gap-4">
             <Button
               variant="outline"
-              onClick={() => signIn("github", { callbackUrl: "/" })}
+              onClick={() => {
+                console.log("sign in with github");
+              }}
               className="flex items-center gap-2"
             >
               <Github className="h-5 w-5" />

@@ -1,8 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { signIn, signOut, useSession } from "next-auth/react";
-import { Github } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -13,7 +11,6 @@ import {
 import Link from "next/link";
 
 export function Navbar() {
-  const { data: session, status } = useSession();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -24,34 +21,25 @@ export function Navbar() {
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-          {status === "loading" ? (
-            <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
-          ) : session?.user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={session.user.image!} alt={session.user.name!} />
-                    <AvatarFallback>{session.user.name?.[0]}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => signOut()}>
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Button
-              variant="outline"
-              onClick={() => signIn("github")}
-              className="flex items-center gap-2"
-            >
-              <Github className="h-5 w-5" />
-              Sign in
-            </Button>
-          )}
+          <Link href="/auth/signin" className="hidden md:flex items-center space-x-2">
+            <Button variant="outline">Sign in</Button>
+          </Link>
+          <Link href="/auth/register" className="hidden md:flex items-center space-x-2">
+            <Button>Register</Button>
+          </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <Avatar>
+                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <Link href="/auth/signin">Sign in</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
