@@ -1,0 +1,16 @@
+{
+  "name": "chop-url-redirect",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250129.0",
+    "wrangler": "^3.107.3"
+  }
+}
