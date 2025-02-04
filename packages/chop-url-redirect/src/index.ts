@@ -1,5 +1,6 @@
 interface Env {
   DB: D1Database;
+  FRONTEND_URL: string;
 }
 
 export default {
@@ -7,8 +8,9 @@ export default {
     const url = new URL(request.url);
     const shortId = url.pathname.slice(1);
 
-    if (!shortId) {
-      return Response.redirect('https://app.chop-url.com', 301);
+    // If no shortId is provided or it's empty, redirect to frontend
+    if (!shortId || shortId.trim() === '') {
+      return Response.redirect(env.FRONTEND_URL, 301);
     }
 
     try {
@@ -17,7 +19,10 @@ export default {
       ).bind(shortId).first<{ original_url: string }>();
 
       if (!result) {
-        return Response.redirect('https://app.chop-url.com', 301);
+        // If shortId is not found, redirect to frontend with the shortId as query param
+        const redirectUrl = new URL(env.FRONTEND_URL);
+        redirectUrl.searchParams.set('error', `Short URL '${shortId}' not found`);
+        return Response.redirect(redirectUrl.toString(), 301);
       }
 
       // Log visit asynchronously
@@ -28,7 +33,10 @@ export default {
       return Response.redirect(result.original_url, 301);
     } catch (error) {
       console.error('Error retrieving URL:', error);
-      return Response.redirect('https://app.chop-url.com', 301);
+      // If there's an error, redirect to frontend with error message
+      const redirectUrl = new URL(env.FRONTEND_URL);
+      redirectUrl.searchParams.set('error', 'An error occurred while retrieving the URL');
+      return Response.redirect(redirectUrl.toString(), 301);
     }
   }
 }; 
