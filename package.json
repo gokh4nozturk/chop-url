@@ -1,15 +1,13 @@
 {
-  "name": "chop-url-monorepo",
+  "name": "chop-url",
   "private": true,
-  "type": "module",
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
-    "build": "bun run build --workspace=*",
-    "test": "bun run test --workspace=*",
-    "lint": "bun run lint --workspace=*"
+    "dev": "pnpm -r dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test"
   },
-  "author": "Gokhan Ozturk",
-  "license": "MIT"
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=8"
+  }
 } 

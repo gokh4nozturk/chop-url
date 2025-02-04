@@ -5,7 +5,7 @@ import { ChopUrlConfig, UrlInfo, ChopUrlError, ChopUrlErrorCode } from './types'
  */
 export class ChopUrl {
   private baseUrl: string;
-  private db: D1Database;
+  private db: any;
 
   constructor(config: ChopUrlConfig) {
     this.validateConfig(config);
@@ -23,12 +23,11 @@ export class ChopUrl {
     const now = new Date();
 
     try {
-      await this.db.prepare(
+      await this.db.query(
         `INSERT INTO urls (short_id, original_url, created_at, visits) 
-         VALUES (?, ?, ?, 0)`
-      )
-      .bind(shortId, url, now.toISOString())
-      .run();
+         VALUES ($1, $2, $3, 0)`,
+        [shortId, url, now]
+      );
 
       return {
         shortId,
@@ -54,13 +53,12 @@ export class ChopUrl {
     this.validateShortId(shortId);
 
     try {
-      const result = await this.db.prepare(
-        `SELECT original_url FROM urls WHERE short_id = ?`
-      )
-      .bind(shortId)
-      .first<{ original_url: string }>();
+      const result = await this.db.query(
+        `SELECT original_url FROM urls WHERE short_id = $1`,
+        [shortId]
+      );
 
-      if (!result) {
+      if (!result.rows[0]) {
         throw new ChopUrlError(
           'Short URL not found',
           ChopUrlErrorCode.URL_NOT_FOUND,
@@ -69,13 +67,12 @@ export class ChopUrl {
       }
 
       // Increment visit count
-      await this.db.prepare(
-        `UPDATE urls SET visits = visits + 1 WHERE short_id = ?`
-      )
-      .bind(shortId)
-      .run();
+      await this.db.query(
+        `UPDATE urls SET visits = visits + 1 WHERE short_id = $1`,
+        [shortId]
+      );
 
-      return result.original_url;
+      return result.rows[0].original_url;
     } catch (error) {
       if (error instanceof ChopUrlError) throw error;
       
@@ -95,18 +92,12 @@ export class ChopUrl {
     this.validateShortId(shortId);
 
     try {
-      const result = await this.db.prepare(
-        `SELECT * FROM urls WHERE short_id = ?`
-      )
-      .bind(shortId)
-      .first<{
-        short_id: string;
-        original_url: string;
-        created_at: string;
-        visits: number;
-      }>();
+      const result = await this.db.query(
+        `SELECT * FROM urls WHERE short_id = $1`,
+        [shortId]
+      );
 
-      if (!result) {
+      if (!result.rows[0]) {
         throw new ChopUrlError(
           'Short URL not found',
           ChopUrlErrorCode.URL_NOT_FOUND,
@@ -114,12 +105,13 @@ export class ChopUrl {
         );
       }
 
+      const row = result.rows[0];
       return {
-        shortId: result.short_id,
-        originalUrl: result.original_url,
-        shortUrl: `${this.baseUrl}/${result.short_id}`,
-        createdAt: new Date(result.created_at),
-        visits: result.visits
+        shortId: row.short_id,
+        originalUrl: row.original_url,
+        shortUrl: `${this.baseUrl}/${row.short_id}`,
+        createdAt: new Date(row.created_at),
+        visits: row.visits
       };
     } catch (error) {
       if (error instanceof ChopUrlError) throw error;

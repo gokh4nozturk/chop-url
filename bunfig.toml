@@ -1,7 +1,0 @@
-[install]
-# Enable workspaces
-workspaces = true
-
-[install.scopes]
-# Configure workspace packages
-packages = "packages/*" 

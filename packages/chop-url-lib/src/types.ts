@@ -4,8 +4,8 @@
 export interface ChopUrlConfig {
   /** Base URL for generating short URLs (e.g., https://example.com) */
   baseUrl: string;
-  /** D1 Database instance */
-  db: D1Database;
+  /** PostgreSQL Pool instance */
+  db: any;
 }
 
 /**
