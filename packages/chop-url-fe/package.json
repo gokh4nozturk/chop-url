@@ -5,10 +5,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "pages:build": "npx @cloudflare/next-on-pages",
-    "pages:deploy": "npm run pages:build && wrangler pages deploy .vercel/output/static",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "clean": "rm -rf .next/cache",
+    "deploy": "npm run clean && next build && bunx wrangler pages deploy .next --project-name chop-url",
+    "deploy:prod": "npm run clean && NODE_ENV=production next build && bunx wrangler pages deploy .next --project-name chop-url --branch main"
   },
   "dependencies": {
     "@auth/core": "^0.37.4",
