@@ -20,10 +20,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn(inter.className, "min-h-screen bg-background")}>
-        <Providers>
-          <Navbar />
-          {children}
-        </Providers>
+
+          <Providers>
+            <Navbar />
+            {children}
+          </Providers>
+
       </body>
     </html>
   );

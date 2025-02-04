@@ -9,8 +9,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
+import { useAuth } from '@/lib/auth-context';
+import { useRouter } from 'next/navigation';
 
 export function Navbar() {
+  const { user, loading, logout } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/login');
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -21,12 +30,25 @@ export function Navbar() {
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-          <Link href="/auth/signin" className="hidden md:flex items-center space-x-2">
-            <Button variant="outline">Sign in</Button>
-          </Link>
-          <Link href="/auth/register" className="hidden md:flex items-center space-x-2">
-            <Button>Register</Button>
-          </Link>
+          {loading ? (
+            <div className="w-24 h-8 bg-gray-200 animate-pulse rounded" />
+          ) : user ? (
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-500">{user.email}</span>
+              <Button variant="outline" onClick={handleLogout}>
+                Logout
+              </Button>
+            </div>
+          ) : (
+            <>
+              <Button variant="ghost" asChild>
+                <Link href="/login">Login</Link>
+              </Button>
+              <Button asChild>
+                <Link href="/register">Register</Link>
+              </Button>
+            </>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger>
               <Avatar>
