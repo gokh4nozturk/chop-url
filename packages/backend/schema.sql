@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS urls (
     short_id TEXT UNIQUE NOT NULL,
     original_url TEXT NOT NULL,
     custom_slug TEXT UNIQUE,
-    expires_at DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     last_accessed_at DATETIME,
     visit_count INTEGER DEFAULT 0
@@ -26,6 +25,5 @@ CREATE TABLE IF NOT EXISTS visits (
 
 CREATE INDEX IF NOT EXISTS idx_urls_short_id ON urls(short_id);
 CREATE INDEX IF NOT EXISTS idx_urls_custom_slug ON urls(custom_slug);
-CREATE INDEX IF NOT EXISTS idx_urls_expires_at ON urls(expires_at);
 CREATE INDEX IF NOT EXISTS idx_visits_url_id ON visits(url_id);
 CREATE INDEX IF NOT EXISTS idx_visits_visited_at ON visits(visited_at); 

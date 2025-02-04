@@ -10,7 +10,8 @@
     "test": "jest",
     "setup": "ts-node src/setup-db.ts",
     "deploy": "wrangler deploy",
-    "migrate": "wrangler d1 execute chop-url-db --file=schema.sql --remote"
+    "migrate": "wrangler d1 execute chop-url-db --file=schema.sql --remote",
+    "db:reset": "wrangler d1 execute chop-url-db --file=schema.sql"
   },
   "keywords": [
     "url-shortener",

@@ -41,10 +41,13 @@ export async function POST(request: Request) {
       }, { status: 400 })
     }
 
-    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/urls`
+    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/shorten`
     console.log('Backend URL:', backendUrl)
 
-    const requestBody = JSON.stringify({ url })
+    const requestBody = JSON.stringify({
+      url,
+      customSlug: body.customSlug
+    })
     console.log('Request body being sent:', requestBody)
 
     const response = await fetch(backendUrl, {

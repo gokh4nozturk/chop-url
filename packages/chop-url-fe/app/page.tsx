@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Copy, Link as LinkIcon, Check, Calendar, Hash, BarChart2 } from "lucide-react"
+import { Copy, Link as LinkIcon, Check, Hash, BarChart2 } from "lucide-react"
 
 interface UrlStats {
   visitCount: number;
@@ -21,7 +21,6 @@ interface UrlStats {
 export default function Home() {
   const [url, setUrl] = useState("")
   const [customSlug, setCustomSlug] = useState("")
-  const [expiresAt, setExpiresAt] = useState("")
   const [shortenedUrl, setShortenedUrl] = useState("")
   const [qrCode, setQrCode] = useState<string>("")
   const [isLoading, setIsLoading] = useState(false)
@@ -66,8 +65,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           url: urlToShorten,
-          customSlug: customSlug || undefined,
-          expiresAt: expiresAt ? new Date(expiresAt).toISOString() : undefined
+          customSlug: customSlug || undefined
         }),
       })
 
@@ -146,17 +144,6 @@ export default function Home() {
                 placeholder="Custom slug (optional)"
                 value={customSlug}
                 onChange={(e) => setCustomSlug(e.target.value)}
-                className="pl-10 pr-4 bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 w-full"
-              />
-            </div>
-
-            <div className="relative">
-              <Calendar className="absolute left-3 top-3 h-4 w-4 text-zinc-400" />
-              <Input
-                type="datetime-local"
-                placeholder="Expires at (optional)"
-                value={expiresAt}
-                onChange={(e) => setExpiresAt(e.target.value)}
                 className="pl-10 pr-4 bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 w-full"
               />
             </div>

@@ -4,7 +4,12 @@
   "scripts": {
     "dev": "pnpm -r dev",
     "build": "pnpm -r build",
-    "test": "pnpm -r test"
+    "test": "pnpm -r test",
+    "deploy:lib": "cd packages/chop-url-lib && pnpm run build",
+    "deploy:backend": "cd packages/backend && pnpm run deploy",
+    "deploy:redirect": "cd packages/chop-url-redirect && pnpm run deploy",
+    "deploy:frontend": "cd packages/chop-url-fe && pnpm run deploy",
+    "deploy:all": "pnpm run deploy:lib && pnpm run deploy:backend && pnpm run deploy:redirect && pnpm run deploy:frontend"
   },
   "engines": {
     "node": ">=18",

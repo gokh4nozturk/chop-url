@@ -54,7 +54,6 @@ export interface IChopUrlConfig {
 
 interface CreateUrlOptions {
   customSlug?: string;
-  expiresAt?: string;
 }
 
 export class ChopUrl {
@@ -70,7 +69,6 @@ export class ChopUrl {
 
   async createShortUrl(originalUrl: string, options?: CreateUrlOptions): Promise<ICreateUrlResponse> {
     const shortId = options?.customSlug || this.generateShortId();
-    const expiresAt = options?.expiresAt || null;
 
     // Check if custom slug is already taken
     if (options?.customSlug) {
@@ -86,17 +84,17 @@ export class ChopUrl {
     try {
       await this.db
         .prepare(
-          `INSERT INTO urls (short_id, original_url, custom_slug, expires_at)
-           VALUES (?, ?, ?, ?)`
+          `INSERT INTO urls (short_id, original_url, custom_slug)
+           VALUES (?, ?, ?)`
         )
-        .bind(shortId, originalUrl, options?.customSlug || null, expiresAt)
+        .bind(shortId, originalUrl, options?.customSlug || null)
         .run();
 
       return {
         shortUrl: `${this.baseUrl}/${shortId}`,
         originalUrl,
         shortId,
-        expiresAt
+        expiresAt: null
       };
     } catch (error) {
       console.error('Database error:', error);
