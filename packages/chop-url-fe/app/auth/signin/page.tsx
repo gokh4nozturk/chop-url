@@ -1,11 +1,11 @@
+'use client';
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getProviders, signIn } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { Github } from "lucide-react";
 
-export default async function SignIn() {
-  const providers = await getProviders();
-
+export default function SignIn() {
   return (
     <div className="flex min-h-screen items-center justify-center">
       <Card className="w-full max-w-md">
