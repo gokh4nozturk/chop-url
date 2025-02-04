@@ -3,29 +3,60 @@ import { D1Database } from '@cloudflare/workers-types';
 import { nanoid } from 'nanoid';
 
 export interface ICreateUrlResponse {
-    shortUrl: string;
-    originalUrl: string;
-    shortId: string;
+  shortUrl: string;
+  originalUrl: string;
+  shortId: string;
+  expiresAt: string | null;
+}
+
+interface D1Result<T> {
+  results: T[];
+  success: boolean;
+  error?: string;
+}
+
+interface D1UrlResult {
+  id: number;
+  short_id: string;
+  original_url: string;
+  custom_slug: string | null;
+  expires_at: string | null;
+  created_at: string;
+  last_accessed_at: string | null;
+  visit_count: number;
+}
+
+interface D1VisitResult {
+  visited_at: string;
+  ip_address: string | null;
+  user_agent: string | null;
+  referrer: string | null;
 }
 
 export interface IUrlStats {
-    shortId: string;
-    originalUrl: string;
-    created: Date;
-    lastAccessed: Date | null;
-    visitCount: number;
-    totalVisits: number;
+  visitCount: number;
+  lastAccessedAt: Date | null;
+  createdAt: Date;
+  expiresAt: Date | null;
+  visits: {
+    visitedAt: Date;
+    ipAddress: string | null;
+    userAgent: string | null;
+    referrer: string | null;
+  }[];
 }
 
 export interface IChopUrlConfig {
-    db: D1Database;
-    baseUrl: string;
-    shortIdLength?: number;
+  db: D1Database;
+  baseUrl: string;
+  shortIdLength?: number;
 }
 
-/**
- * ChopUrl - A URL shortening library
- */
+interface CreateUrlOptions {
+  customSlug?: string;
+  expiresAt?: string;
+}
+
 export class ChopUrl {
   private readonly db: D1Database;
   private readonly baseUrl: string;
@@ -37,25 +68,35 @@ export class ChopUrl {
     this.shortIdLength = config.shortIdLength ?? 8;
   }
 
-  /**
-   * Creates a short URL for the given original URL
-   * @throws {ChopUrlError} If the URL is invalid or database operation fails
-   */
-  async createShortUrl(originalUrl: string): Promise<ICreateUrlResponse> {
+  async createShortUrl(originalUrl: string, options?: CreateUrlOptions): Promise<ICreateUrlResponse> {
+    const shortId = options?.customSlug || this.generateShortId();
+    const expiresAt = options?.expiresAt || null;
+
+    // Check if custom slug is already taken
+    if (options?.customSlug) {
+      const existing = await this.db
+        .prepare('SELECT id FROM urls WHERE custom_slug = ?')
+        .bind(options.customSlug)
+        .first<{ id: number }>();
+      if (existing) {
+        throw new Error('Custom slug is already taken');
+      }
+    }
+
     try {
-      const shortId = nanoid(this.shortIdLength);
-      
-      const stmt = this.db.prepare(
-        'INSERT INTO urls (short_id, original_url) VALUES (?, ?)'
-      );
-      
-      console.log('Executing SQL with params:', { shortId, originalUrl });
-      await stmt.bind(shortId, originalUrl).run();
+      await this.db
+        .prepare(
+          `INSERT INTO urls (short_id, original_url, custom_slug, expires_at)
+           VALUES (?, ?, ?, ?)`
+        )
+        .bind(shortId, originalUrl, options?.customSlug || null, expiresAt)
+        .run();
 
       return {
         shortUrl: `${this.baseUrl}/${shortId}`,
         originalUrl,
-        shortId
+        shortId,
+        expiresAt
       };
     } catch (error) {
       console.error('Database error:', error);
@@ -63,21 +104,34 @@ export class ChopUrl {
     }
   }
 
-  /**
-   * Retrieves the original URL for a given short ID
-   * @throws {ChopUrlError} If the URL is not found or database operation fails
-   */
   async getOriginalUrl(shortId: string): Promise<string> {
     try {
-      const stmt = this.db.prepare(
-        'UPDATE urls SET visit_count = visit_count + 1, last_accessed_at = CURRENT_TIMESTAMP WHERE short_id = ? RETURNING original_url'
-      );
-      
-      const result = await stmt.bind(shortId).first<{ original_url: string }>();
+      const result = await this.db
+        .prepare(
+          `SELECT original_url, expires_at, id FROM urls 
+           WHERE (short_id = ? OR custom_slug = ?)
+           AND (expires_at IS NULL OR expires_at > datetime('now'))`
+        )
+        .bind(shortId, shortId)
+        .first<D1UrlResult>();
 
       if (!result) {
         throw new Error('URL not found');
       }
+
+      // Update visit count and last accessed
+      await this.db
+        .prepare(
+          `UPDATE urls 
+           SET visit_count = visit_count + 1,
+               last_accessed_at = datetime('now')
+           WHERE id = ?`
+        )
+        .bind(result.id)
+        .run();
+
+      // Record visit
+      await this.recordVisit(result.id);
 
       return result.original_url;
     } catch (error) {
@@ -89,42 +143,44 @@ export class ChopUrl {
     }
   }
 
-  /**
-   * Gets detailed information about a shortened URL
-   * @throws {ChopUrlError} If the URL is not found or database operation fails
-   */
   async getUrlStats(shortId: string): Promise<IUrlStats> {
     try {
-      const stmt = this.db.prepare(
-        'SELECT * FROM urls WHERE short_id = ?'
-      );
-      
-      const result = await stmt.bind(shortId).first<{
-        id: number;
-        short_id: string;
-        original_url: string;
-        created_at: string;
-        last_accessed_at: string | null;
-        visit_count: number;
-      }>();
+      const urlInfo = await this.db
+        .prepare(
+          `SELECT visit_count, last_accessed_at, created_at, expires_at
+           FROM urls
+           WHERE short_id = ? OR custom_slug = ?`
+        )
+        .bind(shortId, shortId)
+        .first<D1UrlResult>();
 
-      if (!result) {
+      if (!urlInfo) {
         throw new Error('URL not found');
       }
 
-      const visitsStmt = this.db.prepare(
-        'SELECT COUNT(*) as total_visits FROM visits WHERE url_id = ?'
-      );
-      
-      const visits = await visitsStmt.bind(result.id).first<{ total_visits: number }>();
+      const visits = await this.db
+        .prepare(
+          `SELECT visited_at, ip_address, user_agent, referrer
+           FROM visits v
+           JOIN urls u ON v.url_id = u.id
+           WHERE u.short_id = ? OR u.custom_slug = ?
+           ORDER BY visited_at DESC
+           LIMIT 100`
+        )
+        .bind(shortId, shortId)
+        .all<D1VisitResult>();
 
       return {
-        shortId,
-        originalUrl: result.original_url,
-        created: new Date(result.created_at),
-        lastAccessed: result.last_accessed_at ? new Date(result.last_accessed_at) : null,
-        visitCount: result.visit_count,
-        totalVisits: visits?.total_visits ?? 0
+        visitCount: urlInfo.visit_count,
+        lastAccessedAt: urlInfo.last_accessed_at ? new Date(urlInfo.last_accessed_at) : null,
+        createdAt: new Date(urlInfo.created_at),
+        expiresAt: urlInfo.expires_at ? new Date(urlInfo.expires_at) : null,
+        visits: visits.results.map(v => ({
+          visitedAt: new Date(v.visited_at),
+          ipAddress: v.ip_address,
+          userAgent: v.user_agent,
+          referrer: v.referrer
+        }))
       };
     } catch (error) {
       console.error('Database error:', error);
@@ -135,48 +191,34 @@ export class ChopUrl {
     }
   }
 
-  public async logVisit(shortId: string, visitorInfo: { ip: string; userAgent?: string; referrer?: string }): Promise<void> {
-    try {
-      const stmt = this.db.prepare(
-        'SELECT id FROM urls WHERE short_id = ?'
-      );
-      
-      const urlResult = await stmt.bind(shortId).first<{ id: number }>();
-
-      if (!urlResult) {
-        throw new Error('URL not found');
-      }
-
-      const visitStmt = this.db.prepare(
-        'INSERT INTO visits (url_id, ip_address, user_agent, referrer) VALUES (?, ?, ?, ?)'
-      );
-      
-      await visitStmt.bind(
-        urlResult.id,
-        visitorInfo.ip,
-        visitorInfo.userAgent ?? null,
-        visitorInfo.referrer ?? null
-      ).run();
-    } catch (error) {
-      console.error('Database error:', error);
-      throw new Error('Failed to log visit');
-    }
+  private async recordVisit(urlId: number) {
+    await this.db
+      .prepare(
+        `INSERT INTO visits (url_id, ip_address, user_agent, referrer)
+         VALUES (?, ?, ?, ?)`
+      )
+      .bind(
+        urlId,
+        null, // In a real app, you'd get these from the request
+        null,
+        null
+      )
+      .run();
   }
 
-  public async initializeDatabase(): Promise<void> {
-    try {
-      const statements = [
-        this.db.prepare('CREATE TABLE IF NOT EXISTS urls (id INTEGER PRIMARY KEY AUTOINCREMENT, short_id TEXT UNIQUE NOT NULL, original_url TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, last_accessed_at DATETIME, visit_count INTEGER DEFAULT 0)'),
-        this.db.prepare('CREATE INDEX IF NOT EXISTS idx_urls_short_id ON urls(short_id)'),
-        this.db.prepare('CREATE TABLE IF NOT EXISTS visits (id INTEGER PRIMARY KEY AUTOINCREMENT, url_id INTEGER REFERENCES urls(id), visited_at DATETIME DEFAULT CURRENT_TIMESTAMP, ip_address TEXT, user_agent TEXT, referrer TEXT)'),
-        this.db.prepare('CREATE INDEX IF NOT EXISTS idx_visits_url_id ON visits(url_id)'),
-        this.db.prepare('CREATE INDEX IF NOT EXISTS idx_visits_visited_at ON visits(visited_at)')
-      ];
-
-      await this.db.batch(statements);
-    } catch (error) {
-      console.error('Database error:', error);
-      throw new Error('Failed to initialize database');
+  private generateShortId(length = 6) {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
+    return result;
+  }
+}
+
+export class QRCodeGenerator {
+  static async toDataURL(text: string): Promise<string> {
+    const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(text)}`;
+    return apiUrl;
   }
 } 
