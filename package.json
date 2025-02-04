@@ -8,12 +8,7 @@
   "scripts": {
     "build": "bun run build --workspace=*",
     "test": "bun run test --workspace=*",
-    "lint": "bun run lint --workspace=*",
-    "deploy:backend": "cd packages/backend && bun run deploy",
-    "deploy:frontend": "cd packages/chop-url-fe && bun run deploy",
-    "publish:lib": "cd packages/chop-url-lib && bun publish --access public",
-    "dev:backend": "cd packages/backend && bun run dev",
-    "dev:frontend": "cd packages/chop-url-fe && bun run dev"
+    "lint": "bun run lint --workspace=*"
   },
   "author": "Gokhan Ozturk",
   "license": "MIT"
