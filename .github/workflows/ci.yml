@@ -93,6 +93,13 @@ jobs:
     strategy:
       matrix:
         package: [lib, backend, frontend]
+        include:
+          - package: frontend
+            test_dir: packages/chop-url-fe
+          - package: backend
+            test_dir: packages/backend
+          - package: lib
+            test_dir: packages/chop-url-lib
     steps:
       - uses: actions/checkout@v4
       
@@ -130,12 +137,14 @@ jobs:
           path: packages/chop-url-lib/dist
         
       - name: Run tests
-        run: cd packages/chop-url-${{ matrix.package }} && pnpm run test:coverage
+        run: |
+          cd ${{ matrix.test_dir }}
+          pnpm run test:coverage
         
       - name: Show coverage
         run: |
           echo "## ${{ matrix.package }} Test Coverage" >> $GITHUB_STEP_SUMMARY
-          cat packages/chop-url-${{ matrix.package }}/coverage/text-summary.txt >> $GITHUB_STEP_SUMMARY || echo "No coverage report found" >> $GITHUB_STEP_SUMMARY
+          cat ${{ matrix.test_dir }}/coverage/text-summary.txt >> $GITHUB_STEP_SUMMARY || echo "No coverage report found" >> $GITHUB_STEP_SUMMARY
 
   build:
     needs: [lint, test]
