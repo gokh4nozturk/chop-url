@@ -9,6 +9,18 @@ export default {
   ],
   theme: {
   	extend: {
+  		backgroundSize: {
+  			"300%": "300%",
+  		},
+  		animation: {
+  			gradient: "gradient 6s linear infinite",
+  		},
+  		keyframes: {
+  			gradient: {
+  				"0%": { backgroundPosition: "0% center" },
+  				"100%": { backgroundPosition: "200% center" }
+  			},
+  		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
