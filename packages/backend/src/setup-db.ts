@@ -11,7 +11,10 @@ async function setupDatabase() {
   });
 
   try {
-    const schema = fs.readFileSync(path.join(__dirname, '../schema.sql'), 'utf8');
+    const schema = fs.readFileSync(
+      path.join(__dirname, '../schema.sql'),
+      'utf8'
+    );
     await pool.query(schema);
     console.log('Database schema created successfully');
   } catch (error) {
@@ -21,4 +24,4 @@ async function setupDatabase() {
   }
 }
 
-setupDatabase(); 
+setupDatabase();

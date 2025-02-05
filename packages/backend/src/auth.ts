@@ -38,7 +38,11 @@ export function isValidPassword(password: string): boolean {
 }
 
 // Helper function to create a new user
-export async function createUser(env: Env, email: string, password: string): Promise<User> {
+export async function createUser(
+  env: Env,
+  email: string,
+  password: string
+): Promise<User> {
   const passwordHash = hashPassword(password);
 
   const result = await env.DB.prepare(
@@ -55,7 +59,11 @@ export async function createUser(env: Env, email: string, password: string): Pro
 }
 
 // Helper function to verify user credentials
-export async function verifyUser(env: Env, email: string, password: string): Promise<User | null> {
+export async function verifyUser(
+  env: Env,
+  email: string,
+  password: string
+): Promise<User | null> {
   const passwordHash = hashPassword(password);
 
   const user = await env.DB.prepare(
@@ -81,7 +89,9 @@ export async function getUserById(env: Env, id: number): Promise<User | null> {
 // Helper function to create a session token
 export async function createSession(env: Env, userId: number): Promise<string> {
   const token = generateToken();
-  const expiresAt = new Date(Date.now() + TOKEN_EXPIRATION * 1000).toISOString();
+  const expiresAt = new Date(
+    Date.now() + TOKEN_EXPIRATION * 1000
+  ).toISOString();
 
   await env.DB.prepare(
     'INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)'
@@ -93,7 +103,10 @@ export async function createSession(env: Env, userId: number): Promise<string> {
 }
 
 // Helper function to verify a session token
-export async function verifySession(env: Env, token: string): Promise<User | null> {
+export async function verifySession(
+  env: Env,
+  token: string
+): Promise<User | null> {
   const session = await env.DB.prepare(
     `SELECT u.id, u.email, u.created_at, u.updated_at 
      FROM sessions s 
@@ -111,4 +124,4 @@ export async function deleteSession(env: Env, token: string): Promise<void> {
   await env.DB.prepare('DELETE FROM sessions WHERE token = ?')
     .bind(token)
     .run();
-} 
+}

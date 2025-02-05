@@ -1,24 +1,37 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from "react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Copy, Link as LinkIcon, Check, Hash, BarChart2, Download, Share2 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+import { useState, useEffect } from 'react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import {
+  Copy,
+  Link as LinkIcon,
+  Check,
+  Hash,
+  BarChart2,
+  Download,
+  Share2,
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
-const GradientText = ({ children, className }: { children: React.ReactNode, className?: string }) => {
+const GradientText = ({
+  children,
+  className,
+}: { children: React.ReactNode; className?: string }) => {
   return (
-    <span className={cn(
-      "inline-block bg-clip-text text-transparent bg-300% animate-gradient",
-      "bg-gradient-to-r from-[#FF0080] via-[#7928CA] to-[#FF0080]",
-      "font-black",
-      className
-    )}>
+    <span
+      className={cn(
+        'inline-block bg-clip-text text-transparent bg-300% animate-gradient',
+        'bg-gradient-to-r from-[#FF0080] via-[#7928CA] to-[#FF0080]',
+        'font-black',
+        className
+      )}
+    >
       {children}
     </span>
-  )
-}
+  );
+};
 
 interface UrlStats {
   visitCount: number;
@@ -34,100 +47,117 @@ interface UrlStats {
 }
 
 export default function Home() {
-  const [url, setUrl] = useState("")
-  const [customSlug, setCustomSlug] = useState("")
-  const [shortenedUrl, setShortenedUrl] = useState("")
-  const [qrCode, setQrCode] = useState<string>("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [copied, setCopied] = useState(false)
-  const [stats, setStats] = useState<UrlStats | null>(null)
-  const [showStats, setShowStats] = useState(false)
+  const [url, setUrl] = useState('');
+  const [customSlug, setCustomSlug] = useState('');
+  const [shortenedUrl, setShortenedUrl] = useState('');
+  const [qrCode, setQrCode] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [stats, setStats] = useState<UrlStats | null>(null);
+  const [showStats, setShowStats] = useState(false);
 
   useEffect(() => {
     // Reset copied state after 2 seconds
     if (copied) {
       const timeout = setTimeout(() => {
-        setCopied(false)
-      }, 2000)
-      return () => clearTimeout(timeout)
+        setCopied(false);
+      }, 2000);
+      return () => clearTimeout(timeout);
     }
-  }, [copied])
+  }, [copied]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
-    setStats(null)
-    setShowStats(false)
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    setStats(null);
+    setShowStats(false);
 
     try {
       // Basic URL validation
-      let urlToShorten = url.trim()
-      if (!urlToShorten.startsWith('http://') && !urlToShorten.startsWith('https://')) {
-        urlToShorten = 'https://' + urlToShorten
+      let urlToShorten = url.trim();
+      if (
+        !urlToShorten.startsWith('http://') &&
+        !urlToShorten.startsWith('https://')
+      ) {
+        urlToShorten = `https://${urlToShorten}`;
       }
 
       // Don't allow shortening our own URLs
-      if (urlToShorten.includes('chop-url.vercel.app') || urlToShorten.includes('chop-url-backend.gokhaanozturk.workers.dev')) {
-        throw new Error("Cannot shorten URLs from this domain")
+      if (
+        urlToShorten.includes('chop-url.vercel.app') ||
+        urlToShorten.includes('chop-url-backend.gokhaanozturk.workers.dev')
+      ) {
+        throw new Error('Cannot shorten URLs from this domain');
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/shorten`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          url: urlToShorten,
-          customSlug: customSlug || undefined
-        }),
-      })
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/shorten`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: urlToShorten,
+            customSlug: customSlug || undefined,
+          }),
+        }
+      );
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to shorten URL")
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to shorten URL');
       }
 
-      const data = await response.json()
-      setShortenedUrl(data.shortUrl)
-      setQrCode(data.qrCode)
+      const data = await response.json();
+      setShortenedUrl(data.shortUrl);
+      setQrCode(data.qrCode);
     } catch (error) {
-      console.error("Error shortening URL:", error)
-      setError(error instanceof Error ? error.message : "Failed to shorten URL. Please try again.")
+      console.error('Error shortening URL:', error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to shorten URL. Please try again.'
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(shortenedUrl)
-      setCopied(true)
+      await navigator.clipboard.writeText(shortenedUrl);
+      setCopied(true);
     } catch (error) {
-      console.error("Failed to copy:", error)
+      console.error('Failed to copy:', error);
     }
-  }
+  };
 
   const fetchStats = async () => {
     if (!shortenedUrl) return;
 
     try {
-      const shortId = shortenedUrl.split('/').pop()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/stats/${shortId}`)
-      
+      const shortId = shortenedUrl.split('/').pop();
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/stats/${shortId}`
+      );
+
       if (!response.ok) {
-        throw new Error("Failed to fetch stats")
+        throw new Error('Failed to fetch stats');
       }
 
-      const data = await response.json()
-      setStats(data)
-      setShowStats(true)
+      const data = await response.json();
+      setStats(data);
+      setShowStats(true);
     } catch (error) {
-      console.error("Error fetching stats:", error)
-      setError(error instanceof Error ? error.message : "Failed to fetch stats")
+      console.error('Error fetching stats:', error);
+      setError(
+        error instanceof Error ? error.message : 'Failed to fetch stats'
+      );
     }
-  }
+  };
 
   return (
     <main className="flex min-h-[calc(100vh-theme(spacing.header))] flex-col items-center justify-center relative overflow-hidden bg-gradient-to-b from-background via-background to-background/80">
@@ -144,7 +174,9 @@ export default function Home() {
           <h1 className="text-4xl sm:text-6xl md:text-7xl">
             <GradientText>Chop URL</GradientText>
           </h1>
-          <p className="text-muted-foreground">Make your long URLs short and sweet</p>
+          <p className="text-muted-foreground">
+            Make your long URLs short and sweet
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="w-full max-w-lg space-y-4">
@@ -181,7 +213,7 @@ export default function Home() {
               hover:shadow-[0_0_20px_rgba(255,0,128,0.4)] hover:scale-[1.01] active:scale-[0.99]"
             disabled={isLoading}
           >
-            {isLoading ? "Chopping..." : "Chop!"}
+            {isLoading ? 'Chopping...' : 'Chop!'}
           </Button>
 
           {error && (
@@ -194,7 +226,9 @@ export default function Home() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between space-x-2">
-                  <p className="text-base font-medium truncate flex-1">{shortenedUrl}</p>
+                  <p className="text-base font-medium truncate flex-1">
+                    {shortenedUrl}
+                  </p>
                   <div className="flex gap-2">
                     <Button
                       variant="ghost"
@@ -231,10 +265,10 @@ export default function Home() {
                         variant="ghost"
                         size="icon"
                         onClick={() => {
-                          const link = document.createElement('a')
-                          link.href = qrCode
-                          link.download = 'qr-code.png'
-                          link.click()
+                          const link = document.createElement('a');
+                          link.href = qrCode;
+                          link.download = 'qr-code.png';
+                          link.click();
                         }}
                         className="h-10 w-10"
                       >
@@ -248,8 +282,8 @@ export default function Home() {
                             navigator.share({
                               title: 'QR Code',
                               text: 'Check out this QR code for my shortened URL!',
-                              url: shortenedUrl
-                            })
+                              url: shortenedUrl,
+                            });
                           }
                         }}
                         className="h-10 w-10"
@@ -274,23 +308,31 @@ export default function Home() {
             {showStats && stats && (
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-medium">Statistics</CardTitle>
+                  <CardTitle className="text-lg font-medium">
+                    Statistics
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-muted-foreground">Visit Count</p>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Visit Count
+                      </p>
                       <p className="text-3xl font-bold">{stats.visitCount}</p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-muted-foreground">Created At</p>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Created At
+                      </p>
                       <p className="text-base">
                         {new Date(stats.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                     {stats.lastAccessedAt && (
                       <div className="space-y-1">
-                        <p className="text-sm font-medium text-muted-foreground">Last Accessed</p>
+                        <p className="text-sm font-medium text-muted-foreground">
+                          Last Accessed
+                        </p>
                         <p className="text-base">
                           {new Date(stats.lastAccessedAt).toLocaleDateString()}
                         </p>
@@ -298,7 +340,9 @@ export default function Home() {
                     )}
                     {stats.expiresAt && (
                       <div className="space-y-1">
-                        <p className="text-sm font-medium text-muted-foreground">Expires At</p>
+                        <p className="text-sm font-medium text-muted-foreground">
+                          Expires At
+                        </p>
                         <p className="text-base">
                           {new Date(stats.expiresAt).toLocaleDateString()}
                         </p>
@@ -312,5 +356,5 @@ export default function Home() {
         )}
       </div>
     </main>
-  )
+  );
 }

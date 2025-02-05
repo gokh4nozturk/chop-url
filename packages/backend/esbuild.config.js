@@ -14,7 +14,7 @@ await esbuild.build({
     {
       name: 'workspace-resolver',
       setup(build) {
-        build.onResolve({ filter: /^@chop-url\/lib$/ }, args => {
+        build.onResolve({ filter: /^@chop-url\/lib$/ }, (args) => {
           return {
             path: resolve(__dirname, '../lib/src/index.ts'),
           };
@@ -22,4 +22,4 @@ await esbuild.build({
       },
     },
   ],
-}); 
+});

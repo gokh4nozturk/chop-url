@@ -14,7 +14,9 @@ export interface AuthError {
   error: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace('http://', 'https://') || 'https://api.chop-url.com';
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL?.replace('http://', 'https://') ||
+  'https://api.chop-url.com';
 
 // Helper function to store auth token
 export function setToken(token: string): void {
@@ -32,13 +34,16 @@ export function removeToken(): void {
 }
 
 // Helper function to register a new user
-export async function register(email: string, password: string): Promise<AuthResponse> {
+export async function register(
+  email: string,
+  password: string
+): Promise<AuthResponse> {
   const response = await fetch(`${API_URL}/api/auth/register`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Origin': 'https://app.chop-url.com'
+      Accept: 'application/json',
+      Origin: 'https://app.chop-url.com',
     },
     body: JSON.stringify({ email, password }),
     credentials: 'same-origin',
@@ -46,23 +51,26 @@ export async function register(email: string, password: string): Promise<AuthRes
   });
 
   if (!response.ok) {
-    const error = await response.json() as AuthError;
+    const error = (await response.json()) as AuthError;
     throw new Error(error.error);
   }
 
-  const data = await response.json() as AuthResponse;
+  const data = (await response.json()) as AuthResponse;
   setToken(data.token);
   return data;
 }
 
 // Helper function to login
-export async function login(email: string, password: string): Promise<AuthResponse> {
+export async function login(
+  email: string,
+  password: string
+): Promise<AuthResponse> {
   const response = await fetch(`${API_URL}/api/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Origin': 'https://app.chop-url.com'
+      Accept: 'application/json',
+      Origin: 'https://app.chop-url.com',
     },
     body: JSON.stringify({ email, password }),
     credentials: 'same-origin',
@@ -70,11 +78,11 @@ export async function login(email: string, password: string): Promise<AuthRespon
   });
 
   if (!response.ok) {
-    const error = await response.json() as AuthError;
+    const error = (await response.json()) as AuthError;
     throw new Error(error.error);
   }
 
-  const data = await response.json() as AuthResponse;
+  const data = (await response.json()) as AuthResponse;
   setToken(data.token);
   return data;
 }
@@ -88,8 +96,8 @@ export async function logout(): Promise<void> {
     await fetch(`${API_URL}/api/auth/logout`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Origin': 'https://app.chop-url.com'
+        Authorization: `Bearer ${token}`,
+        Origin: 'https://app.chop-url.com',
       },
       credentials: 'same-origin',
       mode: 'cors',
@@ -107,8 +115,8 @@ export async function getCurrentUser(): Promise<User | null> {
   try {
     const response = await fetch(`${API_URL}/api/auth/me`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Origin': 'https://app.chop-url.com'
+        Authorization: `Bearer ${token}`,
+        Origin: 'https://app.chop-url.com',
       },
       credentials: 'same-origin',
       mode: 'cors',
@@ -132,4 +140,4 @@ export async function getCurrentUser(): Promise<User | null> {
 // Helper function to check if user is authenticated
 export function isAuthenticated(): boolean {
   return !!getToken();
-} 
+}

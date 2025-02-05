@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
-import { ThemeSwitcher } from "./theme-switcher";
-import { LogIn } from "lucide-react";
-import Image from "next/image";
-import UserMenu from "./user-menu";
+import { ThemeSwitcher } from './theme-switcher';
+import { LogIn } from 'lucide-react';
+import Image from 'next/image';
+import UserMenu from './user-menu';
 
 export function Navbar() {
   const { user, loading, logout } = useAuth();
@@ -22,8 +22,8 @@ export function Navbar() {
     <header className="sticky top-0 flex z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="w-full mx-8 flex h-header items-center justify-between">
         <div className="flex items-center gap-6">
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="inline-flex items-center gap-2 hover:opacity-90 transition-opacity"
           >
             <div className="relative w-9 h-9">
@@ -62,4 +62,4 @@ export function Navbar() {
       </div>
     </header>
   );
-} 
+}

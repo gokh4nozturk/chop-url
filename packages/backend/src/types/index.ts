@@ -29,4 +29,4 @@ export interface IUrlStats {
   lastAccessed: Date | null;
   visitCount: number;
   totalVisits: number;
-} 
+}

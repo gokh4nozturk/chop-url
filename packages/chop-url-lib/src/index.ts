@@ -1,5 +1,10 @@
-import { ChopUrlConfig, UrlInfo, ChopUrlError, ChopUrlErrorCode } from './types';
-import { D1Database } from '@cloudflare/workers-types';
+import {
+  ChopUrlConfig,
+  UrlInfo,
+  ChopUrlError,
+  ChopUrlErrorCode,
+  Database,
+} from './types';
 import { nanoid } from 'nanoid';
 
 export interface ICreateUrlResponse {
@@ -47,7 +52,7 @@ export interface IUrlStats {
 }
 
 export interface IChopUrlConfig {
-  db: D1Database;
+  db: Database;
   baseUrl: string;
   shortIdLength?: number;
 }
@@ -57,7 +62,7 @@ interface CreateUrlOptions {
 }
 
 export class ChopUrl {
-  private readonly db: D1Database;
+  private readonly db: Database;
   private readonly baseUrl: string;
   private readonly shortIdLength: number;
 
@@ -67,7 +72,10 @@ export class ChopUrl {
     this.shortIdLength = config.shortIdLength ?? 8;
   }
 
-  async createShortUrl(originalUrl: string, options?: CreateUrlOptions): Promise<ICreateUrlResponse> {
+  async createShortUrl(
+    originalUrl: string,
+    options?: CreateUrlOptions
+  ): Promise<ICreateUrlResponse> {
     const shortId = options?.customSlug || this.generateShortId();
 
     // Check if custom slug is already taken
@@ -94,7 +102,7 @@ export class ChopUrl {
         shortUrl: `${this.baseUrl}/${shortId}`,
         originalUrl,
         shortId,
-        expiresAt: null
+        expiresAt: null,
       };
     } catch (error) {
       console.error('Database error:', error);
@@ -170,15 +178,17 @@ export class ChopUrl {
 
       return {
         visitCount: urlInfo.visit_count,
-        lastAccessedAt: urlInfo.last_accessed_at ? new Date(urlInfo.last_accessed_at) : null,
+        lastAccessedAt: urlInfo.last_accessed_at
+          ? new Date(urlInfo.last_accessed_at)
+          : null,
         createdAt: new Date(urlInfo.created_at),
         expiresAt: urlInfo.expires_at ? new Date(urlInfo.expires_at) : null,
-        visits: visits.results.map(v => ({
+        visits: visits.results.map((v) => ({
           visitedAt: new Date(v.visited_at),
           ipAddress: v.ip_address,
           userAgent: v.user_agent,
-          referrer: v.referrer
-        }))
+          referrer: v.referrer,
+        })),
       };
     } catch (error) {
       console.error('Database error:', error);
@@ -205,7 +215,8 @@ export class ChopUrl {
   }
 
   private generateShortId(length = 6) {
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const chars =
+      'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let result = '';
     for (let i = 0; i < length; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -214,9 +225,11 @@ export class ChopUrl {
   }
 }
 
-export class QRCodeGenerator {
-  static async toDataURL(text: string): Promise<string> {
-    const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(text)}`;
-    return apiUrl;
-  }
-} 
+export const generateQRCode = async (text: string): Promise<string> => {
+  const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
+    text
+  )}`;
+  return apiUrl;
+};
+
+export * from './types';

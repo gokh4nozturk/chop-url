@@ -1,8 +1,6 @@
-"use client";
+'use client';
 import { AuthProvider } from '@/lib/auth-context';
 import { ThemeProvider } from 'next-themes';
-
-
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -10,4 +8,4 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <AuthProvider>{children}</AuthProvider>
     </ThemeProvider>
   );
-} 
+}

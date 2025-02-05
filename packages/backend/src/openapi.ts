@@ -3,13 +3,13 @@ export const openApiSchema = {
   info: {
     title: 'Chop URL API',
     version: '1.0.0',
-    description: 'API for URL shortening service'
+    description: 'API for URL shortening service',
   },
   servers: [
     {
       url: 'https://chop-url-backend.gokhaanozturk.workers.dev',
-      description: 'Production server'
-    }
+      description: 'Production server',
+    },
   ],
   paths: {
     '/health': {
@@ -25,15 +25,15 @@ export const openApiSchema = {
                   properties: {
                     status: {
                       type: 'string',
-                      example: 'ok'
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                      example: 'ok',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/urls': {
       post: {
@@ -48,13 +48,13 @@ export const openApiSchema = {
                   url: {
                     type: 'string',
                     format: 'uri',
-                    example: 'https://example.com'
-                  }
+                    example: 'https://example.com',
+                  },
                 },
-                required: ['url']
-              }
-            }
-          }
+                required: ['url'],
+              },
+            },
+          },
         },
         responses: {
           '200': {
@@ -66,30 +66,30 @@ export const openApiSchema = {
                   properties: {
                     shortId: {
                       type: 'string',
-                      example: 'abc123'
+                      example: 'abc123',
                     },
                     originalUrl: {
                       type: 'string',
                       format: 'uri',
-                      example: 'https://example.com'
+                      example: 'https://example.com',
                     },
                     shortUrl: {
                       type: 'string',
                       format: 'uri',
-                      example: 'https://chop-url.workers.dev/abc123'
+                      example: 'https://chop-url.workers.dev/abc123',
                     },
                     createdAt: {
                       type: 'string',
-                      format: 'date-time'
+                      format: 'date-time',
                     },
                     visits: {
                       type: 'integer',
-                      example: 0
-                    }
-                  }
-                }
-              }
-            }
+                      example: 0,
+                    },
+                  },
+                },
+              },
+            },
           },
           '500': {
             description: 'Error creating short URL',
@@ -99,15 +99,15 @@ export const openApiSchema = {
                   type: 'object',
                   properties: {
                     error: {
-                      type: 'string'
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                      type: 'string',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/urls/{shortId}': {
       get: {
@@ -118,10 +118,10 @@ export const openApiSchema = {
             in: 'path',
             required: true,
             schema: {
-              type: 'string'
+              type: 'string',
             },
-            description: 'Short URL identifier'
-          }
+            description: 'Short URL identifier',
+          },
         ],
         responses: {
           '200': {
@@ -133,30 +133,30 @@ export const openApiSchema = {
                   properties: {
                     shortId: {
                       type: 'string',
-                      example: 'abc123'
+                      example: 'abc123',
                     },
                     originalUrl: {
                       type: 'string',
                       format: 'uri',
-                      example: 'https://example.com'
+                      example: 'https://example.com',
                     },
                     shortUrl: {
                       type: 'string',
                       format: 'uri',
-                      example: 'https://chop-url.workers.dev/abc123'
+                      example: 'https://chop-url.workers.dev/abc123',
                     },
                     createdAt: {
                       type: 'string',
-                      format: 'date-time'
+                      format: 'date-time',
                     },
                     visits: {
                       type: 'integer',
-                      example: 42
-                    }
-                  }
-                }
-              }
-            }
+                      example: 42,
+                    },
+                  },
+                },
+              },
+            },
           },
           '404': {
             description: 'URL not found',
@@ -166,15 +166,15 @@ export const openApiSchema = {
                   type: 'object',
                   properties: {
                     error: {
-                      type: 'string'
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                      type: 'string',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     '/{shortId}': {
       get: {
@@ -185,14 +185,14 @@ export const openApiSchema = {
             in: 'path',
             required: true,
             schema: {
-              type: 'string'
+              type: 'string',
             },
-            description: 'Short URL identifier'
-          }
+            description: 'Short URL identifier',
+          },
         ],
         responses: {
           '302': {
-            description: 'Redirect to original URL'
+            description: 'Redirect to original URL',
           },
           '404': {
             description: 'URL not found',
@@ -202,15 +202,15 @@ export const openApiSchema = {
                   type: 'object',
                   properties: {
                     error: {
-                      type: 'string'
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}; 
+                      type: 'string',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+};

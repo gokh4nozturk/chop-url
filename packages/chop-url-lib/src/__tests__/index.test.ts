@@ -18,13 +18,22 @@ describe('ChopUrl', () => {
 
   describe('constructor', () => {
     it('should throw error for invalid base URL', () => {
-      expect(() => new ChopUrl({ baseUrl: '', db: mockDb })).toThrow(ChopUrlError);
-      expect(() => new ChopUrl({ baseUrl: 'invalid-url', db: mockDb })).toThrow(ChopUrlError);
+      expect(() => new ChopUrl({ baseUrl: '', db: mockDb })).toThrow(
+        ChopUrlError
+      );
+      expect(() => new ChopUrl({ baseUrl: 'invalid-url', db: mockDb })).toThrow(
+        ChopUrlError
+      );
     });
 
     it('should throw error for missing database', () => {
-      expect(() => new ChopUrl({ baseUrl: 'https://example.com', db: null as unknown as D1Database }))
-        .toThrow(ChopUrlError);
+      expect(
+        () =>
+          new ChopUrl({
+            baseUrl: 'https://example.com',
+            db: null as unknown as D1Database,
+          })
+      ).toThrow(ChopUrlError);
     });
 
     it('should remove trailing slash from base URL', () => {
@@ -32,7 +41,7 @@ describe('ChopUrl', () => {
         baseUrl: 'https://example.com/',
         db: mockDb,
       });
-      expect(chopUrl['baseUrl']).toBe('https://example.com');
+      expect(chopUrl.baseUrl).toBe('https://example.com');
     });
   });
 
@@ -48,7 +57,9 @@ describe('ChopUrl', () => {
       expect(result).toEqual({
         shortId: expect.any(String),
         originalUrl: 'https://long-url.com',
-        shortUrl: expect.stringMatching(/^https:\/\/example\.com\/[a-zA-Z0-9]{7}$/),
+        shortUrl: expect.stringMatching(
+          /^https:\/\/example\.com\/[a-zA-Z0-9]{7}$/
+        ),
         createdAt: expect.any(Date),
         visits: 0,
       });
@@ -56,7 +67,9 @@ describe('ChopUrl', () => {
 
     it('should throw error for invalid URL', async () => {
       await expect(chopUrl.createShortUrl('')).rejects.toThrow(ChopUrlError);
-      await expect(chopUrl.createShortUrl('invalid-url')).rejects.toThrow(ChopUrlError);
+      await expect(chopUrl.createShortUrl('invalid-url')).rejects.toThrow(
+        ChopUrlError
+      );
     });
 
     it('should throw error on database failure', async () => {
@@ -65,16 +78,20 @@ describe('ChopUrl', () => {
         bind: jest.fn().mockReturnValue({ run: mockRun }),
       } as unknown as D1PreparedStatement);
 
-      await expect(chopUrl.createShortUrl('https://example.com'))
-        .rejects.toThrow(ChopUrlError);
+      await expect(
+        chopUrl.createShortUrl('https://example.com')
+      ).rejects.toThrow(ChopUrlError);
     });
   });
 
   describe('getOriginalUrl', () => {
     it('should retrieve original URL successfully', async () => {
-      const mockFirst = jest.fn().mockResolvedValue({ original_url: 'https://long-url.com' });
+      const mockFirst = jest
+        .fn()
+        .mockResolvedValue({ original_url: 'https://long-url.com' });
       const mockRun = jest.fn().mockResolvedValue({ success: true });
-      mockDb.prepare = jest.fn()
+      mockDb.prepare = jest
+        .fn()
         .mockReturnValueOnce({
           bind: jest.fn().mockReturnValue({ first: mockFirst }),
         } as unknown as D1PreparedStatement)
@@ -97,8 +114,9 @@ describe('ChopUrl', () => {
         bind: jest.fn().mockReturnValue({ first: mockFirst }),
       } as unknown as D1PreparedStatement);
 
-      await expect(chopUrl.getOriginalUrl('abc1234'))
-        .rejects.toThrow(new ChopUrlError('Short URL not found', ChopUrlErrorCode.URL_NOT_FOUND));
+      await expect(chopUrl.getOriginalUrl('abc1234')).rejects.toThrow(
+        new ChopUrlError('Short URL not found', ChopUrlErrorCode.URL_NOT_FOUND)
+      );
     });
   });
 
@@ -135,8 +153,9 @@ describe('ChopUrl', () => {
         bind: jest.fn().mockReturnValue({ first: mockFirst }),
       } as unknown as D1PreparedStatement);
 
-      await expect(chopUrl.getUrlInfo('abc1234'))
-        .rejects.toThrow(new ChopUrlError('Short URL not found', ChopUrlErrorCode.URL_NOT_FOUND));
+      await expect(chopUrl.getUrlInfo('abc1234')).rejects.toThrow(
+        new ChopUrlError('Short URL not found', ChopUrlErrorCode.URL_NOT_FOUND)
+      );
     });
   });
-}); 
+});

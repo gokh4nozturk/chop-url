@@ -1,11 +1,24 @@
 /**
+ * Database interface for ChopUrl operations
+ */
+export interface Database {
+  prepare: (query: string) => {
+    bind: (...params: unknown[]) => {
+      run: () => Promise<unknown>;
+      first: <T = unknown>() => Promise<T | undefined>;
+      all: <T = unknown>() => Promise<{ results: T[] }>;
+    };
+  };
+}
+
+/**
  * Configuration options for ChopUrl instance
  */
 export interface ChopUrlConfig {
   /** Base URL for generating short URLs (e.g., https://example.com) */
   baseUrl: string;
-  /** PostgreSQL Pool instance */
-  db: any;
+  /** Database instance */
+  db: Database;
 }
 
 /**
@@ -45,7 +58,7 @@ export enum ChopUrlErrorCode {
   URL_NOT_FOUND = 'URL_NOT_FOUND',
   INVALID_URL = 'INVALID_URL',
   DATABASE_ERROR = 'DATABASE_ERROR',
-  INVALID_SHORT_ID = 'INVALID_SHORT_ID'
+  INVALID_SHORT_ID = 'INVALID_SHORT_ID',
 }
 
 declare global {
@@ -74,4 +87,4 @@ declare global {
     lastRowId?: number;
     changes?: number;
   }
-} 
+}
