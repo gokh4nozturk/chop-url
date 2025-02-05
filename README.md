@@ -1,53 +1,70 @@
-# Chop URL Monorepo
+# Chop URL
 
-This monorepo contains the following packages:
+A modern, scalable URL shortening service built with a microservices architecture.
 
-- `@chop-url/backend`: The backend service for URL shortening (Cloudflare Workers)
-- `@chop-url/frontend`: The frontend application (to be implemented)
-- `@chop-url/lib`: The core URL shortening library that can be used as an NPM package
+## Overview
+
+Chop URL is a comprehensive URL shortening solution that includes:
+
+- Fast and reliable URL shortening service
+- Modern web interface
+- Reusable core library
+- Enterprise-grade features
 
 ## Project Structure
 
 ```
 packages/
-  ├── backend/        # Backend service (Cloudflare Workers)
-  ├── chop-url-fe/    # Frontend application
-  └── chop-url-lib/   # NPM package library
+  ├── backend/             # Backend service (Cloudflare Workers)
+  ├── chop-url-fe/         # Frontend application (Next.js)
+  ├── chop-url-lib/        # Core URL shortening library (NPM package)
+  └── chop-url-redirect/   # URL redirection service
 ```
+
+## Prerequisites
+
+- Node.js >= 18
+- pnpm >= 8
+- Cloudflare account (for deployment)
+- Vercel account (for frontend deployment)
 
 ## Development
 
 ### Installation
 
 ```bash
-npm install
+# Install pnpm if you haven't already
+npm install -g pnpm
+
+# Install dependencies
+pnpm install
 ```
 
-This will install dependencies for all packages.
-
-### Building
+### Available Scripts
 
 ```bash
-npm run build
+# Development
+pnpm dev              # Start all services in development mode
+
+# Building
+pnpm build           # Build all packages
+
+# Testing
+pnpm test            # Run tests for all packages
+
+# Code Quality
+pnpm format          # Check code formatting
+pnpm format:fix      # Fix code formatting
+pnpm lint            # Check code linting
+pnpm lint:fix        # Fix code linting issues
+
+# Deployment
+pnpm deploy:lib      # Deploy the core library
+pnpm deploy:backend  # Deploy the backend service
+pnpm deploy:redirect # Deploy the redirect service
+pnpm deploy:frontend # Deploy the frontend application
+pnpm deploy:all      # Deploy all services
 ```
-
-This will build all packages.
-
-### Testing
-
-```bash
-npm test
-```
-
-This will run tests for all packages.
-
-### Linting
-
-```bash
-npm run lint
-```
-
-This will run linting for all packages.
 
 ## Deployment
 
@@ -55,7 +72,7 @@ This will run linting for all packages.
 
 1. Install Wrangler CLI:
 ```bash
-npm i -g wrangler
+pnpm add -g wrangler
 ```
 
 2. Login to Cloudflare:
@@ -68,23 +85,18 @@ wrangler login
 wrangler d1 create chop_url_db
 ```
 
-4. Update the database_id in `wrangler.toml` with the ID from step 3.
+4. Update the database_id in `wrangler.toml`
 
 5. Deploy:
 ```bash
-npm run deploy:backend
-```
-
-For local development:
-```bash
-npm run dev:backend
+pnpm deploy:backend
 ```
 
 ### Frontend (Vercel)
 
 1. Install Vercel CLI:
 ```bash
-npm i -g vercel
+pnpm add -g vercel
 ```
 
 2. Login to Vercel:
@@ -94,29 +106,30 @@ vercel login
 
 3. Deploy:
 ```bash
-npm run deploy:frontend
-```
-
-### NPM Package
-
-1. Login to NPM:
-```bash
-npm login
-```
-
-2. Publish:
-```bash
-npm run publish:lib
+pnpm deploy:frontend
 ```
 
 ## Environment Variables
 
-### Backend (Cloudflare Workers)
-- `BASE_URL`: Base URL for short links (configured in wrangler.toml)
+### Backend
+- `BASE_URL`: Base URL for shortened links
+- `DATABASE_URL`: D1 database connection URL
 
 ### Frontend
 - `NEXT_PUBLIC_API_URL`: Backend API URL
+- `NEXT_PUBLIC_BASE_URL`: Base URL for the frontend application
+
+### Redirect Service
+- `BACKEND_URL`: URL of the backend service
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-MIT 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
