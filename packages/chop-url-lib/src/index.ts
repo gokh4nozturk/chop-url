@@ -83,9 +83,7 @@ export class ChopUrl {
     this.db = config.db;
   }
 
-  async createShortUrl(
-    url: string
-  ): Promise<{
+  async createShortUrl(url: string): Promise<{
     shortId: string;
     originalUrl: string;
     shortUrl: string;
