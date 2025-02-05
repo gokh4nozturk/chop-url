@@ -130,7 +130,7 @@ export default function Home() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center relative overflow-hidden bg-gradient-to-b from-background via-background to-background/80">
+    <main className="flex min-h-[calc(100vh-theme(spacing.header))] flex-col items-center justify-center relative overflow-hidden bg-gradient-to-b from-background via-background to-background/80">
       {/* Decorative background elements */}
       <div className="absolute inset-0 w-full h-full overflow-hidden">
         <div className="absolute -inset-[10px] bg-gradient-to-r from-[#FF0080]/5 via-[#7928CA]/5 to-[#FF0080]/5 dark:from-[#FF0080]/10 dark:via-[#7928CA]/10 dark:to-[#FF0080]/10 blur-2xl opacity-20 animate-gradient bg-300% pointer-events-none" />

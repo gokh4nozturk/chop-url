@@ -1,20 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { ThemeSwitcher } from "./theme-switcher";
-import { LogIn, LogOut } from "lucide-react";
+import { LogIn } from "lucide-react";
 import Image from "next/image";
+import UserMenu from "./user-menu";
 
 export function Navbar() {
   const { user, loading, logout } = useAuth();
@@ -27,7 +20,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 flex z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="w-full mx-8 flex h-16 items-center justify-between">
+      <div className="w-full mx-8 flex h-header items-center justify-between">
         <div className="flex items-center gap-6">
           <Link 
             href="/" 
@@ -52,28 +45,7 @@ export function Navbar() {
             <div className="w-24 h-8 bg-muted animate-pulse rounded" />
           ) : user ? (
             <div className="flex items-center space-x-4">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative size-9 p-0 rounded-full">
-                    <Avatar className="size-9">
-                      <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.email}`} />
-                      <AvatarFallback>{user.email.substring(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <div className="flex items-center justify-start gap-2 p-2">
-                    <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium">{user.email}</p>
-                    </div>
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-red-600 dark:text-red-400">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span className="hidden sm:inline-block">Logout</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <UserMenu user={user} handleLogout={handleLogout} />
             </div>
           ) : (
             <div className="flex items-center space-x-2">
