@@ -53,12 +53,12 @@ jobs:
         run: cd packages/chop-url-lib && pnpm run build
         
       - name: Test lib package
-        run: cd packages/chop-url-lib && pnpm run test
+        run: cd packages/chop-url-lib && pnpm run test:coverage
         
       - name: Show lib coverage
         run: |
           echo "## Lib Package Test Coverage" >> $GITHUB_STEP_SUMMARY
-          cat packages/chop-url-lib/coverage/coverage-summary.txt >> $GITHUB_STEP_SUMMARY
+          cat packages/chop-url-lib/coverage/text-summary.txt >> $GITHUB_STEP_SUMMARY || echo "No coverage report found" >> $GITHUB_STEP_SUMMARY
 
   backend:
     needs: lib
@@ -83,12 +83,12 @@ jobs:
         run: cd packages/chop-url-lib && pnpm run build
         
       - name: Test backend
-        run: cd packages/backend && pnpm run test
+        run: cd packages/backend && pnpm run test:coverage
         
       - name: Show backend coverage
         run: |
           echo "## Backend Test Coverage" >> $GITHUB_STEP_SUMMARY
-          cat packages/backend/coverage/coverage-summary.txt >> $GITHUB_STEP_SUMMARY
+          cat packages/backend/coverage/text-summary.txt >> $GITHUB_STEP_SUMMARY || echo "No coverage report found" >> $GITHUB_STEP_SUMMARY
 
   frontend:
     needs: lib
@@ -113,12 +113,12 @@ jobs:
         run: cd packages/chop-url-lib && pnpm run build
         
       - name: Test frontend
-        run: cd packages/chop-url-fe && pnpm run test
+        run: cd packages/chop-url-fe && pnpm run test:coverage
         
       - name: Show frontend coverage
         run: |
           echo "## Frontend Test Coverage" >> $GITHUB_STEP_SUMMARY
-          cat packages/chop-url-fe/coverage/coverage-summary.txt >> $GITHUB_STEP_SUMMARY
+          cat packages/chop-url-fe/coverage/text-summary.txt >> $GITHUB_STEP_SUMMARY || echo "No coverage report found" >> $GITHUB_STEP_SUMMARY
 
   build:
     needs: [lint, lib, backend, frontend]
