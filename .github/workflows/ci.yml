@@ -7,7 +7,31 @@ on:
     branches: [master]
 
 jobs:
-  test:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          
+      - name: Install dependencies
+        run: pnpm install
+        
+      - name: Run linting
+        run: pnpm lint
+        
+      - name: Check formatting
+        run: pnpm format
+
+  lib:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,25 +52,85 @@ jobs:
       - name: Build lib package
         run: cd packages/chop-url-lib && pnpm run build
         
-      - name: Run tests
-        run: pnpm test
+      - name: Test lib package
+        run: cd packages/chop-url-lib && pnpm run test
         
-      - name: Run linting
-        run: pnpm lint
-        
-      - name: Check formatting
-        run: pnpm format
-        
-      - name: Upload coverage reports
+      - name: Upload lib coverage
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./packages/*/coverage/coverage-final.json
-          flags: unittests
+          files: ./packages/chop-url-lib/coverage/coverage-final.json
+          flags: lib
+          fail_ci_if_error: true
+
+  backend:
+    needs: lib
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          
+      - name: Install dependencies
+        run: pnpm install
+        
+      - name: Build lib package
+        run: cd packages/chop-url-lib && pnpm run build
+        
+      - name: Test backend
+        run: cd packages/backend && pnpm run test
+        
+      - name: Upload backend coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./packages/backend/coverage/coverage-final.json
+          flags: backend
+          fail_ci_if_error: true
+
+  frontend:
+    needs: lib
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          
+      - name: Install dependencies
+        run: pnpm install
+        
+      - name: Build lib package
+        run: cd packages/chop-url-lib && pnpm run build
+        
+      - name: Test frontend
+        run: cd packages/chop-url-fe && pnpm run test
+        
+      - name: Upload frontend coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./packages/chop-url-fe/coverage/coverage-final.json
+          flags: frontend
           fail_ci_if_error: true
 
   build:
-    needs: test
+    needs: [lint, lib, backend, frontend]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
