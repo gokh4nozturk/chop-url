@@ -22,6 +22,20 @@ jobs:
         with:
           version: 8
           
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+          
       - name: Install dependencies
         run: pnpm install
         
@@ -31,7 +45,7 @@ jobs:
       - name: Check formatting
         run: pnpm format
 
-  lib:
+  build-lib:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,35 +60,19 @@ jobs:
         with:
           version: 8
           
-      - name: Install dependencies
-        run: pnpm install
-        
-      - name: Build lib package
-        run: cd packages/chop-url-lib && pnpm run build
-        
-      - name: Test lib package
-        run: cd packages/chop-url-lib && pnpm run test:coverage
-        
-      - name: Show lib coverage
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
         run: |
-          echo "## Lib Package Test Coverage" >> $GITHUB_STEP_SUMMARY
-          cat packages/chop-url-lib/coverage/text-summary.txt >> $GITHUB_STEP_SUMMARY || echo "No coverage report found" >> $GITHUB_STEP_SUMMARY
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
 
-  backend:
-    needs: lib
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
         with:
-          node-version: '20'
-          
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 8
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
           
       - name: Install dependencies
         run: pnpm install
@@ -82,17 +80,19 @@ jobs:
       - name: Build lib package
         run: cd packages/chop-url-lib && pnpm run build
         
-      - name: Test backend
-        run: cd packages/backend && pnpm run test:coverage
-        
-      - name: Show backend coverage
-        run: |
-          echo "## Backend Test Coverage" >> $GITHUB_STEP_SUMMARY
-          cat packages/backend/coverage/text-summary.txt >> $GITHUB_STEP_SUMMARY || echo "No coverage report found" >> $GITHUB_STEP_SUMMARY
+      - name: Upload lib build
+        uses: actions/upload-artifact@v4
+        with:
+          name: lib-build
+          path: packages/chop-url-lib/dist
+          retention-days: 1
 
-  frontend:
-    needs: lib
+  test:
+    needs: build-lib
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: [lib, backend, frontend]
     steps:
       - uses: actions/checkout@v4
       
@@ -106,22 +106,39 @@ jobs:
         with:
           version: 8
           
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+          
       - name: Install dependencies
         run: pnpm install
+
+      - name: Download lib build
+        uses: actions/download-artifact@v4
+        with:
+          name: lib-build
+          path: packages/chop-url-lib/dist
         
-      - name: Build lib package
-        run: cd packages/chop-url-lib && pnpm run build
+      - name: Run tests
+        run: cd packages/chop-url-${{ matrix.package }} && pnpm run test:coverage
         
-      - name: Test frontend
-        run: cd packages/chop-url-fe && pnpm run test:coverage
-        
-      - name: Show frontend coverage
+      - name: Show coverage
         run: |
-          echo "## Frontend Test Coverage" >> $GITHUB_STEP_SUMMARY
-          cat packages/chop-url-fe/coverage/text-summary.txt >> $GITHUB_STEP_SUMMARY || echo "No coverage report found" >> $GITHUB_STEP_SUMMARY
+          echo "## ${{ matrix.package }} Test Coverage" >> $GITHUB_STEP_SUMMARY
+          cat packages/chop-url-${{ matrix.package }}/coverage/text-summary.txt >> $GITHUB_STEP_SUMMARY || echo "No coverage report found" >> $GITHUB_STEP_SUMMARY
 
   build:
-    needs: [lint, lib, backend, frontend]
+    needs: [lint, test]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
@@ -137,8 +154,28 @@ jobs:
         with:
           version: 8
           
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+          
       - name: Install dependencies
         run: pnpm install
+
+      - name: Download lib build
+        uses: actions/download-artifact@v4
+        with:
+          name: lib-build
+          path: packages/chop-url-lib/dist
         
       - name: Build packages
         run: pnpm build
@@ -160,8 +197,28 @@ jobs:
         with:
           version: 8
           
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+          
       - name: Install dependencies
         run: pnpm install
+
+      - name: Download lib build
+        uses: actions/download-artifact@v4
+        with:
+          name: lib-build
+          path: packages/chop-url-lib/dist
         
       - name: Deploy to Cloudflare Workers
         env:
@@ -186,8 +243,28 @@ jobs:
         with:
           version: 8
           
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+          
       - name: Install dependencies
         run: pnpm install
+
+      - name: Download lib build
+        uses: actions/download-artifact@v4
+        with:
+          name: lib-build
+          path: packages/chop-url-lib/dist
         
       - name: Deploy to Vercel
         env:
@@ -214,13 +291,30 @@ jobs:
         with:
           version: 8
           
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+          
       - name: Install dependencies
         run: pnpm install
-        
-      - name: Build library
-        run: pnpm deploy:lib
+
+      - name: Download lib build
+        uses: actions/download-artifact@v4
+        with:
+          name: lib-build
+          path: packages/chop-url-lib/dist
         
       - name: Publish to NPM
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: cd packages/chop-url-lib && pnpm publish --no-git-checks 
+        run: cd packages/chop-url-lib && pnpm publish --no-git-checks
