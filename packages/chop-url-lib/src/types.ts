@@ -41,9 +41,8 @@ export interface IUrlInfo {
  */
 export class ChopUrlError extends Error {
   constructor(
-    message: string,
     public code: ChopUrlErrorCode,
-    public details?: Record<string, unknown>
+    message: string
   ) {
     super(message);
     this.name = 'ChopUrlError';
@@ -54,8 +53,8 @@ export class ChopUrlError extends Error {
  * Error codes for ChopUrl operations
  */
 export enum ChopUrlErrorCode {
-  URL_NOT_FOUND = 'URL_NOT_FOUND',
   INVALID_URL = 'INVALID_URL',
+  URL_NOT_FOUND = 'URL_NOT_FOUND',
   DATABASE_ERROR = 'DATABASE_ERROR',
   INVALID_SHORT_ID = 'INVALID_SHORT_ID',
   INVALID_BASE_URL = 'INVALID_BASE_URL',
