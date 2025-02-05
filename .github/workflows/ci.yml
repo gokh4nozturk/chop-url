@@ -92,7 +92,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        package: [lib, backend, frontend]
+        package: [lib, backend, frontend, redirect]
         include:
           - package: frontend
             test_dir: packages/chop-url-fe
@@ -100,6 +100,8 @@ jobs:
             test_dir: packages/backend
           - package: lib
             test_dir: packages/chop-url-lib
+          - package: redirect
+            test_dir: packages/chop-url-redirect
     steps:
       - uses: actions/checkout@v4
       
@@ -327,3 +329,49 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: cd packages/chop-url-lib && pnpm publish --no-git-checks
+
+  deploy-redirect:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+          
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Download lib build
+        uses: actions/download-artifact@v4
+        with:
+          name: lib-build
+          path: packages/chop-url-lib/dist
+        
+      - name: Deploy to Cloudflare Workers
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm deploy:redirect
