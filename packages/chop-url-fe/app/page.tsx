@@ -11,7 +11,7 @@ const GradientText = ({ children, className }: { children: React.ReactNode, clas
   return (
     <span className={cn(
       "inline-block bg-clip-text text-transparent bg-300% animate-gradient",
-      "bg-gradient-to-r from-[#00DFD8] via-[#007CF0] to-[#00DFD8]",
+      "bg-gradient-to-r from-[#FF0080] via-[#7928CA] to-[#FF0080]",
       "font-black",
       className
     )}>
@@ -148,7 +148,7 @@ export default function Home() {
                 placeholder="Enter your long URL"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="pl-10 h-12 text-base"
+                className="pl-10 h-12 text-base transition-all duration-300 border-0 hover:border-[#FF0080] focus:border-[#FF0080] focus:ring-2 focus:ring-[#FF0080]/20"
                 required
                 autoFocus
               />
@@ -161,7 +161,7 @@ export default function Home() {
                 placeholder="Custom slug (optional)"
                 value={customSlug}
                 onChange={(e) => setCustomSlug(e.target.value)}
-                className="pl-10 h-12 text-base"
+                className="pl-10 h-12 text-base transition-all duration-300 border-0 hover:border-[#7928CA] focus:border-[#7928CA] focus:ring-2 focus:ring-[#7928CA]/20"
               />
             </div>
           </div>
@@ -169,7 +169,9 @@ export default function Home() {
           <Button
             type="submit"
             size="lg"
-            className="w-full text-base"
+            className="w-full text-base font-semibold relative overflow-hidden transition-all duration-300
+              bg-gradient-to-r from-[#FF0080] via-[#7928CA] to-[#FF0080] bg-300% animate-gradient text-white
+              hover:shadow-[0_0_20px_rgba(255,0,128,0.4)] hover:scale-[1.02] active:scale-[0.98]"
             disabled={isLoading}
           >
             {isLoading ? "Chopping..." : "Chop!"}
@@ -191,21 +193,21 @@ export default function Home() {
                       variant="ghost"
                       size="icon"
                       onClick={copyToClipboard}
-                      className="h-10 w-10"
+                      className="h-10 w-10 rounded-full transition-all duration-300 hover:bg-gradient-to-r hover:from-[#FF0080]/10 hover:to-[#7928CA]/10"
                     >
                       {copied ? (
                         <Check className="h-5 w-5 text-green-500" />
                       ) : (
-                        <Copy className="h-5 w-5" />
+                        <Copy className="h-5 w-5 text-[#FF0080] transition-colors" />
                       )}
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={fetchStats}
-                      className="h-10 w-10"
+                      className="h-10 w-10 rounded-full transition-all duration-300 hover:bg-gradient-to-r hover:from-[#7928CA]/10 hover:to-[#FF0080]/10"
                     >
-                      <BarChart2 className="h-5 w-5" />
+                      <BarChart2 className="h-5 w-5 text-[#7928CA] transition-colors" />
                     </Button>
                   </div>
                 </div>

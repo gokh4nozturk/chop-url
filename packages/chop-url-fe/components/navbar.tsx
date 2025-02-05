@@ -47,15 +47,15 @@ export function Navbar() {
             </span>
           </Link>
         </div>
-        <div className="flex flex-1 items-center justify-end space-x-4">
+        <div className="flex flex-1 items-center justify-end sm:space-x-2">
           {loading ? (
             <div className="w-24 h-8 bg-muted animate-pulse rounded" />
           ) : user ? (
             <div className="flex items-center space-x-4">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-9 w-9 p-0">
-                    <Avatar className="h-9 w-9">
+                  <Button variant="ghost" className="relative size-9 p-0 rounded-full">
+                    <Avatar className="size-9">
                       <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.email}`} />
                       <AvatarFallback>{user.email.substring(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
@@ -70,7 +70,7 @@ export function Navbar() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="text-red-600 dark:text-red-400">
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>Logout</span>
+                    <span className="hidden sm:inline-block">Logout</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -79,8 +79,8 @@ export function Navbar() {
             <div className="flex items-center space-x-2">
               <Button variant="ghost" asChild>
                 <Link href="/login">
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Login
+                  <LogIn className="sm:mr-2 h-4 w-4" />
+                  <span className="hidden sm:inline-block">Login</span>
                 </Link>
               </Button>
             </div>
