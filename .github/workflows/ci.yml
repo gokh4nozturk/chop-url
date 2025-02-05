@@ -55,13 +55,10 @@ jobs:
       - name: Test lib package
         run: cd packages/chop-url-lib && pnpm run test
         
-      - name: Upload lib coverage
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./packages/chop-url-lib/coverage/coverage-final.json
-          flags: lib
-          fail_ci_if_error: true
+      - name: Show lib coverage
+        run: |
+          echo "## Lib Package Test Coverage" >> $GITHUB_STEP_SUMMARY
+          cat packages/chop-url-lib/coverage/coverage-summary.txt >> $GITHUB_STEP_SUMMARY
 
   backend:
     needs: lib
@@ -88,13 +85,10 @@ jobs:
       - name: Test backend
         run: cd packages/backend && pnpm run test
         
-      - name: Upload backend coverage
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./packages/backend/coverage/coverage-final.json
-          flags: backend
-          fail_ci_if_error: true
+      - name: Show backend coverage
+        run: |
+          echo "## Backend Test Coverage" >> $GITHUB_STEP_SUMMARY
+          cat packages/backend/coverage/coverage-summary.txt >> $GITHUB_STEP_SUMMARY
 
   frontend:
     needs: lib
@@ -121,13 +115,10 @@ jobs:
       - name: Test frontend
         run: cd packages/chop-url-fe && pnpm run test
         
-      - name: Upload frontend coverage
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./packages/chop-url-fe/coverage/coverage-final.json
-          flags: frontend
-          fail_ci_if_error: true
+      - name: Show frontend coverage
+        run: |
+          echo "## Frontend Test Coverage" >> $GITHUB_STEP_SUMMARY
+          cat packages/chop-url-fe/coverage/coverage-summary.txt >> $GITHUB_STEP_SUMMARY
 
   build:
     needs: [lint, lib, backend, frontend]
