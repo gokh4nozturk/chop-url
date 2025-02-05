@@ -14,6 +14,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { ThemeSwitcher } from "./theme-switcher";
 import { LogIn, LogOut } from "lucide-react";
+import Image from "next/image";
 
 export function Navbar() {
   const { user, loading, logout } = useAuth();
@@ -26,10 +27,24 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 flex z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-     <div className="flex h-16 items-center mx-8 w-full justify-between">
-      <div className="flex items-center">
-          <Link className="mr-6 flex items-center space-x-2 hover:opacity-80 transition-opacity" href="/">
-            <span className="font-bold text-xl">Chop URL</span>
+      <div className="w-full mx-8 flex h-16 items-center justify-between">
+        <div className="flex items-center gap-6">
+          <Link 
+            href="/" 
+            className="inline-flex items-center gap-2 hover:opacity-90 transition-opacity"
+          >
+            <div className="relative w-9 h-9">
+              <Image
+                src="/icon.svg"
+                alt="Chop URL Logo"
+                fill
+                priority
+                className="object-contain"
+              />
+            </div>
+            <span className="font-semibold text-xl tracking-tight hidden sm:inline-block">
+              Chop URL
+            </span>
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-4">
