@@ -168,9 +168,9 @@ export default function Home() {
 
           <Button
             type="submit"
-            className="w-full text-base font-semibold relative overflow-hidden transition-all duration-300
-              bg-gradient-to-r from-[#FF0080] via-[#7928CA] to-[#FF0080] bg-300% animate-gradient text-white
-              hover:shadow-[0_0_20px_rgba(255,0,128,0.4)] hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full text-sm font-semibold relative overflow-hidden transition-all duration-300
+              animate-gradient bg-gradient-to-r from-foreground from-40% to-foreground to-60% bg-[length:200%_100%] text-white
+              hover:shadow-[0_0_20px_rgba(255,0,128,0.4)] hover:scale-[1.01] active:scale-[0.99]"
             disabled={isLoading}
           >
             {isLoading ? "Chopping..." : "Chop!"}
