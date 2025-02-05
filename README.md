@@ -1,6 +1,8 @@
 # Chop URL
 
-A modern, scalable URL shortening service built with a microservices architecture.
+[![CI/CD](https://github.com/gokh4nozturk/chop-url/actions/workflows/ci.yml/badge.svg)](https://github.com/gokh4nozturk/chop-url/actions/workflows/ci.yml)
+
+A modern, scalable URL shortening service built with serverless architecture using Cloudflare Workers and Vercel.
 
 ## Overview
 
