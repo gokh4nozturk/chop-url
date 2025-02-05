@@ -31,17 +31,31 @@ CREATE TABLE IF NOT EXISTS urls (
     user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     last_accessed_at DATETIME,
-    visit_count INTEGER DEFAULT 0
+    visit_count INTEGER DEFAULT 0,
+    expires_at DATETIME,
+    is_active BOOLEAN DEFAULT TRUE
 );
 
--- Create visits table
+-- Create visits table with enhanced analytics
 CREATE TABLE IF NOT EXISTS visits (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     url_id INTEGER REFERENCES urls(id) ON DELETE CASCADE,
     visited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     ip_address TEXT,
     user_agent TEXT,
-    referrer TEXT
+    referrer TEXT,
+    country TEXT,
+    city TEXT,
+    device_type TEXT,
+    browser TEXT,
+    browser_version TEXT,
+    os TEXT,
+    os_version TEXT,
+    utm_source TEXT,
+    utm_medium TEXT,
+    utm_campaign TEXT,
+    utm_term TEXT,
+    utm_content TEXT
 );
 
 -- Create indexes
@@ -50,6 +64,9 @@ CREATE INDEX IF NOT EXISTS idx_urls_custom_slug ON urls(custom_slug);
 CREATE INDEX IF NOT EXISTS idx_urls_user_id ON urls(user_id);
 CREATE INDEX IF NOT EXISTS idx_visits_url_id ON visits(url_id);
 CREATE INDEX IF NOT EXISTS idx_visits_visited_at ON visits(visited_at);
+CREATE INDEX IF NOT EXISTS idx_visits_country ON visits(country);
+CREATE INDEX IF NOT EXISTS idx_visits_device_type ON visits(device_type);
+CREATE INDEX IF NOT EXISTS idx_visits_browser ON visits(browser);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
