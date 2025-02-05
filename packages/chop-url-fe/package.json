@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "clean": "rm -rf .next",
-    "deploy": "pnpm run clean && pnpm run build && vercel --prod"
+    "deploy": "pnpm run clean && pnpm run build && vercel --prod",
+    "generate-favicon": "node scripts/generate-favicon.js",
+    "generate-og": "node scripts/generate-og-image.js",
+    "generate-assets": "pnpm run generate-favicon && pnpm run generate-og"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.2",
@@ -23,7 +26,8 @@
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
     "vercel": "^41.0.0",
-    "next-themes": "0.4.4"
+    "next-themes": "0.4.4",
+    "sharp": "^0.33.2"
   },
   "devDependencies": {
     "@types/node": "^20",
