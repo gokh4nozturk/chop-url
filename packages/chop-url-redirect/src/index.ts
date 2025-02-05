@@ -1,52 +1,54 @@
-interface Env {
-  DB: D1Database;
-  FRONTEND_URL: string;
-}
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import { HTTPException } from 'hono/http-exception';
 
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url);
-    const shortId = url.pathname.slice(1);
+const app = new Hono();
 
-    // If no shortId is provided or it's empty, redirect to frontend
-    if (!shortId || shortId.trim() === '') {
-      return Response.redirect(env.FRONTEND_URL, 301);
+app.use('*', cors());
+
+app.get('/health', (c) => c.json({ status: 'ok' }));
+
+app.get('/:shortId', async (c) => {
+  const shortId = c.req.param('shortId');
+
+  // TODO: Replace with actual KV store lookup
+  const mockKV = new Map([['abc123', 'https://example.com']]);
+
+  const originalUrl = mockKV.get(shortId);
+
+  if (!originalUrl) {
+    return c.json({ message: 'Short URL not found' }, 404);
+  }
+
+  // Create a redirect response directly
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: originalUrl,
+    },
+  });
+});
+
+app.post('/api/shorten', async (c) => {
+  try {
+    const { url } = await c.req.json();
+
+    if (!url) {
+      return c.json({ message: 'URL is required' }, 400);
     }
 
-    try {
-      const result = await env.DB.prepare(
-        'SELECT original_url FROM urls WHERE short_id = ?'
-      )
-        .bind(shortId)
-        .first<{ original_url: string }>();
+    // Mock response for now
+    return c.json(
+      {
+        shortId: 'abc123',
+        shortUrl: 'https://example.com/abc123',
+        originalUrl: url,
+      },
+      200
+    );
+  } catch (error) {
+    return c.json({ message: 'Internal server error' }, 500);
+  }
+});
 
-      if (!result) {
-        // If shortId is not found, redirect to frontend with the shortId as query param
-        const redirectUrl = new URL(env.FRONTEND_URL);
-        redirectUrl.searchParams.set(
-          'error',
-          `Short URL '${shortId}' not found`
-        );
-        return Response.redirect(redirectUrl.toString(), 301);
-      }
-
-      // Log visit asynchronously
-      env.DB.prepare(
-        'UPDATE urls SET visit_count = visit_count + 1, last_accessed_at = CURRENT_TIMESTAMP WHERE short_id = ?'
-      )
-        .bind(shortId)
-        .run();
-
-      return Response.redirect(result.original_url, 301);
-    } catch (error) {
-      console.error('Error retrieving URL:', error);
-      // If there's an error, redirect to frontend with error message
-      const redirectUrl = new URL(env.FRONTEND_URL);
-      redirectUrl.searchParams.set(
-        'error',
-        'An error occurred while retrieving the URL'
-      );
-      return Response.redirect(redirectUrl.toString(), 301);
-    }
-  },
-};
+export default app;

@@ -2,9 +2,9 @@ name: CI/CD
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
 
 jobs:
   test:
@@ -33,6 +33,14 @@ jobs:
         
       - name: Check formatting
         run: pnpm format
+        
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./packages/*/coverage/coverage-final.json
+          flags: unittests
+          fail_ci_if_error: true
 
   build:
     needs: test

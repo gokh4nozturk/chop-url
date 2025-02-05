@@ -19,22 +19,21 @@ export interface ChopUrlConfig {
   baseUrl: string;
   /** Database instance */
   db: Database;
+  shortIdLength?: number;
 }
 
 /**
  * Information about a shortened URL
  */
-export interface UrlInfo {
-  /** Generated short ID */
-  shortId: string;
+export interface IUrlInfo {
   /** Original URL */
   originalUrl: string;
-  /** Complete short URL */
-  shortUrl: string;
   /** Creation timestamp */
   createdAt: Date;
   /** Number of visits */
-  visits: number;
+  visitCount: number;
+  /** Last access timestamp */
+  lastAccessedAt: Date;
 }
 
 /**
@@ -59,6 +58,8 @@ export enum ChopUrlErrorCode {
   INVALID_URL = 'INVALID_URL',
   DATABASE_ERROR = 'DATABASE_ERROR',
   INVALID_SHORT_ID = 'INVALID_SHORT_ID',
+  INVALID_BASE_URL = 'INVALID_BASE_URL',
+  CUSTOM_SLUG_TAKEN = 'CUSTOM_SLUG_TAKEN',
 }
 
 declare global {
