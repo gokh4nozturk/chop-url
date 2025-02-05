@@ -1,9 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-// Add Edge Runtime configuration
 export const runtime = 'edge';
 
-// Add CORS headers helper
 function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
@@ -21,43 +19,39 @@ export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders() });
 }
 
-export async function POST(request: Request) {
+interface RouteParams {
+  shortId: string;
+}
+
+interface StatsResponse {
+  clicks: number;
+  createdAt: string;
+  originalUrl: string;
+  shortId: string;
+}
+
+export async function GET(
+  request: NextRequest,
+  context: { params: RouteParams }
+) {
   try {
-    const body = await request.json();
+    const { shortId } = context.params;
 
-    if (!body || typeof body.url !== 'string') {
+    if (!shortId) {
       return NextResponse.json(
-        { error: 'Invalid request: URL is required' },
+        { error: 'Short ID is required' },
         { status: 400, headers: corsHeaders() }
       );
     }
 
-    const url = body.url.trim();
-
-    // Validate URL format
-    try {
-      new URL(url);
-    } catch (e) {
-      return NextResponse.json(
-        { error: 'Invalid URL format' },
-        { status: 400, headers: corsHeaders() }
-      );
-    }
-
-    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/shorten`;
+    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/stats/${shortId}`;
 
     const response = await fetch(backendUrl, {
-      method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         Accept: 'application/json',
         Origin: process.env.NEXT_PUBLIC_URL || 'http://localhost:3000',
       },
       credentials: 'include',
-      body: JSON.stringify({
-        url,
-        customSlug: body.customSlug,
-      }),
     });
 
     const responseText = await response.text();
@@ -70,12 +64,12 @@ export async function POST(request: Request) {
         errorData = { error: 'Failed to parse error response' };
       }
       return NextResponse.json(
-        { error: errorData?.error || 'Failed to create short URL' },
+        { error: errorData?.error || 'Failed to fetch stats' },
         { status: response.status, headers: corsHeaders() }
       );
     }
 
-    let data: { shortUrl: string; shortId: string } | undefined;
+    let data: StatsResponse;
     try {
       data = JSON.parse(responseText);
     } catch {
@@ -89,8 +83,7 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json(
       {
-        error:
-          error instanceof Error ? error.message : 'Failed to process request',
+        error: error instanceof Error ? error.message : 'Failed to fetch stats',
       },
       { status: 500, headers: corsHeaders() }
     );

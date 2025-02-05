@@ -26,20 +26,29 @@ type Variables = {
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
+// CORS middleware configuration
 app.use(
   '*',
   cors({
-    origin: '*',
-    credentials: true,
+    origin: '*', // Geliştirme aşamasında daha permissive yapalım
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowHeaders: [
       'Content-Type',
       'Authorization',
       'Accept',
       'Origin',
       'X-Requested-With',
+      'Access-Control-Allow-Origin',
+      'Access-Control-Allow-Credentials',
     ],
-    exposeHeaders: ['Content-Type', 'Authorization'],
-    maxAge: 3600,
+    exposeHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Access-Control-Allow-Origin',
+      'Access-Control-Allow-Credentials',
+    ],
+    credentials: true,
+    maxAge: 86400,
   })
 );
 

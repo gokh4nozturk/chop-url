@@ -92,19 +92,17 @@ export default function Home() {
         throw new Error('Cannot shorten URLs from this domain');
       }
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/shorten`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            url: urlToShorten,
-            customSlug: customSlug || undefined,
-          }),
-        }
-      );
+      const response = await fetch('/api/shorten', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          url: urlToShorten,
+          customSlug: customSlug || undefined,
+        }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -140,9 +138,11 @@ export default function Home() {
 
     try {
       const shortId = shortenedUrl.split('/').pop();
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/stats/${shortId}`
-      );
+      const response = await fetch(`/api/stats/${shortId}`, {
+        headers: {
+          Accept: 'application/json',
+        },
+      });
 
       if (!response.ok) {
         throw new Error('Failed to fetch stats');
