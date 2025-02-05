@@ -148,7 +148,7 @@ export default function Home() {
                 placeholder="Enter your long URL"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="pl-10 h-12 text-base transition-all duration-300 border-0 hover:border-[#FF0080] focus:border-[#FF0080] focus:ring-2 focus:ring-[#FF0080]/20"
+                className="pl-10 h-10 text-sm transition-all duration-300 border-2 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:border-[#FF0080] focus:border-[#FF0080]"
                 required
                 autoFocus
               />
@@ -161,14 +161,13 @@ export default function Home() {
                 placeholder="Custom slug (optional)"
                 value={customSlug}
                 onChange={(e) => setCustomSlug(e.target.value)}
-                className="pl-10 h-12 text-base transition-all duration-300 border-0 hover:border-[#7928CA] focus:border-[#7928CA] focus:ring-2 focus:ring-[#7928CA]/20"
+                className="pl-10 h-10 text-sm transition-all duration-300 border-2 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:border-[#7928CA] focus:border-[#7928CA]"
               />
             </div>
           </div>
 
           <Button
             type="submit"
-            size="lg"
             className="w-full text-base font-semibold relative overflow-hidden transition-all duration-300
               bg-gradient-to-r from-[#FF0080] via-[#7928CA] to-[#FF0080] bg-300% animate-gradient text-white
               hover:shadow-[0_0_20px_rgba(255,0,128,0.4)] hover:scale-[1.02] active:scale-[0.98]"
