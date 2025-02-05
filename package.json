@@ -9,10 +9,26 @@
     "deploy:backend": "cd packages/backend && pnpm run deploy",
     "deploy:redirect": "cd packages/chop-url-redirect && pnpm run deploy",
     "deploy:frontend": "cd packages/chop-url-fe && pnpm run deploy",
-    "deploy:all": "pnpm run deploy:lib && pnpm run deploy:backend && pnpm run deploy:redirect && pnpm run deploy:frontend"
+    "deploy:all": "pnpm run deploy:lib && pnpm run deploy:backend && pnpm run deploy:redirect && pnpm run deploy:frontend",
+    "format": "biome format .",
+    "format:fix": "biome format . --write",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint . --apply",
+    "prepare": "husky"
   },
   "engines": {
     "node": ">=18",
     "pnpm": ">=8"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.5.3",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "biome format --write",
+      "biome lint --apply"
+    ]
   }
-} 
+}
