@@ -19,13 +19,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn(inter.className, "min-h-screen bg-background")}>
-
-          <Providers>
+      <body className={cn(inter.className, "min-h-screen bg-background antialiased")}>
+        <Providers>
+          <div className="relative flex min-h-screen flex-col bg-gradient-to-b from-background/10 via-background/50 to-background/80">
             <Navbar />
-            {children}
-          </Providers>
-
+            <div className="flex-1 flex flex-col">
+              {children}
+            </div>
+          </div>
+        </Providers>
       </body>
     </html>
   );

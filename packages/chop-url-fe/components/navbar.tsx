@@ -7,10 +7,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
+import { ThemeSwitcher } from "./theme-switcher";
+import { LogIn, LogOut } from "lucide-react";
 
 export function Navbar() {
   const { user, loading, logout } = useAuth();
@@ -22,46 +25,52 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
-        <div className="mr-4 flex">
-          <Link className="mr-6 flex items-center space-x-2" href="/">
-            <span className="font-bold">Chop URL</span>
+    <header className="sticky top-0 flex z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+     <div className="flex h-16 items-center mx-8 w-full justify-between">
+      <div className="flex items-center">
+          <Link className="mr-6 flex items-center space-x-2 hover:opacity-80 transition-opacity" href="/">
+            <span className="font-bold text-xl">Chop URL</span>
           </Link>
         </div>
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+        <div className="flex flex-1 items-center justify-end space-x-4">
           {loading ? (
-            <div className="w-24 h-8 bg-gray-200 animate-pulse rounded" />
+            <div className="w-24 h-8 bg-muted animate-pulse rounded" />
           ) : user ? (
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">{user.email}</span>
-              <Button variant="outline" onClick={handleLogout}>
-                Logout
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-9 w-9 p-0">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.email}`} />
+                      <AvatarFallback>{user.email.substring(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="flex items-center justify-start gap-2 p-2">
+                    <div className="flex flex-col space-y-1 leading-none">
+                      <p className="font-medium">{user.email}</p>
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-600 dark:text-red-400">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           ) : (
-            <>
+            <div className="flex items-center space-x-2">
               <Button variant="ghost" asChild>
-                <Link href="/login">Login</Link>
+                <Link href="/login">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Login
+                </Link>
               </Button>
-              <Button asChild>
-                <Link href="/register">Register</Link>
-              </Button>
-            </>
+            </div>
           )}
-          <DropdownMenu>
-            <DropdownMenuTrigger>
-              <Avatar>
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <Link href="/auth/signin">Sign in</Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ThemeSwitcher />
         </div>
       </div>
     </header>
