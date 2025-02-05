@@ -13,12 +13,27 @@ export default {
   			"300%": "300%",
   		},
   		animation: {
-  			gradient: "gradient 6s linear infinite",
+  			gradient: "gradient 8s linear infinite",
+  			blob: "blob 10s infinite",
   		},
   		keyframes: {
   			gradient: {
   				"0%": { backgroundPosition: "0% center" },
   				"100%": { backgroundPosition: "200% center" }
+  			},
+  			blob: {
+  				"0%": {
+  					transform: "translate(0px, 0px) scale(1)",
+  				},
+  				"33%": {
+  					transform: "translate(20px, -30px) scale(1.05)",
+  				},
+  				"66%": {
+  					transform: "translate(-15px, 15px) scale(0.95)",
+  				},
+  				"100%": {
+  					transform: "translate(0px, 0px) scale(1)",
+  				},
   			},
   		},
   		colors: {
@@ -67,7 +82,11 @@ export default {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
-  		}
+  		},
+  		transitionDelay: {
+  			'2000': '2000ms',
+  			'4000': '4000ms',
+  		},
   	}
   },
   plugins: [require("tailwindcss-animate")],
