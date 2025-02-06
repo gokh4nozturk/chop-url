@@ -56,7 +56,7 @@ export function Navbar() {
               </Button>
             </div>
           )}
-          {/* <ThemeSwitcher /> */}
+          <ThemeSwitcher />
         </div>
       </div>
     </header>

@@ -1,4 +1,11 @@
 import Image from 'next/image';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Brand Kit',
+  description:
+    'Resources for showcasing the Chop URL brand accurately and uniformly',
+};
 
 export default function BrandPage() {
   return (

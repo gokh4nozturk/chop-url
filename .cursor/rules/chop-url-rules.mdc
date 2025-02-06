@@ -7,7 +7,7 @@ globs:
 
 - Do not use ts type of any
 - Follow up biome rules
-- Use pnpm as workspace manager and package manager
+- Use [pnpm](https://pnpm.io/) as workspace manager and package manager
 - Follow up [issues](mdc:https:/github.com/gokh4nozturk/chop-url/issues)
 - Follow up [wiki](mdc:https:/github.com/gokh4nozturk/chop-url/wiki)
 
