@@ -1,27 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
   <!-- Background with gradient -->
-  <rect width="1200" height="630" fill="url(#gradient)" />
   <defs>
-    <linearGradient id="gradient" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" style="stop-color:#3B82F6" />
-      <stop offset="100%" style="stop-color:#2563EB" />
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EEF2FF"/>
+      <stop offset="100%" style="stop-color:#E0E7FF"/>
     </linearGradient>
   </defs>
-
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg-gradient)"/>
+  
   <!-- Logo -->
-  <g transform="translate(150, 165) scale(0.8)">
-    <rect width="300" height="300" rx="75" fill="white" fill-opacity="0.1" />
-    <path d="M75 150c0-31.14 25.2-56.34 56.34-56.34h56.32M225 150c0 31.14-25.2 56.34-56.34 56.34h-56.32" 
-      stroke="white" stroke-width="28" stroke-linecap="round" fill="none" />
-    <path d="M150 122l28 28-28 28M150 178l-28-28 28-28" 
-      stroke="white" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  <g transform="translate(100,215) scale(0.4)">
+    <circle cx="256" cy="256" r="256" fill="#2563EB"/>
+    <path d="M156 256 L356 256" stroke="white" stroke-width="40" stroke-linecap="round"/>
+    <path d="M256 176 L306 126 M256 176 L306 226" stroke="white" stroke-width="24" stroke-linecap="round"/>
+    <circle cx="256" cy="176" r="16" fill="white"/>
   </g>
-
+  
   <!-- Text -->
-  <text x="500" y="250" fill="white" font-family="Inter" font-size="80" font-weight="700">
+  <text x="400" y="315" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="72" fill="#18181B">
     Chop URL
   </text>
-  <text x="500" y="350" fill="white" fill-opacity="0.9" font-family="Inter" font-size="40" font-weight="400">
-    Modern URL Shortener Service
+  <text x="400" y="385" font-family="Inter, system-ui, sans-serif" font-weight="500" font-size="36" fill="#4B5563">
+    Fast and Secure URL Shortener
   </text>
 </svg> 

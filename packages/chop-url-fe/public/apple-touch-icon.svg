@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="180" height="180" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with gradient -->
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6"/>
+      <stop offset="100%" style="stop-color:#2563EB"/>
+    </linearGradient>
+  </defs>
+  
+  <circle cx="256" cy="256" r="256" fill="url(#bg-gradient)"/>
+  
+  <!-- Stylized elements with subtle shadow -->
+  <g filter="url(#shadow)">
+    <path d="M156 256 L356 256" stroke="white" stroke-width="40" stroke-linecap="round"/>
+    <path d="M256 176 L306 126 M256 176 L306 226" stroke="white" stroke-width="24" stroke-linecap="round"/>
+    <circle cx="256" cy="176" r="16" fill="white"/>
+  </g>
+  
+  <!-- Shadow filter -->
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+</svg> 

@@ -1,11 +1,7 @@
 {
   "name": "Chop URL",
   "short_name": "Chop URL",
-  "description": "Make your long URLs short and sweet",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "description": "Fast and secure URL shortener",
   "icons": [
     {
       "src": "/favicon-192.png",
@@ -29,5 +25,10 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "theme_color": "#2563EB",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/"
 } 
