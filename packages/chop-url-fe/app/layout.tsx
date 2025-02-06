@@ -7,6 +7,7 @@ import { Providers } from './providers';
 import { Navbar } from '@/components/navbar';
 import { useEffect } from 'react';
 import { useAuthStore } from '@/lib/store/auth';
+import { CloudflareAnalytics } from '@/components/analytics/CloudflareAnalytics';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -123,6 +124,7 @@ export default function RootLayout({
           <Navbar />
           {children}
         </Providers>
+        <CloudflareAnalytics />
       </body>
     </html>
   );
