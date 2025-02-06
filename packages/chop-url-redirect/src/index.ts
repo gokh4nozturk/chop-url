@@ -66,26 +66,4 @@ app.get('/:shortId', async (c) => {
   }
 });
 
-app.post('/api/shorten', async (c) => {
-  try {
-    const { url } = await c.req.json();
-
-    if (!url) {
-      return c.json({ message: 'URL is required' }, 400);
-    }
-
-    // Mock response for now
-    return c.json(
-      {
-        shortId: 'abc123',
-        shortUrl: 'https://example.com/abc123',
-        originalUrl: url,
-      },
-      200
-    );
-  } catch (error) {
-    return c.json({ message: 'Internal server error' }, 500);
-  }
-});
-
 export default app;

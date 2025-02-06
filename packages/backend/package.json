@@ -6,14 +6,12 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "wrangler dev --port 8787",
-    "build": "tsc",
-    "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
-    "setup": "ts-node src/setup-db.ts",
     "deploy": "wrangler deploy",
     "migrate": "wrangler d1 execute chop-url-db --file=schema.sql --remote",
+    "migrate:local": "wrangler d1 execute chop-url-db-local --file=schema.sql --local",
     "db:reset": "wrangler d1 execute chop-url-db --file=schema.sql"
   },
   "keywords": [
@@ -27,22 +25,14 @@
     "@chop-url/lib": "workspace:*",
     "@hono/zod-validator": "^0.4.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
     "hono": "^4.0.7",
     "nanoid": "^5.0.6",
-    "pg": "^8.11.3",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240208.0",
     "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
-    "@types/node": "^20.17.17",
-    "@types/pg": "^8.11.0",
     "@vitest/coverage-v8": "^1.3.1",
-    "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.3",
     "vitest": "^1.3.1",
     "wrangler": "^3.28.2"
