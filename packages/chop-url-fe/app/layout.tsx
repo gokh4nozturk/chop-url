@@ -1,9 +1,12 @@
+'use client';
+
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { cn } from '@/lib/utils';
 import { Providers } from './providers';
 import { Navbar } from '@/components/navbar';
+import { useEffect } from 'react';
+import { useAuthStore } from '@/lib/store/auth';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -93,9 +96,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
+  const initialize = useAuthStore((state) => state.initialize);
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -109,17 +118,10 @@ export default function RootLayout({
         <link rel="manifest" href="/site.webmanifest" />
         <link rel="canonical" href={process.env.NEXT_PUBLIC_APP_URL} />
       </head>
-      <body
-        className={cn(
-          inter.className,
-          'min-h-screen bg-background antialiased'
-        )}
-      >
+      <body className={inter.className}>
         <Providers>
-          <div className="relative flex min-h-screen flex-col bg-gradient-to-b from-background/10 via-background/50 to-background/80">
-            <Navbar />
-            <div className="flex-1 flex flex-col">{children}</div>
-          </div>
+          <Navbar />
+          {children}
         </Providers>
       </body>
     </html>

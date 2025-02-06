@@ -167,4 +167,57 @@ export const generateQRCode = async (text: string): Promise<string> => {
   return apiUrl;
 };
 
+export const generateTOTP = async (secret: string): Promise<string> => {
+  const time = Math.floor(Date.now() / 30000); // 30-second window
+  const counter = new ArrayBuffer(8);
+  const view = new DataView(counter);
+  view.setBigInt64(0, BigInt(time), false);
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    base32ToBuffer(secret),
+    { name: 'HMAC', hash: 'SHA-1' },
+    false,
+    ['sign']
+  );
+
+  const hmacBuffer = await crypto.subtle.sign('HMAC', key, counter);
+  const hmac = new Uint8Array(hmacBuffer);
+
+  const offset = hmac[hmac.length - 1] & 0xf;
+  const code =
+    (((hmac[offset] & 0x7f) << 24) |
+      ((hmac[offset + 1] & 0xff) << 16) |
+      ((hmac[offset + 2] & 0xff) << 8) |
+      (hmac[offset + 3] & 0xff)) %
+    1000000;
+
+  return code.toString().padStart(6, '0');
+};
+
+export const verifyTOTP = async (
+  code: string,
+  secret: string
+): Promise<boolean> => {
+  const currentCode = await generateTOTP(secret);
+  return code === currentCode;
+};
+
+const base32ToBuffer = (str: string): Uint8Array => {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  const binary = str
+    .toUpperCase()
+    .replace(/[^A-Z2-7]/g, '')
+    .split('')
+    .map((char) => alphabet.indexOf(char).toString(2).padStart(5, '0'))
+    .join('');
+
+  const bytes = new Uint8Array(Math.floor(binary.length / 8));
+  for (let i = 0; i < bytes.length; i++) {
+    bytes[i] = parseInt(binary.slice(i * 8, (i + 1) * 8), 2);
+  }
+
+  return bytes;
+};
+
 export * from './types';

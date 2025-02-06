@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 import { ThemeSwitcher } from './theme-switcher';
 import { LogIn } from 'lucide-react';
 import Image from 'next/image';
-import UserMenu from './user-menu';
 
 export function Navbar() {
   const { user, loading, logout } = useAuth();
@@ -45,7 +44,7 @@ export function Navbar() {
             <div className="w-24 h-8 bg-muted animate-pulse rounded" />
           ) : user ? (
             <div className="flex items-center space-x-4">
-              <UserMenu user={user} handleLogout={handleLogout} />
+              {/* <UserMenu user={user} handleLogout={handleLogout} /> */}
             </div>
           ) : (
             <div className="flex items-center space-x-2">
