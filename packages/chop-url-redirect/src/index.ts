@@ -14,6 +14,7 @@ app.use('*', cors());
 
 app.get('/health', (c) => c.json({ status: 'ok' }));
 
+// this endpoint is used to redirect the user to the original URL
 app.get('/:shortId', async (c) => {
   console.log('c.env.FRONTEND_URL', c.env.FRONTEND_URL);
   console.log('c.req.param', c.req.param('shortId'));
