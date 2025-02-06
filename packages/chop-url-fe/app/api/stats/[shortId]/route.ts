@@ -24,10 +24,10 @@ type Params = Promise<{
 }>;
 
 interface StatsResponse {
-  clicks: number;
+  visitCount: number;
+  lastAccessedAt: string | null;
   createdAt: string;
   originalUrl: string;
-  shortId: string;
 }
 
 export async function GET(

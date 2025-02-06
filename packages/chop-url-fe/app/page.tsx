@@ -37,13 +37,7 @@ interface UrlStats {
   visitCount: number;
   lastAccessedAt: string | null;
   createdAt: string;
-  expiresAt: string | null;
-  visits: {
-    visitedAt: string;
-    ipAddress: string | null;
-    userAgent: string | null;
-    referrer: string | null;
-  }[];
+  originalUrl: string;
 }
 
 export default function Home() {
@@ -335,16 +329,6 @@ export default function Home() {
                         </p>
                         <p className="text-base">
                           {new Date(stats.lastAccessedAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    )}
-                    {stats.expiresAt && (
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Expires At
-                        </p>
-                        <p className="text-base">
-                          {new Date(stats.expiresAt).toLocaleDateString()}
                         </p>
                       </div>
                     )}

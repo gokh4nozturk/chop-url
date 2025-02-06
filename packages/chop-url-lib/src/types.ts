@@ -33,7 +33,7 @@ export interface IUrlInfo {
   /** Number of visits */
   visitCount: number;
   /** Last access timestamp */
-  lastAccessedAt: Date;
+  lastAccessedAt: Date | null;
 }
 
 /**

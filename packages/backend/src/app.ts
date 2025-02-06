@@ -156,27 +156,6 @@ protectedAuth.post('/disable-2fa', async (c) => {
 app.route('/auth', auth);
 app.route('/auth', protectedAuth);
 
-// Protected API routes
-app.use('/api/*', async (c, next) => {
-  const token = c.req.header('Authorization')?.split(' ')[1];
-  if (!token) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
-
-  try {
-    const user = await c.var.services.authService.verifyToken(token);
-    c.set('user', user);
-    await next();
-  } catch (error) {
-    return c.json({ error: 'Invalid token' }, 401);
-  }
-});
-
-// Health check endpoint
-app.get('/health', (c) => {
-  return c.json({ status: 'ok' });
-});
-
 // Public URL routes
 app.post('/shorten', async (c) => {
   try {
@@ -196,6 +175,30 @@ app.post('/shorten', async (c) => {
   }
 });
 
+app.get('/api/stats/:shortId', async (c) => {
+  try {
+    const shortId = c.req.param('shortId');
+    const urlInfo = await c.var.services.chopUrl.getUrlInfo(shortId);
+
+    if (!urlInfo) {
+      return c.json({ error: 'URL not found' }, 404);
+    }
+
+    return c.json({
+      visitCount: urlInfo.visitCount,
+      lastAccessedAt: urlInfo.lastAccessedAt,
+      createdAt: urlInfo.createdAt,
+      originalUrl: urlInfo.originalUrl,
+    });
+  } catch (error) {
+    console.warn('Error fetching URL stats:', error);
+    if (error instanceof Error && error.message === 'URL not found') {
+      return c.json({ error: 'URL not found' }, 404);
+    }
+    return c.json({ error: 'Internal server error', errorMessage: error }, 500);
+  }
+});
+
 app.get('/:shortId', async (c) => {
   try {
     const shortId = c.req.param('shortId');
@@ -204,6 +207,13 @@ app.get('/:shortId', async (c) => {
     if (!originalUrl) {
       return c.json({ error: 'URL not found' }, 404);
     }
+
+    // Ziyaret sayısını artır
+    await c.env.DB.prepare(
+      'UPDATE urls SET visit_count = visit_count + 1, last_accessed_at = CURRENT_TIMESTAMP WHERE short_id = ?'
+    )
+      .bind(shortId)
+      .run();
 
     c.header('Location', originalUrl);
     return c.text('', 302);
@@ -215,10 +225,31 @@ app.get('/:shortId', async (c) => {
   }
 });
 
+// Protected API routes
+app.use('/api/*', async (c, next) => {
+  const token = c.req.header('Authorization')?.split(' ')[1];
+  if (!token) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const user = await c.var.services.authService.verifyToken(token);
+    c.set('user', user);
+    await next();
+  } catch (error) {
+    return c.json({ error: 'Invalid token' }, 401);
+  }
+});
+
 // Protected URL routes
 app.get('/api/urls', async (c) => {
   // TODO: Implement get user's URLs
   return c.json({ message: 'Not implemented' });
+});
+
+// Health check endpoint
+app.get('/health', (c) => {
+  return c.json({ status: 'ok' });
 });
 
 export default app;

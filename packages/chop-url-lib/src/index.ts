@@ -79,7 +79,7 @@ export class ChopUrl {
     }
 
     // Remove trailing slash from base URL
-    this.baseUrl = config.baseUrl.replace(/\/$/, '');
+    this.baseUrl = 'http://localhost:8788';
     this.db = config.db;
   }
 
@@ -144,7 +144,7 @@ export class ChopUrl {
         original_url: string;
         created_at: string;
         visit_count: number;
-        last_accessed_at: string;
+        last_accessed_at: string | null;
       }>();
 
     if (!result) {
@@ -155,7 +155,9 @@ export class ChopUrl {
       originalUrl: result.original_url,
       createdAt: new Date(result.created_at),
       visitCount: result.visit_count,
-      lastAccessedAt: new Date(result.last_accessed_at),
+      lastAccessedAt: result.last_accessed_at
+        ? new Date(result.last_accessed_at)
+        : null,
     };
   }
 }

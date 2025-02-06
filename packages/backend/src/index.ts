@@ -220,7 +220,7 @@ app.get('/api/stats/:shortId', async (c) => {
       db: c.env.DB,
     });
 
-    const stats = await chopUrl.getUrlStats(shortId);
+    const stats = await chopUrl.getUrlInfo(shortId);
     return c.json(stats);
   } catch (error) {
     if (error instanceof Error && error.message === 'URL not found') {
