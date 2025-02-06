@@ -6,8 +6,17 @@ import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons';
 import { navigation } from '@/lib/navigation';
+import { Suspense } from 'react';
 
 export default function VerifyEmailPage() {
+  return (
+    <Suspense>
+      <VerifyEmailContent />
+    </Suspense>
+  );
+}
+
+function VerifyEmailContent() {
   const { user, verifyEmail, resendVerificationEmail, isLoading, error } =
     useAuthStore();
   const searchParams = useSearchParams();

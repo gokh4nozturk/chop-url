@@ -2,8 +2,17 @@
 
 import { ResetPasswordForm } from '@/components/auth/ResetPasswordForm';
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 export default function ResetPasswordPage() {
+  return (
+    <Suspense>
+      <ResetPasswordContent />
+    </Suspense>
+  );
+}
+
+function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
 

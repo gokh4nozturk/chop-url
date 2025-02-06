@@ -80,6 +80,7 @@ const handler = NextAuth({
   },
   pages: {
     signIn: '/auth',
+    // TODO: Add a custom error page
     error: '/auth/error',
   },
 });

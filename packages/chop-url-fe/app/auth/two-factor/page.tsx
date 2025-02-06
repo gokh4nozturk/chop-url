@@ -7,8 +7,17 @@ import { Icons } from '@/components/icons';
 import { useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth';
 import { navigation } from '@/lib/navigation';
+import { Suspense } from 'react';
 
 export default function TwoFactorPage() {
+  return (
+    <Suspense>
+      <TwoFactorContent />
+    </Suspense>
+  );
+}
+
+function TwoFactorContent() {
   const [code, setCode] = useState('');
   const { verifyTwoFactorLogin, isLoading, error } = useAuthStore();
   const searchParams = useSearchParams();

@@ -19,9 +19,9 @@ export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders() });
 }
 
-interface RouteParams {
+type Params = Promise<{
   shortId: string;
-}
+}>;
 
 interface StatsResponse {
   clicks: number;
@@ -32,10 +32,10 @@ interface StatsResponse {
 
 export async function GET(
   request: NextRequest,
-  context: { params: RouteParams }
+  { params }: { params: Params }
 ) {
   try {
-    const { shortId } = context.params;
+    const { shortId } = await params;
 
     if (!shortId) {
       return NextResponse.json(
