@@ -8,8 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "clean": "rm -rf .next/cache",
-    "deploy": "npm run clean && next build && bunx wrangler pages deploy .next --project-name chop-url",
-    "deploy:prod": "npm run clean && NODE_ENV=production next build && bunx wrangler pages deploy .next --project-name chop-url --branch main",
+    "deploy": "npm run clean && vercel",
+    "deploy:prod": "npm run clean && vercel --prod",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage"
