@@ -33,6 +33,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Specify which paths the middleware should run on
-  matcher: [...protectedPaths, ...authPaths],
+  matcher: ['/dashboard', '/profile', '/settings', '/auth'],
 };
