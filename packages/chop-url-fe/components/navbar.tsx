@@ -40,22 +40,6 @@ export function Navbar() {
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-end sm:space-x-2">
-          {loading ? (
-            <div className="w-24 h-8 bg-muted animate-pulse rounded" />
-          ) : user ? (
-            <div className="flex items-center space-x-4">
-              {/* <UserMenu user={user} handleLogout={handleLogout} /> */}
-            </div>
-          ) : (
-            <div className="flex items-center space-x-2">
-              <Button variant="ghost" asChild>
-                <Link href="/login">
-                  <LogIn className="sm:mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline-block">Login</span>
-                </Link>
-              </Button>
-            </div>
-          )}
           <ThemeSwitcher />
         </div>
       </div>
