@@ -18,8 +18,12 @@ export default {
       },
       keyframes: {
         gradient: {
-          '0%': { backgroundPosition: '0% center' },
-          '100%': { backgroundPosition: '200% center' },
+          '0%': {
+            backgroundPosition: '0% center',
+          },
+          '100%': {
+            backgroundPosition: '200% center',
+          },
         },
         blob: {
           '0%': {

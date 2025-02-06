@@ -171,7 +171,7 @@ importers:
         version: 19.0.3(@types/react@19.0.8)
       '@types/webpack':
         specifier: ^5.28.5
-        version: 5.28.5
+        version: 5.28.5(esbuild@0.17.19)
       '@vitejs/plugin-react':
         specifier: ^4.2.1
         version: 4.3.4(vite@5.4.14(@types/node@20.17.17)(terser@5.37.0))
@@ -6420,11 +6420,11 @@ snapshots:
 
   '@types/strip-json-comments@0.0.30': {}
 
-  '@types/webpack@5.28.5':
+  '@types/webpack@5.28.5(esbuild@0.17.19)':
     dependencies:
       '@types/node': 20.17.17
       tapable: 2.2.1
-      webpack: 5.97.1
+      webpack: 5.97.1(esbuild@0.17.19)
     transitivePeerDependencies:
       - '@swc/core'
       - esbuild
@@ -9397,14 +9397,16 @@ snapshots:
       mkdirp: 3.0.1
       yallist: 5.0.0
 
-  terser-webpack-plugin@5.3.11(webpack@5.97.1):
+  terser-webpack-plugin@5.3.11(esbuild@0.17.19)(webpack@5.97.1(esbuild@0.17.19)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       jest-worker: 27.5.1
       schema-utils: 4.3.0
       serialize-javascript: 6.0.2
       terser: 5.37.0
-      webpack: 5.97.1
+      webpack: 5.97.1(esbuild@0.17.19)
+    optionalDependencies:
+      esbuild: 0.17.19
 
   terser@5.37.0:
     dependencies:
@@ -9775,7 +9777,7 @@ snapshots:
 
   webpack-sources@3.2.3: {}
 
-  webpack@5.97.1:
+  webpack@5.97.1(esbuild@0.17.19):
     dependencies:
       '@types/eslint-scope': 3.7.7
       '@types/estree': 1.0.6
@@ -9797,7 +9799,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 3.3.0
       tapable: 2.2.1
-      terser-webpack-plugin: 5.3.11(webpack@5.97.1)
+      terser-webpack-plugin: 5.3.11(esbuild@0.17.19)(webpack@5.97.1(esbuild@0.17.19))
       watchpack: 2.4.2
       webpack-sources: 3.2.3
     transitivePeerDependencies:
