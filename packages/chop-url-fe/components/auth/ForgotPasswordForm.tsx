@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Icons } from '@/components/icons';
-import { useAuthStore } from '@/lib/store/auth';
 import { navigation } from '@/lib/navigation';
+import { useAuthStore } from '@/lib/store/auth';
+import { useState } from 'react';
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState('');

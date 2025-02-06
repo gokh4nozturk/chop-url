@@ -16,9 +16,9 @@
     "deploy:all": "pnpm run deploy:lib && pnpm run deploy:backend && pnpm run deploy:redirect && pnpm run deploy:frontend",
     "deploy:all:prod": "pnpm run deploy:lib:prod && pnpm run deploy:backend:prod && pnpm run deploy:redirect:prod && pnpm run deploy:frontend:prod",
     "format": "biome format .",
-    "format:fix": "biome format . --write",
+    "format:fix": "biome format --write .",
     "lint": "biome lint .",
-    "lint:fix": "biome lint . --apply",
+    "lint:fix": "biome check --apply .",
     "prepare": "husky"
   },
   "engines": {

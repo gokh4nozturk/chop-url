@@ -1,7 +1,7 @@
+import type { D1Database } from '@cloudflare/workers-types';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
-import type { D1Database } from '@cloudflare/workers-types';
 
 interface Env {
   DB: D1Database;

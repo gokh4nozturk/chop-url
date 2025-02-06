@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { useAuthStore } from '@/lib/store/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { loginSchema, type LoginInput } from '@/lib/validations/auth';
+import { useAuthStore } from '@/lib/store/auth';
+import { type LoginInput, loginSchema } from '@/lib/validations/auth';
 import Link from 'next/link';
+import { useState } from 'react';
 
 interface ValidationError {
   path: string[];

@@ -1,5 +1,7 @@
+import { generateTOTP, verifyTOTP } from '@chop-url/lib';
 import { D1Database } from '@cloudflare/workers-types';
 import {
+  AuthAttemptType,
   AuthError,
   AuthErrorCode,
   IAuthResponse,
@@ -7,9 +9,7 @@ import {
   IRegisterCredentials,
   IUser,
   IUserRow,
-  AuthAttemptType,
 } from './types.js';
-import { generateTOTP, verifyTOTP } from '@chop-url/lib';
 
 const MAX_ATTEMPTS = 5; // Maximum number of attempts within the time window
 const ATTEMPT_WINDOW = 15 * 60 * 1000; // 15 minutes in milliseconds

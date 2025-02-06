@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ChopUrl } from '../index';
 import type {
   D1Database,
   D1PreparedStatement,
   D1Result,
 } from '@cloudflare/workers-types';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ChopUrl } from '../index';
 import { ChopUrlError, ChopUrlErrorCode } from '../types';
 
 describe('ChopUrl', () => {

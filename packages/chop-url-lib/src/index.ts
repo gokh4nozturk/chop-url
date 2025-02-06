@@ -1,6 +1,6 @@
-import { IUrlInfo, IChopUrlConfig, CreateUrlOptions } from './types';
-import { nanoid } from 'nanoid';
 import type { D1Database } from '@cloudflare/workers-types';
+import { nanoid } from 'nanoid';
+import { CreateUrlOptions, IChopUrlConfig, IUrlInfo } from './types';
 
 /**
  * Main class for URL shortening and management

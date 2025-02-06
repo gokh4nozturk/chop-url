@@ -1,17 +1,24 @@
 import {
   AlertTriangle,
   ArrowRight,
+  BarChart,
+  Bell,
   Check,
   ChevronLeft,
   ChevronRight,
   Command,
+  Copy,
   CreditCard,
   File,
   FileText,
   Github,
+  Globe,
   HelpCircle,
+  Home,
+  type Icon as LucideIcon,
   Image,
   Laptop,
+  Link,
   Loader2,
   LucideProps,
   Mail,
@@ -19,16 +26,17 @@ import {
   MoreVertical,
   Pizza,
   Plus,
+  Search,
   Settings,
+  Shield,
   SunMedium,
   Trash,
   Twitter,
   User,
   X,
-  Shield,
 } from 'lucide-react';
 
-export type Icon = React.ElementType;
+export type Icon = typeof LucideIcon;
 
 export const Icons = {
   logo: Command,
@@ -49,7 +57,19 @@ export const Icons = {
   twitter: Twitter,
   check: Check,
   warning: AlertTriangle,
-  mail: Mail,
+  search: Search,
+  bell: Bell,
+  link: Link,
+  plus: Plus,
+  home: Home,
+  barChart: BarChart,
+  globe: Globe,
+  copy: Copy,
+  moreVertical: MoreVertical,
+  creditCard: CreditCard,
+  file: File,
+  fileText: FileText,
+  image: Image,
   google: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden="true"
@@ -68,4 +88,4 @@ export const Icons = {
     </svg>
   ),
   shield: Shield,
-};
+} as const;

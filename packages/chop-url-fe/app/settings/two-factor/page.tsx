@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { useAuthStore } from '@/lib/store/auth';
+import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Icons } from '@/components/icons';
+import { useAuthStore } from '@/lib/store/auth';
 import Image from 'next/image';
+import { useState } from 'react';
 
 export default function TwoFactorSetupPage() {
   const [step, setStep] = useState<'initial' | 'setup' | 'verify'>('initial');

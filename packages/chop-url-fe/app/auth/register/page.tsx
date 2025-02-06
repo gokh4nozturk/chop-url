@@ -1,7 +1,5 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import { Suspense } from 'react';
 import {
   Card,
   CardContent,
@@ -9,6 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
 
 // Lazy load form components
 const RegisterForm = dynamic(() => import('./components/RegisterForm'), {

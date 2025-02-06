@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { RegisterForm } from '@/components/auth/RegisterForm';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/lib/store/auth';
+import { useState } from 'react';
 import { Icons } from '../../components/icons';
 
 export default function AuthPage() {

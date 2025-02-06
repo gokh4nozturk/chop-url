@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { useAuthStore } from '@/lib/store/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { registerSchema, type RegisterInput } from '@/lib/validations/auth';
+import { useAuthStore } from '@/lib/store/auth';
+import { type RegisterInput, registerSchema } from '@/lib/validations/auth';
+import { useState } from 'react';
 
 interface ValidationError {
   path: string[];

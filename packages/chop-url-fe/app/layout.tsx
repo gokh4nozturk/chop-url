@@ -1,7 +1,7 @@
-import './globals.css';
-import { ClientLayout } from './ClientLayout';
 import { CloudflareAnalytics } from '@/components/analytics/CloudflareAnalytics';
 import { Inter } from 'next/font/google';
+import { ClientLayout } from './ClientLayout';
+import './globals.css';
 
 const inter = Inter({
   subsets: ['latin'],

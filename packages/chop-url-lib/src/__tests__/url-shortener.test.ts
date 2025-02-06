@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { generateShortId, isValidUrl, createShortUrl } from '../url-shortener';
+import { describe, expect, it } from 'vitest';
+import { createShortUrl, generateShortId, isValidUrl } from '../url-shortener';
 
 describe('URL Shortener', () => {
   describe('generateShortId', () => {

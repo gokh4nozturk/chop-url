@@ -1,12 +1,12 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
-import { useRouter } from 'next/navigation';
-import { ThemeSwitcher } from './theme-switcher';
 import { LogIn } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { ThemeSwitcher } from './theme-switcher';
 
 export function Navbar() {
   const { user, loading, logout } = useAuth();

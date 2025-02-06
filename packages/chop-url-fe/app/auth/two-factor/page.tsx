@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Icons } from '@/components/icons';
-import { useSearchParams } from 'next/navigation';
-import { useAuthStore } from '@/lib/store/auth';
 import { navigation } from '@/lib/navigation';
+import { useAuthStore } from '@/lib/store/auth';
+import { useSearchParams } from 'next/navigation';
+import { useState } from 'react';
 import { Suspense } from 'react';
 
 export default function TwoFactorPage() {

@@ -1,6 +1,10 @@
 'use client';
 
+import { Icons } from '@/components/icons';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/lib/store/auth';
+import Link from 'next/link';
 
 export default function DashboardPage() {
   const user = useAuthStore((state) => state.user);
@@ -8,60 +12,109 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex h-[calc(100vh-3.5rem)] items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold">Loading...</h2>
+          <Icons.spinner className="mx-auto h-6 w-6 animate-spin" />
+          <h2 className="mt-2 text-lg font-semibold">Loading...</h2>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <div className="text-sm text-muted-foreground">
-            Welcome back, {user?.email}
-          </div>
+    <div className="space-y-8">
+      <div className="flex items-center justify-between space-y-2">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
+          <p className="text-muted-foreground">Welcome back, {user?.email}</p>
         </div>
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {/* URL Statistics Card */}
-          <div className="rounded-lg border bg-card p-6">
-            <h3 className="font-semibold">Your URLs</h3>
-            <div className="mt-2 text-3xl font-bold">0</div>
-            <p className="text-sm text-muted-foreground">
-              Total shortened URLs
-            </p>
-          </div>
-
-          {/* Total Clicks Card */}
-          <div className="rounded-lg border bg-card p-6">
-            <h3 className="font-semibold">Total Clicks</h3>
-            <div className="mt-2 text-3xl font-bold">0</div>
-            <p className="text-sm text-muted-foreground">Across all URLs</p>
-          </div>
-
-          {/* Recent Activity Card */}
-          <div className="rounded-lg border bg-card p-6">
-            <h3 className="font-semibold">Recent Activity</h3>
-            <div className="mt-2 text-3xl font-bold">0</div>
-            <p className="text-sm text-muted-foreground">Clicks in last 24h</p>
-          </div>
+        <div className="flex items-center space-x-2">
+          <Button>
+            <Icons.plus className="mr-2 h-4 w-4" />
+            New Link
+          </Button>
         </div>
+      </div>
 
-        {/* Recent URLs Section */}
-        <div className="rounded-lg border">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold">Recent URLs</h2>
-            <div className="mt-4">
-              <p className="text-center text-muted-foreground py-8">
-                You haven't created any URLs yet.
-              </p>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Links</CardTitle>
+            <Icons.link className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground">+0% from last month</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Clicks</CardTitle>
+            <Icons.barChart className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground">+0% from last month</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Links</CardTitle>
+            <Icons.globe className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground">+0% from last month</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Recent Clicks</CardTitle>
+            <Icons.barChart className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground">+0% from last 24h</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-4">
+          <CardHeader>
+            <CardTitle>Recent Links</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-10">
+              <div className="space-y-2">
+                <Icons.link className="h-8 w-8 mx-auto text-muted-foreground" />
+                <h3 className="text-lg font-semibold">No links created yet</h3>
+                <p className="text-sm text-muted-foreground">
+                  Create your first shortened URL to see it here.
+                </p>
+                <Button asChild className="mt-4">
+                  <Link href="/dashboard/new">Create Link</Link>
+                </Button>
+              </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
+        <Card className="col-span-3">
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-10">
+              <div className="space-y-2">
+                <Icons.barChart className="h-8 w-8 mx-auto text-muted-foreground" />
+                <h3 className="text-lg font-semibold">No recent activity</h3>
+                <p className="text-sm text-muted-foreground">
+                  Activity will appear here when your links are clicked.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

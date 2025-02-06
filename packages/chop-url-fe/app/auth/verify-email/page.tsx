@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Icons } from '@/components/icons';
+import { Button } from '@/components/ui/button';
+import { navigation } from '@/lib/navigation';
 import { useAuthStore } from '@/lib/store/auth';
 import { useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Icons } from '@/components/icons';
-import { navigation } from '@/lib/navigation';
+import { useEffect, useState } from 'react';
 import { Suspense } from 'react';
 
 export default function VerifyEmailPage() {

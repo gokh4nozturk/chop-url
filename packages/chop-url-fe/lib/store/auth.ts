@@ -1,8 +1,8 @@
+import Cookies from 'js-cookie';
+import { signIn } from 'next-auth/react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { apiClient } from '../api/client';
-import Cookies from 'js-cookie';
-import { signIn } from 'next-auth/react';
 import { navigation } from '../navigation';
 
 interface User {

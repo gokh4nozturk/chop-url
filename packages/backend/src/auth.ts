@@ -1,5 +1,5 @@
-import { Env } from './index.js';
 import { createHash, randomBytes } from 'node:crypto';
+import { Env } from './index.js';
 
 export interface User {
   id: number;
