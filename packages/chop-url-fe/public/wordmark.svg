@@ -1,1 +1,15 @@
- 
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="200" viewBox="0 0 800 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background rectangle (optional) -->
+  <rect width="800" height="200" fill="transparent"/>
+  
+  <!-- Main text -->
+  <text x="50" y="130" font-family="Inter, system-ui, sans-serif" font-weight="700" font-size="120" fill="currentColor">
+    <tspan fill="#000000">chop</tspan>
+    <tspan fill="#2563EB">URL</tspan>
+  </text>
+  
+  <!-- Scissors icon -->
+  <path d="M720 100 L750 70 M720 100 L750 130" stroke="#2563EB" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="720" cy="100" r="8" fill="#2563EB"/>
+</svg>
