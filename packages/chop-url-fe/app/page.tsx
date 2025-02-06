@@ -86,6 +86,13 @@ export default function Home() {
         throw new Error('Cannot shorten URLs from this domain');
       }
 
+      // Custom slug validation
+      if (customSlug && !/^[a-zA-Z0-9-_]+$/.test(customSlug)) {
+        throw new Error(
+          'Custom URL can only contain letters, numbers, hyphens, and underscores'
+        );
+      }
+
       const response = await fetch('/api/shorten', {
         method: 'POST',
         headers: {

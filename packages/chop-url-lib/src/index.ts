@@ -1,70 +1,10 @@
-import {
-  ChopUrlConfig,
-  ChopUrlError,
-  ChopUrlErrorCode,
-  Database,
-  IUrlInfo,
-} from './types';
+import { IUrlInfo, IChopUrlConfig, CreateUrlOptions } from './types';
 import { nanoid } from 'nanoid';
 import type { D1Database } from '@cloudflare/workers-types';
-import { isValidUrl } from './url-shortener';
 
-export { isValidUrl };
-
-export interface ICreateUrlResponse {
-  shortUrl: string;
-  originalUrl: string;
-  shortId: string;
-  expiresAt: string | null;
-}
-
-interface D1Result<T> {
-  results: T[];
-  success: boolean;
-  error?: string;
-}
-
-interface D1UrlResult {
-  id: number;
-  short_id: string;
-  original_url: string;
-  custom_slug: string | null;
-  expires_at: string | null;
-  created_at: string;
-  last_accessed_at: string | null;
-  visit_count: number;
-}
-
-interface D1VisitResult {
-  visited_at: string;
-  ip_address: string | null;
-  user_agent: string | null;
-  referrer: string | null;
-}
-
-export interface IUrlStats {
-  visitCount: number;
-  lastAccessedAt: Date | null;
-  createdAt: Date;
-  expiresAt: Date | null;
-  visits: {
-    visitedAt: Date;
-    ipAddress: string | null;
-    userAgent: string | null;
-    referrer: string | null;
-  }[];
-}
-
-export interface IChopUrlConfig {
-  db: D1Database;
-  baseUrl: string;
-  shortIdLength?: number;
-}
-
-interface CreateUrlOptions {
-  customSlug?: string;
-}
-
+/**
+ * Main class for URL shortening and management
+ */
 export class ChopUrl {
   private baseUrl: string;
   private db: D1Database;
@@ -83,7 +23,10 @@ export class ChopUrl {
     this.db = config.db;
   }
 
-  async createShortUrl(url: string): Promise<{
+  async createShortUrl(
+    url: string,
+    options?: CreateUrlOptions
+  ): Promise<{
     shortId: string;
     originalUrl: string;
     shortUrl: string;
@@ -93,10 +36,27 @@ export class ChopUrl {
       throw new Error('Invalid URL');
     }
 
-    const shortId = Math.random().toString(36).substring(2, 8);
-    const shortUrl = `${this.baseUrl}/${shortId}`;
-
     try {
+      let shortId: string;
+
+      if (options?.customSlug) {
+        // Custom slug kullanılmak isteniyorsa, önce bu slug'ın kullanılabilir olup olmadığını kontrol et
+        const existingUrl = await this.db
+          .prepare('SELECT short_id FROM urls WHERE short_id = ?')
+          .bind(options.customSlug)
+          .first<{ short_id: string }>();
+
+        if (existingUrl) {
+          throw new Error('Custom slug is already taken');
+        }
+
+        shortId = options.customSlug;
+      } else {
+        shortId = generateShortId();
+      }
+
+      const shortUrl = `${this.baseUrl}/${shortId}`;
+
       await this.db
         .prepare('INSERT INTO urls (short_id, original_url) VALUES (?, ?)')
         .bind(shortId, url)
@@ -109,6 +69,12 @@ export class ChopUrl {
         createdAt: new Date(),
       };
     } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message === 'Custom slug is already taken'
+      ) {
+        throw error;
+      }
       throw new Error('Database error');
     }
   }
@@ -162,6 +128,11 @@ export class ChopUrl {
   }
 }
 
+/**
+ * Generates a QR code image URL
+ * @param text Text to encode in the QR code
+ * @returns URL of the QR code image
+ */
 export const generateQRCode = async (text: string): Promise<string> => {
   const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
     text
@@ -169,6 +140,11 @@ export const generateQRCode = async (text: string): Promise<string> => {
   return apiUrl;
 };
 
+/**
+ * Generates a TOTP code
+ * @param secret TOTP secret
+ * @returns TOTP code
+ */
 export const generateTOTP = async (secret: string): Promise<string> => {
   const time = Math.floor(Date.now() / 30000); // 30-second window
   const counter = new ArrayBuffer(8);
@@ -197,6 +173,12 @@ export const generateTOTP = async (secret: string): Promise<string> => {
   return code.toString().padStart(6, '0');
 };
 
+/**
+ * Verifies a TOTP code against the current TOTP code
+ * @param code TOTP code to verify
+ * @param secret TOTP secret
+ * @returns boolean indicating if the code is valid
+ */
 export const verifyTOTP = async (
   code: string,
   secret: string
@@ -205,6 +187,11 @@ export const verifyTOTP = async (
   return code === currentCode;
 };
 
+/**
+ * Converts a base32 encoded string to a buffer
+ * @param str Base32 encoded string
+ * @returns Buffer representation of the base32 string
+ */
 const base32ToBuffer = (str: string): Uint8Array => {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
   const binary = str
@@ -221,5 +208,29 @@ const base32ToBuffer = (str: string): Uint8Array => {
 
   return bytes;
 };
+
+/**
+ * Validates if a string is a valid URL
+ * @param url URL to validate
+ * @returns boolean indicating if URL is valid
+ */
+export function isValidUrl(url: string): boolean {
+  try {
+    const parsedUrl = new URL(url);
+    // Only allow http and https protocols
+    return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Generates a short ID for URL shortening
+ * @param length Length of the short ID
+ * @returns Generated short ID
+ */
+export function generateShortId(length = 6): string {
+  return nanoid(length);
+}
 
 export * from './types';

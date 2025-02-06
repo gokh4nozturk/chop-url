@@ -69,6 +69,17 @@ export async function POST(request: Request) {
       } catch {
         errorData = { error: 'Failed to parse error response' };
       }
+
+      // Custom slug hatası için özel durum
+      if (response.status === 409) {
+        return NextResponse.json(
+          {
+            error: 'This custom URL is already taken. Please try another one.',
+          },
+          { status: 409, headers: corsHeaders() }
+        );
+      }
+
       return NextResponse.json(
         { error: errorData?.error || 'Failed to create short URL' },
         { status: response.status, headers: corsHeaders() }
