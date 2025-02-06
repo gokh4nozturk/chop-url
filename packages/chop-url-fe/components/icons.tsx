@@ -70,6 +70,7 @@ export const Icons = {
   file: File,
   fileText: FileText,
   image: Image,
+  mail: Mail,
   google: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden="true"
