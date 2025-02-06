@@ -13,15 +13,18 @@ interface Env {
   ENVIRONMENT: string;
 }
 
-type Variables = {
+interface Variables {
   services: {
     chopUrl: ChopUrl;
     authService: AuthService;
   };
   user?: IUser;
-};
+}
 
-type AppType = { Bindings: Env; Variables: Variables };
+export type AppType = {
+  Bindings: Env;
+  Variables: Variables;
+};
 
 const app = new Hono<AppType>();
 
@@ -30,16 +33,24 @@ app.use('*', cors());
 
 // Create services
 const createServices = (db: D1Database) => {
-  const chopUrl = new ChopUrl({ db, baseUrl: 'https://chop.url' });
+  const chopUrl = new ChopUrl({
+    db,
+    baseUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://chop.url',
+  });
   const authService = new AuthService(db);
   return { chopUrl, authService };
 };
 
 // Initialize services middleware
 app.use('*', async (c, next) => {
-  const services = createServices(c.env.DB);
-  c.set('services', services);
-  await next();
+  try {
+    const services = createServices(c.env.DB);
+    c.set('services', services);
+    await next();
+  } catch (error) {
+    console.error('Error initializing services:', error);
+    return c.json({ error: 'Internal Server Error' }, 500);
+  }
 });
 
 // Auth routes
@@ -161,21 +172,53 @@ app.use('/api/*', async (c, next) => {
   }
 });
 
-app.get('/api/urls', async (c) => {
-  // TODO: Implement get user's URLs
-  return c.json({ message: 'Not implemented' });
+// Health check endpoint
+app.get('/health', (c) => {
+  return c.json({ status: 'ok' });
 });
 
-app.post('/api/urls', async (c) => {
-  const body = await c.req.json();
-  const result = await c.var.services.chopUrl.createShortUrl(body.url);
-  return c.json(result);
+// Public URL routes
+app.post('/shorten', async (c) => {
+  try {
+    const body = await c.req.json();
+    if (!body.url) {
+      return c.json({ error: 'Invalid URL' }, 400);
+    }
+
+    const result = await c.var.services.chopUrl.createShortUrl(body.url);
+    return c.json(result);
+  } catch (error) {
+    console.error('Error creating short URL:', error);
+    if (error instanceof Error && error.message === 'Invalid URL') {
+      return c.json({ error: error.message }, 400);
+    }
+    return c.json({ error: 'Failed to create short URL' }, 500);
+  }
 });
 
 app.get('/:shortId', async (c) => {
-  const shortId = c.req.param('shortId');
-  const url = await c.var.services.chopUrl.getOriginalUrl(shortId);
-  return c.redirect(url);
+  try {
+    const shortId = c.req.param('shortId');
+    const originalUrl = await c.var.services.chopUrl.getOriginalUrl(shortId);
+
+    if (!originalUrl) {
+      return c.json({ error: 'URL not found' }, 404);
+    }
+
+    c.header('Location', originalUrl);
+    return c.text('', 302);
+  } catch (error) {
+    if (error instanceof Error && error.message === 'URL not found') {
+      return c.json({ error: 'URL not found' }, 404);
+    }
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
+// Protected URL routes
+app.get('/api/urls', async (c) => {
+  // TODO: Implement get user's URLs
+  return c.json({ message: 'Not implemented' });
 });
 
 export default app;
