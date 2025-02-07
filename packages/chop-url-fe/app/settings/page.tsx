@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function SettingsPage() {
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto py-10 mt-header">
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
