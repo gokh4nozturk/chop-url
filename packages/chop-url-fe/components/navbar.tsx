@@ -1,21 +1,14 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/lib/auth-context';
-import { LogIn } from 'lucide-react';
+import { useAuthStore } from '@/lib/store/auth';
+import { LogIn, LogOut, UserPlus } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { ThemeSwitcher } from './theme-switcher';
 
 export function Navbar() {
-  const { user, loading, logout } = useAuth();
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    await logout();
-    router.push('/login');
-  };
+  const { user, logout } = useAuthStore();
 
   return (
     <header className="sticky top-0 flex z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -39,7 +32,40 @@ export function Navbar() {
             </span>
           </Link>
         </div>
-        <div className="flex flex-1 items-center justify-end sm:space-x-2">
+        <div className="flex flex-1 items-center justify-end gap-2">
+          {user ? (
+            <>
+              <div className="hidden sm:block">
+                <span className="text-sm text-muted-foreground">
+                  {user.email}
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => logout()}
+                className="gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline-block">Çıkış Yap</span>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link href="/auth/signin" passHref>
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <LogIn className="h-4 w-4" />
+                  <span className="hidden sm:inline-block">Giriş Yap</span>
+                </Button>
+              </Link>
+              <Link href="/auth/register" passHref>
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  <span className="hidden sm:inline-block">Kayıt Ol</span>
+                </Button>
+              </Link>
+            </>
+          )}
           <ThemeSwitcher />
         </div>
       </div>
