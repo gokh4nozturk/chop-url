@@ -22,3 +22,20 @@ export interface URLInfo {
   visitCount: number;
   lastAccessedAt: Date | null;
 }
+
+export interface AuthError {
+  code: string;
+  message: string;
+}
+
+export interface TokenData {
+  token: string;
+  expiresAt: Date;
+}
+
+export interface AuthState {
+  user: User | null;
+  tokenData: TokenData | null;
+  isLoading: boolean;
+  error: AuthError | null;
+}

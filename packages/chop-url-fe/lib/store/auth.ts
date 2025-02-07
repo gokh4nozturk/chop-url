@@ -1,115 +1,106 @@
-import { User } from '@/lib/types';
+import apiClient from '@/lib/api/client';
+import { navigate } from '@/lib/navigation';
+import { AuthError, AuthState, TokenData, User } from '@/lib/types';
 import axios from 'axios';
 import Cookies from 'js-cookie';
-import { signIn } from 'next-auth/react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import apiClient from '../api/client';
-import { navigate } from '../navigation';
 
-interface AuthState {
-  user: User | null;
-  token: string | null;
-  isLoading: boolean;
-  error: string | null;
+interface AuthActions {
   setUser: (user: User | null) => void;
+  setTokenData: (tokenData: TokenData | null) => void;
+  setError: (error: AuthError | null) => void;
+  setLoading: (isLoading: boolean) => void;
   login: (email: string, password: string) => Promise<void>;
   register: (
     email: string,
     password: string,
     confirmPassword: string
   ) => Promise<void>;
-  socialLogin: (provider: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   initialize: () => Promise<void>;
-  refreshToken: () => Promise<{ user: User; token: string; expiresAt: Date }>;
-  requestPasswordReset: (email: string) => Promise<void>;
-  resetPassword: (
-    token: string,
-    newPassword: string,
-    confirmPassword: string
-  ) => Promise<void>;
-  verifyEmail: (token: string) => Promise<void>;
-  resendVerificationEmail: () => Promise<void>;
-  setupTwoFactor: () => Promise<{ qrCodeUrl: string; secret: string }>;
-  verifyTwoFactor: (code: string) => Promise<void>;
-  disableTwoFactor: (code: string) => Promise<void>;
-  verifyTwoFactorLogin: (email: string, code: string) => Promise<void>;
+  refreshToken: () => Promise<void>;
+  clearError: () => void;
 }
 
-export const useAuthStore = create<AuthState>()(
+const COOKIE_NAME = 'auth_token';
+const TOKEN_REFRESH_BUFFER = 5 * 60 * 1000; // 5 minutes before expiry
+
+export const useAuthStore = create<AuthState & AuthActions>()(
   persist(
     (set, get) => ({
+      // State
       user: null,
-      token: null,
+      tokenData: null,
       isLoading: true,
       error: null,
-      setUser: (user) => set({ user }),
+
+      // Actions
+      setUser: (user: User | null) => set({ user }),
+      setTokenData: (tokenData: TokenData | null) => set({ tokenData }),
+      setError: (error: AuthError | null) => set({ error }),
+      setLoading: (isLoading: boolean) => set({ isLoading }),
+      clearError: () => set({ error: null }),
 
       initialize: async () => {
         try {
-          const token = Cookies.get('auth_token');
-          if (token) {
-            const { expiresAt } = await get().refreshToken();
-
-            const refreshTime =
-              new Date(expiresAt).getTime() - Date.now() - 5 * 60 * 1000;
-            const refreshTimeout = setTimeout(
-              async () => {
-                try {
-                  await get().refreshToken();
-                } catch (error) {
-                  console.error('Token refresh error:', error);
-                  get().logout();
-                  navigate.auth();
-                }
-              },
-              Math.max(refreshTime, 0)
-            );
-
-            // Cleanup
-            window.addEventListener('beforeunload', () => {
-              clearTimeout(refreshTimeout);
-            });
-          } else {
+          const token = Cookies.get(COOKIE_NAME);
+          if (!token) {
             set({ isLoading: false });
+            return;
           }
         } catch (error) {
           console.error('Session initialization error:', error);
           get().logout();
+        } finally {
           set({ isLoading: false });
         }
       },
 
       refreshToken: async () => {
         try {
-          const currentToken = Cookies.get('auth_token');
+          const currentToken = Cookies.get(COOKIE_NAME);
           if (!currentToken) {
-            throw new Error('Token not found');
+            throw new Error('No token found');
           }
 
           const response = await apiClient.post('/api/auth/refresh');
+          const { user, token, expiresAt } = response.data;
 
-          const { user, token: newToken, expiresAt } = response.data;
-
-          if (newToken) {
-            Cookies.set('auth_token', newToken, {
-              expires: expiresAt
-                ? new Date(expiresAt)
-                : new Date(Date.now() + 24 * 60 * 60 * 1000),
-              secure: process.env.NODE_ENV === 'production',
-              sameSite: 'lax',
-              path: '/',
-            });
-
-            set({ user, token: newToken, isLoading: false });
-            return { user, token: newToken, expiresAt: new Date(expiresAt) };
+          if (!token) {
+            throw new Error('No token received from server');
           }
-          throw new Error('No token received from server');
+
+          const tokenData: TokenData = {
+            token,
+            expiresAt: new Date(expiresAt),
+          };
+
+          Cookies.set(COOKIE_NAME, token, {
+            expires: new Date(expiresAt),
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+          });
+
+          set({ user, tokenData });
+
+          // Schedule next token refresh
+          const refreshTime =
+            new Date(expiresAt).getTime() - Date.now() - TOKEN_REFRESH_BUFFER;
+          setTimeout(
+            () => {
+              get()
+                .refreshToken()
+                .catch((error) => {
+                  console.error('Token refresh error:', error);
+                  get().logout();
+                });
+            },
+            Math.max(refreshTime, 0)
+          );
         } catch (error) {
-          console.error('Token refresh error:', error);
           get().logout();
-          navigate.auth();
           throw error;
         }
       },
@@ -124,46 +115,33 @@ export const useAuthStore = create<AuthState>()(
 
           const { user, token, expiresAt } = response.data;
 
-          if (token) {
-            Cookies.set('auth_token', token, {
-              expires: expiresAt
-                ? new Date(expiresAt)
-                : new Date(Date.now() + 24 * 60 * 60 * 1000),
-              secure: process.env.NODE_ENV === 'production',
-              sameSite: 'lax',
-              path: '/',
-            });
-
-            set({ user, token, isLoading: false, error: null });
-            navigate.dashboard();
-          } else {
+          if (!token) {
             throw new Error('No token received from server');
           }
-        } catch (error) {
-          let errorMessage = 'Login failed';
 
-          if (axios.isAxiosError(error)) {
-            console.error('Login error details:', error.response?.data);
+          const tokenData: TokenData = {
+            token,
+            expiresAt: new Date(expiresAt),
+          };
 
-            if (error.response?.status === 0) {
-              errorMessage = 'Could not connect to server. Please try again.';
-            } else if (error.response?.data?.error) {
-              errorMessage = error.response.data.error;
-            } else if (error.message === 'Network Error') {
-              errorMessage =
-                'Network error occurred. Please check your connection.';
-            }
-          } else if (error instanceof Error) {
-            errorMessage = error.message;
-          }
-
-          set({
-            error: errorMessage,
-            isLoading: false,
-            user: null,
-            token: null,
+          Cookies.set(COOKIE_NAME, token, {
+            expires: new Date(expiresAt),
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
           });
-          throw new Error(errorMessage);
+
+          set({ user, tokenData, error: null });
+          navigate.dashboard();
+        } catch (error) {
+          const authError: AuthError = {
+            code: 'LOGIN_ERROR',
+            message: getErrorMessage(error),
+          };
+          set({ error: authError, user: null, tokenData: null });
+          throw error;
+        } finally {
+          set({ isLoading: false });
         }
       },
 
@@ -180,235 +158,74 @@ export const useAuthStore = create<AuthState>()(
             confirmPassword,
           });
 
-          const { user, token } = response.data;
+          const { user, token, expiresAt } = response.data;
 
-          Cookies.set('auth_token', token, {
-            expires: 7,
+          if (!token) {
+            throw new Error('No token received from server');
+          }
+
+          const tokenData: TokenData = {
+            token,
+            expiresAt: new Date(expiresAt),
+          };
+
+          Cookies.set(COOKIE_NAME, token, {
+            expires: new Date(expiresAt),
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
+            path: '/',
           });
 
-          set({ user, token, isLoading: false, error: null });
+          set({ user, tokenData, error: null });
           navigate.dashboard();
         } catch (error) {
-          let errorMessage = 'Registration failed';
-
-          if (axios.isAxiosError(error)) {
-            if (error.response?.status === 0) {
-              errorMessage = 'Could not connect to server. Please try again.';
-            } else if (error.response?.data?.error) {
-              errorMessage = error.response.data.error;
-            } else if (error.message === 'Network Error') {
-              errorMessage =
-                'Network error occurred. Please check your connection.';
-            }
-          }
-
-          set({ error: errorMessage, isLoading: false });
-          throw new Error(errorMessage);
-        }
-      },
-
-      verifyEmail: async (token: string) => {
-        set({ isLoading: true, error: null });
-        try {
-          const response = await apiClient.post('/api/api/auth/verify-email', {
-            token,
-          });
-          const { user } = response.data;
-          set({ user, isLoading: false });
-          navigate.dashboard();
-        } catch (error) {
-          set({
-            error:
-              error instanceof Error ? error.message : 'Failed to verify email',
-            isLoading: false,
-          });
-        }
-      },
-
-      resendVerificationEmail: async () => {
-        set({ isLoading: true, error: null });
-        try {
-          await apiClient.post('/api/auth/resend-verification');
+          const authError: AuthError = {
+            code: 'REGISTER_ERROR',
+            message: getErrorMessage(error),
+          };
+          set({ error: authError });
+          throw error;
+        } finally {
           set({ isLoading: false });
-        } catch (error) {
-          set({
-            error:
-              error instanceof Error
-                ? error.message
-                : 'Failed to resend verification email',
-            isLoading: false,
-          });
         }
       },
 
-      requestPasswordReset: async (email: string) => {
-        set({ isLoading: true, error: null });
+      logout: async () => {
         try {
-          await apiClient.post('/api/auth/forgot-password', { email });
-          set({ isLoading: false });
+          await apiClient.post('/api/auth/logout');
         } catch (error) {
-          set({
-            error:
-              error instanceof Error
-                ? error.message
-                : 'Failed to request password reset',
-            isLoading: false,
-          });
-        }
-      },
-
-      resetPassword: async (
-        token: string,
-        newPassword: string,
-        confirmPassword: string
-      ) => {
-        set({ isLoading: true, error: null });
-        try {
-          await apiClient.post('/api/auth/reset-password', {
-            token,
-            newPassword,
-            confirmPassword,
-          });
-          set({ isLoading: false });
+          console.error('Logout error:', error);
+        } finally {
+          Cookies.remove(COOKIE_NAME, { path: '/' });
+          set({ user: null, tokenData: null, error: null });
           navigate.auth();
-        } catch (error) {
-          set({
-            error:
-              error instanceof Error
-                ? error.message
-                : 'Failed to reset password',
-            isLoading: false,
-          });
-        }
-      },
-
-      socialLogin: async (provider: string) => {
-        set({ isLoading: true });
-        try {
-          const result = await signIn(provider, { redirect: false });
-
-          if (result?.error) {
-            throw new Error(result.error);
-          }
-
-          set({ isLoading: false });
-
-          const params = new URLSearchParams(window.location.search);
-          const from = params.get('from');
-          if (from) {
-            window.location.href = from;
-          } else {
-            navigate.dashboard();
-          }
-        } catch (error) {
-          set({
-            error: error instanceof Error ? error.message : 'Failed to login',
-            isLoading: false,
-          });
-        }
-      },
-
-      logout: () => {
-        Cookies.remove('auth_token');
-        set({ user: null, token: null });
-        navigate.auth();
-      },
-
-      verifyTwoFactorLogin: async (email: string, code: string) => {
-        set({ isLoading: true, error: null });
-        try {
-          const response = await apiClient.post('/api/auth/verify-2fa', {
-            email,
-            code,
-          });
-
-          const { user, token } = response.data;
-
-          Cookies.set('auth_token', token, {
-            expires: 7,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-          });
-
-          set({ user, token, isLoading: false });
-
-          const params = new URLSearchParams(window.location.search);
-          const from = params.get('from');
-          if (from) {
-            window.location.href = from;
-          } else {
-            navigate.dashboard();
-          }
-        } catch (error) {
-          set({
-            error:
-              error instanceof Error
-                ? error.message
-                : 'Invalid verification code',
-            isLoading: false,
-          });
-        }
-      },
-
-      setupTwoFactor: async () => {
-        set({ isLoading: true, error: null });
-        try {
-          const response = await apiClient.post('/api/auth/setup-2fa');
-          set({ isLoading: false });
-          return response.data;
-        } catch (error) {
-          set({
-            error:
-              error instanceof Error ? error.message : 'Failed to setup 2FA',
-            isLoading: false,
-          });
-          throw error;
-        }
-      },
-
-      verifyTwoFactor: async (code: string) => {
-        set({ isLoading: true, error: null });
-        try {
-          const response = await apiClient.post('/api/auth/verify-2fa-setup', {
-            code,
-          });
-          const { user } = response.data;
-          set({ user, isLoading: false });
-        } catch (error) {
-          set({
-            error:
-              error instanceof Error
-                ? error.message
-                : 'Invalid verification code',
-            isLoading: false,
-          });
-          throw error;
-        }
-      },
-
-      disableTwoFactor: async (code: string) => {
-        set({ isLoading: true, error: null });
-        try {
-          const response = await apiClient.post('/api/auth/disable-2fa', {
-            code,
-          });
-          const { user } = response.data;
-          set({ user, isLoading: false });
-        } catch (error) {
-          set({
-            error:
-              error instanceof Error ? error.message : 'Failed to disable 2FA',
-            isLoading: false,
-          });
-          throw error;
         }
       },
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ user: state.user, token: state.token }),
+      partialize: (state) => ({ user: state.user }),
     }
   )
 );
+
+function getErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    if (error.response?.status === 0) {
+      return 'Could not connect to server. Please try again.';
+    }
+    if (error.response?.data?.error) {
+      return error.response.data.error;
+    }
+    if (error.message === 'Network Error') {
+      return 'Network error occurred. Please check your connection.';
+    }
+    return error.message;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return 'An unexpected error occurred';
+}

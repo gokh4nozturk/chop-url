@@ -17,13 +17,12 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { logout } from '@/lib/auth';
 import { useAuthStore } from '@/lib/store/auth';
 import { Icons } from '../icons';
 
 export function UserSwitch() {
   const { isMobile } = useSidebar();
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
 
   if (!user) return null;
 
