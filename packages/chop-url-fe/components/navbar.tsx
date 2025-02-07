@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/lib/store/auth';
-import { LogIn, LogOut, UserPlus } from 'lucide-react';
+import { LayoutDashboard, LogOut } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ThemeSwitcher } from './theme-switcher';
@@ -51,10 +51,10 @@ export function Navbar() {
               </Button>
             </>
           ) : (
-            <Link href="/auth/register" passHref>
+            <Link href="/dashboard" passHref>
               <Button variant="default" size="sm" className="gap-2">
-                <UserPlus className="h-4 w-4" />
-                <span className="hidden sm:inline-block">Get Started</span>
+                <LayoutDashboard className="h-4 w-4" />
+                <span className="hidden sm:inline-block">Dashboard</span>
               </Button>
             </Link>
           )}
