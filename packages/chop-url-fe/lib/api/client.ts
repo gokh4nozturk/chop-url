@@ -29,8 +29,8 @@ client.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      // Token'ı sil ve kullanıcıyı login sayfasına yönlendir
-      window.location.href = '/auth/signin';
+      // Delete the token and redirect to the login page
+      window.location.href = '/auth';
     }
     return Promise.reject(error);
   }

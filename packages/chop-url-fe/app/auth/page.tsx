@@ -2,10 +2,10 @@
 
 import { LoginForm } from '@/components/auth/LoginForm';
 import { RegisterForm } from '@/components/auth/RegisterForm';
+import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/lib/store/auth';
-import { useState } from 'react';
-import { Icons } from '../../components/icons';
+import { Suspense, useState } from 'react';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -25,7 +25,7 @@ export default function AuthPage() {
           </p>
         </div>
 
-        {isLogin ? <LoginForm /> : <RegisterForm />}
+        <AuthForm isLogin={isLogin} />
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
@@ -79,5 +79,36 @@ export default function AuthPage() {
         </Button>
       </div>
     </div>
+  );
+}
+
+function AuthForm({ isLogin }: { isLogin: boolean }) {
+  return (
+    <>
+      {isLogin ? (
+        <Suspense
+          fallback={
+            <div className="flex flex-col gap-4">
+              <div className="h-10 bg-gray-200 animate-pulse rounded" />
+              <div className="h-10 bg-gray-200 animate-pulse rounded" />
+            </div>
+          }
+        >
+          <LoginForm />
+        </Suspense>
+      ) : (
+        <Suspense
+          fallback={
+            <div className="flex flex-col gap-4">
+              <div className="h-10 bg-gray-200 animate-pulse rounded" />
+              <div className="h-10 bg-gray-200 animate-pulse rounded" />
+              <div className="h-10 bg-primary/20 animate-pulse rounded" />
+            </div>
+          }
+        >
+          <RegisterForm />
+        </Suspense>
+      )}
+    </>
   );
 }

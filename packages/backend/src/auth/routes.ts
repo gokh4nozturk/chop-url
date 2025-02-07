@@ -29,7 +29,7 @@ type Variables = {
 export const createAuthRoutes = (authService: AuthService) => {
   const router = new Hono<{ Variables: Variables }>();
 
-  router.post('/login', zValidator('json', loginSchema), async (c) => {
+  router.post('/auth', zValidator('json', loginSchema), async (c) => {
     try {
       const credentials = await c.req.json<ILoginCredentials>();
       const response = await authService.login(credentials);
@@ -42,7 +42,7 @@ export const createAuthRoutes = (authService: AuthService) => {
     }
   });
 
-  router.post('/register', zValidator('json', registerSchema), async (c) => {
+  router.post('/auth', zValidator('json', registerSchema), async (c) => {
     try {
       const credentials = await c.req.json<IRegisterCredentials>();
       const response = await authService.register(credentials);

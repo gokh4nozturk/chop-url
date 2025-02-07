@@ -29,12 +29,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Önce mevcut kullanıcıyı al
+        // Before getting the current user, check if the user is already logged in
         const currentUser = await getCurrentUser();
         if (currentUser) {
           setUser(currentUser);
 
-          // Token yenileme için zamanlayıcı kur
+          // Schedule a timer for refreshing the token
           const refreshInterval = setInterval(
             async () => {
               try {
@@ -42,22 +42,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 if (result) {
                   setUser(result.user);
                 } else {
-                  // Token yenilenemezse çıkış yap
+                  // If the token cannot be refreshed, log out
                   await logout();
                 }
               } catch (error) {
-                console.error('Token yenileme hatası:', error);
+                console.error('Token refresh error:', error);
                 await logout();
               }
             },
             15 * 60 * 1000
-          ); // Her 15 dakikada bir
+          ); // Every 15 minutes
 
           // Cleanup
           return () => clearInterval(refreshInterval);
         }
       } catch (error) {
-        console.error('Auth başlatma hatası:', error);
+        console.error('Auth initialization error:', error);
       } finally {
         setLoading(false);
       }
@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { user } = await authLogin(email, password);
       setUser(user);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Giriş başarısız');
+      setError(error instanceof Error ? error.message : 'Login failed');
       throw error;
     }
   };
@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { user } = await authRegister(email, password);
       setUser(user);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Kayıt başarısız');
+      setError(error instanceof Error ? error.message : 'Registration failed');
       throw error;
     }
   };
@@ -94,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setUser(null);
       setError(null);
-      window.location.href = '/auth/signin';
+      window.location.href = '/auth';
     }
   };
 
