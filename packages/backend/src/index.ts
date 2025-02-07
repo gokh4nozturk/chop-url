@@ -21,10 +21,11 @@ const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 app.use(
   '*',
   cors({
-    origin:
-      process.env.NODE_ENV === 'development'
-        ? 'http://localhost:3000'
-        : ['https://app.chop-url.com', 'https://api.chop-url.com'],
+    origin: [
+      'http://localhost:3000',
+      'https://app.chop-url.com',
+      'https://api.chop-url.com',
+    ],
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowHeaders: [
       'Content-Type',

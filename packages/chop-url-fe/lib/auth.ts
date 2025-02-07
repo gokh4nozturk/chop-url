@@ -1,4 +1,5 @@
 import axios from 'axios';
+import Cookies from 'js-cookie';
 import client from './api/client';
 
 export interface User {
@@ -11,6 +12,7 @@ export interface User {
 export interface AuthResponse {
   user: User;
   token: string;
+  expiresAt?: string;
 }
 
 export interface AuthError {
@@ -20,18 +22,26 @@ export interface AuthError {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
 
 // Helper function to store auth token
-export function setToken(token: string): void {
-  localStorage.setItem('auth_token', token);
+export function setToken(token: string, expiresAt?: string): void {
+  const expires = expiresAt
+    ? new Date(expiresAt)
+    : new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 saat
+  Cookies.set('auth_token', token, {
+    expires,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    path: '/',
+  });
 }
 
 // Helper function to get auth token
 export function getToken(): string | null {
-  return localStorage.getItem('auth_token');
+  return Cookies.get('auth_token') || null;
 }
 
 // Helper function to remove auth token
 export function removeToken(): void {
-  localStorage.removeItem('auth_token');
+  Cookies.remove('auth_token', { path: '/' });
 }
 
 // Helper function to register a new user
@@ -45,7 +55,7 @@ export async function register(
       password,
     });
 
-    setToken(data.token);
+    setToken(data.token, data.expiresAt);
     return data;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {
@@ -66,7 +76,7 @@ export async function login(
       password,
     });
 
-    setToken(data.token);
+    setToken(data.token, data.expiresAt);
     return data;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {
@@ -88,8 +98,32 @@ export async function logout(): Promise<void> {
 // Helper function to get current user
 export async function getCurrentUser(): Promise<User | null> {
   try {
+    const token = getToken();
+    if (!token) {
+      return null;
+    }
+
     const { data } = await client.get<{ user: User }>('/api/auth/me');
     return data.user;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      removeToken();
+    }
+    return null;
+  }
+}
+
+// Helper function to refresh token
+export async function refreshToken(): Promise<AuthResponse | null> {
+  try {
+    const token = getToken();
+    if (!token) {
+      return null;
+    }
+
+    const { data } = await client.post<AuthResponse>('/api/auth/refresh');
+    setToken(data.token, data.expiresAt);
+    return data;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
       removeToken();

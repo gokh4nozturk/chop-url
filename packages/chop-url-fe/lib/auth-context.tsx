@@ -6,7 +6,8 @@ import {
   getCurrentUser,
   login as authLogin,
   logout as authLogout,
-  register as authRegister,
+  refreshTokenokenauthRefreshTokeneshToken,
+  registerauthauthRegister,
 } from './auth';
 
 interface AuthContextType {
@@ -26,9 +27,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getCurrentUser()
-      .then(setUser)
-      .finally(() => setLoading(false));
+    const initializeAuth = async () => {
+      try {
+        // Önce mevcut kullanıcıyı al
+        const currentUser = await getCurrentUser();
+        if (currentUser) {
+          setUser(currentUser);
+
+          // Token yenileme için zamanlayıcı kur
+          const refreshInterval = setInterval(
+            async () => {
+              try {
+                const result = await authRefreshToken();
+                if (result) {
+                  setUser(result.user);
+                } else {
+                  // Token yenilenemezse çıkış yap
+                  await logout();
+                }
+              } catch (error) {
+                console.error('Token yenileme hatası:', error);
+                await logout();
+              }
+            },
+            15 * 60 * 1000
+          ); // Her 15 dakikada bir
+
+          // Cleanup
+          return () => clearInterval(refreshInterval);
+        }
+      } catch (error) {
+        console.error('Auth başlatma hatası:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -37,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { user } = await authLogin(email, password);
       setUser(user);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to login');
+      setError(error instanceof Error ? error.message : 'Giriş başarısız');
       throw error;
     }
   };
@@ -48,25 +83,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { user } = await authRegister(email, password);
       setUser(user);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to register');
+      setError(error instanceof Error ? error.message : 'Kayıt başarısız');
       throw error;
     }
   };
 
   const logout = async () => {
     try {
-      setError(null);
       await authLogout();
+    } finally {
       setUser(null);
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to logout');
-      throw error;
+      setError(null);
+      window.location.href = '/auth/signin';
     }
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, error, login, register, logout }}
+      value={{
+        user,
+        loading,
+        error,
+        login,
+        register,
+        logout,
+      }}
     >
       {children}
     </AuthContext.Provider>
