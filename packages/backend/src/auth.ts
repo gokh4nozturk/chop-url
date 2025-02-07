@@ -107,16 +107,24 @@ export async function verifySession(
   env: Env,
   token: string
 ): Promise<User | null> {
-  const session = await env.DB.prepare(
-    `SELECT u.id, u.email, u.created_at, u.updated_at 
+  try {
+    console.log('Verifying session with token:', token);
+
+    const query = `SELECT u.id, u.email, u.created_at, u.updated_at 
      FROM sessions s 
      JOIN users u ON s.user_id = u.id 
-     WHERE s.token = ? AND s.expires_at > CURRENT_TIMESTAMP`
-  )
-    .bind(token)
-    .first<User>();
+     WHERE s.token = ? AND s.expires_at > CURRENT_TIMESTAMP`;
 
-  return session || null;
+    console.log('Executing query:', query);
+
+    const session = await env.DB.prepare(query).bind(token).first<User>();
+
+    console.log('Session result:', session);
+    return session || null;
+  } catch (error) {
+    console.error('Error in verifySession:', error);
+    throw error;
+  }
 }
 
 // Helper function to delete a session
@@ -125,3 +133,62 @@ export async function deleteSession(env: Env, token: string): Promise<void> {
     .bind(token)
     .run();
 }
+
+// Helper function to refresh a session token
+export async function refreshSession(
+  env: Env,
+  currentToken: string
+): Promise<{ user: User; token: string; expiresAt: Date } | null> {
+  try {
+    console.log('Refreshing session with token:', currentToken);
+
+    // Önce mevcut session'ı kontrol et
+    const user = await verifySession(env, currentToken);
+    console.log('User from session:', user);
+
+    if (!user) {
+      console.log('No valid session found');
+      return null;
+    }
+
+    // Eski session'ı sil
+    console.log('Deleting old session');
+    await deleteSession(env, currentToken);
+
+    // Yeni token oluştur
+    const newToken = generateToken();
+    const expiresAt = new Date(Date.now() + TOKEN_EXPIRATION * 1000);
+
+    // Yeni session oluştur
+    console.log('Creating new session for user:', user.id);
+    await env.DB.prepare(
+      'INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)'
+    )
+      .bind(user.id, newToken, expiresAt.toISOString())
+      .run();
+
+    console.log('Created new session with token:', newToken);
+    return {
+      user,
+      token: newToken,
+      expiresAt,
+    };
+  } catch (error) {
+    console.error('Error in refreshSession:', error);
+    throw error;
+  }
+}
+
+export default {
+  createUser,
+  verifyUser,
+  getUserById,
+  createSession,
+  verifySession,
+  deleteSession,
+  refreshSession,
+  isValidEmail,
+  isValidPassword,
+  hashPassword,
+  generateToken,
+};
