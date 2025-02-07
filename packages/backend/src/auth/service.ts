@@ -503,4 +503,88 @@ export class AuthService {
       requiresTwoFactor: false,
     };
   }
+
+  async updateProfile(
+    userId: number,
+    data: { username: string; email: string; name: string }
+  ): Promise<IUser> {
+    // Check if email is already taken by another user
+    const existingUser = await this.db
+      .prepare('SELECT id FROM users WHERE email = ? AND id != ?')
+      .bind(data.email, userId)
+      .first<{ id: number }>();
+
+    if (existingUser) {
+      throw new AuthError(AuthErrorCode.USER_EXISTS, 'Email is already taken');
+    }
+
+    // Update user profile
+    const result = await this.db
+      .prepare(
+        'UPDATE users SET email = ?, username = ?, name = ?, updated_at = datetime("now") WHERE id = ? RETURNING id, email, username, name, is_email_verified, is_two_factor_enabled, created_at, updated_at'
+      )
+      .bind(data.email, data.username, data.name, userId)
+      .first<IUserRow>();
+
+    if (!result) {
+      throw new AuthError(
+        AuthErrorCode.DATABASE_ERROR,
+        'Failed to update profile'
+      );
+    }
+
+    return this.mapUserRow(result);
+  }
+
+  async updatePassword(
+    userId: number,
+    data: { currentPassword: string; newPassword: string },
+    ipAddress: string
+  ): Promise<void> {
+    // Check rate limit
+    await this.checkRateLimit(userId, ipAddress, 'password');
+
+    // Get user's current password hash
+    const user = await this.db
+      .prepare('SELECT password_hash FROM users WHERE id = ?')
+      .bind(userId)
+      .first<{ password_hash: string }>();
+
+    if (!user) {
+      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found');
+    }
+
+    // Verify current password
+    const isValid = await this.verifyPassword(
+      data.currentPassword,
+      user.password_hash
+    );
+
+    // Record attempt
+    await this.recordAuthAttempt(userId, ipAddress, 'password', isValid);
+
+    if (!isValid) {
+      throw new AuthError(
+        AuthErrorCode.INVALID_CREDENTIALS,
+        'Current password is incorrect'
+      );
+    }
+
+    // Hash new password
+    const newPasswordHash = await this.hashPassword(data.newPassword);
+
+    // Update password
+    await this.db
+      .prepare(
+        'UPDATE users SET password_hash = ?, updated_at = datetime("now") WHERE id = ?'
+      )
+      .bind(newPasswordHash, userId)
+      .run();
+
+    // Invalidate all existing sessions
+    await this.db
+      .prepare('DELETE FROM sessions WHERE user_id = ?')
+      .bind(userId)
+      .run();
+  }
 }

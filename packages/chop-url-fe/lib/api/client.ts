@@ -1,5 +1,6 @@
+import { getToken } from '@/lib/auth';
+import { User } from '@/lib/types';
 import axios from 'axios';
-import { getToken } from '../auth';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
 
@@ -35,5 +36,28 @@ client.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export interface UpdateProfileData {
+  username: string;
+  email: string;
+  name: string;
+}
+
+export interface UpdatePasswordData {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export const updateProfile = async (data: UpdateProfileData): Promise<User> => {
+  const response = await client.put('/api/auth/profile', data);
+  return response.data.user;
+};
+
+export const updatePassword = async (
+  data: UpdatePasswordData
+): Promise<void> => {
+  await client.put('/api/auth/password', data);
+};
 
 export default client;

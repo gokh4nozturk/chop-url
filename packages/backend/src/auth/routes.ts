@@ -22,6 +22,23 @@ const twoFactorLoginSchema = z.object({
   code: z.string().length(6).regex(/^\d+$/),
 });
 
+const updateProfileSchema = z.object({
+  username: z.string().min(2).max(30),
+  email: z.string().email(),
+  name: z.string().min(1).max(50),
+});
+
+const updatePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1),
+    newPassword: z.string().min(8).max(100),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
+
 type Variables = {
   user: IUser;
 };
@@ -147,6 +164,42 @@ export const createAuthRoutes = (authService: AuthService) => {
           '0.0.0.0';
 
         await authService.disableTwoFactor(user.id, code, ipAddress);
+        return c.json({ success: true });
+      } catch (error) {
+        if (error instanceof Error) {
+          return c.json({ error: error.message }, 400);
+        }
+        return c.json({ error: 'Internal server error' }, 500);
+      }
+    }
+  );
+
+  router.put('/profile', zValidator('json', updateProfileSchema), async (c) => {
+    try {
+      const user = c.get('user');
+      const data = await c.req.json();
+      const updatedUser = await authService.updateProfile(user.id, data);
+      return c.json({ user: updatedUser });
+    } catch (error) {
+      if (error instanceof Error) {
+        return c.json({ error: error.message }, 400);
+      }
+      return c.json({ error: 'Internal server error' }, 500);
+    }
+  });
+
+  router.put(
+    '/password',
+    zValidator('json', updatePasswordSchema),
+    async (c) => {
+      try {
+        const user = c.get('user');
+        const data = await c.req.json();
+        const ipAddress =
+          c.req.header('cf-connecting-ip') ||
+          c.req.header('x-forwarded-for') ||
+          '0.0.0.0';
+        await authService.updatePassword(user.id, data, ipAddress);
         return c.json({ success: true });
       } catch (error) {
         if (error instanceof Error) {

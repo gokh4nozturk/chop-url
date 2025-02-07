@@ -3,7 +3,7 @@
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { navigation } from '@/lib/navigation';
+import { navigate } from '@/lib/navigation';
 import { useAuthStore } from '@/lib/store/auth';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
@@ -43,7 +43,7 @@ function TwoFactorContent() {
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => navigation.auth()}
+            onClick={() => navigate.auth()}
             disabled={isLoading}
           >
             Back to login
@@ -92,7 +92,7 @@ function TwoFactorContent() {
         <Button
           variant="outline"
           className="w-full"
-          onClick={() => navigation.auth()}
+          onClick={() => navigate.auth()}
           disabled={isLoading}
         >
           Back to login

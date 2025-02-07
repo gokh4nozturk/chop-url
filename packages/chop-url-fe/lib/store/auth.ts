@@ -1,3 +1,4 @@
+import { User } from '@/lib/types';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { signIn } from 'next-auth/react';
@@ -6,27 +7,19 @@ import { persist } from 'zustand/middleware';
 import apiClient from '../api/client';
 import { navigate } from '../navigation';
 
-interface User {
-  id: number;
-  email: string;
-  createdAt: Date;
-  updatedAt: Date;
-  isEmailVerified: boolean;
-  isTwoFactorEnabled: boolean;
-}
-
 interface AuthState {
   user: User | null;
   token: string | null;
   isLoading: boolean;
   error: string | null;
+  setUser: (user: User | null) => void;
   login: (email: string, password: string) => Promise<void>;
   register: (
     email: string,
     password: string,
     confirmPassword: string
   ) => Promise<void>;
-  socialLogin: (provider: 'google' | 'github') => Promise<void>;
+  socialLogin: (provider: string) => Promise<void>;
   logout: () => void;
   initialize: () => Promise<void>;
   refreshToken: () => Promise<{ user: User; token: string; expiresAt: Date }>;
@@ -51,6 +44,7 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       isLoading: true,
       error: null,
+      setUser: (user) => set({ user }),
 
       initialize: async () => {
         try {
@@ -277,8 +271,8 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      socialLogin: async (provider: 'google' | 'github') => {
-        set({ isLoading: true, error: null });
+      socialLogin: async (provider: string) => {
+        set({ isLoading: true });
         try {
           const result = await signIn(provider, { redirect: false });
 
