@@ -19,7 +19,9 @@ import {
   Image,
   Laptop,
   Link,
+  Link2,
   Loader2,
+  LogOut,
   LucideProps,
   Mail,
   Moon,
@@ -33,7 +35,9 @@ import {
   Trash,
   Twitter,
   User,
+  User2,
   X,
+  ChevronsUpDown,
 } from 'lucide-react';
 
 export type Icon = typeof LucideIcon;
@@ -47,6 +51,7 @@ export const Icons = {
   trash: Trash,
   settings: Settings,
   user: User,
+  user2: User2,
   arrowRight: ArrowRight,
   help: HelpCircle,
   pizza: Pizza,
@@ -60,6 +65,7 @@ export const Icons = {
   search: Search,
   bell: Bell,
   link: Link,
+  link2: Link2,
   plus: Plus,
   home: Home,
   barChart: BarChart,
@@ -89,4 +95,6 @@ export const Icons = {
     </svg>
   ),
   shield: Shield,
+  logOut: LogOut,
+  chevronUpDown: ChevronsUpDown,
 } as const;

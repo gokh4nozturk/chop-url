@@ -29,9 +29,16 @@ export default function DashboardPage() {
           <p className="text-muted-foreground">Welcome back, {user?.email}</p>
         </div>
         <div className="flex items-center space-x-2">
-          <Button>
-            <Icons.plus className="mr-2 h-4 w-4" />
-            New Link
+          <Button
+            asChild
+            variant="default"
+            size="sm"
+            className="w-full justify-start"
+          >
+            <Link href="/dashboard/new">
+              <Icons.plus className="mr-2 h-4 w-4" />
+              New Link
+            </Link>
           </Button>
         </div>
       </div>
