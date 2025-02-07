@@ -196,7 +196,7 @@ importers:
         version: 5.14.9
       '@types/webpack':
         specifier: ^5.28.5
-        version: 5.28.5(esbuild@0.17.19)
+        version: 5.28.5
       '@vitejs/plugin-react':
         specifier: ^4.2.1
         version: 4.3.4(vite@5.4.14(@types/node@20.17.17)(terser@5.38.1))
@@ -224,6 +224,9 @@ importers:
       typescript:
         specifier: ^5
         version: 5.7.3
+      usehooks-ts:
+        specifier: ^2.1.0
+        version: 2.16.0(react@18.2.0)
       vercel:
         specifier: ^41.0.1
         version: 41.0.2(rollup@4.34.4)
@@ -3558,6 +3561,9 @@ packages:
     resolution: {integrity: sha512-9rrA30MRRP3gBD3HTGnC6cDFpaE1kVDWxWgqWJUN0RvDNAo+Nz/9GxB+nHOH0ifbVFy0hSA1V6vFDvnx54lTEQ==}
     engines: {node: '>=14'}
 
+  lodash.debounce@4.0.8:
+    resolution: {integrity: sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==}
+
   lodash.sortby@4.7.0:
     resolution: {integrity: sha512-HDWXG8isMntAyRF5vZ7xKuEvOhT4AhlRt/3czTSjvGUxjYCBVRQY48ViDHyfYz9VIoBkW4TMGQNapx+l3RUwdA==}
 
@@ -4832,6 +4838,12 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  usehooks-ts@2.16.0:
+    resolution: {integrity: sha512-bez95WqYujxp6hFdM/CpRDiVPirZPxlMzOH2QB8yopoKQMXpscyZoxOjpEdaxvV+CAWUDSM62cWnqHE0E/MZ7w==}
+    engines: {node: '>=16.15.0'}
+    peerDependencies:
+      react: ^16.8.0  || ^17 || ^18
 
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
@@ -6522,11 +6534,11 @@ snapshots:
     dependencies:
       '@types/jest': 29.5.14
 
-  '@types/webpack@5.28.5(esbuild@0.17.19)':
+  '@types/webpack@5.28.5':
     dependencies:
       '@types/node': 20.17.17
       tapable: 2.2.1
-      webpack: 5.97.1(esbuild@0.17.19)
+      webpack: 5.97.1
     transitivePeerDependencies:
       - '@swc/core'
       - esbuild
@@ -8238,6 +8250,8 @@ snapshots:
       mlly: 1.7.4
       pkg-types: 1.3.1
 
+  lodash.debounce@4.0.8: {}
+
   lodash.sortby@4.7.0: {}
 
   lodash@4.17.21: {}
@@ -9318,16 +9332,14 @@ snapshots:
       mkdirp: 3.0.1
       yallist: 5.0.0
 
-  terser-webpack-plugin@5.3.11(esbuild@0.17.19)(webpack@5.97.1(esbuild@0.17.19)):
+  terser-webpack-plugin@5.3.11(webpack@5.97.1):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       jest-worker: 27.5.1
       schema-utils: 4.3.0
       serialize-javascript: 6.0.2
       terser: 5.38.1
-      webpack: 5.97.1(esbuild@0.17.19)
-    optionalDependencies:
-      esbuild: 0.17.19
+      webpack: 5.97.1
 
   terser@5.38.1:
     dependencies:
@@ -9544,6 +9556,11 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.0.8
 
+  usehooks-ts@2.16.0(react@18.2.0):
+    dependencies:
+      lodash.debounce: 4.0.8
+      react: 18.2.0
+
   util-deprecate@1.0.2: {}
 
   uuid@3.3.2: {}
@@ -9664,7 +9681,7 @@ snapshots:
 
   webpack-sources@3.2.3: {}
 
-  webpack@5.97.1(esbuild@0.17.19):
+  webpack@5.97.1:
     dependencies:
       '@types/eslint-scope': 3.7.7
       '@types/estree': 1.0.6
@@ -9686,7 +9703,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 3.3.0
       tapable: 2.2.1
-      terser-webpack-plugin: 5.3.11(esbuild@0.17.19)(webpack@5.97.1(esbuild@0.17.19))
+      terser-webpack-plugin: 5.3.11(webpack@5.97.1)
       watchpack: 2.4.2
       webpack-sources: 3.2.3
     transitivePeerDependencies:

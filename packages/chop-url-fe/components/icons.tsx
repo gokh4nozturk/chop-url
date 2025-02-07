@@ -6,6 +6,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  ChevronsUpDown,
   Command,
   Copy,
   CreditCard,
@@ -18,6 +19,7 @@ import {
   type Icon as LucideIcon,
   Image,
   Laptop,
+  LayoutDashboard,
   Link,
   Link2,
   Loader2,
@@ -37,7 +39,6 @@ import {
   User,
   User2,
   X,
-  ChevronsUpDown,
 } from 'lucide-react';
 
 export type Icon = typeof LucideIcon;
@@ -97,4 +98,5 @@ export const Icons = {
   shield: Shield,
   logOut: LogOut,
   chevronUpDown: ChevronsUpDown,
+  layoutDashboard: LayoutDashboard,
 } as const;

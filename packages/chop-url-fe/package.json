@@ -72,6 +72,7 @@
     "vercel": "^41.0.1",
     "vite": "^5.1.4",
     "vitest": "^1.2.2",
-    "wrangler": "^3.28.1"
+    "wrangler": "^3.28.1",
+    "usehooks-ts": "^2.1.0"
   }
 }

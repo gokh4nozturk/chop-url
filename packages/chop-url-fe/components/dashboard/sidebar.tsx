@@ -46,27 +46,18 @@ export function Sidebar() {
   return (
     <SidebarProvider defaultOpen className="w-[240px] hidden md:block ">
       <SidebarComponent className="hidden h-[calc(100vh-var(--header-height))] border-r bg-background md:block mt-header">
-        <SidebarHeader className="border-b px-4 py-2">
-          <Button
-            asChild
-            variant="default"
-            size="sm"
-            className="w-full justify-start"
-          >
-            <Link href="/dashboard/new">
-              <Icons.plus className="mr-2 h-4 w-4" />
-              New Link
-            </Link>
-          </Button>
+        <SidebarHeader className="border-b px-2 py-2">
+          <div className="relative">
+            <Icons.search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search URLs..."
+              className="pl-8 h-8"
+              type="search"
+            />
+          </div>
         </SidebarHeader>
         <SidebarContent>
           <div className="flex flex-col gap-4 py-4">
-            <div className="px-4">
-              <div className="relative">
-                <Icons.search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search URLs..." className="pl-8" />
-              </div>
-            </div>
             <div className="px-2">
               <SidebarMenu>
                 {items.map((item) => (
