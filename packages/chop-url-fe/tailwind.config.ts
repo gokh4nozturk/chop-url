@@ -102,7 +102,7 @@ export default {
         '4000': '4000ms',
       },
       spacing: {
-        header: '4rem',
+        header: 'var(--navbar-height)',
       },
     },
   },

@@ -7,8 +7,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -50,9 +48,9 @@ export function Sidebar() {
   if (!user) return null;
 
   return (
-    <SidebarProvider defaultOpen>
-      <SidebarComponent className="mt-14">
-        <SidebarHeader className="border-b p-4">
+    <SidebarProvider defaultOpen className="w-[240px]">
+      <SidebarComponent className="hidden border-r bg-background md:block  mt-header">
+        <SidebarHeader className="border-b px-4 py-2">
           <Button
             asChild
             variant="default"
@@ -66,33 +64,31 @@ export function Sidebar() {
           </Button>
         </SidebarHeader>
         <SidebarContent>
-          <SidebarGroup>
-            <div className="space-y-4 py-4">
-              <div className="px-4">
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search URLs..." className="pl-8" />
-                </div>
-              </div>
-              <div className="px-2">
-                <SidebarMenu>
-                  {items.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={pathname === item.href}
-                      >
-                        <Link href={item.href}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
+          <div className="flex flex-col gap-4 py-4">
+            <div className="px-4">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Search URLs..." className="pl-8" />
               </div>
             </div>
-          </SidebarGroup>
+            <div className="px-2">
+              <SidebarMenu>
+                {items.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname === item.href}
+                    >
+                      <Link href={item.href}>
+                        <item.icon className="mr-2 h-4 w-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </div>
+          </div>
         </SidebarContent>
         <SidebarFooter className="border-t p-4">
           <p className="text-xs text-muted-foreground">
