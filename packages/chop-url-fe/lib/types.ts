@@ -1,8 +1,6 @@
 export interface User {
   id: number;
   email: string;
-  username: string;
-  name: string;
   isEmailVerified: boolean;
   isTwoFactorEnabled: boolean;
   createdAt: Date;
@@ -14,4 +12,13 @@ export interface AuthResponse {
   token: string;
   expiresAt: Date;
   requiresTwoFactor?: boolean;
+}
+
+export interface URLInfo {
+  shortUrl: string;
+  shortId: string;
+  originalUrl: string;
+  createdAt: Date;
+  visitCount: number;
+  lastAccessedAt: Date | null;
 }

@@ -388,7 +388,9 @@ export class AuthService {
     const encoder = new TextEncoder();
     const data = encoder.encode(password);
     const hash = await crypto.subtle.digest('SHA-256', data);
-    return Buffer.from(hash).toString('hex');
+    return Array.from(new Uint8Array(hash))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
   }
 
   private async verifyPassword(
@@ -504,10 +506,7 @@ export class AuthService {
     };
   }
 
-  async updateProfile(
-    userId: number,
-    data: { username: string; email: string; name: string }
-  ): Promise<IUser> {
+  async updateProfile(userId: number, data: { email: string }): Promise<IUser> {
     // Check if email is already taken by another user
     const existingUser = await this.db
       .prepare('SELECT id FROM users WHERE email = ? AND id != ?')
@@ -521,9 +520,9 @@ export class AuthService {
     // Update user profile
     const result = await this.db
       .prepare(
-        'UPDATE users SET email = ?, username = ?, name = ?, updated_at = datetime("now") WHERE id = ? RETURNING id, email, username, name, is_email_verified, is_two_factor_enabled, created_at, updated_at'
+        'UPDATE users SET email = ?, updated_at = datetime("now") WHERE id = ? RETURNING id, email, is_email_verified, is_two_factor_enabled, created_at, updated_at'
       )
-      .bind(data.email, data.username, data.name, userId)
+      .bind(data.email, userId)
       .first<IUserRow>();
 
     if (!result) {

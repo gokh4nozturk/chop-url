@@ -88,22 +88,24 @@ export const useAuthStore = create<AuthState>()(
             throw new Error('Token not found');
           }
 
-          const response = await apiClient.post('/api/auth/refresh', {
-            token: currentToken,
-          });
+          const response = await apiClient.post('/api/auth/refresh');
 
           const { user, token: newToken, expiresAt } = response.data;
 
-          const expirationDate = new Date(expiresAt);
-          Cookies.set('auth_token', newToken, {
-            expires: expirationDate,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            path: '/',
-          });
+          if (newToken) {
+            Cookies.set('auth_token', newToken, {
+              expires: expiresAt
+                ? new Date(expiresAt)
+                : new Date(Date.now() + 24 * 60 * 60 * 1000),
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax',
+              path: '/',
+            });
 
-          set({ user, token: newToken, isLoading: false });
-          return { user, token: newToken, expiresAt };
+            set({ user, token: newToken, isLoading: false });
+            return { user, token: newToken, expiresAt: new Date(expiresAt) };
+          }
+          throw new Error('No token received from server');
         } catch (error) {
           console.error('Token refresh error:', error);
           get().logout();
@@ -120,38 +122,48 @@ export const useAuthStore = create<AuthState>()(
             password,
           });
 
-          const { user, token, requiresTwoFactor } = response.data;
+          const { user, token, expiresAt } = response.data;
 
-          if (requiresTwoFactor) {
-            navigate.twoFactor(email);
-            return;
-          }
+          if (token) {
+            Cookies.set('auth_token', token, {
+              expires: expiresAt
+                ? new Date(expiresAt)
+                : new Date(Date.now() + 24 * 60 * 60 * 1000),
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax',
+              path: '/',
+            });
 
-          Cookies.set('auth_token', token, {
-            expires: 7,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-          });
-
-          set({ user, token, isLoading: false });
-
-          if (!user.isEmailVerified) {
-            navigate.verifyEmail();
-            return;
-          }
-
-          const params = new URLSearchParams(window.location.search);
-          const from = params.get('from');
-          if (from) {
-            window.location.href = from;
-          } else {
+            set({ user, token, isLoading: false, error: null });
             navigate.dashboard();
+          } else {
+            throw new Error('No token received from server');
           }
         } catch (error) {
+          let errorMessage = 'Login failed';
+
+          if (axios.isAxiosError(error)) {
+            console.error('Login error details:', error.response?.data);
+
+            if (error.response?.status === 0) {
+              errorMessage = 'Could not connect to server. Please try again.';
+            } else if (error.response?.data?.error) {
+              errorMessage = error.response.data.error;
+            } else if (error.message === 'Network Error') {
+              errorMessage =
+                'Network error occurred. Please check your connection.';
+            }
+          } else if (error instanceof Error) {
+            errorMessage = error.message;
+          }
+
           set({
-            error: error instanceof Error ? error.message : 'Failed to login',
+            error: errorMessage,
             isLoading: false,
+            user: null,
+            token: null,
           });
+          throw new Error(errorMessage);
         }
       },
 
@@ -177,6 +189,7 @@ export const useAuthStore = create<AuthState>()(
           });
 
           set({ user, token, isLoading: false, error: null });
+          navigate.dashboard();
         } catch (error) {
           let errorMessage = 'Registration failed';
 

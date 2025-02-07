@@ -1,13 +1,7 @@
+import { User } from '@/lib/types';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import client from './api/client';
-
-export interface User {
-  id: number;
-  email: string;
-  created_at: string;
-  updated_at: string;
-}
 
 export interface AuthResponse {
   user: User;
@@ -29,8 +23,7 @@ export function setToken(token: string, expiresAt?: string): void {
   Cookies.set('auth_token', token, {
     expires,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    path: '/',
+    sameSite: 'lax',
   });
 }
 
@@ -47,12 +40,14 @@ export function removeToken(): void {
 // Helper function to register a new user
 export async function register(
   email: string,
-  password: string
+  password: string,
+  confirmPassword: string
 ): Promise<AuthResponse> {
   try {
     const { data } = await client.post<AuthResponse>('/api/auth/register', {
       email,
       password,
+      confirmPassword,
     });
 
     setToken(data.token, data.expiresAt);
@@ -76,7 +71,10 @@ export async function login(
       password,
     });
 
-    setToken(data.token, data.expiresAt);
+    if (data.token) {
+      setToken(data.token, data.expiresAt?.toString());
+    }
+
     return data;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {
@@ -89,7 +87,10 @@ export async function login(
 // Helper function to logout
 export async function logout(): Promise<void> {
   try {
-    await client.post('/api/auth/logout');
+    const token = getToken();
+    if (token) {
+      await client.post('/api/auth/logout');
+    }
   } finally {
     removeToken();
   }

@@ -1,4 +1,4 @@
-import { getToken } from '@/lib/auth';
+import { getToken, removeToken } from '@/lib/auth';
 import { User } from '@/lib/types';
 import axios from 'axios';
 
@@ -10,7 +10,6 @@ const client = axios.create({
     'Content-Type': 'application/json',
     Accept: 'application/json',
   },
-  withCredentials: true,
 });
 
 // Request interceptor
@@ -30,7 +29,7 @@ client.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      // Delete the token and redirect to the login page
+      removeToken();
       window.location.href = '/auth';
     }
     return Promise.reject(error);

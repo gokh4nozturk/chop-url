@@ -4,6 +4,9 @@ import { Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
 
 import auth, { User, AuthRequest } from './auth.js';
+import { createAuthRoutes } from './auth/routes.js';
+import { AuthService } from './auth/service.js';
+import { ILoginCredentials, IRegisterCredentials } from './auth/types.js';
 import { openApiSchema } from './openapi.js';
 
 export interface Env {
@@ -13,6 +16,7 @@ export interface Env {
 
 type Variables = {
   user: User;
+  authService: AuthService;
 };
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -21,11 +25,7 @@ const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 app.use(
   '*',
   cors({
-    origin: [
-      'http://localhost:3000',
-      'https://app.chop-url.com',
-      'https://api.chop-url.com',
-    ],
+    origin: ['http://localhost:3000'], // Sadece frontend'in originini kabul edelim
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowHeaders: [
       'Content-Type',
@@ -50,20 +50,15 @@ async function authMiddleware(
   next: () => Promise<void>
 ) {
   try {
-    console.log(
-      'Auth middleware called with token:',
-      c.req.header('Authorization')
-    );
-
     const token = c.req.header('Authorization')?.replace('Bearer ', '');
-    console.log('Extracted token:', token);
+    console.log('Auth middleware - Token:', token);
 
     if (!token) {
       return c.json({ error: 'Unauthorized - No token provided' }, 401);
     }
 
     const user = await auth.verifySession(c.env, token);
-    console.log('User from verifySession:', user);
+    console.log('Auth middleware - User:', user);
 
     if (!user) {
       return c.json({ error: 'Unauthorized - Invalid token' }, 401);
@@ -83,79 +78,56 @@ async function authMiddleware(
   }
 }
 
-// Auth endpoints
-app.post('/api/auth/register', async (c) => {
-  const body = await c.req.json<AuthRequest>();
-  const { email, password } = body;
+// AuthService middleware
+app.use('/api/auth/*', async (c, next) => {
+  const authService = new AuthService(c.env.DB);
+  c.set('authService', authService);
+  await next();
+});
 
-  // Validate input
-  if (!email || !password) {
-    return c.json({ error: 'Email and password are required' }, 400);
-  }
+// Auth routes
+const authRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-  if (!auth.isValidEmail(email)) {
-    return c.json({ error: 'Invalid email format' }, 400);
-  }
-
-  if (!auth.isValidPassword(password)) {
-    return c.json(
-      { error: 'Password must be at least 8 characters long' },
-      400
-    );
-  }
-
+// Public routes
+authRouter.post('/login', async (c) => {
   try {
-    const user = await auth.createUser(c.env, email, password);
-    const token = await auth.createSession(c.env, user.id);
-
-    return c.json({ user, token });
+    const authService = c.get('authService');
+    const credentials = await c.req.json<ILoginCredentials>();
+    const response = await authService.login(credentials);
+    return c.json(response);
   } catch (error) {
-    if ((error as Error).message.includes('UNIQUE constraint failed')) {
-      return c.json({ error: 'Email already exists' }, 409);
+    if (error instanceof Error) {
+      return c.json({ error: error.message }, 400);
     }
-    return c.json({ error: 'Failed to create user' }, 500);
+    return c.json({ error: 'Internal server error' }, 500);
   }
 });
 
-app.post('/api/auth/login', async (c) => {
-  const body = await c.req.json<AuthRequest>();
-  const { email, password } = body;
-
-  if (!email || !password) {
-    return c.json({ error: 'Email and password are required' }, 400);
-  }
-
-  const user = await auth.verifyUser(c.env, email, password);
-  if (!user) {
-    return c.json({ error: 'Invalid credentials' }, 401);
-  }
-
-  const token = await auth.createSession(c.env, user.id);
-  return c.json({ user, token });
-});
-
-app.post('/api/auth/logout', authMiddleware, async (c) => {
-  const token = c.req.header('Authorization')?.replace('Bearer ', '');
-  if (token) {
-    await auth.deleteSession(c.env, token);
-  }
-  return c.json({ success: true });
-});
-
-app.post('/api/auth/refresh', async (c) => {
+authRouter.post('/register', async (c) => {
   try {
-    const authHeader = c.req.header('Authorization');
-    console.log('Refresh endpoint called with header:', authHeader);
+    const authService = c.get('authService');
+    const credentials = await c.req.json<IRegisterCredentials>();
+    const response = await authService.register(credentials);
+    return c.json(response);
+  } catch (error) {
+    if (error instanceof Error) {
+      return c.json({ error: error.message }, 400);
+    }
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
 
-    const token = authHeader?.replace('Bearer ', '');
-    console.log('Extracted token:', token);
+authRouter.post('/refresh', async (c) => {
+  try {
+    const token = c.req.header('Authorization')?.replace('Bearer ', '');
+    console.log('Refresh endpoint - Token:', token);
 
     if (!token) {
       return c.json({ error: 'Token is required' }, 400);
     }
 
     const result = await auth.refreshSession(c.env, token);
-    console.log('Refresh result:', result);
+    console.log('Refresh endpoint - Result:', result);
 
     if (!result) {
       return c.json({ error: 'Invalid or expired token' }, 401);
@@ -174,7 +146,10 @@ app.post('/api/auth/refresh', async (c) => {
   }
 });
 
-app.get('/api/auth/me', authMiddleware, async (c) => {
+// Protected routes
+authRouter.use('/*', authMiddleware);
+
+authRouter.get('/me', async (c) => {
   try {
     console.log(
       'Me endpoint called with token:',
@@ -195,6 +170,33 @@ app.get('/api/auth/me', authMiddleware, async (c) => {
   }
 });
 
+authRouter.put('/profile', async (c) => {
+  try {
+    const user = c.get('user');
+    const authService = c.get('authService');
+    const data = await c.req.json();
+    const updatedUser = await authService.updateProfile(user.id, data);
+    return c.json({ user: updatedUser });
+  } catch (error) {
+    if (error instanceof Error) {
+      return c.json({ error: error.message }, 400);
+    }
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
+authRouter.post('/logout', async (c) => {
+  const token = c.req.header('Authorization')?.replace('Bearer ', '');
+  if (token) {
+    await auth.deleteSession(c.env, token);
+  }
+  return c.json({ success: true });
+});
+
+// Mount auth routes
+app.route('/api/auth', authRouter);
+
+// URL shortening routes
 app.post(
   '/api/shorten',
   async (c: Context<{ Bindings: Env; Variables: Variables }>) => {
