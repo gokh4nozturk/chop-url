@@ -194,7 +194,7 @@ app.get('/api/:shortId', async (c) => {
     });
 
     const originalUrl = await chopUrl.getOriginalUrl(shortId);
-    return c.json({ url: originalUrl });
+    return c.redirect(originalUrl, 302);
   } catch (error) {
     if (error instanceof Error && error.message === 'URL not found') {
       return c.json({ error: 'URL not found' }, 404);
