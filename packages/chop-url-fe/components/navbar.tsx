@@ -51,20 +51,12 @@ export function Navbar() {
               </Button>
             </>
           ) : (
-            <>
-              <Link href="/auth/signin" passHref>
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <LogIn className="h-4 w-4" />
-                  <span className="hidden sm:inline-block">Giriş Yap</span>
-                </Button>
-              </Link>
-              <Link href="/auth/register" passHref>
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <UserPlus className="h-4 w-4" />
-                  <span className="hidden sm:inline-block">Kayıt Ol</span>
-                </Button>
-              </Link>
-            </>
+            <Link href="/auth/register" passHref>
+              <Button variant="default" size="sm" className="gap-2">
+                <UserPlus className="h-4 w-4" />
+                <span className="hidden sm:inline-block">Get Started</span>
+              </Button>
+            </Link>
           )}
           <ThemeSwitcher />
         </div>
