@@ -24,7 +24,7 @@ const sidebarNavItems = [
   },
   {
     title: 'Settings',
-    href: '/settings',
+    href: '/settings/two-factor',
     icon: 'settings',
   },
 ];

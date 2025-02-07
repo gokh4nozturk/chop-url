@@ -1,24 +1,33 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useAuthStore } from '@/lib/store/auth';
-import { LayoutDashboard, LogOut } from 'lucide-react';
+import { Bell, LayoutDashboard, LogOut, Search, User } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ThemeSwitcher } from './theme-switcher';
+import { Input } from './ui/input';
 
 export function Navbar() {
   const { user, logout } = useAuthStore();
 
   return (
     <header className="sticky top-0 flex z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="w-full mx-8 flex h-header items-center justify-between">
+      <div className="w-full mx-8 flex h-14 items-center justify-between gap-4">
         <div className="flex items-center gap-6">
           <Link
             href="/"
             className="inline-flex items-center gap-2 hover:opacity-90 transition-opacity"
           >
-            <div className="relative w-9 h-9">
+            <div className="relative w-8 h-8">
               <Image
                 src="/icon.svg"
                 alt="Chop URL Logo"
@@ -32,33 +41,28 @@ export function Navbar() {
             </span>
           </Link>
         </div>
-        <div className="flex flex-1 items-center justify-end gap-2">
-          {user ? (
-            <>
-              <div className="hidden sm:block">
-                <span className="text-sm text-muted-foreground">
-                  {user.email}
-                </span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => logout()}
-                className="gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline-block">Çıkış Yap</span>
-              </Button>
-            </>
-          ) : (
-            <Link href="/dashboard" passHref>
-              <Button variant="default" size="sm" className="gap-2">
-                <LayoutDashboard className="h-4 w-4" />
-                <span className="hidden sm:inline-block">Dashboard</span>
-              </Button>
-            </Link>
-          )}
+        <div className="flex-1 max-w-xl">
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search URLs..." className="pl-8" />
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="w-9 h-9"
+            aria-label="Notifications"
+          >
+            <Bell className="h-4 w-4" />
+          </Button>
           <ThemeSwitcher />
+          <Link href="/dashboard" passHref>
+            <Button variant="default" size="sm" className="gap-2">
+              <LayoutDashboard className="h-4 w-4" />
+              <span className="hidden sm:inline-block">Dashboard</span>
+            </Button>
+          </Link>
         </div>
       </div>
     </header>
