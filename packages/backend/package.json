@@ -14,7 +14,11 @@
     "migrate:local": "wrangler d1 execute chop-url-db-local --file=schema.sql --remote",
     "db:reset": "wrangler d1 execute chop-url-db --file=schema.sql"
   },
-  "keywords": ["url-shortener", "cloudflare-workers", "typescript"],
+  "keywords": [
+    "url-shortener",
+    "cloudflare-workers",
+    "typescript"
+  ],
   "author": "Gokhan Ozturk",
   "license": "MIT",
   "dependencies": {
