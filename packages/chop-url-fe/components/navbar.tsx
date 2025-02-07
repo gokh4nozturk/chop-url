@@ -1,24 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { useAuthStore } from '@/lib/store/auth';
-import { Bell, LayoutDashboard, LogOut, Search, User } from 'lucide-react';
+import { Bell, LayoutDashboard } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ThemeSwitcher } from './theme-switcher';
-import { Input } from './ui/input';
 
 export function Navbar() {
-  const { user, logout } = useAuthStore();
-
   return (
     <header className="sticky top-0 flex z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="w-full mx-8 flex h-14 items-center justify-between gap-4">
@@ -40,12 +29,6 @@ export function Navbar() {
               Chop URL
             </span>
           </Link>
-        </div>
-        <div className="flex-1 max-w-xl">
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search URLs..." className="pl-8" />
-          </div>
         </div>
         <div className="flex items-center gap-2">
           <Button
