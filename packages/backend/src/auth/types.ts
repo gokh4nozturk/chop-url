@@ -4,6 +4,7 @@
 export interface IUser {
   id: number;
   email: string;
+  name: string;
   isEmailVerified: boolean;
   isTwoFactorEnabled: boolean;
   createdAt: Date;
@@ -108,6 +109,7 @@ export class AuthError extends Error {
 export interface IUserRow {
   id: number;
   email: string;
+  name: string;
   password_hash: string;
   is_email_verified: boolean;
   is_two_factor_enabled: boolean;

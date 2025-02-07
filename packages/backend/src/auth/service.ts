@@ -43,9 +43,9 @@ export class AuthService {
     // Create user
     const result = await this.db
       .prepare(
-        'INSERT INTO users (email, password_hash) VALUES (?, ?) RETURNING id, email, created_at, updated_at'
+        'INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?) RETURNING id, email, name, created_at, updated_at'
       )
-      .bind(email, passwordHash)
+      .bind(email, email.split('@')[0], passwordHash)
       .first<IUserRow>();
 
     if (!result) {
@@ -360,6 +360,7 @@ export class AuthService {
     return {
       id: row.id,
       email: row.email,
+      name: row.name,
       isEmailVerified: row.is_email_verified,
       isTwoFactorEnabled: row.is_two_factor_enabled,
       createdAt: new Date(row.created_at),
