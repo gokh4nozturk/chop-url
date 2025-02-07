@@ -4,7 +4,7 @@ import { signIn } from 'next-auth/react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import apiClient from '../api/client';
-import { navigation } from '../navigation';
+import { navigate } from '../navigation';
 
 interface User {
   id: number;
@@ -29,7 +29,7 @@ interface AuthState {
   socialLogin: (provider: 'google' | 'github') => Promise<void>;
   logout: () => void;
   initialize: () => Promise<void>;
-  refreshToken: () => Promise<void>;
+  refreshToken: () => Promise<{ user: User; token: string; expiresAt: Date }>;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (
     token: string,
@@ -57,6 +57,24 @@ export const useAuthStore = create<AuthState>()(
           const token = Cookies.get('auth_token');
           if (token) {
             await get().refreshToken();
+            // Set up automatic token refresh
+            const refreshInterval = setInterval(
+              async () => {
+                try {
+                  await get().refreshToken();
+                } catch (error) {
+                  console.error('Failed to refresh token:', error);
+                  clearInterval(refreshInterval);
+                  get().logout();
+                }
+              },
+              15 * 60 * 1000
+            ); // Her 15 dakikada bir yenile
+
+            // Cleanup on unmount
+            window.addEventListener('beforeunload', () => {
+              clearInterval(refreshInterval);
+            });
           } else {
             set({ isLoading: false });
           }
@@ -68,25 +86,32 @@ export const useAuthStore = create<AuthState>()(
 
       refreshToken: async () => {
         try {
-          const token = Cookies.get('auth_token');
-          if (!token) {
+          const currentToken = Cookies.get('auth_token');
+          if (!currentToken) {
             throw new Error('No token found');
           }
 
-          const response = await apiClient.post('/api/auth/refresh');
-          const { user, token: newToken } = response.data;
+          const response = await apiClient.post('/api/auth/refresh', {
+            token: currentToken,
+          });
 
+          const { user, token: newToken, expiresAt } = response.data;
+
+          // Set new token with expiration
+          const expirationDate = new Date(expiresAt);
           Cookies.set('auth_token', newToken, {
-            expires: 7,
+            expires: expirationDate,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
           });
 
           set({ user, token: newToken, isLoading: false });
+          return { user, token: newToken, expiresAt };
         } catch (error) {
           Cookies.remove('auth_token');
           set({ user: null, token: null, isLoading: false });
-          navigation.auth();
+          navigate.auth();
+          throw error;
         }
       },
 
@@ -101,7 +126,7 @@ export const useAuthStore = create<AuthState>()(
           const { user, token, requiresTwoFactor } = response.data;
 
           if (requiresTwoFactor) {
-            navigation.twoFactor(email);
+            navigate.twoFactor(email);
             return;
           }
 
@@ -114,7 +139,7 @@ export const useAuthStore = create<AuthState>()(
           set({ user, token, isLoading: false });
 
           if (!user.isEmailVerified) {
-            navigation.verifyEmail();
+            navigate.verifyEmail();
             return;
           }
 
@@ -123,7 +148,7 @@ export const useAuthStore = create<AuthState>()(
           if (from) {
             window.location.href = from;
           } else {
-            navigation.dashboard();
+            navigate.dashboard();
           }
         } catch (error) {
           set({
@@ -182,7 +207,7 @@ export const useAuthStore = create<AuthState>()(
           });
           const { user } = response.data;
           set({ user, isLoading: false });
-          navigation.dashboard();
+          navigate.dashboard();
         } catch (error) {
           set({
             error:
@@ -237,7 +262,7 @@ export const useAuthStore = create<AuthState>()(
             confirmPassword,
           });
           set({ isLoading: false });
-          navigation.auth();
+          navigate.auth();
         } catch (error) {
           set({
             error:
@@ -265,7 +290,7 @@ export const useAuthStore = create<AuthState>()(
           if (from) {
             window.location.href = from;
           } else {
-            navigation.dashboard();
+            navigate.dashboard();
           }
         } catch (error) {
           set({
@@ -278,7 +303,7 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         Cookies.remove('auth_token');
         set({ user: null, token: null });
-        navigation.auth();
+        navigate.auth();
       },
 
       verifyTwoFactorLogin: async (email: string, code: string) => {
@@ -304,7 +329,7 @@ export const useAuthStore = create<AuthState>()(
           if (from) {
             window.location.href = from;
           } else {
-            navigation.dashboard();
+            navigate.dashboard();
           }
         } catch (error) {
           set({

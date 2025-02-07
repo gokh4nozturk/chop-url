@@ -458,4 +458,49 @@ export class AuthService {
 
     return codes.results.map((row) => row.code);
   }
+
+  async refreshToken(currentToken: string): Promise<IAuthResponse> {
+    // Get current session and verify it
+    const session = await this.db
+      .prepare(
+        'SELECT user_id, expires_at FROM sessions WHERE token = ? AND expires_at > datetime("now")'
+      )
+      .bind(currentToken)
+      .first<{ user_id: number; expires_at: string }>();
+
+    if (!session) {
+      throw new AuthError(
+        AuthErrorCode.INVALID_TOKEN,
+        'Invalid or expired token'
+      );
+    }
+
+    // Get user
+    const user = await this.db
+      .prepare(
+        'SELECT id, email, is_email_verified, is_two_factor_enabled, created_at, updated_at FROM users WHERE id = ?'
+      )
+      .bind(session.user_id)
+      .first<IUserRow>();
+
+    if (!user) {
+      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found');
+    }
+
+    // Invalidate old session
+    await this.db
+      .prepare('DELETE FROM sessions WHERE token = ?')
+      .bind(currentToken)
+      .run();
+
+    // Create new session
+    const { token, expiresAt } = await this.createSession(user.id);
+
+    return {
+      user: this.mapUserRow(user),
+      token,
+      expiresAt,
+      requiresTwoFactor: false,
+    };
+  }
 }

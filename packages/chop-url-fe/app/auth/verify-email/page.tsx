@@ -2,7 +2,7 @@
 
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { navigation } from '@/lib/navigation';
+import { navigate } from '@/lib/navigation';
 import { useAuthStore } from '@/lib/store/auth';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -47,7 +47,7 @@ function VerifyEmailContent() {
               Please verify your email address to continue.
             </p>
           </div>
-          <Button className="w-full mt-4" onClick={() => navigation.auth()}>
+          <Button className="w-full mt-4" onClick={() => navigate.auth()}>
             Go to Login
           </Button>
         </div>
@@ -55,7 +55,7 @@ function VerifyEmailContent() {
     );
   }
 
-  if (user.isEmailVerified) {
+  if (isVerified) {
     return (
       <div className="container flex h-screen w-screen flex-col items-center justify-center">
         <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
@@ -68,7 +68,7 @@ function VerifyEmailContent() {
               Your email has been successfully verified.
             </p>
           </div>
-          <Button className="w-full" onClick={() => navigation.dashboard()}>
+          <Button className="w-full" onClick={() => navigate.dashboard()}>
             Go to Dashboard
           </Button>
         </div>
@@ -114,7 +114,7 @@ function VerifyEmailContent() {
         <Button
           variant="outline"
           className="w-full"
-          onClick={() => navigation.auth()}
+          onClick={() => navigate.auth()}
           disabled={isLoading}
         >
           Back to login
