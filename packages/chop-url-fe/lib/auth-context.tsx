@@ -6,8 +6,8 @@ import {
   getCurrentUser,
   login as authLogin,
   logout as authLogout,
-  refreshTokenokenauthRefreshTokeneshToken,
-  registerauthauthRegister,
+  refreshToken as authRefreshToken,
+  register as authRegister,
 } from './auth';
 
 interface AuthContextType {
