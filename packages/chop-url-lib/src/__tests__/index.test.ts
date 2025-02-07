@@ -5,7 +5,6 @@ import type {
 } from '@cloudflare/workers-types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChopUrl } from '../index';
-import { ChopUrlError, ChopUrlErrorCode } from '../types';
 
 describe('ChopUrl', () => {
   let chopUrl: ChopUrl;

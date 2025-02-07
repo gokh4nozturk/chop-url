@@ -1,5 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
-import { nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
 import { CreateUrlOptions, IChopUrlConfig, IUrlInfo } from './types';
 
 /**
@@ -19,7 +19,7 @@ export class ChopUrl {
     }
 
     // Remove trailing slash from base URL
-    this.baseUrl = 'http://localhost:8788';
+    this.baseUrl = config.baseUrl.replace(/\/$/, '');
     this.db = config.db;
   }
 
@@ -225,11 +225,14 @@ export function isValidUrl(url: string): boolean {
 }
 
 /**
- * Generates a short ID for URL shortening
+ * Generates a short ID using only alphanumeric characters
  * @param length Length of the short ID
  * @returns Generated short ID
  */
 export function generateShortId(length = 6): string {
+  const nanoid = customAlphabet(
+    '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+  );
   return nanoid(length);
 }
 

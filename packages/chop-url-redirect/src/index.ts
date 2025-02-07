@@ -16,8 +16,6 @@ app.get('/health', (c) => c.json({ status: 'ok' }));
 
 // this endpoint is used to redirect the user to the original URL
 app.get('/:shortId', async (c) => {
-  console.log('c.env.FRONTEND_URL', c.env.FRONTEND_URL);
-  console.log('c.req.param', c.req.param('shortId'));
   try {
     const shortId = c.req.param('shortId');
 
@@ -32,21 +30,20 @@ app.get('/:shortId', async (c) => {
       .first<{ original_url: string }>();
 
     if (!result) {
-      // Eğer URL bulunamazsa frontend'e yönlendir
-      return new Response(null, {
-        status: 302,
-        headers: {
-          Location: `${c.env.FRONTEND_URL}?error=url-not-found`,
-        },
-      });
+      return c.json({ message: 'Short URL not found' }, 404);
     }
 
     // Ziyaret sayısını artır
-    await c.env.DB.prepare(
-      'UPDATE urls SET visit_count = visit_count + 1, last_accessed_at = CURRENT_TIMESTAMP WHERE short_id = ?'
-    )
-      .bind(shortId)
-      .run();
+    try {
+      await c.env.DB.prepare(
+        'UPDATE urls SET visit_count = visit_count + 1, last_accessed_at = CURRENT_TIMESTAMP WHERE short_id = ?'
+      )
+        .bind(shortId)
+        .run();
+    } catch (error) {
+      console.error('Error updating visit count:', error);
+      // Ziyaret sayısı güncellenemese bile yönlendirmeye devam et
+    }
 
     // Orijinal URL'ye yönlendir
     return new Response(null, {
@@ -56,13 +53,11 @@ app.get('/:shortId', async (c) => {
       },
     });
   } catch (error) {
-    console.error('Error redirecting:', error);
-    return new Response(null, {
-      status: 302,
-      headers: {
-        Location: `${c.env.FRONTEND_URL}?error=server-error`,
-      },
-    });
+    console.error('Error in redirect handler:', error);
+    if (error instanceof HTTPException) {
+      return c.json({ message: error.message }, error.status);
+    }
+    return c.json({ message: 'Internal server error' }, 500);
   }
 });
 

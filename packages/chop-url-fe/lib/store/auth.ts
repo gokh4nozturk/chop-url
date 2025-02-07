@@ -1,3 +1,4 @@
+import axios from 'axios';
 import Cookies from 'js-cookie';
 import { signIn } from 'next-auth/react';
 import { create } from 'zustand';
@@ -150,17 +151,26 @@ export const useAuthStore = create<AuthState>()(
           Cookies.set('auth_token', token, {
             expires: 7,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            sameSite: 'lax',
           });
 
-          set({ user, token, isLoading: false });
-          navigation.verifyEmail();
+          set({ user, token, isLoading: false, error: null });
         } catch (error) {
-          set({
-            error:
-              error instanceof Error ? error.message : 'Failed to register',
-            isLoading: false,
-          });
+          let errorMessage = 'Registration failed';
+
+          if (axios.isAxiosError(error)) {
+            if (error.response?.status === 0) {
+              errorMessage = 'Could not connect to server. Please try again.';
+            } else if (error.response?.data?.error) {
+              errorMessage = error.response.data.error;
+            } else if (error.message === 'Network Error') {
+              errorMessage =
+                'Network error occurred. Please check your connection.';
+            }
+          }
+
+          set({ error: errorMessage, isLoading: false });
+          throw new Error(errorMessage);
         }
       },
 

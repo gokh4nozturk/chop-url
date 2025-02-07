@@ -30,7 +30,7 @@ const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 app.use(
   '*',
   cors({
-    origin: '*', // Geliştirme aşamasında daha permissive yapalım
+    origin: '*',
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowHeaders: [
       'Content-Type',
@@ -38,17 +38,10 @@ app.use(
       'Accept',
       'Origin',
       'X-Requested-With',
-      'Access-Control-Allow-Origin',
-      'Access-Control-Allow-Credentials',
     ],
-    exposeHeaders: [
-      'Content-Type',
-      'Authorization',
-      'Access-Control-Allow-Origin',
-      'Access-Control-Allow-Credentials',
-    ],
+    exposeHeaders: ['Content-Type'],
     credentials: true,
-    maxAge: 86400,
+    maxAge: 86400, // 24 hours
   })
 );
 
@@ -141,43 +134,42 @@ app.get('/api/auth/me', authMiddleware, async (c) => {
 });
 
 app.post('/api/shorten', async (c) => {
-  const body = await c.req.json<{ url: string; customSlug?: string }>();
-  const { url, customSlug } = body;
+  const { url, customSlug } = await c.req.json();
+  const token = c.req.header('Authorization')?.replace('Bearer ', '');
 
   if (!url) {
-    return c.json({ error: 'URL is required' }, 400);
-  }
-
-  try {
-    new URL(url);
-  } catch {
     return c.json({ error: 'Invalid URL' }, 400);
   }
 
-  // Get user from auth (optional)
-  const token = c.req.header('Authorization')?.replace('Bearer ', '');
   const user = token ? await verifySession(c.env, token) : null;
 
   try {
-    const shortId = customSlug || nanoid(6);
-    const result = await c.env.DB.prepare(
-      'INSERT INTO urls (short_id, original_url, custom_slug, user_id) VALUES (?, ?, ?, ?) RETURNING *'
-    )
-      .bind(shortId, url, customSlug || null, user?.id || null)
-      .first<{ short_id: string }>();
-
-    if (!result) {
-      throw new Error('Failed to create short URL');
-    }
-
-    return c.json({
-      shortUrl: `${c.env.BASE_URL}/${result.short_id}`,
-      shortId: result.short_id,
+    const chopUrl = new ChopUrl({
+      baseUrl: c.env.BASE_URL,
+      db: c.env.DB,
     });
+
+    const result = await chopUrl.createShortUrl(url, { customSlug });
+
+    return c.json(
+      {
+        shortUrl: result.shortUrl,
+        shortId: result.shortId,
+        originalUrl: result.originalUrl,
+        createdAt: result.createdAt.toISOString(),
+      },
+      200
+    );
   } catch (error) {
-    if ((error as Error).message.includes('UNIQUE constraint failed')) {
-      return c.json({ error: 'Custom slug already exists' }, 409);
+    if (error instanceof Error) {
+      if (error.message === 'Custom slug is already taken') {
+        return c.json({ error: 'Custom slug already exists' }, 409);
+      }
+      if (error.message === 'Invalid URL') {
+        return c.json({ error: 'Invalid URL' }, 400);
+      }
     }
+    console.error('Error creating short URL:', error);
     return c.json({ error: 'Failed to create short URL' }, 500);
   }
 });
