@@ -11,7 +11,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { UpdateProfileData, updateProfile } from '@/lib/api/client';
 import { useAuthStore } from '@/lib/store/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -32,7 +31,7 @@ const profileFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export function ProfileForm() {
-  const { user, setUser } = useAuthStore();
+  const { user, updateProfile } = useAuthStore();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -44,8 +43,7 @@ export function ProfileForm() {
 
   async function onSubmit(data: ProfileFormValues) {
     try {
-      const updatedUser = await updateProfile(data as UpdateProfileData);
-      setUser(updatedUser);
+      await updateProfile(data);
       toast.success('Profile updated successfully');
     } catch (error) {
       toast.error(

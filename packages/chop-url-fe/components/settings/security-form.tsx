@@ -12,12 +12,13 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { UpdatePasswordData, updatePassword } from '@/lib/api/client';
 import { useAuthStore } from '@/lib/store/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
+import { Label } from '../ui/label';
 
 const securityFormSchema = z
   .object({
@@ -27,7 +28,6 @@ const securityFormSchema = z
       .min(8, 'Password must be at least 8 characters')
       .max(100, 'Password must not be longer than 100 characters'),
     confirmPassword: z.string(),
-    twoFactorEnabled: z.boolean().default(false),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: 'Passwords do not match',
@@ -37,7 +37,14 @@ const securityFormSchema = z
 type SecurityFormValues = z.infer<typeof securityFormSchema>;
 
 export function SecurityForm() {
-  const { user } = useAuthStore();
+  const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(false);
+  const secret = 'secret';
+  const { user, disableTwoFactor, enableTwoFactor, updatePassword } =
+    useAuthStore();
+
+  useEffect(() => {
+    setIsTwoFactorEnabled(user?.isTwoFactorEnabled || false);
+  }, [user]);
 
   const form = useForm<SecurityFormValues>({
     resolver: zodResolver(securityFormSchema),
@@ -45,25 +52,41 @@ export function SecurityForm() {
       currentPassword: '',
       newPassword: '',
       confirmPassword: '',
-      twoFactorEnabled: user?.isTwoFactorEnabled || false,
     },
   });
 
   async function onSubmit(data: SecurityFormValues) {
     try {
-      await updatePassword(data as UpdatePasswordData);
+      await updatePassword(data);
       toast.success('Security settings updated successfully');
       form.reset({
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
-        twoFactorEnabled: data.twoFactorEnabled,
       });
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
           : 'Failed to update security settings'
+      );
+    }
+  }
+
+  async function on2FactorSubmit() {
+    try {
+      if (isTwoFactorEnabled) {
+        await disableTwoFactor(secret);
+      } else {
+        await enableTwoFactor(secret);
+      }
+      toast.success('Two-factor settings updated successfully');
+      setIsTwoFactorEnabled(!isTwoFactorEnabled);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to update two-factor settings'
       );
     }
   }
@@ -111,28 +134,19 @@ export function SecurityForm() {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="twoFactorEnabled"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">
-                  Two-Factor Authentication
-                </FormLabel>
-                <FormDescription>
-                  Add an extra layer of security to your account
-                </FormDescription>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
+
+        <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+          <div className="space-y-0.5">
+            <Label className="text-base">Two-Factor Authentication</Label>
+            <p className="text-sm text-muted-foreground">
+              Add an extra layer of security to your account
+            </p>
+          </div>
+          <Switch
+            checked={isTwoFactorEnabled}
+            onCheckedChange={() => on2FactorSubmit()}
+          />
+        </div>
         <Button type="submit">Update security settings</Button>
       </form>
     </Form>

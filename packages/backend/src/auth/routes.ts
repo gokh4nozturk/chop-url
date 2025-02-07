@@ -1,6 +1,7 @@
 import { zValidator } from '@hono/zod-validator';
 import { Context, Hono } from 'hono';
 import { z } from 'zod';
+import { auth } from './middleware.js';
 import { AuthService } from './service.js';
 import { ILoginCredentials, IRegisterCredentials, IUser } from './types.js';
 
@@ -81,39 +82,7 @@ export const createAuthRoutes = () => {
     }
   });
 
-  router.post('/auth', zValidator('json', loginSchema), async (c: Context) => {
-    try {
-      const authService = new AuthService(c.env.DB);
-      const credentials = await c.req.json<ILoginCredentials>();
-      const response = await authService.login(credentials);
-      return c.json(response);
-    } catch (error) {
-      if (error instanceof Error) {
-        return c.json({ error: error.message }, 400);
-      }
-      return c.json({ error: 'Internal server error' }, 500);
-    }
-  });
-
-  router.post(
-    '/auth',
-    zValidator('json', registerSchema),
-    async (c: Context) => {
-      try {
-        const authService = new AuthService(c.env.DB);
-        const credentials = await c.req.json<IRegisterCredentials>();
-        const response = await authService.register(credentials);
-        return c.json(response);
-      } catch (error) {
-        if (error instanceof Error) {
-          return c.json({ error: error.message }, 400);
-        }
-        return c.json({ error: 'Internal server error' }, 500);
-      }
-    }
-  );
-
-  router.post('/setup-2fa', async (c: Context) => {
+  router.post('/setup-2fa', auth(), async (c: Context) => {
     try {
       const authService = new AuthService(c.env.DB);
       const user = c.get('user');
@@ -129,6 +98,7 @@ export const createAuthRoutes = () => {
 
   router.post(
     '/verify-2fa-setup',
+    auth(),
     zValidator('json', twoFactorCodeSchema),
     async (c: Context) => {
       try {
@@ -155,7 +125,7 @@ export const createAuthRoutes = () => {
     }
   );
 
-  router.get('/recovery-codes', async (c: Context) => {
+  router.get('/recovery-codes', auth(), async (c: Context) => {
     try {
       const authService = new AuthService(c.env.DB);
       const user = c.get('user');
@@ -197,7 +167,33 @@ export const createAuthRoutes = () => {
   );
 
   router.post(
+    '/enable-2fa',
+    auth(),
+    zValidator('json', twoFactorCodeSchema),
+    async (c: Context) => {
+      try {
+        const authService = new AuthService(c.env.DB);
+        const { code } = await c.req.json();
+        const user = c.get('user');
+        const ipAddress =
+          c.req.header('cf-connecting-ip') ||
+          c.req.header('x-forwarded-for') ||
+          '0.0.0.0';
+
+        await authService.enableTwoFactor(user.id, code, ipAddress);
+        return c.json({ success: true });
+      } catch (error) {
+        if (error instanceof Error) {
+          return c.json({ error: error.message }, 400);
+        }
+        return c.json({ error: 'Internal server error' }, 500);
+      }
+    }
+  );
+
+  router.post(
     '/disable-2fa',
+    auth(),
     zValidator('json', twoFactorCodeSchema),
     async (c: Context) => {
       try {
@@ -222,6 +218,7 @@ export const createAuthRoutes = () => {
 
   router.put(
     '/profile',
+    auth(),
     zValidator('json', updateProfileSchema),
     async (c: Context) => {
       try {
@@ -242,6 +239,7 @@ export const createAuthRoutes = () => {
 
   router.put(
     '/password',
+    auth(),
     zValidator('json', updatePasswordSchema),
     async (c: Context) => {
       try {

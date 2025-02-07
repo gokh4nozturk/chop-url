@@ -304,6 +304,38 @@ export class AuthService {
     };
   }
 
+  async enableTwoFactor(
+    userId: number,
+    code: string,
+    ipAddress: string
+  ): Promise<void> {
+    // Check rate limit
+    await this.checkRateLimit(userId, ipAddress, 'totp');
+
+    // Get user
+    const user = await this.db
+      .prepare('SELECT two_factor_secret FROM users WHERE id = ?')
+      .bind(userId)
+      .first<{ two_factor_secret: string }>();
+
+    if (!user?.two_factor_secret) {
+      throw new AuthError(AuthErrorCode.INVALID_2FA_CODE, 'Invalid setup');
+    }
+
+    // Verify code
+    const isValid = await verifyTOTP(code, user.two_factor_secret);
+
+    if (!isValid) {
+      throw new AuthError(AuthErrorCode.INVALID_2FA_CODE, 'Invalid code');
+    }
+
+    // Enable 2FA
+    await this.db
+      .prepare('UPDATE users SET is_two_factor_enabled = TRUE WHERE id = ?')
+      .bind(userId)
+      .run();
+  }
+
   async disableTwoFactor(
     userId: number,
     code: string,

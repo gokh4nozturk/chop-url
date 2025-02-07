@@ -7,6 +7,15 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface AuthActions {
+  updateProfile: (data: {
+    email: string;
+    name: string;
+  }) => Promise<void>;
+  updatePassword: (data: {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }) => Promise<void>;
   setUser: (user: User | null) => void;
   setTokenData: (tokenData: TokenData | null) => void;
   setError: (error: AuthError | null) => void;
@@ -24,15 +33,13 @@ interface AuthActions {
   socialLogin: (provider: string) => Promise<void>;
   verifyEmail: (email: string) => Promise<void>;
   resendVerificationEmail: (email: string) => Promise<void>;
-  setupTwoFactor: (
-    email: string,
-    code: string
-  ) => Promise<{
+  setupTwoFactor: () => Promise<{
     qrCodeUrl: string;
     secret: string;
   }>;
-  disableTwoFactor: (email: string, code: string) => Promise<void>;
-  verifyTwoFactor: (email: string, code: string) => Promise<void>;
+  enableTwoFactor: (code: string) => Promise<void>;
+  disableTwoFactor: (code: string) => Promise<void>;
+  verifyTwoFactor: (code: string) => Promise<void>;
   verifyTwoFactorLogin: (email: string, code: string) => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (
@@ -73,6 +80,30 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           get().logout();
         } finally {
           set({ isLoading: false });
+        }
+      },
+
+      updateProfile: async (data: {
+        email: string;
+        name: string;
+      }) => {
+        try {
+          const response = await apiClient.post('/api/auth/profile', data);
+          set({ user: response.data.user });
+        } catch (error) {
+          console.error('Update profile error:', error);
+        }
+      },
+
+      updatePassword: async (data: {
+        currentPassword: string;
+        newPassword: string;
+        confirmPassword: string;
+      }) => {
+        try {
+          await apiClient.post('/api/auth/password', data);
+        } catch (error) {
+          console.error('Update password error:', error);
         }
       },
 
@@ -259,28 +290,33 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         }
       },
 
-      setupTwoFactor: async (email: string, code: string) => {
+      setupTwoFactor: async () => {
         try {
-          const response = await apiClient.post('/api/auth/setup-2fa', {
-            email,
-            code,
-          });
+          const response = await apiClient.post('/api/auth/setup-2fa');
           return response.data;
         } catch (error) {
           console.error('Two-factor setup error:', error);
         }
       },
-      disableTwoFactor: async () => {
+      enableTwoFactor: async (code: string) => {
+        try {
+          await apiClient.post('/api/auth/enable-2fa', {
+            code,
+          });
+        } catch (error) {
+          console.error('Two-factor enable error:', error);
+        }
+      },
+      disableTwoFactor: async (code: string) => {
         try {
           await apiClient.post('/api/auth/disable-2fa');
         } catch (error) {
           console.error('Two-factor disable error:', error);
         }
       },
-      verifyTwoFactor: async (email: string, code: string) => {
+      verifyTwoFactor: async (code: string) => {
         try {
           await apiClient.post('/api/auth/verify-2fa', {
-            email,
             code,
           });
         } catch (error) {
