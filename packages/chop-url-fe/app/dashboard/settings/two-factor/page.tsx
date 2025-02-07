@@ -23,7 +23,13 @@ export default function TwoFactorSetupPage() {
 
   const handleSetup = async () => {
     try {
-      const { qrCodeUrl, secret: setupSecret } = await setupTwoFactor();
+      if (!user) {
+        throw new Error('User not found');
+      }
+      const { qrCodeUrl, secret: setupSecret } = await setupTwoFactor(
+        user.email,
+        code
+      );
       setQrCode(qrCodeUrl);
       setSecret(setupSecret);
       setStep('setup');
@@ -35,7 +41,10 @@ export default function TwoFactorSetupPage() {
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await verifyTwoFactor(code);
+      if (!user) {
+        throw new Error('User not found');
+      }
+      await verifyTwoFactor(user.email, code);
       setStep('initial');
       setCode('');
     } catch (error) {
@@ -46,7 +55,11 @@ export default function TwoFactorSetupPage() {
   const handleDisable = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await disableTwoFactor(code);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      await disableTwoFactor(user.email, code);
       setStep('initial');
       setCode('');
     } catch (error) {
@@ -116,7 +129,9 @@ export default function TwoFactorSetupPage() {
                 className="text-center text-2xl tracking-widest"
               />
             </div>
-            {error && <div className="text-sm text-destructive">{error}</div>}
+            {error && (
+              <div className="text-sm text-destructive">{error.message}</div>
+            )}
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
                 <>
@@ -167,7 +182,9 @@ export default function TwoFactorSetupPage() {
               className="text-center text-2xl tracking-widest"
             />
           </div>
-          {error && <div className="text-sm text-destructive">{error}</div>}
+          {error && (
+            <div className="text-sm text-destructive">{error.message}</div>
+          )}
           <Button
             type="submit"
             variant="destructive"

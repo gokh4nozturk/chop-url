@@ -21,6 +21,25 @@ interface AuthActions {
   initialize: () => Promise<void>;
   refreshToken: () => Promise<void>;
   clearError: () => void;
+  socialLogin: (provider: string) => Promise<void>;
+  verifyEmail: (email: string) => Promise<void>;
+  resendVerificationEmail: (email: string) => Promise<void>;
+  setupTwoFactor: (
+    email: string,
+    code: string
+  ) => Promise<{
+    qrCodeUrl: string;
+    secret: string;
+  }>;
+  disableTwoFactor: (email: string, code: string) => Promise<void>;
+  verifyTwoFactor: (email: string, code: string) => Promise<void>;
+  verifyTwoFactorLogin: (email: string, code: string) => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<void>;
+  resetPassword: (
+    token: string,
+    newPassword: string,
+    confirmPassword: string
+  ) => Promise<void>;
 }
 
 const COOKIE_NAME = 'auth_token';
@@ -199,6 +218,97 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           Cookies.remove(COOKIE_NAME, { path: '/' });
           set({ user: null, tokenData: null, error: null });
           navigate.auth();
+        }
+      },
+
+      socialLogin: async (provider: string) => {
+        try {
+          await apiClient.post('/api/auth/social', {
+            provider,
+          });
+        } catch (error) {
+          console.error('Social login error:', error);
+        }
+      },
+      verifyTwoFactorLogin: async (email: string, code: string) => {
+        try {
+          await apiClient.post('/api/auth/verify-2fa', {
+            email,
+            code,
+          });
+        } catch (error) {
+          console.error('Two-factor login verification error:', error);
+        }
+      },
+      verifyEmail: async (email: string) => {
+        try {
+          await apiClient.post('/api/auth/verify-email', {
+            email,
+          });
+        } catch (error) {
+          console.error('Email verification error:', error);
+        }
+      },
+      resendVerificationEmail: async (email: string) => {
+        try {
+          await apiClient.post('/api/auth/resend-verification-email', {
+            email,
+          });
+        } catch (error) {
+          console.error('Resend verification email error:', error);
+        }
+      },
+
+      setupTwoFactor: async (email: string, code: string) => {
+        try {
+          const response = await apiClient.post('/api/auth/setup-2fa', {
+            email,
+            code,
+          });
+          return response.data;
+        } catch (error) {
+          console.error('Two-factor setup error:', error);
+        }
+      },
+      disableTwoFactor: async () => {
+        try {
+          await apiClient.post('/api/auth/disable-2fa');
+        } catch (error) {
+          console.error('Two-factor disable error:', error);
+        }
+      },
+      verifyTwoFactor: async (email: string, code: string) => {
+        try {
+          await apiClient.post('/api/auth/verify-2fa', {
+            email,
+            code,
+          });
+        } catch (error) {
+          console.error('Two-factor verification error:', error);
+        }
+      },
+      requestPasswordReset: async (email: string) => {
+        try {
+          await apiClient.post('/api/auth/request-password-reset', {
+            email,
+          });
+        } catch (error) {
+          console.error('Password reset request error:', error);
+        }
+      },
+      resetPassword: async (
+        token: string,
+        newPassword: string,
+        confirmPassword: string
+      ) => {
+        try {
+          await apiClient.post('/api/auth/reset-password', {
+            token,
+            newPassword,
+            confirmPassword,
+          });
+        } catch (error) {
+          console.error('Password reset error:', error);
         }
       },
     }),

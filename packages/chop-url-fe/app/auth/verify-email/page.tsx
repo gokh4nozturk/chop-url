@@ -98,14 +98,14 @@ function VerifyEmailContent() {
             {isLoading
               ? 'Please wait while we verify your email address.'
               : error
-                ? error
+                ? error.message
                 : 'We sent you a verification link. Please check your email.'}
           </p>
         </div>
         {error && (
           <Button
             className="w-full"
-            onClick={() => resendVerificationEmail()}
+            onClick={() => resendVerificationEmail(user.email)}
             disabled={isLoading}
           >
             Resend Verification Email

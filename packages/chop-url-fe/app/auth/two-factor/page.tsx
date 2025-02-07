@@ -74,7 +74,9 @@ function TwoFactorContent() {
           onChange={(e) => setCode(e.target.value)}
           className="text-center text-2xl tracking-widest"
         />
-        {error && <div className="text-sm text-destructive">{error}</div>}
+        {error && (
+          <div className="text-sm text-destructive">{error.message}</div>
+        )}
         <Button
           className="w-full"
           onClick={handleVerify}

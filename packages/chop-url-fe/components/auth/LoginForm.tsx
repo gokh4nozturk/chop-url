@@ -121,7 +121,7 @@ export function LoginForm() {
           </p>
         )}
       </div>
-      {error && <div className="text-sm text-destructive">{error}</div>}
+      {error && <div className="text-sm text-destructive">{error.message}</div>}
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? 'Signing in...' : 'Sign in'}
       </Button>
