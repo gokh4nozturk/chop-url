@@ -3,6 +3,7 @@
 This documentation provides a detailed explanation of the authentication and authorization system in the Chop URL application.
 
 ## Table of Contents
+
 1. [Overview](#overview)
 2. [Auth Flow](#auth-flow)
 3. [Token Management](#token-management)
@@ -14,6 +15,7 @@ This documentation provides a detailed explanation of the authentication and aut
 Chop URL uses a JWT-based authentication system. User sessions are managed with HTTP-only cookies, and a unique token is generated for each session.
 
 ### Key Features
+
 - JWT-based authentication
 - HTTP-only cookie token management
 - Automatic token refresh (every 15 minutes)
@@ -129,6 +131,7 @@ The authentication flow is divided into three main processes:
    - Forces re-login if invalid
 
 Each process includes error handling and appropriate user feedback. The system maintains security by:
+
 - Validating credentials at each step
 - Managing sessions in the database
 - Automatically refreshing tokens
@@ -137,6 +140,7 @@ Each process includes error handling and appropriate user feedback. The system m
 ## Token Management
 
 ### Token Lifecycle
+
 ```mermaid
 stateDiagram-v2
     [*] --> Token_Created: Login/Register
@@ -148,6 +152,7 @@ stateDiagram-v2
 ```
 
 ### Timing
+
 ```mermaid
 gantt
     title Token Refresh Cycle
@@ -176,6 +181,7 @@ gantt
 ### Request/Response Examples
 
 #### Register
+
 ```typescript
 // Request
 POST /api/auth/register
@@ -206,6 +212,7 @@ POST /api/auth/register
    - 1-hour expiration time
 
 2. **CORS Protection**
+
    ```typescript
    cors({
      origin: ['http://localhost:3000', 'https://app.chop-url.com'],
@@ -223,6 +230,7 @@ POST /api/auth/register
 ## User Stories
 
 ### User Registration
+
 ```gherkin
 Feature: User Registration
   
@@ -241,6 +249,7 @@ Feature: User Registration
 ```
 
 ### Token Refresh
+
 ```gherkin
 Feature: Token Refresh
 
@@ -273,6 +282,7 @@ flowchart TD
 ## Frontend Implementation
 
 ### Using Auth Context
+
 ```typescript
 function MyComponent() {
   const { user, login, logout } = useAuth();
@@ -291,6 +301,7 @@ function MyComponent() {
 ```
 
 ### Token Refresh Mechanism
+
 ```typescript
 useEffect(() => {
   const refreshInterval = setInterval(async () => {
@@ -311,6 +322,7 @@ useEffect(() => {
 ## Common Issues and Solutions
 
 ### CORS Issues
+
 ```typescript
 // Problem: Credentials not being sent
 axios.create({
@@ -329,6 +341,7 @@ app.use(cors({
 ```
 
 ### Token Refresh Edge Cases
+
 1. **Race Conditions**
    ```typescript
    let refreshPromise: Promise<any> | null = null;
@@ -346,6 +359,7 @@ app.use(cors({
    ```
 
 2. **Multiple Tabs**
+
    ```typescript
    window.addEventListener('storage', (event) => {
      if (event.key === 'auth_token' && !event.newValue) {
@@ -358,6 +372,7 @@ app.use(cors({
 ## Testing Guide
 
 ### Unit Tests
+
 ```typescript
 describe('Auth Provider', () => {
   it('should handle successful login', async () => {
@@ -374,6 +389,7 @@ describe('Auth Provider', () => {
 ```
 
 ### Integration Tests
+
 ```typescript
 describe('Auth Flow', () => {
   it('should maintain session across page reloads', async () => {
@@ -390,4 +406,5 @@ describe('Auth Flow', () => {
     expect(page.url()).toContain('/dashboard');
   });
 });
-``` 
+```
+ 

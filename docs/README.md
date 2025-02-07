@@ -5,6 +5,7 @@ Welcome to the Chop URL documentation. This documentation is divided into severa
 ## Table of Contents
 
 ### Core Documentation
+
 - [Authentication & Authorization](auth/README.md)
   - Token Management
   - Security Measures
@@ -19,13 +20,14 @@ Welcome to the Chop URL documentation. This documentation is divided into severa
   - Monitoring
 
 ### Additional Resources
-- [GitHub Wiki](https://github.com/yourusername/chop-url/wiki) - For high-level documentation and guides
+
+- [GitHub Wiki](https://github.com/gokh4nozturk/chop-url/wiki) - For high-level documentation and guides
 - [API Documentation](https://api.chop-url.com/docs) - OpenAPI/Swagger documentation
 - [Contributing Guidelines](CONTRIBUTING.md) - How to contribute to the project
 
 ## Documentation Structure
 
-```
+```txt
 /docs
   /auth           - Authentication and authorization details
   /deployment     - Deployment and infrastructure documentation
@@ -35,7 +37,7 @@ Welcome to the Chop URL documentation. This documentation is divided into severa
 ## Updating Documentation
 
 1. Technical documentation should be kept in this `/docs` directory
-2. High-level guides and operational documentation should be in the [Wiki](https://github.com/yourusername/chop-url/wiki)
+2. High-level guides and operational documentation should be in the [Wiki](https://github.com/gokh4nozturk/chop-url/wiki)
 3. API documentation is auto-generated from code comments
 
-Please ensure all code changes are accompanied by appropriate documentation updates. 
+Please ensure all code changes are accompanied by appropriate documentation updates.
