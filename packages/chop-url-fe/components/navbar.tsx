@@ -9,7 +9,7 @@ import { ThemeSwitcher } from './theme-switcher';
 
 export function Navbar() {
   return (
-    <header className="sticky top-0 flex z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="fixed top-0 flex z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="w-full mx-8 flex h-14 items-center justify-between gap-4">
         <div className="flex items-center gap-6">
           <Link

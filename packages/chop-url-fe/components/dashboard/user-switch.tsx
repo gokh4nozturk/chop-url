@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 
+import { Icons } from '@/components/icons';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +19,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { useAuthStore } from '@/lib/store/auth';
-import { Icons } from '../icons';
+import Link from 'next/link';
 
 export function UserSwitch() {
   const { isMobile } = useSidebar();
@@ -60,6 +61,15 @@ export function UserSwitch() {
               {user.email}
               <DropdownMenuShortcut>⌘1</DropdownMenuShortcut>
             </DropdownMenuItem>
+            <DropdownMenuItem className="gap-2 p-2" asChild>
+              <Link href="/settings">
+                <div className="flex size-6 items-center justify-center rounded-sm border">
+                  <Icons.settings className="size-4 shrink-0" />
+                </div>
+                Settings
+                <DropdownMenuShortcut>⌘2</DropdownMenuShortcut>
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="gap-2 p-2"
@@ -71,7 +81,7 @@ export function UserSwitch() {
                 <Icons.logOut className="size-4 shrink-0" />
               </div>
               Sign out
-              <DropdownMenuShortcut>⌘2</DropdownMenuShortcut>
+              <DropdownMenuShortcut>⌘3</DropdownMenuShortcut>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

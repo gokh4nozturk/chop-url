@@ -1,5 +1,7 @@
 'use client';
 
+import { UserSwitch } from '@/components/dashboard/user-switch';
+import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -16,14 +18,6 @@ import {
 import { useAuthStore } from '@/lib/store/auth';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Icons } from '../icons';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
-import { UserSwitch } from './user-switch';
 
 const items = [
   {
@@ -40,11 +34,6 @@ const items = [
     title: 'Analytics',
     href: '/dashboard/analytics',
     icon: Icons.barChart,
-  },
-  {
-    title: 'Settings',
-    href: '/dashboard/settings',
-    icon: Icons.settings,
   },
 ];
 
