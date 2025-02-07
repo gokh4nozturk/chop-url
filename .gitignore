@@ -16,7 +16,6 @@ pids/
 *.pid.lock
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo
