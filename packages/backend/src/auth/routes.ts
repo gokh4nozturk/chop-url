@@ -1,5 +1,5 @@
 import { zValidator } from '@hono/zod-validator';
-import { Hono } from 'hono';
+import { Context, Hono } from 'hono';
 import { z } from 'zod';
 import { AuthService } from './service.js';
 import { ILoginCredentials, IRegisterCredentials, IUser } from './types.js';
@@ -23,7 +23,6 @@ const twoFactorLoginSchema = z.object({
 });
 
 const updateProfileSchema = z.object({
-  username: z.string().min(2).max(30),
   email: z.string().email(),
   name: z.string().min(1).max(50),
 });
@@ -39,15 +38,38 @@ const updatePasswordSchema = z
     path: ['confirmPassword'],
   });
 
-type Variables = {
+interface Env {
+  DB: D1Database;
+  BASE_URL: string;
+}
+interface Variables {
   user: IUser;
-};
+}
 
-export const createAuthRoutes = (authService: AuthService) => {
-  const router = new Hono<{ Variables: Variables }>();
+export const createAuthRoutes = () => {
+  const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-  router.post('/auth', zValidator('json', loginSchema), async (c) => {
+  router.post(
+    '/register',
+    zValidator('json', registerSchema),
+    async (c: Context) => {
+      try {
+        const authService = new AuthService(c.env.DB);
+        const credentials = await c.req.json<IRegisterCredentials>();
+        const response = await authService.register(credentials);
+        return c.json(response);
+      } catch (error) {
+        if (error instanceof Error) {
+          return c.json({ error: error.message }, 400);
+        }
+        return c.json({ error: 'Internal server error' }, 500);
+      }
+    }
+  );
+
+  router.post('/login', zValidator('json', loginSchema), async (c: Context) => {
     try {
+      const authService = new AuthService(c.env.DB);
       const credentials = await c.req.json<ILoginCredentials>();
       const response = await authService.login(credentials);
       return c.json(response);
@@ -59,10 +81,11 @@ export const createAuthRoutes = (authService: AuthService) => {
     }
   });
 
-  router.post('/auth', zValidator('json', registerSchema), async (c) => {
+  router.post('/auth', zValidator('json', loginSchema), async (c: Context) => {
     try {
-      const credentials = await c.req.json<IRegisterCredentials>();
-      const response = await authService.register(credentials);
+      const authService = new AuthService(c.env.DB);
+      const credentials = await c.req.json<ILoginCredentials>();
+      const response = await authService.login(credentials);
       return c.json(response);
     } catch (error) {
       if (error instanceof Error) {
@@ -72,8 +95,27 @@ export const createAuthRoutes = (authService: AuthService) => {
     }
   });
 
-  router.post('/setup-2fa', async (c) => {
+  router.post(
+    '/auth',
+    zValidator('json', registerSchema),
+    async (c: Context) => {
+      try {
+        const authService = new AuthService(c.env.DB);
+        const credentials = await c.req.json<IRegisterCredentials>();
+        const response = await authService.register(credentials);
+        return c.json(response);
+      } catch (error) {
+        if (error instanceof Error) {
+          return c.json({ error: error.message }, 400);
+        }
+        return c.json({ error: 'Internal server error' }, 500);
+      }
+    }
+  );
+
+  router.post('/setup-2fa', async (c: Context) => {
     try {
+      const authService = new AuthService(c.env.DB);
       const user = c.get('user');
       const response = await authService.setupTwoFactor(user.id);
       return c.json(response);
@@ -88,8 +130,9 @@ export const createAuthRoutes = (authService: AuthService) => {
   router.post(
     '/verify-2fa-setup',
     zValidator('json', twoFactorCodeSchema),
-    async (c) => {
+    async (c: Context) => {
       try {
+        const authService = new AuthService(c.env.DB);
         const { code } = await c.req.json();
         const user = c.get('user');
         const ipAddress =
@@ -112,8 +155,9 @@ export const createAuthRoutes = (authService: AuthService) => {
     }
   );
 
-  router.get('/recovery-codes', async (c) => {
+  router.get('/recovery-codes', async (c: Context) => {
     try {
+      const authService = new AuthService(c.env.DB);
       const user = c.get('user');
       const codes = await authService.getRecoveryCodes(user.id);
       return c.json({ recoveryCodes: codes });
@@ -128,8 +172,9 @@ export const createAuthRoutes = (authService: AuthService) => {
   router.post(
     '/verify-2fa',
     zValidator('json', twoFactorLoginSchema),
-    async (c) => {
+    async (c: Context) => {
       try {
+        const authService = new AuthService(c.env.DB);
         const { email, code } = await c.req.json();
         const ipAddress =
           c.req.header('cf-connecting-ip') ||
@@ -154,8 +199,9 @@ export const createAuthRoutes = (authService: AuthService) => {
   router.post(
     '/disable-2fa',
     zValidator('json', twoFactorCodeSchema),
-    async (c) => {
+    async (c: Context) => {
       try {
+        const authService = new AuthService(c.env.DB);
         const { code } = await c.req.json();
         const user = c.get('user');
         const ipAddress =
@@ -174,25 +220,32 @@ export const createAuthRoutes = (authService: AuthService) => {
     }
   );
 
-  router.put('/profile', zValidator('json', updateProfileSchema), async (c) => {
-    try {
-      const user = c.get('user');
-      const data = await c.req.json();
-      const updatedUser = await authService.updateProfile(user.id, data);
-      return c.json({ user: updatedUser });
-    } catch (error) {
-      if (error instanceof Error) {
-        return c.json({ error: error.message }, 400);
+  router.put(
+    '/profile',
+    zValidator('json', updateProfileSchema),
+    async (c: Context) => {
+      try {
+        const authService = new AuthService(c.env.DB);
+        const user = c.get('user');
+
+        const data = await c.req.json();
+        const updatedUser = await authService.updateProfile(user.id, data);
+        return c.json({ user: updatedUser });
+      } catch (error) {
+        if (error instanceof Error) {
+          return c.json({ error: error.message }, 400);
+        }
+        return c.json({ error: 'Internal server error' }, 500);
       }
-      return c.json({ error: 'Internal server error' }, 500);
     }
-  });
+  );
 
   router.put(
     '/password',
     zValidator('json', updatePasswordSchema),
-    async (c) => {
+    async (c: Context) => {
       try {
+        const authService = new AuthService(c.env.DB);
         const user = c.get('user');
         const data = await c.req.json();
         const ipAddress =

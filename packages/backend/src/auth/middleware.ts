@@ -2,7 +2,7 @@ import { Context, Next } from 'hono';
 import { AuthService } from './service.js';
 import { AuthError, AuthErrorCode } from './types.js';
 
-export const authMiddleware = (authService: AuthService) => {
+export const auth = () => {
   return async (c: Context, next: Next) => {
     try {
       const token = c.req.header('Authorization')?.replace('Bearer ', '');
@@ -11,6 +11,7 @@ export const authMiddleware = (authService: AuthService) => {
         throw new AuthError(AuthErrorCode.INVALID_TOKEN, 'No token provided');
       }
 
+      const authService = new AuthService(c.env.DB);
       const user = await authService.verifyToken(token);
       c.set('user', user);
 
