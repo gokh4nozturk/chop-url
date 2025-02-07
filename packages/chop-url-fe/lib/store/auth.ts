@@ -56,31 +56,34 @@ export const useAuthStore = create<AuthState>()(
         try {
           const token = Cookies.get('auth_token');
           if (token) {
-            await get().refreshToken();
-            // Set up automatic token refresh
-            const refreshInterval = setInterval(
+            const { expiresAt } = await get().refreshToken();
+
+            const refreshTime =
+              new Date(expiresAt).getTime() - Date.now() - 5 * 60 * 1000;
+            const refreshTimeout = setTimeout(
               async () => {
                 try {
                   await get().refreshToken();
                 } catch (error) {
-                  console.error('Failed to refresh token:', error);
-                  clearInterval(refreshInterval);
+                  console.error('Token refresh error:', error);
                   get().logout();
+                  navigate.auth();
                 }
               },
-              15 * 60 * 1000
-            ); // Her 15 dakikada bir yenile
+              Math.max(refreshTime, 0)
+            );
 
-            // Cleanup on unmount
+            // Cleanup
             window.addEventListener('beforeunload', () => {
-              clearInterval(refreshInterval);
+              clearTimeout(refreshTimeout);
             });
           } else {
             set({ isLoading: false });
           }
         } catch (error) {
-          Cookies.remove('auth_token');
-          set({ user: null, token: null, isLoading: false });
+          console.error('Session initialization error:', error);
+          get().logout();
+          set({ isLoading: false });
         }
       },
 
@@ -88,7 +91,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const currentToken = Cookies.get('auth_token');
           if (!currentToken) {
-            throw new Error('No token found');
+            throw new Error('Token not found');
           }
 
           const response = await apiClient.post('/api/auth/refresh', {
@@ -97,19 +100,19 @@ export const useAuthStore = create<AuthState>()(
 
           const { user, token: newToken, expiresAt } = response.data;
 
-          // Set new token with expiration
           const expirationDate = new Date(expiresAt);
           Cookies.set('auth_token', newToken, {
             expires: expirationDate,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
+            path: '/',
           });
 
           set({ user, token: newToken, isLoading: false });
           return { user, token: newToken, expiresAt };
         } catch (error) {
-          Cookies.remove('auth_token');
-          set({ user: null, token: null, isLoading: false });
+          console.error('Token refresh error:', error);
+          get().logout();
           navigate.auth();
           throw error;
         }
