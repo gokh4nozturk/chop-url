@@ -228,6 +228,12 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 
           set({ user, tokenData, error: null });
           navigate.dashboard();
+
+          await apiClient.post('/api/auth/send-verification-email', {
+            email,
+            token,
+            name: user.name,
+          });
         } catch (error) {
           const authError: AuthError = {
             code: 'REGISTER_ERROR',
