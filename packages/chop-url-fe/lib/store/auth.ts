@@ -3,7 +3,7 @@ import Cookies from 'js-cookie';
 import { signIn } from 'next-auth/react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { apiClient } from '../api/client';
+import apiClient from '../api/client';
 import { navigation } from '../navigation';
 
 interface User {
@@ -73,7 +73,7 @@ export const useAuthStore = create<AuthState>()(
             throw new Error('No token found');
           }
 
-          const response = await apiClient.post('/auth/refresh');
+          const response = await apiClient.post('/api/auth/refresh');
           const { user, token: newToken } = response.data;
 
           Cookies.set('auth_token', newToken, {
@@ -93,7 +93,7 @@ export const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await apiClient.post('/auth/login', {
+          const response = await apiClient.post('/api/auth/login', {
             email,
             password,
           });
@@ -140,7 +140,7 @@ export const useAuthStore = create<AuthState>()(
       ) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await apiClient.post('/auth/register', {
+          const response = await apiClient.post('/api/auth/register', {
             email,
             password,
             confirmPassword,
@@ -177,7 +177,7 @@ export const useAuthStore = create<AuthState>()(
       verifyEmail: async (token: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await apiClient.post('/auth/verify-email', {
+          const response = await apiClient.post('/api/api/auth/verify-email', {
             token,
           });
           const { user } = response.data;
@@ -195,7 +195,7 @@ export const useAuthStore = create<AuthState>()(
       resendVerificationEmail: async () => {
         set({ isLoading: true, error: null });
         try {
-          await apiClient.post('/auth/resend-verification');
+          await apiClient.post('/api/auth/resend-verification');
           set({ isLoading: false });
         } catch (error) {
           set({
@@ -211,7 +211,7 @@ export const useAuthStore = create<AuthState>()(
       requestPasswordReset: async (email: string) => {
         set({ isLoading: true, error: null });
         try {
-          await apiClient.post('/auth/forgot-password', { email });
+          await apiClient.post('/api/auth/forgot-password', { email });
           set({ isLoading: false });
         } catch (error) {
           set({
@@ -231,7 +231,7 @@ export const useAuthStore = create<AuthState>()(
       ) => {
         set({ isLoading: true, error: null });
         try {
-          await apiClient.post('/auth/reset-password', {
+          await apiClient.post('/api/auth/reset-password', {
             token,
             newPassword,
             confirmPassword,
@@ -284,7 +284,7 @@ export const useAuthStore = create<AuthState>()(
       verifyTwoFactorLogin: async (email: string, code: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await apiClient.post('/auth/verify-2fa', {
+          const response = await apiClient.post('/api/auth/verify-2fa', {
             email,
             code,
           });
@@ -320,7 +320,7 @@ export const useAuthStore = create<AuthState>()(
       setupTwoFactor: async () => {
         set({ isLoading: true, error: null });
         try {
-          const response = await apiClient.post('/auth/setup-2fa');
+          const response = await apiClient.post('/api/auth/setup-2fa');
           set({ isLoading: false });
           return response.data;
         } catch (error) {
@@ -336,7 +336,7 @@ export const useAuthStore = create<AuthState>()(
       verifyTwoFactor: async (code: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await apiClient.post('/auth/verify-2fa-setup', {
+          const response = await apiClient.post('/api/auth/verify-2fa-setup', {
             code,
           });
           const { user } = response.data;
@@ -356,7 +356,9 @@ export const useAuthStore = create<AuthState>()(
       disableTwoFactor: async (code: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await apiClient.post('/auth/disable-2fa', { code });
+          const response = await apiClient.post('/api/auth/disable-2fa', {
+            code,
+          });
           const { user } = response.data;
           set({ user, isLoading: false });
         } catch (error) {

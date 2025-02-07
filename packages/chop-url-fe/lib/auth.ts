@@ -1,3 +1,6 @@
+import axios from 'axios';
+import client from './api/client';
+
 export interface User {
   id: number;
   email: string;
@@ -14,9 +17,7 @@ export interface AuthError {
   error: string;
 }
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace('http://', 'https://') ||
-  'https://api.chop-url.com';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
 
 // Helper function to store auth token
 export function setToken(token: string): void {
@@ -38,26 +39,20 @@ export async function register(
   email: string,
   password: string
 ): Promise<AuthResponse> {
-  const response = await fetch(`${API_URL}/api/auth/register`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      Origin: 'https://app.chop-url.com',
-    },
-    body: JSON.stringify({ email, password }),
-    credentials: 'same-origin',
-    mode: 'cors',
-  });
+  try {
+    const { data } = await client.post<AuthResponse>('/api/auth/register', {
+      email,
+      password,
+    });
 
-  if (!response.ok) {
-    const error = (await response.json()) as AuthError;
-    throw new Error(error.error);
+    setToken(data.token);
+    return data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error);
+    }
+    throw error;
   }
-
-  const data = (await response.json()) as AuthResponse;
-  setToken(data.token);
-  return data;
 }
 
 // Helper function to login
@@ -65,43 +60,26 @@ export async function login(
   email: string,
   password: string
 ): Promise<AuthResponse> {
-  const response = await fetch(`${API_URL}/api/auth/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      Origin: 'https://app.chop-url.com',
-    },
-    body: JSON.stringify({ email, password }),
-    credentials: 'same-origin',
-    mode: 'cors',
-  });
+  try {
+    const { data } = await client.post<AuthResponse>('/api/auth/login', {
+      email,
+      password,
+    });
 
-  if (!response.ok) {
-    const error = (await response.json()) as AuthError;
-    throw new Error(error.error);
+    setToken(data.token);
+    return data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error);
+    }
+    throw error;
   }
-
-  const data = (await response.json()) as AuthResponse;
-  setToken(data.token);
-  return data;
 }
 
 // Helper function to logout
 export async function logout(): Promise<void> {
-  const token = getToken();
-  if (!token) return;
-
   try {
-    await fetch(`${API_URL}/api/auth/logout`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Origin: 'https://app.chop-url.com',
-      },
-      credentials: 'same-origin',
-      mode: 'cors',
-    });
+    await client.post('/api/auth/logout');
   } finally {
     removeToken();
   }
@@ -109,30 +87,13 @@ export async function logout(): Promise<void> {
 
 // Helper function to get current user
 export async function getCurrentUser(): Promise<User | null> {
-  const token = getToken();
-  if (!token) return null;
-
   try {
-    const response = await fetch(`${API_URL}/api/auth/me`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Origin: 'https://app.chop-url.com',
-      },
-      credentials: 'same-origin',
-      mode: 'cors',
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        removeToken();
-        return null;
-      }
-      throw new Error('Failed to get user');
-    }
-
-    const data = await response.json();
+    const { data } = await client.get<{ user: User }>('/api/auth/me');
     return data.user;
-  } catch {
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      removeToken();
+    }
     return null;
   }
 }

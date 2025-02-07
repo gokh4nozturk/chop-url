@@ -30,7 +30,10 @@ const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 app.use(
   '*',
   cors({
-    origin: 'http://localhost:3000',
+    origin:
+      process.env.NODE_ENV === 'development'
+        ? 'http://localhost:3000'
+        : ['https://app.chop-url.com', 'https://api.chop-url.com'],
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowHeaders: [
       'Content-Type',
@@ -39,7 +42,7 @@ app.use(
       'Origin',
       'X-Requested-With',
     ],
-    exposeHeaders: ['Content-Type'],
+    exposeHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
     maxAge: 86400, // 24 hours
   })
