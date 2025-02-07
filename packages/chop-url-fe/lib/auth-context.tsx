@@ -1,5 +1,7 @@
 'use client';
 
+import { useAuthStore } from '@/lib/store/auth';
+import { User } from '@/lib/types';
 import {
   createContext,
   useCallback,
@@ -8,8 +10,6 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { useAuthStore } from './store/auth';
-import { User } from './types';
 
 interface AuthContextType {
   user: User | null;

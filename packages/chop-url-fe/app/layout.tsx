@@ -1,9 +1,9 @@
+import { ClientLayout } from '@/app/ClientLayout';
 import { CloudflareAnalytics } from '@/components/analytics/CloudflareAnalytics';
 import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Toaster } from 'sonner';
-import { ClientLayout } from './ClientLayout';
 import './globals.css';
 
 const inter = Inter({
