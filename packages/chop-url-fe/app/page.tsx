@@ -145,7 +145,7 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-[calc(100vh-theme(spacing.header))] flex-col items-center justify-center relative overflow-hidden">
+    <main className="flex min-h-screen flex-col items-center justify-center relative overflow-hidden">
       <DecorativeBackground />
 
       <div className="container relative flex flex-col items-center justify-center gap-8 px-4 py-16">

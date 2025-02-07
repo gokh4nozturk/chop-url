@@ -44,8 +44,8 @@ export function Sidebar() {
   if (!user) return null;
 
   return (
-    <SidebarProvider defaultOpen className="w-[240px] hidden md:block ">
-      <SidebarComponent className="hidden h-[calc(100vh-var(--header-height))] border-r bg-background md:block mt-header">
+    <SidebarProvider defaultOpen className="w-64 hidden md:block ">
+      <SidebarComponent className="hidden h-[calc(100vh-theme(spacing.header))] border-r bg-background md:block mt-header">
         <SidebarHeader className="border-b px-2 py-2">
           <div className="relative">
             <Icons.search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
