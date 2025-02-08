@@ -1,4 +1,8 @@
 import { ChopUrl } from '@chop-url/lib';
+import { D1Database } from '@cloudflare/workers-types';
+import { eq } from 'drizzle-orm';
+import { db } from '../db/client';
+import { urls } from '../db/schema';
 
 export class UrlService {
   private chopUrl: ChopUrl;
@@ -26,9 +30,10 @@ export class UrlService {
   }
 
   async getUserUrls(userId: string) {
-    return this.db
-      .prepare('SELECT * FROM urls WHERE user_id = ? ORDER BY created_at DESC')
-      .bind(userId)
-      .all();
+    return db
+      .select()
+      .from(urls)
+      .where(eq(urls.userId, parseInt(userId)))
+      .orderBy(urls.createdAt);
   }
 }

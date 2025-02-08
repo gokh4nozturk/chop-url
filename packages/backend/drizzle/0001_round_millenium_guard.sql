@@ -1,0 +1,1 @@
+ALTER TABLE `auth_attempts` ADD `code` text NOT NULL;

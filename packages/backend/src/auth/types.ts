@@ -117,12 +117,12 @@ export interface IUserRow {
   id: number;
   email: string;
   name: string;
-  password_hash: string;
-  is_email_verified: boolean;
-  is_two_factor_enabled: boolean;
-  two_factor_secret: string | null;
-  created_at: string;
-  updated_at: string;
+  passwordHash: string;
+  isEmailVerified: boolean;
+  isTwoFactorEnabled: boolean;
+  twoFactorSecret: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ISessionRow {

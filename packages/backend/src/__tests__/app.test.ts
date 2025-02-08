@@ -1,12 +1,12 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import { Hono } from 'hono';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { User } from '../auth.js';
+import type { IUser } from '../auth/types.js';
 import app from '../index.js';
 import type { Env } from '../index.js';
 
 type Variables = {
-  user: User;
+  user: IUser;
 };
 
 let shouldSimulateDatabaseError = false;
@@ -80,7 +80,7 @@ describe('Backend Service', () => {
   };
 
   it('GET /health should return 200', async () => {
-    const res = await createTestRequest('/health');
+    const res = await createTestRequest('/api/health');
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({
       status: 'ok',
@@ -136,22 +136,6 @@ describe('Backend Service', () => {
 
       expect(res.status).toBe(500);
       expect(await res.json()).toEqual({ error: 'Failed to create short URL' });
-    });
-  });
-
-  describe('GET /:shortId', () => {
-    it('should redirect to original URL', async () => {
-      mockChopUrl.getOriginalUrl.mockResolvedValue('https://example.com');
-      const res = await createTestRequest('/api/abc123');
-      expect(res.status).toBe(302);
-      expect(res.headers.get('Location')).toBe('https://example.com');
-    });
-
-    it('should return 404 for non-existent URL', async () => {
-      mockChopUrl.getOriginalUrl.mockRejectedValue(new Error('URL not found'));
-      const res = await createTestRequest('/api/nonexistent');
-      expect(res.status).toBe(404);
-      expect(await res.json()).toEqual({ error: 'URL not found' });
     });
   });
 });

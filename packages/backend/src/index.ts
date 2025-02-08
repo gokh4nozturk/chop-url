@@ -2,15 +2,24 @@ import { swaggerUI } from '@hono/swagger-ui';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { createAuthRoutes } from './auth/routes.js';
+import { createDb } from './db/client';
 import { openApiSchema } from './openapi.js';
 import { createUrlRoutes } from './url/routes.js';
 
 export interface Env {
   DB: D1Database;
   BASE_URL: string;
+  FRONTEND_URL: string;
+  RESEND_API_KEY: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();
+
+// Initialize database
+app.use('*', async (c, next) => {
+  createDb(c.env.DB);
+  await next();
+});
 
 // CORS middleware configuration
 app.use(

@@ -1,5 +1,12 @@
 import { generateTOTP, verifyTOTP } from '@chop-url/lib';
-import { D1Database } from '@cloudflare/workers-types';
+import { and, eq, gt, sql } from 'drizzle-orm';
+import { createDb, db } from '../db/client';
+import {
+  authAttempts,
+  emailVerifications,
+  sessions,
+  users,
+} from '../db/schema';
 import { EmailService } from '../email/service.js';
 import {
   AuthAttemptType,
@@ -20,8 +27,11 @@ export class AuthService {
   private emailService: EmailService;
 
   constructor(
-    private db: D1Database,
-    private config: { resendApiKey: string; frontendUrl: string }
+    private db: ReturnType<typeof createDb>,
+    private config: {
+      resendApiKey: string;
+      frontendUrl: string;
+    }
   ) {
     this.emailService = new EmailService(config.resendApiKey);
   }
@@ -32,20 +42,21 @@ export class AuthService {
     if (password !== confirmPassword) {
       throw new AuthError(
         AuthErrorCode.VALIDATION_ERROR,
-        'Şifreler eşleşmiyor'
+        'Passwords do not match'
       );
     }
 
     // Check if user exists
-    const existingUser = await this.db
-      .prepare('SELECT id FROM users WHERE email = ?')
-      .bind(email)
-      .first<{ id: number }>();
+    const existingUser = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, email))
+      .get();
 
     if (existingUser) {
       throw new AuthError(
         AuthErrorCode.USER_EXISTS,
-        'Bu email adresi zaten kullanımda'
+        'This email address is already in use'
       );
     }
 
@@ -53,28 +64,31 @@ export class AuthService {
     const passwordHash = await this.hashPassword(password);
 
     // Create user
-    const result = await this.db
-      .prepare(
-        'INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?) RETURNING id, email, name, created_at, updated_at'
-      )
-      .bind(email, name, passwordHash)
-      .first<IUserRow>();
+    const user = await db
+      .insert(users)
+      .values({
+        email,
+        name,
+        passwordHash,
+      })
+      .returning()
+      .get();
 
-    if (!result) {
+    if (!user) {
       throw new AuthError(
         AuthErrorCode.DATABASE_ERROR,
-        'Kullanıcı oluşturulurken bir hata oluştu'
+        'An error occurred while creating the user'
       );
     }
 
     // Create session
-    const { token, expiresAt } = await this.createSession(result.id);
+    const { token, expiresAt } = await this.createSession(user.id);
 
     // Send verification email
-    await this.resendVerificationEmail(result.id);
+    await this.resendVerificationEmail(user.id);
 
     return {
-      user: this.mapUserRow(result),
+      user: this.mapUserRow(user),
       token,
       expiresAt,
     };
@@ -84,19 +98,18 @@ export class AuthService {
     const { email, password } = credentials;
 
     // Get user
-    const user = await this.db
-      .prepare(
-        'SELECT id, email, password_hash, is_email_verified, is_two_factor_enabled, created_at, updated_at FROM users WHERE email = ?'
-      )
-      .bind(email)
-      .first<IUserRow>();
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .get();
 
     if (!user) {
       throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found');
     }
 
     // Verify password
-    const isValid = await this.verifyPassword(password, user.password_hash);
+    const isValid = await this.verifyPassword(password, user.passwordHash);
     if (!isValid) {
       throw new AuthError(
         AuthErrorCode.INVALID_CREDENTIALS,
@@ -105,7 +118,7 @@ export class AuthService {
     }
 
     // If 2FA is enabled, return early with requiresTwoFactor flag
-    if (user.is_two_factor_enabled) {
+    if (user.isTwoFactorEnabled) {
       return {
         user: this.mapUserRow(user),
         token: '',
@@ -127,12 +140,16 @@ export class AuthService {
 
   async verifyToken(token: string): Promise<IUser> {
     // Get session
-    const session = await this.db
-      .prepare(
-        'SELECT user_id, expires_at FROM sessions WHERE token = ? AND expires_at > datetime("now")'
+    const session = await db
+      .select({ userId: sessions.userId, expiresAt: sessions.expiresAt })
+      .from(sessions)
+      .where(
+        and(
+          eq(sessions.token, token),
+          gt(sessions.expiresAt, new Date().toISOString())
+        )
       )
-      .bind(token)
-      .first<{ user_id: number; expires_at: string }>();
+      .get();
 
     if (!session) {
       throw new AuthError(
@@ -142,12 +159,11 @@ export class AuthService {
     }
 
     // Get user
-    const user = await this.db
-      .prepare(
-        'SELECT id, email, created_at, updated_at FROM users WHERE id = ?'
-      )
-      .bind(session.user_id)
-      .first<IUserRow>();
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, session?.userId ?? 0))
+      .get();
 
     if (!user) {
       throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found');
@@ -160,10 +176,11 @@ export class AuthService {
     userId: number
   ): Promise<{ secret: string; qrCodeUrl: string }> {
     // Get user
-    const user = await this.db
-      .prepare('SELECT email FROM users WHERE id = ?')
-      .bind(userId)
-      .first<{ email: string }>();
+    const user = await db
+      .select({ email: users.email })
+      .from(users)
+      .where(eq(users.id, userId))
+      .get();
 
     if (!user) {
       throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found');
@@ -173,9 +190,10 @@ export class AuthService {
     const secret = crypto.randomUUID().replace(/-/g, '');
 
     // Save secret to database
-    await this.db
-      .prepare('UPDATE users SET two_factor_secret = ? WHERE id = ?')
-      .bind(secret, userId)
+    await db
+      .update(users)
+      .set({ twoFactorSecret: secret })
+      .where(eq(users.id, userId))
       .run();
 
     // Generate QR code URL
@@ -190,15 +208,21 @@ export class AuthService {
     attemptType: AuthAttemptType
   ): Promise<void> {
     // Get recent attempts within the time window
-    const windowStart = new Date(Date.now() - ATTEMPT_WINDOW).toISOString();
-    const attempts = await this.db
-      .prepare(
-        'SELECT COUNT(*) as count FROM auth_attempts WHERE user_id = ? AND ip_address = ? AND attempt_type = ? AND created_at > ?'
+    const windowStart = new Date(Date.now() - ATTEMPT_WINDOW);
+    const attempts = await db
+      .select({ count: sql`count(*)` })
+      .from(authAttempts)
+      .where(
+        and(
+          eq(authAttempts.userId, userId),
+          eq(authAttempts.ipAddress, ipAddress),
+          eq(authAttempts.attemptType, attemptType),
+          gt(authAttempts.createdAt, windowStart.toISOString())
+        )
       )
-      .bind(userId, ipAddress, attemptType, windowStart)
-      .first<{ count: number }>();
+      .get();
 
-    if (attempts && attempts.count >= MAX_ATTEMPTS) {
+    if (attempts && Number(attempts.count) >= MAX_ATTEMPTS) {
       throw new AuthError(
         AuthErrorCode.TOO_MANY_ATTEMPTS,
         `Too many attempts. Please try again after ${Math.ceil(
@@ -214,11 +238,14 @@ export class AuthService {
     attemptType: AuthAttemptType,
     isSuccessful: boolean
   ): Promise<void> {
-    await this.db
-      .prepare(
-        'INSERT INTO auth_attempts (user_id, ip_address, attempt_type, is_successful) VALUES (?, ?, ?, ?)'
-      )
-      .bind(userId, ipAddress, attemptType, isSuccessful)
+    await db
+      .insert(authAttempts)
+      .values({
+        userId,
+        ipAddress,
+        attemptType,
+        isSuccessful,
+      })
       .run();
   }
 
@@ -231,17 +258,18 @@ export class AuthService {
     await this.checkRateLimit(userId, ipAddress, AuthAttemptType.TOTP);
 
     // Get user
-    const user = await this.db
-      .prepare('SELECT two_factor_secret FROM users WHERE id = ?')
-      .bind(userId)
-      .first<{ two_factor_secret: string }>();
+    const user = await db
+      .select({ twoFactorSecret: users.twoFactorSecret })
+      .from(users)
+      .where(eq(users.id, userId))
+      .get();
 
-    if (!user?.two_factor_secret) {
+    if (!user?.twoFactorSecret) {
       throw new AuthError(AuthErrorCode.INVALID_2FA_CODE, 'Invalid setup');
     }
 
     // Verify code
-    const isValid = await verifyTOTP(code, user.two_factor_secret);
+    const isValid = await verifyTOTP(code, user.twoFactorSecret);
 
     // Record attempt
     await this.recordAuthAttempt(
@@ -256,9 +284,10 @@ export class AuthService {
     }
 
     // Enable 2FA
-    await this.db
-      .prepare('UPDATE users SET is_two_factor_enabled = TRUE WHERE id = ?')
-      .bind(userId)
+    await db
+      .update(users)
+      .set({ isTwoFactorEnabled: true })
+      .where(eq(users.id, userId))
       .run();
 
     // Generate recovery codes
@@ -272,18 +301,17 @@ export class AuthService {
     ipAddress: string
   ): Promise<IAuthResponse> {
     // Get user
-    const user = await this.db
-      .prepare(
-        'SELECT id, email, is_email_verified, is_two_factor_enabled, two_factor_secret, created_at, updated_at FROM users WHERE email = ?'
-      )
-      .bind(email)
-      .first<IUserRow>();
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .get();
 
     if (!user) {
       throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found');
     }
 
-    if (!user.is_two_factor_enabled || !user.two_factor_secret) {
+    if (!user.isTwoFactorEnabled || !user.twoFactorSecret) {
       throw new AuthError(AuthErrorCode.INVALID_2FA_CODE, 'Invalid setup');
     }
 
@@ -291,7 +319,7 @@ export class AuthService {
     await this.checkRateLimit(user.id, ipAddress, AuthAttemptType.TOTP);
 
     // First try TOTP code
-    const isValidTOTP = await verifyTOTP(code, user.two_factor_secret);
+    const isValidTOTP = await verifyTOTP(code, user.twoFactorSecret);
     let isSuccessful = false;
 
     if (isValidTOTP) {
@@ -348,26 +376,28 @@ export class AuthService {
     await this.checkRateLimit(userId, ipAddress, AuthAttemptType.TOTP);
 
     // Get user
-    const user = await this.db
-      .prepare('SELECT two_factor_secret FROM users WHERE id = ?')
-      .bind(userId)
-      .first<{ two_factor_secret: string }>();
+    const user = await db
+      .select({ twoFactorSecret: users.twoFactorSecret })
+      .from(users)
+      .where(eq(users.id, userId))
+      .get();
 
-    if (!user?.two_factor_secret) {
+    if (!user?.twoFactorSecret) {
       throw new AuthError(AuthErrorCode.INVALID_2FA_CODE, 'Invalid setup');
     }
 
     // Verify code
-    const isValid = await verifyTOTP(code, user.two_factor_secret);
+    const isValid = await verifyTOTP(code, user.twoFactorSecret);
 
     if (!isValid) {
       throw new AuthError(AuthErrorCode.INVALID_2FA_CODE, 'Invalid code');
     }
 
     // Enable 2FA
-    await this.db
-      .prepare('UPDATE users SET is_two_factor_enabled = TRUE WHERE id = ?')
-      .bind(userId)
+    await db
+      .update(users)
+      .set({ isTwoFactorEnabled: true })
+      .where(eq(users.id, userId))
       .run();
   }
 
@@ -380,17 +410,18 @@ export class AuthService {
     await this.checkRateLimit(userId, ipAddress, AuthAttemptType.TOTP);
 
     // Get user
-    const user = await this.db
-      .prepare('SELECT two_factor_secret FROM users WHERE id = ?')
-      .bind(userId)
-      .first<{ two_factor_secret: string }>();
+    const user = await db
+      .select({ twoFactorSecret: users.twoFactorSecret })
+      .from(users)
+      .where(eq(users.id, userId))
+      .get();
 
-    if (!user?.two_factor_secret) {
+    if (!user?.twoFactorSecret) {
       throw new AuthError(AuthErrorCode.INVALID_2FA_CODE, 'Invalid setup');
     }
 
     // Verify code
-    const isValid = await verifyTOTP(code, user.two_factor_secret);
+    const isValid = await verifyTOTP(code, user.twoFactorSecret);
 
     // Record attempt
     await this.recordAuthAttempt(
@@ -405,21 +436,19 @@ export class AuthService {
     }
 
     // Disable 2FA
-    await this.db
-      .prepare(
-        'UPDATE users SET is_two_factor_enabled = FALSE, two_factor_secret = NULL WHERE id = ?'
-      )
-      .bind(userId)
+    await db
+      .update(users)
+      .set({ isTwoFactorEnabled: false, twoFactorSecret: null })
+      .where(eq(users.id, userId))
       .run();
   }
 
   async getUser(userId: number): Promise<IUser> {
-    const user = await this.db
-      .prepare(
-        'SELECT id, email, is_email_verified, is_two_factor_enabled, created_at, updated_at FROM users WHERE id = ?'
-      )
-      .bind(userId)
-      .first<IUserRow>();
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .get();
 
     if (!user) {
       throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found');
@@ -433,10 +462,10 @@ export class AuthService {
       id: row.id,
       email: row.email,
       name: row.name,
-      isEmailVerified: row.is_email_verified,
-      isTwoFactorEnabled: row.is_two_factor_enabled,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at),
+      isEmailVerified: row.isEmailVerified,
+      isTwoFactorEnabled: row.isTwoFactorEnabled,
+      createdAt: new Date(row.createdAt),
+      updatedAt: new Date(row.updatedAt),
     };
   }
 
@@ -447,11 +476,13 @@ export class AuthService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
 
-    await this.db
-      .prepare(
-        'INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)'
-      )
-      .bind(userId, token, expiresAt.toISOString())
+    await db
+      .insert(sessions)
+      .values({
+        userId,
+        token,
+        expiresAt: expiresAt.toISOString(),
+      })
       .run();
 
     return { token, expiresAt };
@@ -485,13 +516,17 @@ export class AuthService {
     );
 
     // Save codes to database
-    const stmt = this.db.prepare(
-      'INSERT INTO recovery_codes (user_id, code) VALUES (?, ?)'
+    const stmt = db.insert(authAttempts).values(
+      codes.map((code) => ({
+        userId,
+        ipAddress: 'system',
+        attemptType: AuthAttemptType.RECOVERY,
+        isSuccessful: true,
+        code,
+      }))
     );
 
-    for (const code of codes) {
-      await stmt.bind(userId, code).run();
-    }
+    await stmt.run();
 
     return codes;
   }
@@ -501,47 +536,61 @@ export class AuthService {
     code: string
   ): Promise<boolean> {
     // Get and verify recovery code
-    const recoveryCode = await this.db
-      .prepare(
-        'SELECT id FROM recovery_codes WHERE user_id = ? AND code = ? AND is_used = FALSE'
+    const recoveryCode = await db
+      .select()
+      .from(authAttempts)
+      .where(
+        and(
+          eq(authAttempts.userId, userId),
+          eq(authAttempts.attemptType, AuthAttemptType.RECOVERY),
+          eq(authAttempts.code, code),
+          eq(authAttempts.isSuccessful, true)
+        )
       )
-      .bind(userId, code)
-      .first<{ id: number }>();
+      .get();
 
     if (!recoveryCode) {
       return false;
     }
 
     // Mark code as used
-    await this.db
-      .prepare(
-        'UPDATE recovery_codes SET is_used = TRUE, used_at = datetime("now") WHERE id = ?'
-      )
-      .bind(recoveryCode.id)
+    await db
+      .update(authAttempts)
+      .set({ isSuccessful: false })
+      .where(eq(authAttempts.id, recoveryCode.id))
       .run();
 
     return true;
   }
 
-  async getRecoveryCodes(userId: number): Promise<string[]> {
-    const codes = await this.db
-      .prepare(
-        'SELECT code FROM recovery_codes WHERE user_id = ? AND is_used = FALSE ORDER BY created_at ASC'
+  async getRecoveryCodes(userId: number): Promise<string> {
+    const attempts = await db
+      .select()
+      .from(authAttempts)
+      .where(
+        and(
+          eq(authAttempts.userId, userId),
+          eq(authAttempts.attemptType, AuthAttemptType.RECOVERY),
+          eq(authAttempts.isSuccessful, true)
+        )
       )
-      .bind(userId)
-      .all<{ code: string }>();
+      .get();
 
-    return codes.results.map((row) => row.code);
+    return attempts?.code ?? '';
   }
 
   async refreshToken(currentToken: string): Promise<IAuthResponse> {
     // Get current session and verify it
-    const session = await this.db
-      .prepare(
-        'SELECT user_id, expires_at FROM sessions WHERE token = ? AND expires_at > datetime("now")'
+    const session = await db
+      .select({ userId: sessions.userId, expiresAt: sessions.expiresAt })
+      .from(sessions)
+      .where(
+        and(
+          eq(sessions.token, currentToken),
+          gt(sessions.expiresAt, new Date().toISOString())
+        )
       )
-      .bind(currentToken)
-      .first<{ user_id: number; expires_at: string }>();
+      .get();
 
     if (!session) {
       throw new AuthError(
@@ -551,22 +600,18 @@ export class AuthService {
     }
 
     // Get user
-    const user = await this.db
-      .prepare(
-        'SELECT id, email, is_email_verified, is_two_factor_enabled, created_at, updated_at FROM users WHERE id = ?'
-      )
-      .bind(session.user_id)
-      .first<IUserRow>();
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, session?.userId ?? 0))
+      .get();
 
     if (!user) {
       throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found');
     }
 
     // Invalidate old session
-    await this.db
-      .prepare('DELETE FROM sessions WHERE token = ?')
-      .bind(currentToken)
-      .run();
+    await db.delete(sessions).where(eq(sessions.token, currentToken)).run();
 
     // Create new session
     const { token, expiresAt } = await this.createSession(user.id);
@@ -584,22 +629,27 @@ export class AuthService {
     data: { email: string; name: string }
   ): Promise<IUser> {
     // Check if email is already taken by another user
-    const existingUser = await this.db
-      .prepare('SELECT id FROM users WHERE email = ? AND id != ?')
-      .bind(data.email, userId)
-      .first<{ id: number }>();
+    const existingUser = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(and(eq(users.email, data.email), eq(users.id, userId)))
+      .get();
 
     if (existingUser) {
       throw new AuthError(AuthErrorCode.USER_EXISTS, 'Email is already taken');
     }
 
     // Update user profile
-    const result = await this.db
-      .prepare(
-        'UPDATE users SET email = ?, name = ?, updated_at = datetime("now") WHERE id = ? RETURNING id, email, name, is_email_verified, is_two_factor_enabled, created_at, updated_at'
-      )
-      .bind(data.email, data.name, userId)
-      .first<IUserRow>();
+    const result = await db
+      .update(users)
+      .set({
+        email: data.email,
+        name: data.name,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(users.id, userId))
+      .returning()
+      .get();
 
     if (!result) {
       throw new AuthError(
@@ -620,10 +670,11 @@ export class AuthService {
     await this.checkRateLimit(userId, ipAddress, AuthAttemptType.PASSWORD);
 
     // Get user's current password hash
-    const user = await this.db
-      .prepare('SELECT password_hash FROM users WHERE id = ?')
-      .bind(userId)
-      .first<{ password_hash: string }>();
+    const user = await db
+      .select({ passwordHash: users.passwordHash })
+      .from(users)
+      .where(eq(users.id, userId))
+      .get();
 
     if (!user) {
       throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found');
@@ -632,7 +683,7 @@ export class AuthService {
     // Verify current password
     const isValid = await this.verifyPassword(
       data.currentPassword,
-      user.password_hash
+      user.passwordHash
     );
 
     // Record attempt
@@ -654,18 +705,17 @@ export class AuthService {
     const newPasswordHash = await this.hashPassword(data.newPassword);
 
     // Update password
-    await this.db
-      .prepare(
-        'UPDATE users SET password_hash = ?, updated_at = datetime("now") WHERE id = ?'
-      )
-      .bind(newPasswordHash, userId)
+    await db
+      .update(users)
+      .set({
+        passwordHash: newPasswordHash,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(users.id, userId))
       .run();
 
     // Invalidate all existing sessions
-    await this.db
-      .prepare('DELETE FROM sessions WHERE user_id = ?')
-      .bind(userId)
-      .run();
+    await db.delete(sessions).where(eq(sessions.userId, userId)).run();
   }
 
   async verifyEmail(token: string, userId: number): Promise<void> {
@@ -677,12 +727,17 @@ export class AuthService {
     );
 
     // Get and verify token
-    const verificationRecord = await this.db
-      .prepare(
-        'SELECT id, expires_at FROM email_verifications WHERE user_id = ? AND token = ? AND is_used = FALSE'
+    const verificationRecord = await db
+      .select()
+      .from(emailVerifications)
+      .where(
+        and(
+          eq(emailVerifications.userId, userId),
+          eq(emailVerifications.token, token),
+          eq(emailVerifications.isUsed, false)
+        )
       )
-      .bind(userId, token)
-      .first<{ id: number; expires_at: string }>();
+      .get();
 
     if (!verificationRecord) {
       throw new AuthError(
@@ -691,7 +746,7 @@ export class AuthService {
       );
     }
 
-    if (new Date(verificationRecord.expires_at) < new Date()) {
+    if (new Date(verificationRecord.expiresAt) < new Date()) {
       throw new AuthError(
         AuthErrorCode.INVALID_TOKEN,
         'Verification token has expired'
@@ -699,14 +754,17 @@ export class AuthService {
     }
 
     // Mark token as used and verify email
-    await this.db.batch([
-      this.db
-        .prepare('UPDATE email_verifications SET is_used = TRUE WHERE id = ?')
-        .bind(verificationRecord.id),
-      this.db
-        .prepare('UPDATE users SET is_email_verified = TRUE WHERE id = ?')
-        .bind(userId),
-    ]);
+    await db
+      .update(emailVerifications)
+      .set({ isUsed: true })
+      .where(eq(emailVerifications.id, verificationRecord.id))
+      .run();
+
+    await db
+      .update(users)
+      .set({ isEmailVerified: true })
+      .where(eq(users.id, userId))
+      .run();
 
     // Record successful attempt
     await this.recordAuthAttempt(
@@ -730,10 +788,11 @@ export class AuthService {
 
   private async sendVerificationEmail(userId: number): Promise<void> {
     // Get user
-    const user = await this.db
-      .prepare('SELECT email, name FROM users WHERE id = ?')
-      .bind(userId)
-      .first<{ email: string; name: string }>();
+    const user = await db
+      .select({ email: users.email, name: users.name })
+      .from(users)
+      .where(eq(users.id, userId))
+      .get();
 
     if (!user) {
       throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found');
@@ -745,11 +804,13 @@ export class AuthService {
     expiresAt.setHours(expiresAt.getHours() + 24); // Verification token expires in 24 hours
 
     // Save token to database
-    await this.db
-      .prepare(
-        'INSERT INTO email_verifications (user_id, token, expires_at) VALUES (?, ?, ?)'
-      )
-      .bind(userId, token, expiresAt.toISOString())
+    await db
+      .insert(emailVerifications)
+      .values({
+        userId,
+        token,
+        expiresAt: expiresAt.toISOString(),
+      })
       .run();
 
     // Create verification link
