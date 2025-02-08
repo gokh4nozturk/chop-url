@@ -1,5 +1,6 @@
 import { generateTOTP, verifyTOTP } from '@chop-url/lib';
 import { D1Database } from '@cloudflare/workers-types';
+import { EmailService } from '../email/service.js';
 import {
   AuthAttemptType,
   AuthError,
@@ -16,7 +17,14 @@ const MAX_ATTEMPTS = 5; // Maximum number of attempts within the time window
 const ATTEMPT_WINDOW = 15 * 60 * 1000; // 15 minutes in milliseconds
 
 export class AuthService {
-  constructor(private db: D1Database) {}
+  private emailService: EmailService;
+
+  constructor(
+    private db: D1Database,
+    private config: { resendApiKey: string; frontendUrl: string }
+  ) {
+    this.emailService = new EmailService(config.resendApiKey);
+  }
 
   async register(credentials: IRegisterCredentials): Promise<IAuthResponse> {
     const { email, password, confirmPassword, name } = credentials;
@@ -717,14 +725,18 @@ export class AuthService {
       AuthAttemptType.EMAIL_VERIFICATION
     );
 
+    await this.sendVerificationEmail(userId);
+  }
+
+  private async sendVerificationEmail(userId: number): Promise<void> {
     // Get user
     const user = await this.db
-      .prepare('SELECT email FROM users WHERE id = ?')
+      .prepare('SELECT email, name FROM users WHERE id = ?')
       .bind(userId)
-      .first<{ email: string }>();
+      .first<{ email: string; name: string }>();
 
     if (!user) {
-      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'Kullanıcı bulunamadı');
+      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found');
     }
 
     // Generate verification token
@@ -740,8 +752,15 @@ export class AuthService {
       .bind(userId, token, expiresAt.toISOString())
       .run();
 
-    // Send verification email
-    await this.sendVerificationEmail(user.email, token, userId);
+    // Create verification link
+    const verificationLink = `${this.config.frontendUrl}/auth/verify-email?token=${token}&userId=${userId}`;
+
+    // Send email
+    await this.emailService.sendVerificationEmail(
+      user.email,
+      verificationLink,
+      user.name
+    );
 
     // Record attempt
     await this.recordAuthAttempt(
@@ -750,18 +769,5 @@ export class AuthService {
       AuthAttemptType.EMAIL_VERIFICATION,
       true
     );
-  }
-
-  private async sendVerificationEmail(
-    email: string,
-    token: string,
-    userId: number
-  ): Promise<void> {
-    // Create verification link
-    const verificationLink = `${process.env.FRONTEND_URL}/auth/verify-email?token=${token}&userId=${userId}`;
-
-    // TODO: Email gönderme işlemi burada implemente edilecek
-    console.log(`Doğrulama linki: ${verificationLink}`);
-    console.log(`Email: ${email}`);
   }
 }

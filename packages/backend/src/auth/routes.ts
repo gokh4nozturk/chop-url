@@ -51,8 +51,10 @@ const verifyEmailSchema = z.object({
 
 interface Env {
   DB: D1Database;
-  BASE_URL: string;
+  FRONTEND_URL: string;
+  RESEND_API_KEY: string;
 }
+
 interface Variables {
   user: IUser;
 }
@@ -65,7 +67,10 @@ export const createAuthRoutes = () => {
     zValidator('json', registerSchema),
     async (c: Context) => {
       try {
-        const authService = new AuthService(c.env.DB);
+        const authService = new AuthService(c.env.DB, {
+          resendApiKey: c.env.RESEND_API_KEY,
+          frontendUrl: c.env.FRONTEND_URL,
+        });
         const credentials = await c.req.json<z.infer<typeof registerSchema>>();
         const response = await authService.register(credentials);
         return c.json(response);
@@ -80,7 +85,10 @@ export const createAuthRoutes = () => {
 
   router.post('/login', zValidator('json', loginSchema), async (c: Context) => {
     try {
-      const authService = new AuthService(c.env.DB);
+      const authService = new AuthService(c.env.DB, {
+        resendApiKey: c.env.RESEND_API_KEY,
+        frontendUrl: c.env.FRONTEND_URL,
+      });
       const credentials = await c.req.json<z.infer<typeof loginSchema>>();
       const response = await authService.login(credentials);
       return c.json(response);
@@ -94,7 +102,10 @@ export const createAuthRoutes = () => {
 
   router.post('/setup-2fa', auth(), async (c: Context) => {
     try {
-      const authService = new AuthService(c.env.DB);
+      const authService = new AuthService(c.env.DB, {
+        resendApiKey: c.env.RESEND_API_KEY,
+        frontendUrl: c.env.FRONTEND_URL,
+      });
       const user = c.get('user');
       const response = await authService.setupTwoFactor(user.id);
       return c.json(response);
@@ -112,7 +123,10 @@ export const createAuthRoutes = () => {
     zValidator('json', twoFactorCodeSchema),
     async (c: Context) => {
       try {
-        const authService = new AuthService(c.env.DB);
+        const authService = new AuthService(c.env.DB, {
+          resendApiKey: c.env.RESEND_API_KEY,
+          frontendUrl: c.env.FRONTEND_URL,
+        });
         const { code } = await c.req.json();
         const user = c.get('user');
         const ipAddress =
@@ -137,7 +151,10 @@ export const createAuthRoutes = () => {
 
   router.get('/recovery-codes', auth(), async (c: Context) => {
     try {
-      const authService = new AuthService(c.env.DB);
+      const authService = new AuthService(c.env.DB, {
+        resendApiKey: c.env.RESEND_API_KEY,
+        frontendUrl: c.env.FRONTEND_URL,
+      });
       const user = c.get('user');
       const codes = await authService.getRecoveryCodes(user.id);
       return c.json({ recoveryCodes: codes });
@@ -154,7 +171,10 @@ export const createAuthRoutes = () => {
     zValidator('json', twoFactorLoginSchema),
     async (c: Context) => {
       try {
-        const authService = new AuthService(c.env.DB);
+        const authService = new AuthService(c.env.DB, {
+          resendApiKey: c.env.RESEND_API_KEY,
+          frontendUrl: c.env.FRONTEND_URL,
+        });
         const { email, code } = await c.req.json();
         const ipAddress =
           c.req.header('cf-connecting-ip') ||
@@ -182,7 +202,10 @@ export const createAuthRoutes = () => {
     zValidator('json', twoFactorCodeSchema),
     async (c: Context) => {
       try {
-        const authService = new AuthService(c.env.DB);
+        const authService = new AuthService(c.env.DB, {
+          resendApiKey: c.env.RESEND_API_KEY,
+          frontendUrl: c.env.FRONTEND_URL,
+        });
         const { code } = await c.req.json();
         const user = c.get('user');
         const ipAddress =
@@ -207,7 +230,10 @@ export const createAuthRoutes = () => {
     zValidator('json', twoFactorCodeSchema),
     async (c: Context) => {
       try {
-        const authService = new AuthService(c.env.DB);
+        const authService = new AuthService(c.env.DB, {
+          resendApiKey: c.env.RESEND_API_KEY,
+          frontendUrl: c.env.FRONTEND_URL,
+        });
         const { code } = await c.req.json();
         const user = c.get('user');
         const ipAddress =
@@ -232,7 +258,10 @@ export const createAuthRoutes = () => {
     zValidator('json', updateProfileSchema),
     async (c: Context) => {
       try {
-        const authService = new AuthService(c.env.DB);
+        const authService = new AuthService(c.env.DB, {
+          resendApiKey: c.env.RESEND_API_KEY,
+          frontendUrl: c.env.FRONTEND_URL,
+        });
         const user = c.get('user');
 
         const data = await c.req.json();
@@ -253,7 +282,10 @@ export const createAuthRoutes = () => {
     zValidator('json', updatePasswordSchema),
     async (c: Context) => {
       try {
-        const authService = new AuthService(c.env.DB);
+        const authService = new AuthService(c.env.DB, {
+          resendApiKey: c.env.RESEND_API_KEY,
+          frontendUrl: c.env.FRONTEND_URL,
+        });
         const user = c.get('user');
         const data = await c.req.json();
         const ipAddress =
@@ -276,19 +308,32 @@ export const createAuthRoutes = () => {
     auth(),
     zValidator('json', verifyEmailSchema),
     async (c: Context) => {
-      const { token } = await c.req.json();
-      const userId = c.get('user').id;
+      try {
+        const { token } = await c.req.json();
+        const userId = c.get('user').id;
 
-      const authService = new AuthService(c.env.DB);
-      await authService.verifyEmail(token, userId);
+        const authService = new AuthService(c.env.DB, {
+          resendApiKey: c.env.RESEND_API_KEY,
+          frontendUrl: c.env.FRONTEND_URL,
+        });
+        await authService.verifyEmail(token, userId);
 
-      return c.json({ message: 'Email verified successfully' });
+        return c.json({ message: 'Email verified successfully' });
+      } catch (error) {
+        if (error instanceof Error) {
+          return c.json({ error: error.message }, 400);
+        }
+        return c.json({ error: 'Internal server error' }, 500);
+      }
     }
   );
 
   router.post('/resend-verification-email', auth(), async (c: Context) => {
     try {
-      const authService = new AuthService(c.env.DB);
+      const authService = new AuthService(c.env.DB, {
+        resendApiKey: c.env.RESEND_API_KEY,
+        frontendUrl: c.env.FRONTEND_URL,
+      });
       const user = c.get('user');
       await authService.resendVerificationEmail(user.id);
       return c.json({ message: 'Verification email sent successfully' });

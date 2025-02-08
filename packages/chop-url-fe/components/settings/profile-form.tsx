@@ -83,11 +83,16 @@ export function ProfileForm() {
                   <Input placeholder="john@example.com" {...field} />
                   <TooltipProvider>
                     <Tooltip>
-                      <TooltipTrigger>
+                      <TooltipTrigger asChild>
                         <Button
                           type="button"
                           variant="outline"
                           size="icon"
+                          disabled={user?.isEmailVerified}
+                          className={cn(
+                            'disabled:opacity-50 disabled:cursor-not-allowed',
+                            'size-10'
+                          )}
                           onClick={handleSendVerificationEmail}
                         >
                           <Icons.mail
@@ -98,13 +103,18 @@ export function ProfileForm() {
                                 : 'text-red-500'
                             )}
                           />
+                          <span className="sr-only">
+                            {user?.isEmailVerified
+                              ? 'Email verified'
+                              : 'Email not verified!'}
+                          </span>
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>
                           {user?.isEmailVerified
                             ? 'Email verified'
-                            : 'Email not verified.'}
+                            : 'Email not verified!'}
                         </p>
                       </TooltipContent>
                     </Tooltip>
