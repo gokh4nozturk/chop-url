@@ -138,6 +138,7 @@ export const openApiSchema = {
         },
       },
     },
+    // Auth Routes
     '/api/auth/register': {
       post: {
         tags: ['Authentication'],
@@ -242,56 +243,6 @@ export const openApiSchema = {
         },
       },
     },
-    '/api/auth/verify-email': {
-      post: {
-        tags: ['Authentication'],
-        summary: 'Verify email address',
-        security: [{ bearerAuth: [] }],
-        requestBody: {
-          required: true,
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                required: ['token'],
-                properties: {
-                  token: {
-                    type: 'string',
-                  },
-                },
-              },
-            },
-          },
-        },
-        responses: {
-          '200': {
-            description: 'Email verified successfully',
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'object',
-                  properties: {
-                    message: {
-                      type: 'string',
-                    },
-                  },
-                },
-              },
-            },
-          },
-          '400': {
-            description: 'Invalid token',
-            content: {
-              'application/json': {
-                schema: {
-                  $ref: '#/components/schemas/Error',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
     '/api/auth/setup-2fa': {
       post: {
         tags: ['Authentication'],
@@ -314,6 +265,98 @@ export const openApiSchema = {
                   },
                 },
               },
+            },
+          },
+        },
+      },
+    },
+    '/api/auth/verify-2fa-setup': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Verify 2FA setup',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['code'],
+                properties: {
+                  code: {
+                    type: 'string',
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: '2FA setup verified successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: {
+                      type: 'boolean',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        '400': {
+          description: 'Invalid code',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/Error',
+              },
+            },
+          },
+        },
+        '500': {
+          description: 'Internal server error',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/Error',
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/auth/recovery-codes': {
+      get: {
+        tags: ['Authentication'],
+        summary: 'Get recovery codes',
+        security: [{ bearerAuth: [] }],
+      },
+      responses: {
+        '200': {
+          description: 'Recovery codes retrieved successfully',
+        },
+      },
+      '400': {
+        description: 'Invalid request',
+        content: {
+          'application/json': {
+            schema: {
+              $ref: '#/components/schemas/Error',
+            },
+          },
+        },
+      },
+      '500': {
+        description: 'Internal server error',
+        content: {
+          'application/json': {
+            schema: {
+              $ref: '#/components/schemas/Error',
             },
           },
         },
@@ -363,6 +406,70 @@ export const openApiSchema = {
                   $ref: '#/components/schemas/Error',
                 },
               },
+            },
+          },
+        },
+      },
+    },
+    '/api/auth/enable-2fa': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Enable 2FA',
+        security: [{ bearerAuth: [] }],
+      },
+      responses: {
+        '200': {
+          description: '2FA enabled successfully',
+        },
+      },
+      '400': {
+        description: 'Invalid code',
+        content: {
+          'application/json': {
+            schema: {
+              $ref: '#/components/schemas/Error',
+            },
+          },
+        },
+      },
+      '500': {
+        description: 'Internal server error',
+        content: {
+          'application/json': {
+            schema: {
+              $ref: '#/components/schemas/Error',
+            },
+          },
+        },
+      },
+    },
+    '/api/auth/disable-2fa': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Disable 2FA',
+        security: [{ bearerAuth: [] }],
+      },
+      responses: {
+        '200': {
+          description: '2FA disabled successfully',
+        },
+      },
+      '400': {
+        description: 'Invalid code',
+        content: {
+          'application/json': {
+            schema: {
+              $ref: '#/components/schemas/Error',
+            },
+          },
+        },
+      },
+      '500': {
+        description: 'Internal server error',
+        content: {
+          'application/json': {
+            schema: {
+              $ref: '#/components/schemas/Error',
             },
           },
         },
@@ -459,6 +566,56 @@ export const openApiSchema = {
         },
       },
     },
+    '/api/auth/verify-email': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Verify email address',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['token'],
+                properties: {
+                  token: {
+                    type: 'string',
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Email verified successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '400': {
+            description: 'Invalid token',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
     '/api/auth/resend-verification-email': {
       post: {
         tags: ['User'],
@@ -500,6 +657,7 @@ export const openApiSchema = {
         },
       },
     },
+    // URL Routes
     '/api/shorten': {
       post: {
         tags: ['URL'],
@@ -565,38 +723,6 @@ export const openApiSchema = {
           },
           '401': {
             description: 'Unauthorized',
-            content: {
-              'application/json': {
-                schema: {
-                  $ref: '#/components/schemas/Error',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-    '/api/{shortId}': {
-      get: {
-        tags: ['URLs'],
-        summary: 'Redirect to original URL',
-        parameters: [
-          {
-            name: 'shortId',
-            in: 'path',
-            required: true,
-            schema: {
-              type: 'string',
-            },
-            description: 'Short URL identifier',
-          },
-        ],
-        responses: {
-          '302': {
-            description: 'Redirect to original URL',
-          },
-          '404': {
-            description: 'URL not found',
             content: {
               'application/json': {
                 schema: {
