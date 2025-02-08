@@ -12,7 +12,7 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-[calc(100vh-3.5rem)] items-center justify-center">
+      <div className="flex w-full h-[calc(100vh-theme(spacing.header))] items-center justify-center">
         <div className="text-center">
           <Icons.spinner className="mx-auto h-6 w-6 animate-spin" />
           <h2 className="mt-2 text-lg font-semibold">Loading...</h2>

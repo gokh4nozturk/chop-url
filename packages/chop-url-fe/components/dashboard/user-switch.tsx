@@ -78,7 +78,7 @@ export function UserSwitch() {
               }}
             >
               <div className="flex size-6 items-center justify-center rounded-sm border">
-                <Icons.logOut className="size-4 shrink-0" />
+                <Icons.logout className="size-4 shrink-0" />
               </div>
               Sign out
               <DropdownMenuShortcut>⌘3</DropdownMenuShortcut>
