@@ -283,7 +283,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       verifyEmail: async (token: string) => {
         try {
           set({ isLoading: true, error: null });
-          await apiClient.post('/auth/verify-email', { token });
+          await apiClient.post('/api/auth/verify-email', { token });
           const user = get().user;
           if (user) {
             set({ user: { ...user, isEmailVerified: true } });
