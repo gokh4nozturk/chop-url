@@ -1,9 +1,10 @@
+import { D1Database } from '@cloudflare/workers-types';
 import { zValidator } from '@hono/zod-validator';
 import { Context, Hono } from 'hono';
 import { z } from 'zod';
 import { auth } from './middleware.js';
 import { AuthService } from './service.js';
-import { ILoginCredentials, IRegisterCredentials, IUser } from './types.js';
+import { AuthError, IUser } from './types.js';
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -35,10 +36,14 @@ const updatePasswordSchema = z
     newPassword: z.string().min(8).max(100),
     confirmPassword: z.string(),
   })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ['confirmPassword'],
-  });
+  .refine(
+    (data: { newPassword: string; confirmPassword: string }) =>
+      data.newPassword === data.confirmPassword,
+    {
+      message: "Passwords don't match",
+      path: ['confirmPassword'],
+    }
+  );
 
 const verifyEmailSchema = z.object({
   token: z.string().min(1),
@@ -61,7 +66,7 @@ export const createAuthRoutes = () => {
     async (c: Context) => {
       try {
         const authService = new AuthService(c.env.DB);
-        const credentials = await c.req.json<IRegisterCredentials>();
+        const credentials = await c.req.json<z.infer<typeof registerSchema>>();
         const response = await authService.register(credentials);
         return c.json(response);
       } catch (error) {
@@ -76,12 +81,12 @@ export const createAuthRoutes = () => {
   router.post('/login', zValidator('json', loginSchema), async (c: Context) => {
     try {
       const authService = new AuthService(c.env.DB);
-      const credentials = await c.req.json<ILoginCredentials>();
+      const credentials = await c.req.json<z.infer<typeof loginSchema>>();
       const response = await authService.login(credentials);
       return c.json(response);
     } catch (error) {
-      if (error instanceof Error) {
-        return c.json({ error: error.message }, 400);
+      if (error instanceof AuthError) {
+        return c.json({ error: error.message }, 401);
       }
       return c.json({ error: 'Internal server error' }, 500);
     }
@@ -270,8 +275,8 @@ export const createAuthRoutes = () => {
     '/verify-email',
     auth(),
     zValidator('json', verifyEmailSchema),
-    async (c) => {
-      const { token } = c.req.valid('json');
+    async (c: Context) => {
+      const { token } = await c.req.json();
       const userId = c.get('user').id;
 
       const authService = new AuthService(c.env.DB);

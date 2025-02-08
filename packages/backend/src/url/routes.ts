@@ -57,21 +57,6 @@ export const createUrlRoutes = () => {
     return c.json(urls);
   });
 
-  router.get('/:shortId', async (c: Context) => {
-    try {
-      const shortId = c.req.param('shortId');
-      const urlService = new UrlService(c.env.DB, c.env.BASE_URL);
-      const originalUrl = await urlService.getOriginalUrl(shortId);
-      return c.redirect(originalUrl, 302);
-    } catch (error) {
-      if (error instanceof Error && error.message === 'URL not found') {
-        return c.json({ error: 'URL not found' }, 404);
-      }
-      console.error('Error expanding URL:', error);
-      return c.json({ error: 'Internal server error' }, 500);
-    }
-  });
-
   router.get('/stats/:shortId', async (c: Context) => {
     try {
       const shortId = c.req.param('shortId');
