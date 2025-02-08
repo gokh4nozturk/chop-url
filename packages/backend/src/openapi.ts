@@ -8,12 +8,12 @@ export const openApiSchema = {
   },
   servers: [
     {
-      url: 'https://api.chop-url.com',
-      description: 'Production server',
-    },
-    {
       url: 'http://localhost:8787',
       description: 'Development server',
+    },
+    {
+      url: 'https://api.chop-url.com',
+      description: 'Production server',
     },
   ],
   components: {
@@ -403,6 +403,94 @@ export const openApiSchema = {
                   properties: {
                     user: {
                       $ref: '#/components/schemas/User',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/auth/password': {
+      put: {
+        tags: ['User'],
+        summary: 'Update user password',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['password', 'newPassword', 'confirmPassword'],
+                properties: {
+                  password: {
+                    type: 'string',
+                    format: 'email',
+                  },
+                  newPassword: {
+                    type: 'string',
+                  },
+                  confirmPassword: {
+                    type: 'string',
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Password updated successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: {
+                      type: 'boolean',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/auth/resend-verification-email': {
+      post: {
+        tags: ['User'],
+        summary: 'Resend verification email',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email'],
+                properties: {
+                  email: {
+                    type: 'string',
+                    format: 'email',
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Verification email sent successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
                     },
                   },
                 },
