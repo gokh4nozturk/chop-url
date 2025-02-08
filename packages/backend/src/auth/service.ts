@@ -5,6 +5,7 @@ import {
   AuthError,
   AuthErrorCode,
   IAuthResponse,
+  IEmailVerificationRow,
   ILoginCredentials,
   IRegisterCredentials,
   IUser,
@@ -23,7 +24,7 @@ export class AuthService {
     if (password !== confirmPassword) {
       throw new AuthError(
         AuthErrorCode.VALIDATION_ERROR,
-        'Passwords do not match'
+        'Şifreler eşleşmiyor'
       );
     }
 
@@ -34,7 +35,10 @@ export class AuthService {
       .first<{ id: number }>();
 
     if (existingUser) {
-      throw new AuthError(AuthErrorCode.USER_EXISTS, 'User already exists');
+      throw new AuthError(
+        AuthErrorCode.USER_EXISTS,
+        'Bu email adresi zaten kullanımda'
+      );
     }
 
     // Hash password
@@ -51,12 +55,15 @@ export class AuthService {
     if (!result) {
       throw new AuthError(
         AuthErrorCode.DATABASE_ERROR,
-        'Failed to create user'
+        'Kullanıcı oluşturulurken bir hata oluştu'
       );
     }
 
     // Create session
     const { token, expiresAt } = await this.createSession(result.id);
+
+    // Send verification email
+    await this.resendVerificationEmail(result.id);
 
     return {
       user: this.mapUserRow(result),
@@ -655,34 +662,16 @@ export class AuthService {
 
   async verifyEmail(token: string, userId: number): Promise<void> {
     // Check rate limit
-    const attempts = await this.db
-      .prepare(
-        'SELECT COUNT(*) as count FROM auth_attempts WHERE user_id = ? AND type = ? AND created_at > ?'
-      )
-      .bind(
-        userId,
-        AuthAttemptType.EMAIL_VERIFICATION,
-        new Date(Date.now() - ATTEMPT_WINDOW).toISOString()
-      )
-      .first<{ count: number }>();
+    await this.checkRateLimit(
+      userId,
+      'system',
+      AuthAttemptType.EMAIL_VERIFICATION
+    );
 
-    if (attempts && attempts.count >= MAX_ATTEMPTS) {
-      throw new AuthError(
-        AuthErrorCode.RATE_LIMIT,
-        'Too many verification attempts. Please try again later.'
-      );
-    }
-
-    // Record attempt
-    await this.db
-      .prepare('INSERT INTO auth_attempts (user_id, type) VALUES (?, ?)')
-      .bind(userId, AuthAttemptType.EMAIL_VERIFICATION)
-      .run();
-
-    // Verify token
+    // Get and verify token
     const verificationRecord = await this.db
       .prepare(
-        'SELECT id, expires_at FROM email_verifications WHERE user_id = ? AND token = ? AND is_used = 0'
+        'SELECT id, expires_at FROM email_verifications WHERE user_id = ? AND token = ? AND is_used = FALSE'
       )
       .bind(userId, token)
       .first<{ id: number; expires_at: string }>();
@@ -704,11 +693,75 @@ export class AuthService {
     // Mark token as used and verify email
     await this.db.batch([
       this.db
-        .prepare('UPDATE email_verifications SET is_used = 1 WHERE id = ?')
+        .prepare('UPDATE email_verifications SET is_used = TRUE WHERE id = ?')
         .bind(verificationRecord.id),
       this.db
-        .prepare('UPDATE users SET is_email_verified = 1 WHERE id = ?')
+        .prepare('UPDATE users SET is_email_verified = TRUE WHERE id = ?')
         .bind(userId),
     ]);
+
+    // Record successful attempt
+    await this.recordAuthAttempt(
+      userId,
+      'system',
+      AuthAttemptType.EMAIL_VERIFICATION,
+      true
+    );
+  }
+
+  async resendVerificationEmail(userId: number): Promise<void> {
+    // Check rate limit
+    await this.checkRateLimit(
+      userId,
+      'system',
+      AuthAttemptType.EMAIL_VERIFICATION
+    );
+
+    // Get user
+    const user = await this.db
+      .prepare('SELECT email FROM users WHERE id = ?')
+      .bind(userId)
+      .first<{ email: string }>();
+
+    if (!user) {
+      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'Kullanıcı bulunamadı');
+    }
+
+    // Generate verification token
+    const token = crypto.randomUUID();
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24); // Verification token expires in 24 hours
+
+    // Save token to database
+    await this.db
+      .prepare(
+        'INSERT INTO email_verifications (user_id, token, expires_at) VALUES (?, ?, ?)'
+      )
+      .bind(userId, token, expiresAt.toISOString())
+      .run();
+
+    // Send verification email
+    await this.sendVerificationEmail(user.email, token, userId);
+
+    // Record attempt
+    await this.recordAuthAttempt(
+      userId,
+      'system',
+      AuthAttemptType.EMAIL_VERIFICATION,
+      true
+    );
+  }
+
+  private async sendVerificationEmail(
+    email: string,
+    token: string,
+    userId: number
+  ): Promise<void> {
+    // Create verification link
+    const verificationLink = `${process.env.FRONTEND_URL}/auth/verify-email?token=${token}&userId=${userId}`;
+
+    // TODO: Email gönderme işlemi burada implemente edilecek
+    console.log(`Doğrulama linki: ${verificationLink}`);
+    console.log(`Email: ${email}`);
   }
 }

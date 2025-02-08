@@ -581,6 +581,7 @@ export const openApiSchema = {
                 properties: {
                   token: {
                     type: 'string',
+                    description: 'Email verification token',
                   },
                 },
               },
@@ -597,6 +598,7 @@ export const openApiSchema = {
                   properties: {
                     message: {
                       type: 'string',
+                      example: 'Email verified successfully',
                     },
                   },
                 },
@@ -618,26 +620,9 @@ export const openApiSchema = {
     },
     '/api/auth/resend-verification-email': {
       post: {
-        tags: ['User'],
+        tags: ['Authentication'],
         summary: 'Resend verification email',
         security: [{ bearerAuth: [] }],
-        requestBody: {
-          required: true,
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                required: ['email'],
-                properties: {
-                  email: {
-                    type: 'string',
-                    format: 'email',
-                  },
-                },
-              },
-            },
-          },
-        },
         responses: {
           '200': {
             description: 'Verification email sent successfully',
@@ -648,8 +633,19 @@ export const openApiSchema = {
                   properties: {
                     message: {
                       type: 'string',
+                      example: 'Verification email sent successfully',
                     },
                   },
+                },
+              },
+            },
+          },
+          '400': {
+            description: 'Error sending verification email',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
                 },
               },
             },

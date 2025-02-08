@@ -286,5 +286,19 @@ export const createAuthRoutes = () => {
     }
   );
 
+  router.post('/resend-verification-email', auth(), async (c: Context) => {
+    try {
+      const authService = new AuthService(c.env.DB);
+      const user = c.get('user');
+      await authService.resendVerificationEmail(user.id);
+      return c.json({ message: 'Verification email sent successfully' });
+    } catch (error) {
+      if (error instanceof Error) {
+        return c.json({ error: error.message }, 400);
+      }
+      return c.json({ error: 'Internal server error' }, 500);
+    }
+  });
+
   return router;
 };

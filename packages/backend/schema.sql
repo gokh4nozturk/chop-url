@@ -4,6 +4,7 @@ DROP TABLE IF EXISTS recovery_codes;
 DROP TABLE IF EXISTS visits;
 DROP TABLE IF EXISTS urls;
 DROP TABLE IF EXISTS sessions;
+DROP TABLE IF EXISTS email_verifications;
 DROP TABLE IF EXISTS users;
 
 -- Create users table
@@ -83,6 +84,16 @@ CREATE TABLE IF NOT EXISTS auth_attempts (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create email verifications table
+CREATE TABLE IF NOT EXISTS email_verifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    token TEXT UNIQUE NOT NULL,
+    is_used BOOLEAN DEFAULT FALSE,
+    expires_at DATETIME NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes
 CREATE INDEX IF NOT EXISTS idx_urls_short_id ON urls(short_id);
 CREATE INDEX IF NOT EXISTS idx_urls_custom_slug ON urls(custom_slug);
@@ -102,4 +113,9 @@ CREATE INDEX IF NOT EXISTS idx_recovery_codes_code ON recovery_codes(code);
 -- Create indexes for auth attempts
 CREATE INDEX IF NOT EXISTS idx_auth_attempts_user_id ON auth_attempts(user_id);
 CREATE INDEX IF NOT EXISTS idx_auth_attempts_ip_address ON auth_attempts(ip_address);
-CREATE INDEX IF NOT EXISTS idx_auth_attempts_created_at ON auth_attempts(created_at); 
+CREATE INDEX IF NOT EXISTS idx_auth_attempts_created_at ON auth_attempts(created_at);
+
+-- Create indexes for email verifications
+CREATE INDEX IF NOT EXISTS idx_email_verifications_user_id ON email_verifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_email_verifications_token ON email_verifications(token);
+CREATE INDEX IF NOT EXISTS idx_email_verifications_expires_at ON email_verifications(expires_at); 

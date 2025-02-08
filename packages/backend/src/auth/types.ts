@@ -150,3 +150,12 @@ export interface IAuthAttemptRow {
   is_successful: boolean;
   created_at: string;
 }
+
+export interface IEmailVerificationRow {
+  id: number;
+  user_id: number;
+  token: string;
+  is_used: boolean;
+  expires_at: string;
+  created_at: string;
+}
