@@ -33,7 +33,7 @@ interface AuthActions {
   clearError: () => void;
   socialLogin: (provider: string) => Promise<void>;
   verifyEmail: (token: string) => Promise<void>;
-  resendVerificationEmail: (email: string) => Promise<void>;
+  resendVerificationEmail: () => Promise<void>;
   setupTwoFactor: () => Promise<{
     qrCodeUrl: string;
     secret: string;
@@ -300,11 +300,9 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           set({ isLoading: false });
         }
       },
-      resendVerificationEmail: async (email: string) => {
+      resendVerificationEmail: async () => {
         try {
-          await apiClient.post('/api/auth/resend-verification-email', {
-            email,
-          });
+          await apiClient.post('/api/auth/resend-verification-email');
         } catch (error) {
           console.error('Resend verification email error:', error);
         }

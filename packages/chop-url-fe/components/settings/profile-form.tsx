@@ -62,7 +62,7 @@ export function ProfileForm() {
 
   async function handleSendVerificationEmail() {
     try {
-      await resendVerificationEmail(user?.email || '');
+      await resendVerificationEmail();
       toast.success('Verification email sent');
     } catch (error) {
       toast.error('Failed to send verification email');
