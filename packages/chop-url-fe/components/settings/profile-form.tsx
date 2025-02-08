@@ -1,5 +1,6 @@
 'use client';
 
+import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -12,10 +13,17 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useAuthStore } from '@/lib/store/auth';
+import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../ui/tooltip';
 
 const profileFormSchema = z.object({
   email: z
@@ -31,7 +39,7 @@ const profileFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export function ProfileForm() {
-  const { user, updateProfile } = useAuthStore();
+  const { user, updateProfile, resendVerificationEmail } = useAuthStore();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -52,6 +60,15 @@ export function ProfileForm() {
     }
   }
 
+  async function handleSendVerificationEmail() {
+    try {
+      await resendVerificationEmail(user?.email || '');
+      toast.success('Verification email sent');
+    } catch (error) {
+      toast.error('Failed to send verification email');
+    }
+  }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -62,7 +79,37 @@ export function ProfileForm() {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="john@example.com" {...field} />
+                <div className="flex items-center gap-2">
+                  <Input placeholder="john@example.com" {...field} />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={handleSendVerificationEmail}
+                        >
+                          <Icons.mail
+                            className={cn(
+                              'size-4',
+                              user?.isEmailVerified
+                                ? 'text-green-500'
+                                : 'text-red-500'
+                            )}
+                          />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          {user?.isEmailVerified
+                            ? 'Email verified'
+                            : 'Email not verified.'}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               </FormControl>
               <FormDescription>
                 Your email address will be used for notifications.
