@@ -236,7 +236,8 @@ export class AuthService {
     userId: number,
     ipAddress: string,
     attemptType: AuthAttemptType,
-    isSuccessful: boolean
+    isSuccessful: boolean,
+    code = 'none'
   ): Promise<void> {
     await db
       .insert(authAttempts)
@@ -245,6 +246,7 @@ export class AuthService {
         ipAddress,
         attemptType,
         isSuccessful,
+        code,
       })
       .run();
   }
@@ -276,7 +278,8 @@ export class AuthService {
       userId,
       ipAddress,
       AuthAttemptType.TOTP,
-      isValid
+      isValid,
+      code
     );
 
     if (!isValid) {
@@ -333,14 +336,16 @@ export class AuthService {
           user.id,
           ipAddress,
           AuthAttemptType.RECOVERY,
-          true
+          true,
+          code
         );
       } else {
         await this.recordAuthAttempt(
           user.id,
           ipAddress,
           AuthAttemptType.TOTP,
-          false
+          false,
+          code
         );
         throw new AuthError(AuthErrorCode.INVALID_2FA_CODE, 'Invalid code');
       }
@@ -352,7 +357,8 @@ export class AuthService {
         user.id,
         ipAddress,
         AuthAttemptType.TOTP,
-        true
+        true,
+        code
       );
     }
 
@@ -428,7 +434,8 @@ export class AuthService {
       userId,
       ipAddress,
       AuthAttemptType.TOTP,
-      isValid
+      isValid,
+      code
     );
 
     if (!isValid) {
@@ -462,10 +469,10 @@ export class AuthService {
       id: row.id,
       email: row.email,
       name: row.name,
-      isEmailVerified: row.isEmailVerified,
-      isTwoFactorEnabled: row.isTwoFactorEnabled,
-      createdAt: new Date(row.createdAt),
-      updatedAt: new Date(row.updatedAt),
+      isEmailVerified: row.isEmailVerified ?? false,
+      isTwoFactorEnabled: row.isTwoFactorEnabled ?? false,
+      createdAt: row.createdAt ? new Date(row.createdAt) : new Date(),
+      updatedAt: row.updatedAt ? new Date(row.updatedAt) : new Date(),
     };
   }
 
@@ -691,7 +698,8 @@ export class AuthService {
       userId,
       ipAddress,
       AuthAttemptType.PASSWORD,
-      isValid
+      isValid,
+      data.currentPassword
     );
 
     if (!isValid) {
@@ -771,19 +779,25 @@ export class AuthService {
       userId,
       'system',
       AuthAttemptType.EMAIL_VERIFICATION,
-      true
+      true,
+      token
     );
   }
 
   async resendVerificationEmail(userId: number): Promise<void> {
-    // Check rate limit
-    await this.checkRateLimit(
-      userId,
-      'system',
-      AuthAttemptType.EMAIL_VERIFICATION
-    );
+    try {
+      // Check rate limit
+      await this.checkRateLimit(
+        userId,
+        'system',
+        AuthAttemptType.EMAIL_VERIFICATION
+      );
 
-    await this.sendVerificationEmail(userId);
+      await this.sendVerificationEmail(userId);
+    } catch (error) {
+      console.error('Error in resendVerificationEmail:', error);
+      throw error;
+    }
   }
 
   private async sendVerificationEmail(userId: number): Promise<void> {
@@ -828,7 +842,8 @@ export class AuthService {
       userId,
       'system',
       AuthAttemptType.EMAIL_VERIFICATION,
-      true
+      true,
+      token
     );
   }
 }

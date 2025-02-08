@@ -17,11 +17,7 @@
     "db:push": "drizzle-kit push:sqlite",
     "db:studio": "drizzle-kit studio"
   },
-  "keywords": [
-    "url-shortener",
-    "cloudflare-workers",
-    "typescript"
-  ],
+  "keywords": ["url-shortener", "cloudflare-workers", "typescript"],
   "author": "Gokhan Ozturk",
   "license": "MIT",
   "dependencies": {

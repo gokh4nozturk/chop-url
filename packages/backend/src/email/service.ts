@@ -13,6 +13,7 @@ export class EmailService {
     name: string
   ): Promise<void> {
     try {
+      console.log('Attempting to send verification email to:', to);
       await this.resend.emails.send({
         from: 'ChopURL <noreply@chop-url.com>',
         to: [to],
@@ -33,9 +34,15 @@ export class EmailService {
           </div>
         `,
       });
+      console.log('Verification email sent successfully to:', to);
     } catch (error) {
-      console.error('Email sending error:', error);
-      throw new Error('Email could not be sent');
+      console.error('Email sending error details:', {
+        error,
+        to,
+        verificationLink,
+        name,
+      });
+      throw new Error(`Email could not be sent: ${(error as Error).message}`);
     }
   }
 }

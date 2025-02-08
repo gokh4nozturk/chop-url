@@ -118,11 +118,11 @@ export interface IUserRow {
   email: string;
   name: string;
   passwordHash: string;
-  isEmailVerified: boolean;
-  isTwoFactorEnabled: boolean;
+  isEmailVerified: boolean | null;
+  isTwoFactorEnabled: boolean | null;
   twoFactorSecret: string | null;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string | null;
+  updatedAt: string | null;
 }
 
 export interface ISessionRow {
