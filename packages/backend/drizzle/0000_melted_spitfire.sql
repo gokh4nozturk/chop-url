@@ -3,6 +3,7 @@ CREATE TABLE `auth_attempts` (
 	`user_id` integer,
 	`ip_address` text NOT NULL,
 	`attempt_type` text NOT NULL,
+	`code` text NOT NULL,
 	`is_successful` integer DEFAULT false,
 	`created_at` text DEFAULT CURRENT_TIMESTAMP,
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade

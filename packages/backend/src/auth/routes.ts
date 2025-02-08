@@ -330,18 +330,44 @@ export const createAuthRoutes = () => {
 
   router.post('/resend-verification-email', auth(), async (c: Context) => {
     try {
+      console.log('Starting resend-verification-email handler', {
+        apiKey: c.env.RESEND_API_KEY ? 'present' : 'missing',
+        frontendUrl: c.env.FRONTEND_URL,
+        userId: c.get('user').id,
+      });
+
+      if (!c.env.RESEND_API_KEY) {
+        console.error('RESEND_API_KEY is missing');
+        return c.json({ error: 'Email service configuration error' }, 500);
+      }
+
       const authService = new AuthService(c.env.DB, {
         resendApiKey: c.env.RESEND_API_KEY,
         frontendUrl: c.env.FRONTEND_URL,
       });
+
       const user = c.get('user');
+      console.log('User from context:', user);
+
       await authService.resendVerificationEmail(user.id);
       return c.json({ message: 'Verification email sent successfully' });
     } catch (error) {
-      if (error instanceof Error) {
+      console.error('Error in resend-verification-email handler:', {
+        error: error instanceof Error ? error.message : error,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+
+      if (error instanceof AuthError) {
         return c.json({ error: error.message }, 400);
       }
-      return c.json({ error: 'Internal server error' }, 500);
+
+      return c.json(
+        {
+          error: 'Internal server error',
+          details: error instanceof Error ? error.message : 'Unknown error',
+        },
+        500
+      );
     }
   });
 

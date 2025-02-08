@@ -4,6 +4,13 @@ export class EmailService {
   private resend: Resend;
 
   constructor(apiKey: string) {
+    if (!apiKey) {
+      throw new Error('Resend API key is required');
+    }
+    console.log(
+      'Initializing EmailService with API key:',
+      apiKey ? 'present' : 'missing'
+    );
     this.resend = new Resend(apiKey);
   }
 
@@ -13,8 +20,17 @@ export class EmailService {
     name: string
   ): Promise<void> {
     try {
-      console.log('Attempting to send verification email to:', to);
-      await this.resend.emails.send({
+      if (!this.resend) {
+        throw new Error('Resend client is not initialized');
+      }
+
+      console.log('EmailService: Starting to send verification email', {
+        to,
+        name,
+        apiKey: this.resend ? 'present' : 'missing',
+      });
+
+      const emailContent = {
         from: 'ChopURL <noreply@chop-url.com>',
         to: [to],
         subject: 'Verify your email address',
@@ -33,13 +49,17 @@ export class EmailService {
             <p>Best regards,<br>ChopURL Team</p>
           </div>
         `,
-      });
-      console.log('Verification email sent successfully to:', to);
+      };
+
+      console.log('EmailService: Prepared email content');
+
+      const response = await this.resend.emails.send(emailContent);
+      console.log('EmailService: Email sent successfully', response);
     } catch (error) {
-      console.error('Email sending error details:', {
-        error,
+      console.error('EmailService: Error sending email:', {
+        error: error instanceof Error ? error.message : error,
+        stack: error instanceof Error ? error.stack : undefined,
         to,
-        verificationLink,
         name,
       });
       throw new Error(`Email could not be sent: ${(error as Error).message}`);

@@ -139,37 +139,52 @@ export class AuthService {
   }
 
   async verifyToken(token: string): Promise<IUser> {
-    // Get session
-    const session = await db
-      .select({ userId: sessions.userId, expiresAt: sessions.expiresAt })
-      .from(sessions)
-      .where(
-        and(
-          eq(sessions.token, token),
-          gt(sessions.expiresAt, new Date().toISOString())
+    try {
+      console.log('verifyToken - starting token verification');
+
+      // Get session
+      const session = await db
+        .select({ userId: sessions.userId, expiresAt: sessions.expiresAt })
+        .from(sessions)
+        .where(
+          and(
+            eq(sessions.token, token),
+            gt(sessions.expiresAt, new Date().toISOString())
+          )
         )
-      )
-      .get();
+        .get();
 
-    if (!session) {
-      throw new AuthError(
-        AuthErrorCode.INVALID_TOKEN,
-        'Invalid or expired token'
-      );
+      console.log('verifyToken - session query result:', session);
+
+      if (!session) {
+        throw new AuthError(
+          AuthErrorCode.INVALID_TOKEN,
+          'Invalid or expired token'
+        );
+      }
+
+      // Get user
+      const user = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, session?.userId ?? 0))
+        .get();
+
+      console.log('verifyToken - user query result:', user);
+
+      if (!user) {
+        throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found');
+      }
+
+      return this.mapUserRow(user);
+    } catch (error) {
+      console.error('verifyToken error:', {
+        error: error instanceof Error ? error.message : error,
+        stack: error instanceof Error ? error.stack : undefined,
+        token: `${token.substring(0, 8)}...`,
+      });
+      throw error;
     }
-
-    // Get user
-    const user = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, session?.userId ?? 0))
-      .get();
-
-    if (!user) {
-      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found');
-    }
-
-    return this.mapUserRow(user);
   }
 
   async setupTwoFactor(
@@ -786,64 +801,92 @@ export class AuthService {
 
   async resendVerificationEmail(userId: number): Promise<void> {
     try {
+      console.log('Starting resendVerificationEmail for userId:', userId);
+
       // Check rate limit
       await this.checkRateLimit(
         userId,
         'system',
         AuthAttemptType.EMAIL_VERIFICATION
       );
+      console.log('Rate limit check passed');
 
       await this.sendVerificationEmail(userId);
+      console.log('Email sent successfully');
     } catch (error) {
-      console.error('Error in resendVerificationEmail:', error);
+      console.error('Error in resendVerificationEmail:', {
+        userId,
+        error: error instanceof Error ? error.message : error,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       throw error;
     }
   }
 
   private async sendVerificationEmail(userId: number): Promise<void> {
-    // Get user
-    const user = await db
-      .select({ email: users.email, name: users.name })
-      .from(users)
-      .where(eq(users.id, userId))
-      .get();
+    try {
+      console.log('Starting sendVerificationEmail for userId:', userId);
 
-    if (!user) {
-      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found');
-    }
+      // Get user
+      const user = await db
+        .select({ email: users.email, name: users.name })
+        .from(users)
+        .where(eq(users.id, userId))
+        .get();
 
-    // Generate verification token
-    const token = crypto.randomUUID();
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 24); // Verification token expires in 24 hours
+      console.log('User query result:', user);
 
-    // Save token to database
-    await db
-      .insert(emailVerifications)
-      .values({
+      if (!user) {
+        throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found');
+      }
+
+      // Generate verification token
+      const token = crypto.randomUUID();
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 24);
+
+      console.log('Generated token and expiry:', { token, expiresAt });
+
+      // Save token to database
+      await db
+        .insert(emailVerifications)
+        .values({
+          userId,
+          token,
+          expiresAt: expiresAt.toISOString(),
+        })
+        .run();
+
+      console.log('Token saved to database');
+
+      // Create verification link
+      const verificationLink = `${this.config.frontendUrl}/auth/verify-email?token=${token}&userId=${userId}`;
+      console.log('Generated verification link:', verificationLink);
+
+      // Send email
+      await this.emailService.sendVerificationEmail(
+        user.email,
+        verificationLink,
+        user.name
+      );
+      console.log('Email sent via Resend');
+
+      // Record attempt
+      await this.recordAuthAttempt(
         userId,
-        token,
-        expiresAt: expiresAt.toISOString(),
-      })
-      .run();
-
-    // Create verification link
-    const verificationLink = `${this.config.frontendUrl}/auth/verify-email?token=${token}&userId=${userId}`;
-
-    // Send email
-    await this.emailService.sendVerificationEmail(
-      user.email,
-      verificationLink,
-      user.name
-    );
-
-    // Record attempt
-    await this.recordAuthAttempt(
-      userId,
-      'system',
-      AuthAttemptType.EMAIL_VERIFICATION,
-      true,
-      token
-    );
+        'system',
+        AuthAttemptType.EMAIL_VERIFICATION,
+        true,
+        token
+      );
+      console.log('Auth attempt recorded');
+    } catch (error) {
+      console.error('Error in sendVerificationEmail:', {
+        userId,
+        error: error instanceof Error ? error.message : error,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      throw error;
+    }
   }
 }
