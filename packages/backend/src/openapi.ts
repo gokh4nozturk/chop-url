@@ -43,6 +43,9 @@ export const openApiSchema = {
             type: 'string',
             format: 'email',
           },
+          name: {
+            type: 'string',
+          },
           isEmailVerified: {
             type: 'boolean',
           },
@@ -67,6 +70,13 @@ export const openApiSchema = {
           },
           token: {
             type: 'string',
+          },
+          expiresAt: {
+            type: 'string',
+            format: 'date-time',
+          },
+          requiresTwoFactor: {
+            type: 'boolean',
           },
         },
       },
@@ -100,7 +110,7 @@ export const openApiSchema = {
     },
   },
   paths: {
-    '/health': {
+    '/api/health': {
       get: {
         tags: ['System'],
         summary: 'Health check',
@@ -138,7 +148,7 @@ export const openApiSchema = {
             'application/json': {
               schema: {
                 type: 'object',
-                required: ['email', 'password'],
+                required: ['email', 'password', 'confirmPassword', 'name'],
                 properties: {
                   email: {
                     type: 'string',
@@ -147,6 +157,13 @@ export const openApiSchema = {
                   password: {
                     type: 'string',
                     minLength: 8,
+                  },
+                  confirmPassword: {
+                    type: 'string',
+                    minLength: 8,
+                  },
+                  name: {
+                    type: 'string',
                   },
                 },
               },
@@ -166,16 +183,6 @@ export const openApiSchema = {
           },
           '400': {
             description: 'Invalid input',
-            content: {
-              'application/json': {
-                schema: {
-                  $ref: '#/components/schemas/Error',
-                },
-              },
-            },
-          },
-          '409': {
-            description: 'Email already exists',
             content: {
               'application/json': {
                 schema: {
@@ -235,34 +242,45 @@ export const openApiSchema = {
         },
       },
     },
-    '/api/auth/logout': {
+    '/api/auth/verify-email': {
       post: {
         tags: ['Authentication'],
-        summary: 'Logout current user',
-        security: [
-          {
-            bearerAuth: [],
+        summary: 'Verify email address',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['token'],
+                properties: {
+                  token: {
+                    type: 'string',
+                  },
+                },
+              },
+            },
           },
-        ],
+        },
         responses: {
           '200': {
-            description: 'Logout successful',
+            description: 'Email verified successfully',
             content: {
               'application/json': {
                 schema: {
                   type: 'object',
                   properties: {
-                    success: {
-                      type: 'boolean',
-                      example: true,
+                    message: {
+                      type: 'string',
                     },
                   },
                 },
               },
             },
           },
-          '401': {
-            description: 'Unauthorized',
+          '400': {
+            description: 'Invalid token',
             content: {
               'application/json': {
                 schema: {
@@ -274,18 +292,110 @@ export const openApiSchema = {
         },
       },
     },
-    '/api/auth/me': {
-      get: {
+    '/api/auth/setup-2fa': {
+      post: {
         tags: ['Authentication'],
-        summary: 'Get current user information',
-        security: [
-          {
-            bearerAuth: [],
-          },
-        ],
+        summary: 'Setup two-factor authentication',
+        security: [{ bearerAuth: [] }],
         responses: {
           '200': {
-            description: 'User information retrieved successfully',
+            description: '2FA setup successful',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    secret: {
+                      type: 'string',
+                    },
+                    qrCodeUrl: {
+                      type: 'string',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/auth/verify-2fa': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Verify two-factor authentication code',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email', 'code'],
+                properties: {
+                  email: {
+                    type: 'string',
+                    format: 'email',
+                  },
+                  code: {
+                    type: 'string',
+                    pattern: '^[0-9]{6}$',
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: '2FA verification successful',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/AuthResponse',
+                },
+              },
+            },
+          },
+          '400': {
+            description: 'Invalid code',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/auth/profile': {
+      put: {
+        tags: ['User'],
+        summary: 'Update user profile',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email', 'name'],
+                properties: {
+                  email: {
+                    type: 'string',
+                    format: 'email',
+                  },
+                  name: {
+                    type: 'string',
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Profile updated successfully',
             content: {
               'application/json': {
                 schema: {
@@ -299,28 +409,14 @@ export const openApiSchema = {
               },
             },
           },
-          '401': {
-            description: 'Unauthorized',
-            content: {
-              'application/json': {
-                schema: {
-                  $ref: '#/components/schemas/Error',
-                },
-              },
-            },
-          },
         },
       },
     },
     '/api/shorten': {
       post: {
-        tags: ['URLs'],
-        summary: 'Create a short URL',
-        security: [
-          {
-            bearerAuth: [],
-          },
-        ],
+        tags: ['URL'],
+        summary: 'Shorten a URL',
+        security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
           content: {
@@ -332,11 +428,10 @@ export const openApiSchema = {
                   url: {
                     type: 'string',
                     format: 'uri',
-                    example: 'https://example.com',
                   },
                   customSlug: {
                     type: 'string',
-                    example: 'my-custom-url',
+                    pattern: '^[a-zA-Z0-9-_]+$',
                   },
                 },
               },
@@ -345,31 +440,11 @@ export const openApiSchema = {
         },
         responses: {
           '200': {
-            description: 'Short URL created successfully',
+            description: 'URL shortened successfully',
             content: {
               'application/json': {
                 schema: {
                   $ref: '#/components/schemas/URLInfo',
-                },
-              },
-            },
-          },
-          '400': {
-            description: 'Invalid input',
-            content: {
-              'application/json': {
-                schema: {
-                  $ref: '#/components/schemas/Error',
-                },
-              },
-            },
-          },
-          '409': {
-            description: 'Custom slug already exists',
-            content: {
-              'application/json': {
-                schema: {
-                  $ref: '#/components/schemas/Error',
                 },
               },
             },

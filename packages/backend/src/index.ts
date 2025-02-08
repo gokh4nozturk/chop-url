@@ -1,10 +1,10 @@
 import { swaggerUI } from '@hono/swagger-ui';
-import { Context, Hono } from 'hono';
+import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { createAuthRoutes } from './auth/routes.js';
-import { AuthService } from './auth/service.js';
 import { openApiSchema } from './openapi.js';
 import { createUrlRoutes } from './url/routes.js';
+
 export interface Env {
   DB: D1Database;
   BASE_URL: string;
@@ -14,9 +14,29 @@ const app = new Hono<{ Bindings: Env }>();
 
 // CORS middleware configuration
 app.use(
-  '/api/*',
+  '*',
   cors({
-    origin: ['https://app.chop-url.com', 'http://localhost:3000'],
+    origin: [
+      'https://app.chop-url.com',
+      'http://localhost:3000',
+      'http://localhost:8787',
+    ],
+  })
+);
+
+// OpenAPI schema endpoint - Bu endpoint'i üste taşıyoruz
+app.get('/openapi.json', (c) => {
+  return c.json(openApiSchema);
+});
+
+// Add Swagger UI route
+app.get(
+  '/docs',
+  swaggerUI({
+    url: '/openapi.json', // URL'i güncelliyoruz
+    defaultModelsExpandDepth: 3,
+    docExpansion: 'list',
+    persistAuthorization: true,
   })
 );
 
@@ -31,17 +51,9 @@ app.route('/api/auth', createAuthRoutes());
 // Mount URL routes
 app.route('/api', createUrlRoutes());
 
-// Add Swagger UI route
-app.get(
-  '/docs',
-  swaggerUI({
-    url: '/api/openapi.json',
-  })
-);
-
-// OpenAPI schema endpoint
-app.get('/api/openapi.json', (c) => {
-  return c.json(openApiSchema);
+// Root route - redirect to docs
+app.get('/', (c) => {
+  return c.redirect('/docs');
 });
 
 export default app;
