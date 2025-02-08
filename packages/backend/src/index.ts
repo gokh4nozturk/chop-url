@@ -14,20 +14,15 @@ const app = new Hono<{ Bindings: Env }>();
 
 // CORS middleware configuration
 app.use(
-  '*',
+  '/api/*',
   cors({
-    origin: ['http://localhost:3000'],
-    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowHeaders: [
-      'Content-Type',
-      'Authorization',
-      'Accept',
-      'Origin',
-      'X-Requested-With',
-    ],
-    exposeHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-    maxAge: 86400,
+    // `c` is a `Context` object
+    origin: (origin, c) => {
+      console.log('origin', origin);
+      return origin.endsWith('.chop-url.com')
+        ? origin
+        : 'http://localhost:3000';
+    },
   })
 );
 

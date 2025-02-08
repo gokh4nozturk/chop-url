@@ -24,7 +24,8 @@ interface AuthActions {
   register: (
     email: string,
     password: string,
-    confirmPassword: string
+    confirmPassword: string,
+    name: string
   ) => Promise<void>;
   logout: () => Promise<void>;
   initialize: () => Promise<void>;
@@ -198,7 +199,8 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       register: async (
         email: string,
         password: string,
-        confirmPassword: string
+        confirmPassword: string,
+        name: string
       ) => {
         set({ isLoading: true, error: null });
         try {
@@ -206,6 +208,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
             email,
             password,
             confirmPassword,
+            name,
           });
 
           const { user, token, expiresAt } = response.data;
@@ -229,10 +232,10 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           set({ user, tokenData, error: null });
           navigate.dashboard();
 
-          await apiClient.post('/api/auth/send-verification-email', {
+          await axios.post('/api/auth/send-verification-email', {
             email,
             token,
-            name: user.name,
+            name,
           });
         } catch (error) {
           const authError: AuthError = {

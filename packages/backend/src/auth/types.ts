@@ -47,6 +47,7 @@ export interface ILoginCredentials {
  */
 export interface IRegisterCredentials extends ILoginCredentials {
   confirmPassword: string;
+  name: string;
 }
 
 /**

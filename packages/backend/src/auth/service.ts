@@ -18,7 +18,7 @@ export class AuthService {
   constructor(private db: D1Database) {}
 
   async register(credentials: IRegisterCredentials): Promise<IAuthResponse> {
-    const { email, password, confirmPassword } = credentials;
+    const { email, password, confirmPassword, name } = credentials;
 
     if (password !== confirmPassword) {
       throw new AuthError(
@@ -45,7 +45,7 @@ export class AuthService {
       .prepare(
         'INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?) RETURNING id, email, name, created_at, updated_at'
       )
-      .bind(email, email.split('@')[0], passwordHash)
+      .bind(email, name, passwordHash)
       .first<IUserRow>();
 
     if (!result) {

@@ -22,7 +22,8 @@ interface AuthContextType {
   register: (
     email: string,
     password: string,
-    confirmPassword: string
+    confirmPassword: string,
+    name: string
   ) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
@@ -87,11 +88,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const register = useCallback(
-    async (email: string, password: string, confirmPassword: string) => {
+    async (
+      email: string,
+      password: string,
+      confirmPassword: string,
+      name: string
+    ) => {
       try {
         setLoading(true);
         setError(null);
-        await storeRegister(email, password, confirmPassword);
+        await storeRegister(email, password, confirmPassword, name);
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Registration failed';

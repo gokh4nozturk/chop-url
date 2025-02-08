@@ -14,6 +14,7 @@ interface ValidationError {
 export function RegisterForm() {
   const [formData, setFormData] = useState<RegisterInput>({
     email: '',
+    name: '',
     password: '',
     confirmPassword: '',
   });
@@ -43,7 +44,8 @@ export function RegisterForm() {
       await register(
         formData.email,
         formData.password,
-        formData.confirmPassword
+        formData.confirmPassword,
+        formData.name
       );
     } catch (err) {
       if (err instanceof Error) {
@@ -87,6 +89,32 @@ export function RegisterForm() {
         {validationErrors.email && (
           <p className="text-sm text-destructive" id="email-error">
             {validationErrors.email}
+          </p>
+        )}
+      </div>
+      <div className="space-y-2">
+        <label
+          htmlFor="name"
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+          Name
+        </label>
+        <Input
+          id="name"
+          name="name"
+          type="text"
+          placeholder="John Doe"
+          value={formData.name}
+          onChange={handleChange}
+          required
+          autoComplete="name"
+          disabled={isLoading}
+          aria-invalid={!!validationErrors.name}
+          aria-describedby={validationErrors.name ? 'name-error' : undefined}
+        />
+        {validationErrors.name && (
+          <p className="text-sm text-destructive" id="name-error">
+            {validationErrors.name}
           </p>
         )}
       </div>

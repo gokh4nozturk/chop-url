@@ -26,10 +26,7 @@ export default function TwoFactorSetupPage() {
       if (!user) {
         throw new Error('User not found');
       }
-      const { qrCodeUrl, secret: setupSecret } = await setupTwoFactor(
-        user.email,
-        code
-      );
+      const { qrCodeUrl, secret: setupSecret } = await setupTwoFactor();
       setQrCode(qrCodeUrl);
       setSecret(setupSecret);
       setStep('setup');
@@ -44,7 +41,7 @@ export default function TwoFactorSetupPage() {
       if (!user) {
         throw new Error('User not found');
       }
-      await verifyTwoFactor(user.email, code);
+      await verifyTwoFactor(code);
       setStep('initial');
       setCode('');
     } catch (error) {
@@ -59,7 +56,7 @@ export default function TwoFactorSetupPage() {
         throw new Error('User not found');
       }
 
-      await disableTwoFactor(user.email, code);
+      await disableTwoFactor(code);
       setStep('initial');
       setCode('');
     } catch (error) {

@@ -11,6 +11,7 @@ const loginSchema = z.object({
 });
 
 const registerSchema = loginSchema.extend({
+  name: z.string().min(1),
   confirmPassword: z.string().min(6),
 });
 
