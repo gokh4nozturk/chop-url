@@ -40,6 +40,10 @@ const updatePasswordSchema = z
     path: ['confirmPassword'],
   });
 
+const verifyEmailSchema = z.object({
+  token: z.string().min(1),
+});
+
 interface Env {
   DB: D1Database;
   BASE_URL: string;
@@ -259,6 +263,21 @@ export const createAuthRoutes = () => {
         }
         return c.json({ error: 'Internal server error' }, 500);
       }
+    }
+  );
+
+  router.post(
+    '/verify-email',
+    auth(),
+    zValidator('json', verifyEmailSchema),
+    async (c) => {
+      const { token } = c.req.valid('json');
+      const userId = c.get('user').id;
+
+      const authService = new AuthService(c.env.DB);
+      await authService.verifyEmail(token, userId);
+
+      return c.json({ message: 'Email verified successfully' });
     }
   );
 

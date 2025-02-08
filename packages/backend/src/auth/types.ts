@@ -63,7 +63,12 @@ export interface IAuthResponse {
 /**
  * Auth attempt type
  */
-export type AuthAttemptType = 'totp' | 'recovery' | 'password';
+export enum AuthAttemptType {
+  TOTP = 'totp',
+  RECOVERY = 'recovery',
+  PASSWORD = 'password',
+  EMAIL_VERIFICATION = 'email_verification',
+}
 
 /**
  * Auth attempt interface
@@ -89,6 +94,7 @@ export enum AuthErrorCode {
   DATABASE_ERROR = 'DATABASE_ERROR',
   INVALID_2FA_CODE = 'INVALID_2FA_CODE',
   TOO_MANY_ATTEMPTS = 'TOO_MANY_ATTEMPTS',
+  RATE_LIMIT = 'RATE_LIMIT',
 }
 
 /**

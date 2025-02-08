@@ -32,7 +32,7 @@ interface AuthActions {
   refreshToken: () => Promise<void>;
   clearError: () => void;
   socialLogin: (provider: string) => Promise<void>;
-  verifyEmail: (email: string) => Promise<void>;
+  verifyEmail: (token: string) => Promise<void>;
   resendVerificationEmail: (email: string) => Promise<void>;
   setupTwoFactor: () => Promise<{
     qrCodeUrl: string;
@@ -280,13 +280,24 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           console.error('Two-factor login verification error:', error);
         }
       },
-      verifyEmail: async (email: string) => {
+      verifyEmail: async (token: string) => {
         try {
-          await apiClient.post('/api/auth/verify-email', {
-            email,
-          });
+          set({ isLoading: true, error: null });
+          await apiClient.post('/auth/verify-email', { token });
+          const user = get().user;
+          if (user) {
+            set({ user: { ...user, isEmailVerified: true } });
+          }
         } catch (error) {
-          console.error('Email verification error:', error);
+          set({
+            error: {
+              code: 'VERIFY_EMAIL_ERROR',
+              message: getErrorMessage(error),
+            },
+          });
+          throw error;
+        } finally {
+          set({ isLoading: false });
         }
       },
       resendVerificationEmail: async (email: string) => {

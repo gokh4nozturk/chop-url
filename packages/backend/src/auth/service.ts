@@ -213,7 +213,7 @@ export class AuthService {
     ipAddress: string
   ): Promise<string[]> {
     // Check rate limit
-    await this.checkRateLimit(userId, ipAddress, 'totp');
+    await this.checkRateLimit(userId, ipAddress, AuthAttemptType.TOTP);
 
     // Get user
     const user = await this.db
@@ -229,7 +229,12 @@ export class AuthService {
     const isValid = await verifyTOTP(code, user.two_factor_secret);
 
     // Record attempt
-    await this.recordAuthAttempt(userId, ipAddress, 'totp', isValid);
+    await this.recordAuthAttempt(
+      userId,
+      ipAddress,
+      AuthAttemptType.TOTP,
+      isValid
+    );
 
     if (!isValid) {
       throw new AuthError(AuthErrorCode.INVALID_2FA_CODE, 'Invalid code');
@@ -268,7 +273,7 @@ export class AuthService {
     }
 
     // Check rate limit
-    await this.checkRateLimit(user.id, ipAddress, 'totp');
+    await this.checkRateLimit(user.id, ipAddress, AuthAttemptType.TOTP);
 
     // First try TOTP code
     const isValidTOTP = await verifyTOTP(code, user.two_factor_secret);
@@ -281,16 +286,31 @@ export class AuthService {
       const isValidRecovery = await this.verifyRecoveryCode(user.id, code);
       if (isValidRecovery) {
         isSuccessful = true;
-        await this.recordAuthAttempt(user.id, ipAddress, 'recovery', true);
+        await this.recordAuthAttempt(
+          user.id,
+          ipAddress,
+          AuthAttemptType.RECOVERY,
+          true
+        );
       } else {
-        await this.recordAuthAttempt(user.id, ipAddress, 'totp', false);
+        await this.recordAuthAttempt(
+          user.id,
+          ipAddress,
+          AuthAttemptType.TOTP,
+          false
+        );
         throw new AuthError(AuthErrorCode.INVALID_2FA_CODE, 'Invalid code');
       }
     }
 
     // Record successful TOTP attempt if we got here
     if (isValidTOTP) {
-      await this.recordAuthAttempt(user.id, ipAddress, 'totp', true);
+      await this.recordAuthAttempt(
+        user.id,
+        ipAddress,
+        AuthAttemptType.TOTP,
+        true
+      );
     }
 
     // Create session
@@ -310,7 +330,7 @@ export class AuthService {
     ipAddress: string
   ): Promise<void> {
     // Check rate limit
-    await this.checkRateLimit(userId, ipAddress, 'totp');
+    await this.checkRateLimit(userId, ipAddress, AuthAttemptType.TOTP);
 
     // Get user
     const user = await this.db
@@ -342,7 +362,7 @@ export class AuthService {
     ipAddress: string
   ): Promise<void> {
     // Check rate limit
-    await this.checkRateLimit(userId, ipAddress, 'totp');
+    await this.checkRateLimit(userId, ipAddress, AuthAttemptType.TOTP);
 
     // Get user
     const user = await this.db
@@ -358,7 +378,12 @@ export class AuthService {
     const isValid = await verifyTOTP(code, user.two_factor_secret);
 
     // Record attempt
-    await this.recordAuthAttempt(userId, ipAddress, 'totp', isValid);
+    await this.recordAuthAttempt(
+      userId,
+      ipAddress,
+      AuthAttemptType.TOTP,
+      isValid
+    );
 
     if (!isValid) {
       throw new AuthError(AuthErrorCode.INVALID_2FA_CODE, 'Invalid code');
@@ -577,7 +602,7 @@ export class AuthService {
     ipAddress: string
   ): Promise<void> {
     // Check rate limit
-    await this.checkRateLimit(userId, ipAddress, 'password');
+    await this.checkRateLimit(userId, ipAddress, AuthAttemptType.PASSWORD);
 
     // Get user's current password hash
     const user = await this.db
@@ -596,7 +621,12 @@ export class AuthService {
     );
 
     // Record attempt
-    await this.recordAuthAttempt(userId, ipAddress, 'password', isValid);
+    await this.recordAuthAttempt(
+      userId,
+      ipAddress,
+      AuthAttemptType.PASSWORD,
+      isValid
+    );
 
     if (!isValid) {
       throw new AuthError(
@@ -621,5 +651,64 @@ export class AuthService {
       .prepare('DELETE FROM sessions WHERE user_id = ?')
       .bind(userId)
       .run();
+  }
+
+  async verifyEmail(token: string, userId: number): Promise<void> {
+    // Check rate limit
+    const attempts = await this.db
+      .prepare(
+        'SELECT COUNT(*) as count FROM auth_attempts WHERE user_id = ? AND type = ? AND created_at > ?'
+      )
+      .bind(
+        userId,
+        AuthAttemptType.EMAIL_VERIFICATION,
+        new Date(Date.now() - ATTEMPT_WINDOW).toISOString()
+      )
+      .first<{ count: number }>();
+
+    if (attempts && attempts.count >= MAX_ATTEMPTS) {
+      throw new AuthError(
+        AuthErrorCode.RATE_LIMIT,
+        'Too many verification attempts. Please try again later.'
+      );
+    }
+
+    // Record attempt
+    await this.db
+      .prepare('INSERT INTO auth_attempts (user_id, type) VALUES (?, ?)')
+      .bind(userId, AuthAttemptType.EMAIL_VERIFICATION)
+      .run();
+
+    // Verify token
+    const verificationRecord = await this.db
+      .prepare(
+        'SELECT id, expires_at FROM email_verifications WHERE user_id = ? AND token = ? AND is_used = 0'
+      )
+      .bind(userId, token)
+      .first<{ id: number; expires_at: string }>();
+
+    if (!verificationRecord) {
+      throw new AuthError(
+        AuthErrorCode.INVALID_TOKEN,
+        'Invalid or expired verification token'
+      );
+    }
+
+    if (new Date(verificationRecord.expires_at) < new Date()) {
+      throw new AuthError(
+        AuthErrorCode.INVALID_TOKEN,
+        'Verification token has expired'
+      );
+    }
+
+    // Mark token as used and verify email
+    await this.db.batch([
+      this.db
+        .prepare('UPDATE email_verifications SET is_used = 1 WHERE id = ?')
+        .bind(verificationRecord.id),
+      this.db
+        .prepare('UPDATE users SET is_email_verified = 1 WHERE id = ?')
+        .bind(userId),
+    ]);
   }
 }

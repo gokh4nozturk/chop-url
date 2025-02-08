@@ -17,14 +17,15 @@ export default function VerifyEmailPage() {
 }
 
 function VerifyEmailContent() {
-  const { user, verifyEmail, resendVerificationEmail, isLoading, error } =
-    useAuthStore();
+  const { user, verifyEmail, isLoading, error } = useAuthStore();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const [isVerified, setIsVerified] = useState(false);
+  const [verificationAttempted, setVerificationAttempted] = useState(false);
 
   useEffect(() => {
-    if (token) {
+    if (token && !verificationAttempted) {
+      setVerificationAttempted(true);
       verifyEmail(token)
         .then(() => {
           setIsVerified(true);
@@ -33,42 +34,23 @@ function VerifyEmailContent() {
           setIsVerified(false);
         });
     }
-  }, [token, verifyEmail]);
+  }, [token, verifyEmail, verificationAttempted]);
 
-  if (!user) {
+  if (!token) {
     return (
       <div className="container flex h-screen w-screen flex-col items-center justify-center">
         <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
           <div className="flex flex-col space-y-2 text-center">
+            <Icons.alertTriangle className="mx-auto h-8 w-8 text-yellow-500" />
             <h1 className="text-2xl font-semibold tracking-tight">
-              Email Verification
+              Invalid Verification Link
             </h1>
             <p className="text-sm text-muted-foreground">
-              Please verify your email address to continue.
+              The verification link appears to be invalid. Please check your
+              email for the correct link.
             </p>
           </div>
-          <Button className="w-full mt-4" onClick={() => navigate.auth()}>
-            Go to Login
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (isVerified) {
-    return (
-      <div className="container flex h-screen w-screen flex-col items-center justify-center">
-        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-          <div className="flex flex-col space-y-2 text-center">
-            <Icons.check className="mx-auto h-8 w-8 text-green-500" />
-            <h1 className="text-2xl font-semibold tracking-tight">
-              Email Verified
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Your email has been successfully verified.
-            </p>
-          </div>
-          <Button className="w-full" onClick={() => navigate.dashboard()}>
+          <Button className="w-full mt-4" onClick={() => navigate.dashboard()}>
             Go to Dashboard
           </Button>
         </div>
@@ -81,44 +63,50 @@ function VerifyEmailContent() {
       <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
         <div className="flex flex-col space-y-2 text-center">
           {isLoading ? (
-            <Icons.spinner className="mx-auto h-8 w-8 animate-spin" />
-          ) : error ? (
-            <Icons.warning className="mx-auto h-8 w-8 text-destructive" />
+            <>
+              <Icons.spinner className="mx-auto h-8 w-8 animate-spin" />
+              <h1 className="text-2xl font-semibold tracking-tight">
+                Verifying Email
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Please wait while we verify your email address...
+              </p>
+            </>
+          ) : isVerified ? (
+            <>
+              <Icons.check className="mx-auto h-8 w-8 text-green-500" />
+              <h1 className="text-2xl font-semibold tracking-tight">
+                Email Verified
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Your email has been successfully verified.
+              </p>
+              <Button
+                className="w-full mt-4"
+                onClick={() => navigate.dashboard()}
+              >
+                Continue to Dashboard
+              </Button>
+            </>
           ) : (
-            <Icons.mail className="mx-auto h-8 w-8" />
+            <>
+              <Icons.close className="mx-auto h-8 w-8 text-red-500" />
+              <h1 className="text-2xl font-semibold tracking-tight">
+                Verification Failed
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {error?.message ||
+                  'Failed to verify your email address. Please try again later.'}
+              </p>
+              <Button
+                className="w-full mt-4"
+                onClick={() => navigate.dashboard()}
+              >
+                Go to Dashboard
+              </Button>
+            </>
           )}
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {isLoading
-              ? 'Verifying Email'
-              : error
-                ? 'Verification Failed'
-                : 'Check Your Email'}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {isLoading
-              ? 'Please wait while we verify your email address.'
-              : error
-                ? error.message
-                : 'We sent you a verification link. Please check your email.'}
-          </p>
         </div>
-        {error && (
-          <Button
-            className="w-full"
-            onClick={() => resendVerificationEmail(user.email)}
-            disabled={isLoading}
-          >
-            Resend Verification Email
-          </Button>
-        )}
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={() => navigate.auth()}
-          disabled={isLoading}
-        >
-          Back to login
-        </Button>
       </div>
     </div>
   );
