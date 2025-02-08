@@ -16,18 +16,12 @@ const app = new Hono<{ Bindings: Env }>();
 app.use(
   '/api/*',
   cors({
-    // `c` is a `Context` object
-    origin: (origin, c) => {
-      console.log('origin', origin);
-      return origin.endsWith('.chop-url.com')
-        ? origin
-        : 'http://localhost:3000';
-    },
+    origin: ['https://app.chop-url.com', 'http://localhost:3000'],
   })
 );
 
 // Health check endpoint
-app.get('/health', (c) => {
+app.get('/api/health', (c) => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 

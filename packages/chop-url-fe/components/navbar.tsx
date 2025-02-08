@@ -8,6 +8,7 @@ import { Icons } from './icons';
 import { ThemeSwitcher } from './theme-switcher';
 export function Navbar() {
   const isMobile = useMediaQuery('(max-width: 640px)');
+
   return (
     <header className="fixed top-0 flex z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="w-full mx-4 sm:mx-8 flex h-14 items-center justify-between gap-4">
