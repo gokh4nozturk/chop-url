@@ -5,7 +5,7 @@
 1. Clone the repository
 2. Install dependencies:
 ```bash
-npm install
+pnpm install
 ```
 
 3. Configure Wrangler:
@@ -22,7 +22,7 @@ npm install
 
 4. Start the development server:
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 ## Security Note
