@@ -1,0 +1,38 @@
+name = "chop-url-backend"
+main = "src/index.ts"
+compatibility_date = "2024-02-04"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+BASE_URL = "http://localhost:8788"
+FRONTEND_URL = "http://localhost:3000"
+RESEND_API_KEY = "your_resend_api_key"
+CLOUDFLARE_API_TOKEN = "your_cloudflare_api_token"
+GOOGLE_CLIENT_ID = "your_google_client_id"
+GOOGLE_CLIENT_SECRET = "your_google_client_secret"
+GITHUB_CLIENT_ID = "your_github_client_id"
+GITHUB_CLIENT_SECRET = "your_github_client_secret"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "chop-url-db-local"
+database_id = "your_local_database_id"
+migrations_dir = "migrations"
+
+[env.production]
+vars = { BASE_URL = "https://chop-url.com", FRONTEND_URL = "https://app.chop-url.com" }
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "chop-url-db"
+database_id = "your_production_database_id"
+
+[[routes]]
+pattern = "api.chop-url.com"
+custom_domain = true 
+
+[observability.logs]
+enabled = true
+
+[env.production.observability.logs]
+enabled = true 

@@ -86,15 +86,16 @@ export interface IAuthAttempt {
  * Auth error codes
  */
 export enum AuthErrorCode {
-  VALIDATION_ERROR = 'VALIDATION_ERROR',
-  USER_EXISTS = 'USER_EXISTS',
   USER_NOT_FOUND = 'USER_NOT_FOUND',
+  USER_EXISTS = 'USER_EXISTS',
   INVALID_CREDENTIALS = 'INVALID_CREDENTIALS',
   INVALID_TOKEN = 'INVALID_TOKEN',
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
   DATABASE_ERROR = 'DATABASE_ERROR',
-  INVALID_2FA_CODE = 'INVALID_2FA_CODE',
   TOO_MANY_ATTEMPTS = 'TOO_MANY_ATTEMPTS',
-  RATE_LIMIT = 'RATE_LIMIT',
+  INVALID_PROVIDER = 'INVALID_PROVIDER',
+  OAUTH_ERROR = 'OAUTH_ERROR',
+  INVALID_2FA_CODE = 'INVALID_2FA_CODE',
 }
 
 /**
@@ -158,4 +159,20 @@ export interface IEmailVerificationRow {
   is_used: boolean;
   expires_at: string;
   created_at: string;
+}
+
+export enum OAuthProvider {
+  GOOGLE = 'google',
+  GITHUB = 'github',
+}
+
+export interface IOAuthConfig {
+  clientId: string;
+  clientSecret: string;
+  redirectUri: string;
+}
+
+export interface IOAuthProviderConfig {
+  [OAuthProvider.GOOGLE]: IOAuthConfig;
+  [OAuthProvider.GITHUB]: IOAuthConfig;
 }

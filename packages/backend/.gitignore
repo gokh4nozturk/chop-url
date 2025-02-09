@@ -146,4 +146,7 @@ dist
 /.mf
 /.wrangler
 
+# Sensitive configuration files
+wrangler.toml
+
 # End of https://www.toptal.com/developers/gitignore/api/node,remix+cloudflareworkers

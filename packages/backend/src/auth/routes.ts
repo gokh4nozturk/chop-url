@@ -4,7 +4,13 @@ import { Context, Hono } from 'hono';
 import { z } from 'zod';
 import { auth } from './middleware.js';
 import { AuthService } from './service.js';
-import { AuthError, IUser } from './types.js';
+import {
+  AuthError,
+  AuthErrorCode,
+  IAuthResponse,
+  IUser,
+  OAuthProvider,
+} from './types.js';
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -70,6 +76,10 @@ export const createAuthRoutes = () => {
         const authService = new AuthService(c.env.DB, {
           resendApiKey: c.env.RESEND_API_KEY,
           frontendUrl: c.env.FRONTEND_URL,
+          googleClientId: c.env.GOOGLE_CLIENT_ID,
+          googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
+          githubClientId: c.env.GITHUB_CLIENT_ID,
+          githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
         });
         const credentials = await c.req.json<z.infer<typeof registerSchema>>();
         const response = await authService.register(credentials);
@@ -88,6 +98,10 @@ export const createAuthRoutes = () => {
       const authService = new AuthService(c.env.DB, {
         resendApiKey: c.env.RESEND_API_KEY,
         frontendUrl: c.env.FRONTEND_URL,
+        googleClientId: c.env.GOOGLE_CLIENT_ID,
+        googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
+        githubClientId: c.env.GITHUB_CLIENT_ID,
+        githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
       });
       const credentials = await c.req.json<z.infer<typeof loginSchema>>();
       const response = await authService.login(credentials);
@@ -105,6 +119,10 @@ export const createAuthRoutes = () => {
       const authService = new AuthService(c.env.DB, {
         resendApiKey: c.env.RESEND_API_KEY,
         frontendUrl: c.env.FRONTEND_URL,
+        googleClientId: c.env.GOOGLE_CLIENT_ID,
+        googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
+        githubClientId: c.env.GITHUB_CLIENT_ID,
+        githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
       });
       const user = c.get('user');
       const response = await authService.setupTwoFactor(user.id);
@@ -126,6 +144,10 @@ export const createAuthRoutes = () => {
         const authService = new AuthService(c.env.DB, {
           resendApiKey: c.env.RESEND_API_KEY,
           frontendUrl: c.env.FRONTEND_URL,
+          googleClientId: c.env.GOOGLE_CLIENT_ID,
+          googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
+          githubClientId: c.env.GITHUB_CLIENT_ID,
+          githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
         });
         const { code } = await c.req.json();
         const user = c.get('user');
@@ -154,6 +176,10 @@ export const createAuthRoutes = () => {
       const authService = new AuthService(c.env.DB, {
         resendApiKey: c.env.RESEND_API_KEY,
         frontendUrl: c.env.FRONTEND_URL,
+        googleClientId: c.env.GOOGLE_CLIENT_ID,
+        googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
+        githubClientId: c.env.GITHUB_CLIENT_ID,
+        githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
       });
       const user = c.get('user');
       const codes = await authService.getRecoveryCodes(user.id);
@@ -174,6 +200,10 @@ export const createAuthRoutes = () => {
         const authService = new AuthService(c.env.DB, {
           resendApiKey: c.env.RESEND_API_KEY,
           frontendUrl: c.env.FRONTEND_URL,
+          googleClientId: c.env.GOOGLE_CLIENT_ID,
+          googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
+          githubClientId: c.env.GITHUB_CLIENT_ID,
+          githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
         });
         const { email, code } = await c.req.json();
         const ipAddress =
@@ -205,6 +235,10 @@ export const createAuthRoutes = () => {
         const authService = new AuthService(c.env.DB, {
           resendApiKey: c.env.RESEND_API_KEY,
           frontendUrl: c.env.FRONTEND_URL,
+          googleClientId: c.env.GOOGLE_CLIENT_ID,
+          googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
+          githubClientId: c.env.GITHUB_CLIENT_ID,
+          githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
         });
         const { code } = await c.req.json();
         const user = c.get('user');
@@ -233,6 +267,10 @@ export const createAuthRoutes = () => {
         const authService = new AuthService(c.env.DB, {
           resendApiKey: c.env.RESEND_API_KEY,
           frontendUrl: c.env.FRONTEND_URL,
+          googleClientId: c.env.GOOGLE_CLIENT_ID,
+          googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
+          githubClientId: c.env.GITHUB_CLIENT_ID,
+          githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
         });
         const { code } = await c.req.json();
         const user = c.get('user');
@@ -261,6 +299,10 @@ export const createAuthRoutes = () => {
         const authService = new AuthService(c.env.DB, {
           resendApiKey: c.env.RESEND_API_KEY,
           frontendUrl: c.env.FRONTEND_URL,
+          googleClientId: c.env.GOOGLE_CLIENT_ID,
+          googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
+          githubClientId: c.env.GITHUB_CLIENT_ID,
+          githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
         });
         const user = c.get('user');
 
@@ -285,6 +327,10 @@ export const createAuthRoutes = () => {
         const authService = new AuthService(c.env.DB, {
           resendApiKey: c.env.RESEND_API_KEY,
           frontendUrl: c.env.FRONTEND_URL,
+          googleClientId: c.env.GOOGLE_CLIENT_ID,
+          googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
+          githubClientId: c.env.GITHUB_CLIENT_ID,
+          githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
         });
         const user = c.get('user');
         const data = await c.req.json();
@@ -315,6 +361,10 @@ export const createAuthRoutes = () => {
         const authService = new AuthService(c.env.DB, {
           resendApiKey: c.env.RESEND_API_KEY,
           frontendUrl: c.env.FRONTEND_URL,
+          googleClientId: c.env.GOOGLE_CLIENT_ID,
+          googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
+          githubClientId: c.env.GITHUB_CLIENT_ID,
+          githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
         });
         await authService.verifyEmail(token, userId);
 
@@ -344,6 +394,10 @@ export const createAuthRoutes = () => {
       const authService = new AuthService(c.env.DB, {
         resendApiKey: c.env.RESEND_API_KEY,
         frontendUrl: c.env.FRONTEND_URL,
+        googleClientId: c.env.GOOGLE_CLIENT_ID,
+        googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
+        githubClientId: c.env.GITHUB_CLIENT_ID,
+        githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
       });
 
       const user = c.get('user');
@@ -367,6 +421,69 @@ export const createAuthRoutes = () => {
           details: error instanceof Error ? error.message : 'Unknown error',
         },
         500
+      );
+    }
+  });
+
+  // OAuth routes
+  router.get('/oauth/:provider', async (c: Context) => {
+    try {
+      const provider = c.req.param('provider');
+      const authService = new AuthService(c.env.DB, {
+        resendApiKey: c.env.RESEND_API_KEY,
+        frontendUrl: c.env.FRONTEND_URL,
+        googleClientId: c.env.GOOGLE_CLIENT_ID,
+        googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
+        githubClientId: c.env.GITHUB_CLIENT_ID,
+        githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
+      });
+      const authUrl = await authService.getOAuthUrl(provider as OAuthProvider);
+      return c.redirect(authUrl);
+    } catch (error) {
+      if (error instanceof Error) {
+        return c.json({ error: error.message }, 400);
+      }
+      return c.json({ error: 'Internal server error' }, 500);
+    }
+  });
+
+  router.get('/oauth/:provider/callback', async (c: Context) => {
+    try {
+      const provider = c.req.param('provider');
+      const code = c.req.query('code');
+
+      if (!code) {
+        throw new Error('Authorization code is missing');
+      }
+
+      const authService = new AuthService(c.env.DB, {
+        resendApiKey: c.env.RESEND_API_KEY,
+        frontendUrl: c.env.FRONTEND_URL,
+        googleClientId: c.env.GOOGLE_CLIENT_ID,
+        googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
+        githubClientId: c.env.GITHUB_CLIENT_ID,
+        githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
+      });
+
+      const response = await authService.handleOAuthCallback(
+        provider as OAuthProvider,
+        code
+      );
+
+      // Redirect to frontend with token
+      return c.redirect(
+        `${c.env.FRONTEND_URL}/auth/callback?token=${response.token}`
+      );
+    } catch (error) {
+      if (error instanceof Error) {
+        return c.redirect(
+          `${c.env.FRONTEND_URL}/auth/callback?error=${encodeURIComponent(
+            error.message
+          )}`
+        );
+      }
+      return c.redirect(
+        `${c.env.FRONTEND_URL}/auth/callback?error=Internal server error`
       );
     }
   });

@@ -15,13 +15,46 @@ import {
   IAuthResponse,
   IEmailVerificationRow,
   ILoginCredentials,
+  IOAuthConfig,
+  IOAuthProviderConfig,
   IRegisterCredentials,
   IUser,
   IUserRow,
+  OAuthProvider,
 } from './types.js';
 
 const MAX_ATTEMPTS = 5; // Maximum number of attempts within the time window
 const ATTEMPT_WINDOW = 15 * 60 * 1000; // 15 minutes in milliseconds
+
+interface GoogleTokenResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+}
+
+interface GoogleUserResponse {
+  email: string;
+  name: string;
+  picture?: string;
+}
+
+interface GithubTokenResponse {
+  access_token: string;
+  token_type: string;
+  scope: string;
+}
+
+interface GithubUserResponse {
+  email: string;
+  name: string;
+  login: string;
+}
+
+interface GithubEmailResponse {
+  email: string;
+  primary: boolean;
+  verified: boolean;
+}
 
 export class AuthService {
   private emailService: EmailService;
@@ -31,6 +64,10 @@ export class AuthService {
     private config: {
       resendApiKey: string;
       frontendUrl: string;
+      googleClientId: string;
+      googleClientSecret: string;
+      githubClientId: string;
+      githubClientSecret: string;
     }
   ) {
     this.emailService = new EmailService(config.resendApiKey);
@@ -888,5 +925,215 @@ export class AuthService {
       });
       throw error;
     }
+  }
+
+  async getOAuthUrl(provider: OAuthProvider): Promise<string> {
+    const config = this.getOAuthConfig(provider);
+    const state = crypto.randomUUID();
+
+    switch (provider) {
+      case OAuthProvider.GOOGLE:
+        return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${
+          config.clientId
+        }&redirect_uri=${encodeURIComponent(
+          config.redirectUri
+        )}&response_type=code&scope=email profile&state=${state}`;
+
+      case OAuthProvider.GITHUB:
+        return `https://github.com/login/oauth/authorize?client_id=${
+          config.clientId
+        }&redirect_uri=${encodeURIComponent(
+          config.redirectUri
+        )}&scope=user:email&state=${state}`;
+
+      default:
+        throw new AuthError(
+          AuthErrorCode.INVALID_PROVIDER,
+          'Invalid OAuth provider'
+        );
+    }
+  }
+
+  async handleOAuthCallback(
+    provider: OAuthProvider,
+    code: string
+  ): Promise<IAuthResponse> {
+    const config = this.getOAuthConfig(provider);
+    let userInfo: { email: string; name: string };
+
+    switch (provider) {
+      case OAuthProvider.GOOGLE:
+        userInfo = await this.getGoogleUserInfo(code, config);
+        break;
+      case OAuthProvider.GITHUB:
+        userInfo = await this.getGithubUserInfo(code, config);
+        break;
+      default:
+        throw new AuthError(
+          AuthErrorCode.INVALID_PROVIDER,
+          'Invalid OAuth provider'
+        );
+    }
+
+    // Check if user exists
+    let user = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, userInfo.email))
+      .get();
+
+    if (!user) {
+      // Create new user
+      user = await db
+        .insert(users)
+        .values({
+          email: userInfo.email,
+          name: userInfo.name,
+          isEmailVerified: true, // OAuth emails are pre-verified
+          passwordHash: '', // OAuth users don't have a password
+        })
+        .returning()
+        .get();
+    }
+
+    // Create session
+    const { token, expiresAt } = await this.createSession(user.id);
+
+    return {
+      user: this.mapUserRow(user),
+      token,
+      expiresAt,
+    };
+  }
+
+  private async getGoogleUserInfo(
+    code: string,
+    config: IOAuthConfig
+  ): Promise<{ email: string; name: string }> {
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id: config.clientId,
+        client_secret: config.clientSecret,
+        redirect_uri: config.redirectUri,
+        grant_type: 'authorization_code',
+      }),
+    });
+
+    const tokenData = (await tokenResponse.json()) as GoogleTokenResponse;
+    if (!tokenData.access_token) {
+      throw new AuthError(
+        AuthErrorCode.OAUTH_ERROR,
+        'Failed to get access token from Google'
+      );
+    }
+
+    const userResponse = await fetch(
+      'https://www.googleapis.com/oauth2/v2/userinfo',
+      {
+        headers: { Authorization: `Bearer ${tokenData.access_token}` },
+      }
+    );
+
+    const userData = (await userResponse.json()) as GoogleUserResponse;
+    if (!userData.email) {
+      throw new AuthError(
+        AuthErrorCode.OAUTH_ERROR,
+        'Failed to get user info from Google'
+      );
+    }
+
+    return {
+      email: userData.email,
+      name: userData.name || userData.email.split('@')[0],
+    };
+  }
+
+  private async getGithubUserInfo(
+    code: string,
+    config: IOAuthConfig
+  ): Promise<{ email: string; name: string }> {
+    const tokenResponse = await fetch(
+      'https://github.com/login/oauth/access_token',
+      {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          client_id: config.clientId,
+          client_secret: config.clientSecret,
+          code,
+          redirect_uri: config.redirectUri,
+        }),
+      }
+    );
+
+    const tokenData = (await tokenResponse.json()) as GithubTokenResponse;
+    if (!tokenData.access_token) {
+      throw new AuthError(
+        AuthErrorCode.OAUTH_ERROR,
+        'Failed to get access token from GitHub'
+      );
+    }
+
+    const userResponse = await fetch('https://api.github.com/user', {
+      headers: {
+        Accept: 'application/vnd.github.v3+json',
+        Authorization: `token ${tokenData.access_token}`,
+      },
+    });
+
+    const userData = (await userResponse.json()) as GithubUserResponse;
+
+    const emailResponse = await fetch('https://api.github.com/user/emails', {
+      headers: {
+        Accept: 'application/vnd.github.v3+json',
+        Authorization: `token ${tokenData.access_token}`,
+      },
+    });
+
+    const emails = (await emailResponse.json()) as GithubEmailResponse[];
+    const primaryEmail = emails.find((email) => email.primary)?.email;
+
+    if (!primaryEmail) {
+      throw new AuthError(
+        AuthErrorCode.OAUTH_ERROR,
+        'Failed to get email from GitHub'
+      );
+    }
+
+    return {
+      email: primaryEmail,
+      name: userData.name || userData.login || primaryEmail.split('@')[0],
+    };
+  }
+
+  private getOAuthConfig(provider: OAuthProvider): IOAuthConfig {
+    const configs: IOAuthProviderConfig = {
+      [OAuthProvider.GOOGLE]: {
+        clientId: this.config.googleClientId,
+        clientSecret: this.config.googleClientSecret,
+        redirectUri: `${this.config.frontendUrl}/api/auth/oauth/google/callback`,
+      },
+      [OAuthProvider.GITHUB]: {
+        clientId: this.config.githubClientId,
+        clientSecret: this.config.githubClientSecret,
+        redirectUri: `${this.config.frontendUrl}/api/auth/oauth/github/callback`,
+      },
+    };
+
+    const config = configs[provider];
+    if (!config) {
+      throw new AuthError(
+        AuthErrorCode.INVALID_PROVIDER,
+        'Invalid OAuth provider'
+      );
+    }
+
+    return config;
   }
 }

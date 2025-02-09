@@ -263,11 +263,14 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 
       socialLogin: async (provider: string) => {
         try {
-          await apiClient.post('/api/auth/social', {
-            provider,
-          });
+          window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/oauth/${provider}`;
         } catch (error) {
-          console.error('Social login error:', error);
+          const authError: AuthError = {
+            code: 'OAUTH_ERROR',
+            message: getErrorMessage(error),
+          };
+          set({ error: authError });
+          throw error;
         }
       },
       verifyTwoFactorLogin: async (email: string, code: string) => {
