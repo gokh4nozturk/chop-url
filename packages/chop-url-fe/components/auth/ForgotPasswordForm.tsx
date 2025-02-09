@@ -7,15 +7,17 @@ import { navigate } from '@/lib/navigation';
 import { useAuthStore } from '@/lib/store/auth';
 import { useState } from 'react';
 
-export function ForgotPasswordForm() {
-  const [email, setEmail] = useState('');
+export function ForgotPasswordForm({ email }: { email: string | null }) {
   const { requestPasswordReset, isLoading, error } = useAuthStore();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [formData, setFormData] = useState({
+    email: decodeURIComponent(email || ''),
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await requestPasswordReset(email);
+      await requestPasswordReset(formData.email);
       setIsSubmitted(true);
     } catch (err) {
       // Error is handled by the store
@@ -51,8 +53,8 @@ export function ForgotPasswordForm() {
         <Input
           type="email"
           placeholder="Enter your email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           required
           disabled={isLoading}
         />

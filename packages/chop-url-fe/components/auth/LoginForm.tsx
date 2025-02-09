@@ -94,7 +94,9 @@ export function LoginForm() {
             Password
           </label>
           <Link
-            href="/auth/forgot-password"
+            href={`/auth/forgot-password?email=${encodeURIComponent(
+              formData.email
+            )}`}
             className="text-sm font-medium text-primary hover:underline"
           >
             Forgot password?

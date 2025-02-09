@@ -1,8 +1,12 @@
 'use client';
 
 import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
+import { useSearchParams } from 'next/navigation';
 
 export default function ForgotPasswordPage() {
+  const searchParams = useSearchParams();
+  const email = searchParams.get('email');
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/50">
       <div className="w-full max-w-md space-y-8 p-8 bg-background rounded-lg shadow-lg">
@@ -16,7 +20,7 @@ export default function ForgotPasswordPage() {
           </p>
         </div>
 
-        <ForgotPasswordForm />
+        <ForgotPasswordForm email={email} />
       </div>
     </div>
   );
