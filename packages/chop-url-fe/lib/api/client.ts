@@ -27,7 +27,10 @@ client.interceptors.request.use(
 client.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
+    const isLoginOrRegisterRoute = ['login', 'register'].includes(
+      error.request.responseURL.split('/').pop()
+    );
+    if (error.response?.status === 401 && !isLoginOrRegisterRoute) {
       removeToken();
       window.location.href = '/auth';
     }

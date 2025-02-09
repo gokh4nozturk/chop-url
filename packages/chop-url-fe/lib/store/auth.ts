@@ -183,14 +183,18 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           });
 
           set({ user, tokenData, error: null });
-          navigate.dashboard();
+
+          if (user.requiresTwoFactor) {
+            navigate.twoFactor(email);
+          } else {
+            navigate.dashboard();
+          }
         } catch (error) {
           const authError: AuthError = {
             code: 'LOGIN_ERROR',
             message: getErrorMessage(error),
           };
           set({ error: authError, user: null, tokenData: null });
-          throw error;
         } finally {
           set({ isLoading: false });
         }
@@ -230,20 +234,20 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           });
 
           set({ user, tokenData, error: null });
-          navigate.dashboard();
 
           await axios.post('/api/auth/send-verification-email', {
             email,
             token,
             name,
           });
+
+          navigate.dashboard();
         } catch (error) {
           const authError: AuthError = {
             code: 'REGISTER_ERROR',
             message: getErrorMessage(error),
           };
           set({ error: authError });
-          throw error;
         } finally {
           set({ isLoading: false });
         }
