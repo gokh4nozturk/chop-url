@@ -123,7 +123,11 @@ export class AuthService {
     const { token, expiresAt } = await this.createSession(user.id);
 
     // Send verification email
-    await this.resendVerificationEmail(user.id);
+    await this.emailService.sendVerificationEmail(
+      { email: user.email, name: user.name, id: user.id },
+      token,
+      this.config.frontendUrl
+    );
 
     return {
       user: this.mapUserRow(user),
@@ -903,9 +907,9 @@ export class AuthService {
 
       // Send email
       await this.emailService.sendVerificationEmail(
-        user.email,
-        verificationLink,
-        user.name
+        { email: user.email, name: user.name, id: userId },
+        token,
+        this.config.frontendUrl
       );
       console.log('Email sent via Resend');
 
