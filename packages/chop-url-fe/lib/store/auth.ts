@@ -89,7 +89,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         name: string;
       }) => {
         try {
-          const response = await apiClient.post('/api/auth/profile', data);
+          const response = await apiClient.put('/api/auth/profile', data);
           set({ user: response.data.user });
         } catch (error) {
           console.error('Update profile error:', error);
@@ -102,7 +102,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         confirmPassword: string;
       }) => {
         try {
-          await apiClient.post('/api/auth/password', data);
+          await apiClient.put('/api/auth/password', data);
         } catch (error) {
           console.error('Update password error:', error);
         }
