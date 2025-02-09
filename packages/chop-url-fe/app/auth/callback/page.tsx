@@ -2,9 +2,9 @@
 
 import { useAuthStore } from '@/lib/store/auth';
 import { useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 
-export default function AuthCallback() {
+function CallbackContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const error = searchParams.get('error');
@@ -37,5 +37,21 @@ export default function AuthCallback() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function AuthCallback() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold">Loading...</h1>
+          </div>
+        </div>
+      }
+    >
+      <CallbackContent />
+    </Suspense>
   );
 }

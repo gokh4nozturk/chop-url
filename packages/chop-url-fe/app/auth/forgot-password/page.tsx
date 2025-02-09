@@ -2,8 +2,25 @@
 
 import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 export default function ForgotPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold">Loading...</h1>
+          </div>
+        </div>
+      }
+    >
+      <ForgotPasswordContent />
+    </Suspense>
+  );
+}
+
+function ForgotPasswordContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get('email');
 
