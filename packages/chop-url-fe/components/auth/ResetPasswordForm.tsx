@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { navigate } from '@/lib/navigation';
 import { useAuthStore } from '@/lib/store/auth';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface ResetPasswordFormProps {
   token: string;
@@ -20,7 +21,14 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await resetPassword(token, formData.newPassword, formData.confirmPassword);
+    await resetPassword(token, formData.newPassword, formData.confirmPassword)
+      .then(() => {
+        toast.success('Password reset successful');
+        navigate.auth();
+      })
+      .catch((error) => {
+        toast.error(error.message);
+      });
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

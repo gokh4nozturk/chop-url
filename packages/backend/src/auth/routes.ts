@@ -488,5 +488,47 @@ export const createAuthRoutes = () => {
     }
   });
 
+  router.post('/request-password-reset', async (c: Context) => {
+    try {
+      const { email } = await c.req.json();
+      const authService = new AuthService(c.env.DB, {
+        resendApiKey: c.env.RESEND_API_KEY,
+        frontendUrl: c.env.FRONTEND_URL,
+        googleClientId: c.env.GOOGLE_CLIENT_ID,
+        googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
+        githubClientId: c.env.GITHUB_CLIENT_ID,
+        githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
+      });
+      await authService.requestPasswordReset(email);
+      return c.json({ message: 'Password reset request sent' });
+    } catch (error) {
+      if (error instanceof Error) {
+        return c.json({ error: error.message }, 400);
+      }
+      return c.json({ error: 'Internal server error' }, 500);
+    }
+  });
+
+  router.put('/reset-password', async (c: Context) => {
+    try {
+      const { token, newPassword, confirmPassword } = await c.req.json();
+      const authService = new AuthService(c.env.DB, {
+        resendApiKey: c.env.RESEND_API_KEY,
+        frontendUrl: c.env.FRONTEND_URL,
+        googleClientId: c.env.GOOGLE_CLIENT_ID,
+        googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
+        githubClientId: c.env.GITHUB_CLIENT_ID,
+        githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
+      });
+      await authService.resetPassword(token, newPassword, confirmPassword);
+      return c.json({ message: 'Password reset successful' });
+    } catch (error) {
+      if (error instanceof Error) {
+        return c.json({ error: error.message }, 400);
+      }
+      return c.json({ error: 'Internal server error' }, 500);
+    }
+  });
+
   return router;
 };

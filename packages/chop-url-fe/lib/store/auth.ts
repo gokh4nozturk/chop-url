@@ -235,12 +235,6 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 
           set({ user, tokenData, error: null });
 
-          await axios.post('/api/auth/send-verification-email', {
-            email,
-            token,
-            name,
-          });
-
           navigate.dashboard();
         } catch (error) {
           const authError: AuthError = {
@@ -363,7 +357,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         confirmPassword: string
       ) => {
         try {
-          await apiClient.post('/api/auth/reset-password', {
+          await apiClient.put('/api/auth/reset-password', {
             token,
             newPassword,
             confirmPassword,

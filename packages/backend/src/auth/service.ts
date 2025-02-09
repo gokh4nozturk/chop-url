@@ -4,6 +4,7 @@ import { createDb, db } from '../db/client';
 import {
   authAttempts,
   emailVerifications,
+  passwordResets,
   sessions,
   users,
 } from '../db/schema';
@@ -1135,5 +1136,74 @@ export class AuthService {
     }
 
     return config;
+  }
+
+  async requestPasswordReset(email: string): Promise<void> {
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .get();
+
+    if (!user) {
+      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found');
+    }
+
+    const token = crypto.randomUUID();
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1);
+
+    await db
+      .insert(passwordResets)
+      .values({ userId: user.id, token, expiresAt: expiresAt.toISOString() })
+      .run();
+
+    const resetLink = `${this.config.frontendUrl}/auth/reset-password?token=${token}`;
+
+    await this.emailService.sendPasswordResetEmail(
+      user.email,
+      resetLink,
+      user.name
+    );
+  }
+
+  async resetPassword(
+    token: string,
+    newPassword: string,
+    confirmPassword: string
+  ): Promise<{ message: string }> {
+    const reset = await db
+      .select()
+      .from(passwordResets)
+      .where(eq(passwordResets.token, token))
+      .get();
+
+    if (!reset) {
+      throw new AuthError(
+        AuthErrorCode.INVALID_TOKEN,
+        'Invalid or expired token'
+      );
+    }
+
+    if (reset.expiresAt < new Date().toISOString()) {
+      throw new AuthError(AuthErrorCode.EXPIRED_TOKEN, 'Token has expired');
+    }
+
+    const hashedPassword = await this.hashPassword(newPassword);
+
+    await db
+      .update(users)
+      .set({ passwordHash: hashedPassword })
+      .where(eq(users.id, reset.userId ?? 0))
+      .run();
+
+    await db
+      .delete(passwordResets)
+      .where(eq(passwordResets.id, reset.id))
+      .run();
+
+    return {
+      message: 'Password reset successful',
+    };
   }
 }

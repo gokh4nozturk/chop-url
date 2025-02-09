@@ -65,4 +65,56 @@ export class EmailService {
       throw new Error(`Email could not be sent: ${(error as Error).message}`);
     }
   }
+
+  async sendPasswordResetEmail(
+    to: string,
+    resetLink: string,
+    name: string
+  ): Promise<void> {
+    try {
+      if (!this.resend) {
+        throw new Error('Resend client is not initialized');
+      }
+
+      console.log('EmailService: Starting to send password reset email', {
+        to,
+        name,
+        apiKey: this.resend ? 'present' : 'missing',
+      });
+
+      const emailContent = {
+        from: 'ChopURL <noreply@chop-url.com>',
+        to: [to],
+        subject: 'Reset your password',
+        html: `
+          <div>
+            <h1>Hello ${name},</h1>
+            <p>We received a request to reset your password.</p>
+            <p>Click the button below to reset your password:</p>
+            <a href="${resetLink}" style="display: inline-block; background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 24px 0;">
+              Reset Password
+            </a>
+            <p>Or copy and paste the following link into your browser:</p>
+            <p>${resetLink}</p>
+            <p>This link will expire in 1 hour.</p>
+            <p>If you did not request a password reset, you can ignore this email.</p>
+            <p>Best regards,<br>ChopURL Team</p>
+          </div>
+        `,
+      };
+
+      console.log('EmailService: Prepared email content');
+
+      const response = await this.resend.emails.send(emailContent);
+      console.log('EmailService: Email sent successfully', response);
+    } catch (error) {
+      console.error('EmailService: Error sending email:', {
+        error: error instanceof Error ? error.message : error,
+        stack: error instanceof Error ? error.stack : undefined,
+        to,
+        name,
+      });
+      throw new Error(`Email could not be sent: ${(error as Error).message}`);
+    }
+  }
 }
