@@ -28,3 +28,7 @@ dist
 .vercel
 
 .wrangler/
+
+# Cloudflare configuration
+wrangler.toml
+**/wrangler.toml
