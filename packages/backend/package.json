@@ -11,8 +11,8 @@
     "deploy": "wrangler deploy --minify src/index.ts",
     "deploy:prod": "wrangler deploy --minify src/index.ts --env production",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "wrangler d1 migrations apply chop-url-db-local --local",
-    "db:migrate:prod": "wrangler d1 migrations apply chop-url-db",
+    "db:migrate": "wrangler d1 migrations apply chop-url-db-local --remote",
+    "db:migrate:prod": "wrangler d1 migrations apply chop-url-db --remote",
     "db:studio": "drizzle-kit studio"
   },
   "keywords": ["url-shortener", "cloudflare-workers", "typescript"],
