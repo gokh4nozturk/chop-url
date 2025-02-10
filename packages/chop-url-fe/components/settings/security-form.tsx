@@ -18,6 +18,12 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from '@/components/ui/input-otp';
 import { Switch } from '@/components/ui/switch';
 import { useAuthStore } from '@/lib/store/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -269,12 +275,20 @@ export function SecurityForm() {
                     <FormItem>
                       <FormLabel>Verification Code</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Enter 6-digit code"
-                          maxLength={6}
-                          {...field}
-                        />
+                        <InputOTP maxLength={6} {...field}>
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                          </InputOTPGroup>
+                        </InputOTP>
                       </FormControl>
+                      <FormDescription>
+                        Enter the 6-digit code from your authenticator app
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -308,12 +322,21 @@ export function SecurityForm() {
                   <FormItem>
                     <FormLabel>Verification Code</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Enter 6-digit code"
-                        maxLength={6}
-                        {...field}
-                      />
+                      <InputOTP maxLength={6} {...field}>
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} />
+                          <InputOTPSlot index={1} />
+                          <InputOTPSlot index={2} />
+                          <InputOTPSlot index={3} />
+                          <InputOTPSlot index={4} />
+                          <InputOTPSlot index={5} />
+                        </InputOTPGroup>
+                      </InputOTP>
                     </FormControl>
+
+                    <FormDescription>
+                      Enter the 6-digit code from your authenticator app
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

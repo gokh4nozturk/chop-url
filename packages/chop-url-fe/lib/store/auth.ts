@@ -38,7 +38,7 @@ interface AuthActions {
     qrCodeUrl: string;
     secret: string;
   }>;
-  enableTwoFactor: () => Promise<void>;
+  enableTwoFactor: (code: string) => Promise<void>;
   disableTwoFactor: (code: string) => Promise<void>;
   verifyTwoFactor: (code: string) => Promise<void>;
   verifyTwoFactorLogin: (email: string, code: string) => Promise<void>;
@@ -324,9 +324,11 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           throw new Error(getErrorMessage(error));
         }
       },
-      enableTwoFactor: async () => {
+      enableTwoFactor: async (code: string) => {
         try {
-          const response = await apiClient.post('/api/auth/enable-2fa');
+          const response = await apiClient.post('/api/auth/enable-2fa', {
+            code,
+          });
           const { user } = response.data;
           set({ user });
         } catch (error) {
