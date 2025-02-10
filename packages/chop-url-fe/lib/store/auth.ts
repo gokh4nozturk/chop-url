@@ -99,9 +99,24 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       }) => {
         try {
           const response = await apiClient.put('/api/auth/profile', data);
-          set({ user: response.data.user });
+
+          if (response.status === 200) {
+            set({ user: response.data.user });
+          } else {
+            const authError: AuthError = {
+              code: 'UPDATE_PROFILE_ERROR',
+              message: getErrorMessage(response.data),
+            };
+            set({ error: authError });
+            throw new Error(getErrorMessage(response.data));
+          }
         } catch (error) {
-          console.error('Update profile error:', error);
+          const authError: AuthError = {
+            code: 'UPDATE_PROFILE_ERROR',
+            message: getErrorMessage(error),
+          };
+          set({ error: authError });
+          throw error;
         }
       },
 

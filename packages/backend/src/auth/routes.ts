@@ -168,10 +168,43 @@ export const createAuthRoutes = () => {
         );
         return c.json({ success: true, recoveryCodes });
       } catch (error) {
-        if (error instanceof Error) {
-          return c.json({ error: error.message }, 400);
+        if (error instanceof AuthError) {
+          const errorMessages: Record<AuthErrorCode, string> = {
+            [AuthErrorCode.USER_NOT_FOUND]:
+              'User not found. Please try logging in again.',
+            [AuthErrorCode.INVALID_2FA_CODE]:
+              'Invalid verification code. Please make sure you entered the correct code from your authenticator app.',
+            [AuthErrorCode.TOO_MANY_ATTEMPTS]:
+              'Too many failed attempts. Please wait for a while before trying again.',
+            [AuthErrorCode.INVALID_TOKEN]:
+              'Your session has expired. Please log in again to continue setup.',
+            [AuthErrorCode.VALIDATION_ERROR]:
+              'Invalid code format. Please enter a 6-digit code.',
+            [AuthErrorCode.DATABASE_ERROR]:
+              'A database error occurred. Please try again later.',
+            [AuthErrorCode.USER_EXISTS]:
+              'This email address is already in use.',
+            [AuthErrorCode.INVALID_CREDENTIALS]:
+              'Invalid credentials. Please log in again.',
+            [AuthErrorCode.INVALID_PROVIDER]:
+              'Invalid authentication provider.',
+            [AuthErrorCode.OAUTH_ERROR]:
+              'Authentication error occurred. Please try again.',
+            [AuthErrorCode.EXPIRED_TOKEN]:
+              'Your session has expired. Please log in again.',
+          };
+
+          return c.json(
+            { error: errorMessages[error.code] || error.message },
+            400
+          );
         }
-        return c.json({ error: 'Internal server error' }, 500);
+        return c.json(
+          {
+            error: 'An unexpected error occurred. Please try again later.',
+          },
+          500
+        );
       }
     }
   );
@@ -223,10 +256,42 @@ export const createAuthRoutes = () => {
         );
         return c.json(result);
       } catch (error) {
-        if (error instanceof Error) {
-          return c.json({ error: error.message }, 400);
+        if (error instanceof AuthError) {
+          const errorMessages: Record<AuthErrorCode, string> = {
+            [AuthErrorCode.USER_NOT_FOUND]:
+              'User not found. Please check your email address.',
+            [AuthErrorCode.INVALID_2FA_CODE]:
+              'Invalid verification code. Please check your authenticator app code or recovery code and try again.',
+            [AuthErrorCode.TOO_MANY_ATTEMPTS]:
+              'Too many failed attempts. Please wait for a while before trying again. If the issue persists, you can use your recovery codes or contact support.',
+            [AuthErrorCode.INVALID_TOKEN]:
+              'Invalid or expired session. Please log in again.',
+            [AuthErrorCode.VALIDATION_ERROR]:
+              'Invalid input. Please make sure all fields are filled correctly.',
+            [AuthErrorCode.DATABASE_ERROR]:
+              'A database error occurred. Please try again later.',
+            [AuthErrorCode.USER_EXISTS]:
+              'This email address is already in use.',
+            [AuthErrorCode.INVALID_CREDENTIALS]: 'Invalid credentials.',
+            [AuthErrorCode.INVALID_PROVIDER]:
+              'Invalid authentication provider.',
+            [AuthErrorCode.OAUTH_ERROR]:
+              'Authentication error occurred. Please try again.',
+            [AuthErrorCode.EXPIRED_TOKEN]:
+              'Token has expired. Please log in again.',
+          };
+
+          return c.json(
+            { error: errorMessages[error.code] || error.message },
+            400
+          );
         }
-        return c.json({ error: 'Internal server error' }, 500);
+        return c.json(
+          {
+            error: 'An unexpected error occurred. Please try again later.',
+          },
+          500
+        );
       }
     }
   );
@@ -315,10 +380,43 @@ export const createAuthRoutes = () => {
         const updatedUser = await authService.updateProfile(user.id, data);
         return c.json({ user: updatedUser });
       } catch (error) {
-        if (error instanceof Error) {
-          return c.json({ error: error.message }, 400);
+        if (error instanceof AuthError) {
+          const errorMessages: Record<AuthErrorCode, string> = {
+            [AuthErrorCode.USER_NOT_FOUND]:
+              'Unable to find your account. Please log in again.',
+            [AuthErrorCode.USER_EXISTS]:
+              'This email is already registered. Please use a different email address.',
+            [AuthErrorCode.VALIDATION_ERROR]:
+              'Please check your input: Name should be between 1-50 characters and email should be valid.',
+            [AuthErrorCode.DATABASE_ERROR]:
+              'Unable to update your profile at the moment. Please try again later.',
+            [AuthErrorCode.INVALID_TOKEN]:
+              'Your session has expired. Please log in again to update your profile.',
+            [AuthErrorCode.INVALID_CREDENTIALS]:
+              'Authentication failed. Please log in again.',
+            [AuthErrorCode.TOO_MANY_ATTEMPTS]:
+              'Too many profile update attempts. Please try again in a few minutes.',
+            [AuthErrorCode.INVALID_2FA_CODE]:
+              'Two-factor authentication failed. Please verify your code.',
+            [AuthErrorCode.INVALID_PROVIDER]: 'Invalid authentication method.',
+            [AuthErrorCode.OAUTH_ERROR]:
+              'Authentication error. Please try logging in again.',
+            [AuthErrorCode.EXPIRED_TOKEN]:
+              'Your session has expired. Please log in again to continue.',
+          };
+
+          return c.json(
+            { error: errorMessages[error.code] || error.message },
+            400
+          );
         }
-        return c.json({ error: 'Internal server error' }, 500);
+        return c.json(
+          {
+            error:
+              'Unable to update profile due to a system error. Please try again later.',
+          },
+          500
+        );
       }
     }
   );
