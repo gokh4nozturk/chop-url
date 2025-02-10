@@ -5,6 +5,7 @@ import {
   authAttempts,
   emailVerifications,
   passwordResets,
+  recoveryCodes,
   sessions,
   users,
 } from '../db/schema';
@@ -570,23 +571,26 @@ export class AuthService {
   }
 
   private async generateRecoveryCodes(userId: number): Promise<string[]> {
-    // Generate 10 random recovery codes
-    const codes: string[] = Array.from({ length: 10 }, () =>
-      Array.from({ length: 4 }, () =>
-        Math.floor(Math.random() * 10000)
-          .toString()
-          .padStart(4, '0')
-      ).join('-')
-    );
+    // Generate 10 random recovery codes with improved entropy
+    const codes: string[] = Array.from({ length: 10 }, () => {
+      const buffer = new Uint8Array(8);
+      crypto.getRandomValues(buffer);
+      return (
+        Array.from(buffer)
+          .map((b) => b.toString(16).padStart(2, '0'))
+          .join('')
+          .slice(0, 8)
+          .match(/.{1,4}/g)
+          ?.join('-') ?? buffer.slice(0, 8).join('-')
+      );
+    });
 
-    // Save codes to database
-    const stmt = db.insert(authAttempts).values(
+    // Save codes to recovery_codes table
+    const stmt = db.insert(recoveryCodes).values(
       codes.map((code) => ({
         userId,
-        ipAddress: 'system',
-        attemptType: AuthAttemptType.RECOVERY,
-        isSuccessful: true,
         code,
+        isUsed: false,
       }))
     );
 
@@ -602,13 +606,12 @@ export class AuthService {
     // Get and verify recovery code
     const recoveryCode = await db
       .select()
-      .from(authAttempts)
+      .from(recoveryCodes)
       .where(
         and(
-          eq(authAttempts.userId, userId),
-          eq(authAttempts.attemptType, AuthAttemptType.RECOVERY),
-          eq(authAttempts.code, code),
-          eq(authAttempts.isSuccessful, true)
+          eq(recoveryCodes.userId, userId),
+          eq(recoveryCodes.code, code),
+          eq(recoveryCodes.isUsed, false)
         )
       )
       .get();
@@ -617,30 +620,29 @@ export class AuthService {
       return false;
     }
 
-    // Mark code as used
+    // Mark code as used with timestamp
     await db
-      .update(authAttempts)
-      .set({ isSuccessful: false })
-      .where(eq(authAttempts.id, recoveryCode.id))
+      .update(recoveryCodes)
+      .set({
+        isUsed: true,
+        usedAt: new Date().toISOString(),
+      })
+      .where(eq(recoveryCodes.id, recoveryCode.id))
       .run();
 
     return true;
   }
 
-  async getRecoveryCodes(userId: number): Promise<string> {
-    const attempts = await db
+  async getRecoveryCodes(userId: number): Promise<string[]> {
+    const codes = await db
       .select()
-      .from(authAttempts)
+      .from(recoveryCodes)
       .where(
-        and(
-          eq(authAttempts.userId, userId),
-          eq(authAttempts.attemptType, AuthAttemptType.RECOVERY),
-          eq(authAttempts.isSuccessful, true)
-        )
+        and(eq(recoveryCodes.userId, userId), eq(recoveryCodes.isUsed, false))
       )
-      .get();
+      .all();
 
-    return attempts?.code ?? '';
+    return codes.map((code) => code.code);
   }
 
   async refreshToken(currentToken: string): Promise<IAuthResponse> {

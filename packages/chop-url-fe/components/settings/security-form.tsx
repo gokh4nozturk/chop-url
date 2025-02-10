@@ -65,7 +65,7 @@ export function SecurityForm() {
   const [showRecoveryCodesDialog, setShowRecoveryCodesDialog] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const [secret, setSecret] = useState<string | null>(null);
-  const [recoveryCodes, setRecoveryCodes] = useState<string>(''); // 'asdf-asdf-asdf-asdf'
+  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
   const {
     user,
     disableTwoFactor,
@@ -91,8 +91,15 @@ export function SecurityForm() {
   });
 
   useEffect(() => {
+    const fetchRecoveryCodes = async () => {
+      const { recoveryCodes } = await getRecoveryCodes();
+      console.log('recoveryCodes', recoveryCodes);
+    };
+
+    fetchRecoveryCodes();
+
     setIsTwoFactorEnabled(user?.isTwoFactorEnabled || false);
-  }, [user]);
+  }, [user, getRecoveryCodes]);
 
   const form = useForm<SecurityFormValues>({
     resolver: zodResolver(securityFormSchema),
@@ -372,7 +379,7 @@ export function SecurityForm() {
           </DialogHeader>
           <div className="flex flex-col items-center space-y-6">
             <div className="grid grid-cols-2 gap-4 w-full">
-              {recoveryCodes.split('-').map((code) => (
+              {recoveryCodes.map((code) => (
                 <div
                   key={code}
                   className="p-2 bg-muted rounded-md text-center font-mono"
@@ -381,9 +388,16 @@ export function SecurityForm() {
                 </div>
               ))}
             </div>
+            <div className="text-sm text-muted-foreground text-center">
+              <p>Each code can only be used once.</p>
+              <p>Store these codes in a secure location.</p>
+              <p>
+                If you lose these codes, you may lose access to your account.
+              </p>
+            </div>
             <Button
               onClick={() => {
-                const codesText = recoveryCodes.split('-').join('\n');
+                const codesText = recoveryCodes.join('\n');
                 navigator.clipboard.writeText(codesText);
                 toast.success('Recovery codes copied to clipboard');
               }}

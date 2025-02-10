@@ -41,7 +41,7 @@ interface AuthActions {
   }>;
   enableTwoFactor: (code: string) => Promise<void>;
   getRecoveryCodes: () => Promise<{
-    recoveryCodes: string;
+    recoveryCodes: string[];
   }>;
   disableTwoFactor: (code: string) => Promise<void>;
   verifyTwoFactor: (code: string) => Promise<void>;
