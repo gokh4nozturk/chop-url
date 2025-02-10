@@ -173,29 +173,29 @@ export const useAuthStore = create<AuthState & AuthActions>()(
             password,
           });
 
-          const { user, token, expiresAt } = response.data;
+          const { user, token, expiresAt, requiresTwoFactor } = response.data;
 
-          if (!token) {
-            throw new Error('No token received from server');
-          }
-
-          const tokenData: TokenData = {
-            token,
-            expiresAt: new Date(expiresAt),
-          };
-
-          Cookies.set(COOKIE_NAME, token, {
-            expires: new Date(expiresAt),
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            path: '/',
-          });
-
-          set({ user, tokenData, error: null });
-
-          if (user.requiresTwoFactor) {
+          if (requiresTwoFactor) {
             navigate.twoFactor(email);
           } else {
+            if (!token) {
+              throw new Error('No token received from server');
+            }
+
+            const tokenData: TokenData = {
+              token,
+              expiresAt: new Date(expiresAt),
+            };
+
+            Cookies.set(COOKIE_NAME, token, {
+              expires: new Date(expiresAt),
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax',
+              path: '/',
+            });
+
+            set({ user, tokenData, error: null });
+
             navigate.dashboard();
           }
         } catch (error) {
@@ -282,12 +282,34 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
       verifyTwoFactorLogin: async (email: string, code: string) => {
         try {
-          await apiClient.post('/api/auth/verify-2fa', {
+          const response = await apiClient.post('/api/auth/verify-2fa', {
             email,
             code,
           });
+          const { user, token, expiresAt } = response.data;
+
+          Cookies.set(COOKIE_NAME, token, {
+            expires: new Date(expiresAt),
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+          });
+
+          set({
+            user,
+            tokenData: { token, expiresAt: new Date(expiresAt) },
+            error: null,
+          });
+
+          navigate.dashboard();
         } catch (error) {
-          console.error('Two-factor login verification error:', error);
+          set({
+            error: {
+              code: 'VERIFY_TWO_FACTOR_LOGIN_ERROR',
+              message: getErrorMessage(error),
+            },
+          });
+          throw error;
         }
       },
       verifyEmail: async (token: string) => {
