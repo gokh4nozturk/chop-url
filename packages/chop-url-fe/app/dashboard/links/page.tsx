@@ -19,27 +19,22 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import useUrlStore from '@/lib/store/url';
 import Link from 'next/link';
-import { useState } from 'react';
-
-type LinkItem = {
-  id: string;
-  shortUrl: string;
-  longUrl: string;
-  clicks: number;
-  createdAt: string;
-  lastClickedAt: string | null;
-};
-
-const dummyLinks: LinkItem[] = [];
+import { useEffect, useState } from 'react';
 
 export default function LinksPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading] = useState(false);
+  const { urls, getUserUrls, isLoading: isLoadingUrls, error } = useUrlStore();
 
-  const filteredLinks = dummyLinks.filter(
+  useEffect(() => {
+    getUserUrls();
+  }, [getUserUrls]);
+
+  const filteredLinks = urls.filter(
     (link) =>
-      link.shortUrl.includes(searchQuery) || link.longUrl.includes(searchQuery)
+      link.shortUrl?.includes(searchQuery) ||
+      link.originalUrl?.includes(searchQuery)
   );
 
   const copyToClipboard = async (text: string) => {
@@ -92,7 +87,7 @@ export default function LinksPage() {
         </DropdownMenu>
       </div>
 
-      {isLoading ? (
+      {isLoadingUrls ? (
         <div className="flex h-[400px] items-center justify-center">
           <Icons.spinner className="h-6 w-6 animate-spin" />
         </div>
@@ -127,17 +122,17 @@ export default function LinksPage() {
                       </Button>
                     </div>
                   </TableCell>
-                  <TableCell className="hidden max-w-[300px] truncate md:table-cell">
-                    {link.longUrl}
+                  <TableCell className="hidden max-w-[200px] truncate md:table-cell">
+                    {link.originalUrl}
                   </TableCell>
                   <TableCell>{link.clicks}</TableCell>
                   <TableCell className="hidden sm:table-cell">
                     {new Date(link.createdAt).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">
-                    {link.lastClickedAt
+                    {/* {link.lastClickedAt
                       ? new Date(link.lastClickedAt).toLocaleDateString()
-                      : 'Never'}
+                      : 'Never'} */}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>

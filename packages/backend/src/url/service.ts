@@ -14,7 +14,8 @@ export class UrlService {
   async createShortUrl(
     url: string,
     options?: { customSlug?: string },
-    token?: string
+    token?: string,
+    userId?: string
   ): Promise<{
     shortUrl: string;
     shortId: string;
@@ -47,7 +48,7 @@ export class UrlService {
           shortId: shortId,
           originalUrl: url,
           customSlug: options?.customSlug,
-          userId: null,
+          userId: parseInt(userId ?? '0'),
           createdAt: new Date().toISOString(),
           lastAccessedAt: null,
           visitCount: 0,

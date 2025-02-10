@@ -6,24 +6,29 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import useUrlStore from '@/lib/store/url';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 export default function NewLinkPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [url, setUrl] = useState('');
   const [customAlias, setCustomAlias] = useState('');
+  const { createShortUrl } = useUrlStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // TODO: Implement link creation
+      await createShortUrl(url, customAlias);
       router.push('/dashboard/links');
+      toast.success('Link created successfully');
     } catch (error) {
       console.error('Failed to create link:', error);
+      toast.error('Failed to create link');
     } finally {
       setIsLoading(false);
     }

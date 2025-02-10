@@ -15,9 +15,14 @@ interface Variables {
 export const createUrlRoutes = () => {
   const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-  router.post('/shorten', async (c: Context) => {
+  router.post('/shorten', auth(), async (c: Context) => {
     const { url, customSlug } = await c.req.json();
     const token = c.req.header('Authorization')?.replace('Bearer ', '');
+    const user = c.get('user');
+
+    if (!user) {
+      return c.json({ error: 'User not authenticated' }, 401);
+    }
 
     if (!url) {
       return c.json({ error: 'Invalid URL' }, 400);
@@ -28,7 +33,8 @@ export const createUrlRoutes = () => {
       const result = await urlService.createShortUrl(
         url,
         { customSlug },
-        token
+        token,
+        user.id.toString()
       );
 
       return c.json(
