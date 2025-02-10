@@ -5,10 +5,18 @@ import { Button } from '@/components/ui/button';
 import { navigate } from '@/lib/navigation';
 import { useAuthStore } from '@/lib/store/auth';
 import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { toast } from 'sonner';
 
 export default function TwoFactorVerificationPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TwoFactorVerificationContent />
+    </Suspense>
+  );
+}
+
+function TwoFactorVerificationContent() {
   const [isLoading, setIsLoading] = useState(false);
   const { verifyTwoFactorLogin } = useAuthStore();
   const searchParams = useSearchParams();
