@@ -64,7 +64,15 @@ export const createUrlRoutes = () => {
     const user = c.get('user');
     const urlService = new UrlService(c.env.BASE_URL);
     const urls = await urlService.getUserUrls(user.id.toString());
-    return c.json(urls);
+
+    const response = urls.map((url) => ({
+      id: url.id,
+      shortUrl: `${c.env.BASE_URL}/${url.shortId}`,
+      originalUrl: url.originalUrl,
+      clicks: url.visitCount,
+      createdAt: url.createdAt,
+    }));
+    return c.json(response);
   });
 
   router.get('/stats/:shortId', async (c: Context) => {

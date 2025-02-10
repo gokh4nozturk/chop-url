@@ -4,19 +4,24 @@ import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/lib/store/auth';
+import useUrlStore from '@/lib/store/url';
 import Link from 'next/link';
 import { useEffect } from 'react';
 
 export default function DashboardPage() {
   const { getUser } = useAuthStore();
+  const { getUserUrls, urls, isLoading: isLoadingUrls } = useUrlStore();
   const user = useAuthStore((state) => state.user);
   const isLoading = useAuthStore((state) => state.isLoading);
 
   useEffect(() => {
     getUser();
-  }, [getUser]);
+    getUserUrls();
+  }, [getUser, getUserUrls]);
 
-  if (isLoading) {
+  console.log(urls);
+
+  if (isLoading || isLoadingUrls) {
     return (
       <div className="flex w-full h-[calc(100vh-theme(spacing.header))] items-center justify-center">
         <div className="text-center">
@@ -98,18 +103,32 @@ export default function DashboardPage() {
             <CardTitle>Recent Links</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-10">
-              <div className="space-y-2">
-                <Icons.link className="h-8 w-8 mx-auto text-muted-foreground" />
-                <h3 className="text-lg font-semibold">No links created yet</h3>
-                <p className="text-sm text-muted-foreground">
-                  Create your first shortened URL to see it here.
-                </p>
-                <Button asChild className="mt-4">
-                  <Link href="/dashboard/new">Create Link</Link>
-                </Button>
+            {urls.length > 0 ? (
+              <div className="flex flex-col gap-2">
+                {urls.map((url) => (
+                  <div key={url.id}>
+                    <Link href={`dashboard/links/${url.id}`}>
+                      {url.shortUrl}
+                    </Link>
+                  </div>
+                ))}
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-10">
+                <div className="space-y-2">
+                  <Icons.link className="h-8 w-8 mx-auto text-muted-foreground" />
+                  <h3 className="text-lg font-semibold">
+                    No links created yet
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Create your first shortened URL to see it here.
+                  </p>
+                  <Button asChild className="mt-4">
+                    <Link href="/dashboard/new">Create Link</Link>
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
         <Card className="col-span-3">

@@ -21,15 +21,11 @@ import {
 } from '@/components/ui/table';
 import useUrlStore from '@/lib/store/url';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 export default function LinksPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const { urls, getUserUrls, isLoading: isLoadingUrls, error } = useUrlStore();
-
-  useEffect(() => {
-    getUserUrls();
-  }, [getUserUrls]);
+  const { urls, isLoading: isLoadingUrls, error } = useUrlStore();
 
   const filteredLinks = urls.filter(
     (link) =>
