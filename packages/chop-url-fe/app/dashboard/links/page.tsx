@@ -121,7 +121,7 @@ export default function LinksPage() {
                   <TableCell className="hidden max-w-[200px] truncate md:table-cell">
                     {link.originalUrl}
                   </TableCell>
-                  <TableCell>{link.clicks}</TableCell>
+                  <TableCell>{link.visitCount}</TableCell>
                   <TableCell className="hidden sm:table-cell">
                     {new Date(link.createdAt).toLocaleDateString()}
                   </TableCell>

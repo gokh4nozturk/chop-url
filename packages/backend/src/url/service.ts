@@ -1,6 +1,6 @@
 import { ChopUrl } from '@chop-url/lib';
 import { D1Database } from '@cloudflare/workers-types';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from '../db/client';
 import { urls } from '../db/schema';
 
@@ -87,11 +87,11 @@ export class UrlService {
     return result[0].originalUrl;
   }
 
-  async getUrlInfo(shortId: string) {
+  async getUrlInfo(shortId: string, userId: string) {
     const result = await db
       .select()
       .from(urls)
-      .where(eq(urls.shortId, shortId))
+      .where(and(eq(urls.shortId, shortId), eq(urls.userId, parseInt(userId))))
       .limit(1);
 
     if (!result.length) {

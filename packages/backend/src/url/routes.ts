@@ -72,11 +72,16 @@ export const createUrlRoutes = () => {
     return c.json(response);
   });
 
-  router.get('/stats/:shortId', async (c: Context) => {
+  router.get('/stats/:shortId', auth(), async (c: Context) => {
     try {
+      const user = c.get('user');
+      if (!user) {
+        return c.json({ error: 'User not authenticated' }, 401);
+      }
+
       const shortId = c.req.param('shortId');
       const urlService = new UrlService(c.env.BASE_URL);
-      const stats = await urlService.getUrlInfo(shortId);
+      const stats = await urlService.getUrlInfo(shortId, user.id.toString());
       return c.json(stats);
     } catch (error) {
       if (error instanceof Error && error.message === 'URL not found') {

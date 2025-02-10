@@ -122,7 +122,7 @@ export default function DashboardPage() {
                     className="group flex items-center justify-between rounded-lg border px-3 py-1 hover:bg-muted/50 transition-colors"
                   >
                     <Link
-                      href={`dashboard/links/${url.id}`}
+                      href={`dashboard/links/${url.shortId}`}
                       className="font-medium hover:underline"
                     >
                       {url.shortUrl}

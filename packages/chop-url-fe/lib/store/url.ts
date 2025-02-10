@@ -23,6 +23,7 @@ interface Url {
 
 interface UrlState {
   urls: Url[];
+  urlDetails: Url | null;
   isLoading: boolean;
   error: UrlError | null;
 }
@@ -33,11 +34,13 @@ interface UrlActions {
   setLoading: (isLoading: boolean) => void;
   setError: (error: UrlError | null) => void;
   clearError: () => void;
+  getUrlDetails: (shortId: string) => Promise<Url>;
 }
 
 const useUrlStore = create<UrlState & UrlActions>((set, get) => ({
   // State
   urls: [],
+  urlDetails: null,
   isLoading: false,
   error: null,
 
@@ -79,6 +82,27 @@ const useUrlStore = create<UrlState & UrlActions>((set, get) => ({
         code: 'GET_URLS_ERROR',
         message:
           error instanceof Error ? error.message : 'Failed to fetch URLs',
+      };
+      set({ error: urlError });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  getUrlDetails: async (shortId: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await apiClient.get(`/api/stats/${shortId}`);
+      set({ urlDetails: response.data });
+      return response.data;
+    } catch (error) {
+      const urlError: UrlError = {
+        code: 'GET_URL_DETAILS_ERROR',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to fetch URL details',
       };
       set({ error: urlError });
       throw error;
