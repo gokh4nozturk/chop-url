@@ -21,17 +21,22 @@ import {
 } from '@/components/ui/table';
 import useUrlStore from '@/lib/store/url';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function LinksPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const { urls, isLoading: isLoadingUrls, error } = useUrlStore();
+  const {
+    urls,
+    filteredUrls,
+    searchTerm,
+    setSearchTerm,
+    getUserUrls,
+    isLoading: isLoadingUrls,
+    error,
+  } = useUrlStore();
 
-  const filteredLinks = urls.filter(
-    (link) =>
-      link.shortUrl?.includes(searchQuery) ||
-      link.originalUrl?.includes(searchQuery)
-  );
+  useEffect(() => {
+    getUserUrls();
+  }, [getUserUrls]);
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -62,8 +67,8 @@ export default function LinksPage() {
         <div className="flex-1">
           <Input
             placeholder="Search links..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-sm"
           />
         </div>
@@ -87,7 +92,7 @@ export default function LinksPage() {
         <div className="flex h-[400px] items-center justify-center">
           <Icons.spinner className="h-6 w-6 animate-spin" />
         </div>
-      ) : filteredLinks.length > 0 ? (
+      ) : (searchTerm ? filteredUrls : urls).length > 0 ? (
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -103,7 +108,7 @@ export default function LinksPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredLinks.map((link) => (
+              {(searchTerm ? filteredUrls : urls).map((link) => (
                 <TableRow key={link.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
@@ -158,7 +163,7 @@ export default function LinksPage() {
           <Icons.link className="h-8 w-8 text-muted-foreground" />
           <h3 className="font-semibold">No links found</h3>
           <p className="text-sm text-muted-foreground">
-            {searchQuery
+            {searchTerm
               ? 'No links match your search query'
               : "You haven't created any links yet"}
           </p>

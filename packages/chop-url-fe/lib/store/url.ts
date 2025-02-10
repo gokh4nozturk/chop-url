@@ -26,6 +26,8 @@ interface UrlState {
   urlDetails: Url | null;
   isLoading: boolean;
   error: UrlError | null;
+  searchTerm: string;
+  filteredUrls: Url[];
 }
 
 interface UrlActions {
@@ -35,6 +37,7 @@ interface UrlActions {
   setError: (error: UrlError | null) => void;
   clearError: () => void;
   getUrlDetails: (shortId: string) => Promise<Url>;
+  setSearchTerm: (term: string) => void;
 }
 
 const useUrlStore = create<UrlState & UrlActions>((set, get) => ({
@@ -43,11 +46,25 @@ const useUrlStore = create<UrlState & UrlActions>((set, get) => ({
   urlDetails: null,
   isLoading: false,
   error: null,
+  searchTerm: '',
+  filteredUrls: [],
 
   // Actions
   setLoading: (isLoading: boolean) => set({ isLoading }),
   setError: (error: UrlError | null) => set({ error }),
   clearError: () => set({ error: null }),
+  setSearchTerm: (term: string) => {
+    const urls = get().urls;
+    const filteredUrls = term
+      ? urls.filter(
+          (url) =>
+            url.originalUrl.toLowerCase().includes(term.toLowerCase()) ||
+            url.shortUrl.toLowerCase().includes(term.toLowerCase()) ||
+            url.customSlug?.toLowerCase().includes(term.toLowerCase())
+        )
+      : urls;
+    set({ searchTerm: term, filteredUrls });
+  },
 
   createShortUrl: async (url: string, customAlias?: string) => {
     set({ isLoading: true, error: null });
