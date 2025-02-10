@@ -232,11 +232,27 @@ export async function getUrlStats(
     .where(
       and(
         eq(visits.urlId, url.id),
-        sql`datetime(visited_at) >= datetime('now', '-${period}')`,
-        sql`datetime(visited_at) <= datetime('now')`
+        sql`datetime(visitedAt) >= datetime('now', '-${period}')`,
+        sql`datetime(visitedAt) <= datetime('now')`
       )
     )
     .orderBy(desc(visits.visitedAt));
+
+  const mappedVisits: IVisit[] = urlVisits.map((visit) => ({
+    id: visit.id,
+    urlId: visit.urlId,
+    visitedAt: visit.visitedAt || '',
+    ipAddress: visit.ipAddress || '',
+    userAgent: visit.userAgent || '',
+    referrer: visit.referrer || '',
+    browser: visit.browser || '',
+    browserVersion: visit.browserVersion || '',
+    os: visit.os || '',
+    osVersion: visit.osVersion || '',
+    deviceType: visit.deviceType || '',
+    country: visit.country || '',
+    city: visit.city || '',
+  }));
 
   return {
     id: url.id,
@@ -250,21 +266,7 @@ export async function getUrlStats(
     expiresAt: url.expiresAt || '',
     userId: url.userId || 0,
     customSlug: url.customSlug || '',
-    visits: urlVisits.map((visit) => ({
-      id: visit.id,
-      urlId: visit.urlId,
-      visitedAt: visit.visitedAt || '',
-      ipAddress: visit.ipAddress || '',
-      userAgent: visit.userAgent || '',
-      referrer: visit.referrer || '',
-      browser: visit.browser || '',
-      browserVersion: visit.browserVersion || '',
-      os: visit.os || '',
-      osVersion: visit.osVersion || '',
-      deviceType: visit.deviceType || '',
-      country: visit.country || '',
-      city: visit.city || '',
-    })),
+    visits: mappedVisits,
   };
 }
 

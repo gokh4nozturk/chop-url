@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm';
 import { Context, Next } from 'hono';
-import { db } from './db/client';
-import { urls } from './db/schema/urls';
-import { trackVisit } from './url/service';
+import { db } from '../db/client';
+import { urls } from '../db/schema/urls';
+import { trackVisit } from './service';
 
 export async function trackVisitMiddleware(c: Context, next: Next) {
   const shortId = c.req.param('shortId');

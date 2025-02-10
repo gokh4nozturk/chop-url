@@ -1,10 +1,9 @@
-import { zValidator } from '@hono/zod-validator';
 import { Context, Hono } from 'hono';
 import { ValidationTargets } from 'hono/types';
 import { z } from 'zod';
 import { auth } from '../auth/middleware.js';
 import { IUser } from '../auth/types.js';
-import { trackVisitMiddleware } from '../middleware';
+import { trackVisitMiddleware } from './middleware.js';
 import { getUrlStats, getVisitsByTimeRange, trackVisit } from './service';
 import { UrlService } from './service.js';
 
@@ -44,13 +43,10 @@ type Period = (typeof VALID_PERIODS)[number];
 export const createUrlRoutes = () => {
   const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-  router.post('/shorten', async (c: Context, next) => {
-    // Test ortamında auth middleware'i atlıyoruz
-    if (c.env.ENVIRONMENT !== 'test') {
-      return auth()(c, next);
-    }
-
+  router.post('/shorten', auth(), async (c: Context) => {
     const { url, customSlug } = await c.req.json();
+    const user = c.get('user');
+    const token = c.req.header('Authorization')?.split(' ')[1];
 
     if (!url) {
       return c.json({ error: 'Invalid URL' }, 400);
@@ -61,8 +57,8 @@ export const createUrlRoutes = () => {
       const result = await urlService.createShortUrl(
         url,
         { customSlug },
-        'test-token',
-        'test-user'
+        token,
+        user.id.toString()
       );
 
       return c.json(
@@ -101,18 +97,6 @@ export const createUrlRoutes = () => {
     return c.json(response);
   });
 
-  router.get('/:shortId', trackVisitMiddleware, async (c: Context) => {
-    const shortId = c.req.param('shortId');
-    const urlService = new UrlService(c.env.BASE_URL);
-    const url = await urlService.getUrl(shortId);
-
-    if (!url) {
-      return c.json({ error: 'URL not found' }, 404);
-    }
-
-    return c.redirect(url.originalUrl);
-  });
-
   router.get('/stats/:shortId', auth(), async (c: Context) => {
     const shortId = c.req.param('shortId');
     const period = (c.req.query('period') as Period) || '7d';
@@ -122,7 +106,11 @@ export const createUrlRoutes = () => {
     }
 
     try {
-      const stats = await getUrlStats(shortId, period);
+      const urlService = new UrlService(c.env.BASE_URL);
+      const stats = await urlService.getUrlStats(shortId);
+      if (!stats) {
+        return c.json({ error: 'URL not found' }, 404);
+      }
       return c.json(stats);
     } catch (error) {
       return c.json({ error: 'URL not found' }, 404);
@@ -159,6 +147,18 @@ export const createUrlRoutes = () => {
     } catch (error) {
       return c.json({ error: 'Failed to track visit' }, 500);
     }
+  });
+
+  router.get('/:shortId', trackVisitMiddleware, async (c: Context) => {
+    const shortId = c.req.param('shortId');
+    const urlService = new UrlService(c.env.BASE_URL);
+    const url = await urlService.getUrl(shortId);
+
+    if (!url) {
+      return c.json({ error: 'URL not found' }, 404);
+    }
+
+    return c.redirect(url.originalUrl);
   });
 
   return router;

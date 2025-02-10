@@ -33,7 +33,7 @@ app.use(
   })
 );
 
-// OpenAPI schema endpoint - Bu endpoint'i üste taşıyoruz
+// OpenAPI schema endpoint
 app.get('/openapi.json', (c) => {
   return c.json(openApiSchema);
 });
@@ -42,7 +42,7 @@ app.get('/openapi.json', (c) => {
 app.get(
   '/docs',
   swaggerUI({
-    url: '/openapi.json', // URL'i güncelliyoruz
+    url: '/openapi.json',
     defaultModelsExpandDepth: 3,
     docExpansion: 'list',
     persistAuthorization: true,
