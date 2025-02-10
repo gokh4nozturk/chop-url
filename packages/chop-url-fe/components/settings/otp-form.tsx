@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Icons } from '../icons';
-import { Button } from './button';
+import { Button } from '../ui/button';
 import {
   Form,
   FormControl,
@@ -13,8 +13,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from './form';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from './input-otp';
+} from '../ui/form';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '../ui/input-otp';
 
 const otpFormSchema = z.object({
   code: z
