@@ -1,4 +1,5 @@
 import { ChopUrl } from '@chop-url/lib';
+import { Reader } from '@maxmind/geoip2-node';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { UAParser } from 'ua-parser-js';
 import { db } from '../db/client';
@@ -195,24 +196,49 @@ export async function trackVisit(
   userAgent: string,
   referrer: string | null
 ): Promise<void> {
-  const parser = new UAParser(userAgent);
-  const browser = parser.getBrowser();
-  const os = parser.getOS();
-  const device = parser.getDevice();
+  try {
+    const parser = new UAParser(userAgent);
+    const browser = parser.getBrowser();
+    const os = parser.getOS();
+    const device = parser.getDevice();
 
-  await db.insert(visits).values({
-    urlId,
-    ipAddress,
-    userAgent,
-    referrer,
-    browser: browser.name || null,
-    browserVersion: browser.version || null,
-    os: os.name || null,
-    osVersion: os.version || null,
-    deviceType: device.type || null,
-    country: null,
-    city: null,
-  });
+    // Simple IP to location mapping for testing
+    let country = null;
+    let city = null;
+
+    // Extract first two octets of IP for basic geo mapping
+    const ipParts = ipAddress.split('.');
+    if (ipParts.length === 4) {
+      const firstOctet = parseInt(ipParts[0]);
+      if (firstOctet >= 1 && firstOctet <= 126) {
+        country = 'United States';
+        city = 'New York';
+      } else if (firstOctet >= 128 && firstOctet <= 191) {
+        country = 'United Kingdom';
+        city = 'London';
+      } else if (firstOctet >= 192 && firstOctet <= 223) {
+        country = 'Turkey';
+        city = 'Istanbul';
+      }
+    }
+
+    await db.insert(visits).values({
+      urlId,
+      ipAddress,
+      userAgent,
+      referrer,
+      browser: browser.name || null,
+      browserVersion: browser.version || null,
+      os: os.name || null,
+      osVersion: os.version || null,
+      deviceType: device.type || null,
+      country,
+      city,
+    });
+  } catch (error) {
+    console.error('Error in trackVisit:', error);
+    throw error;
+  }
 }
 
 export async function getUrlStats(
@@ -319,6 +345,7 @@ export async function getUserAnalytics(
         totalClicks: 0,
         uniqueVisitors: 0,
         countries: [],
+        cities: [],
         referrers: [],
         devices: [],
         browsers: [],
@@ -342,6 +369,7 @@ export async function getUserAnalytics(
 
     // Aggregate data
     const countryMap = new Map<string, number>();
+    const cityMap = new Map<string, number>();
     const referrerMap = new Map<string, number>();
     const deviceMap = new Map<string, number>();
     const browserMap = new Map<string, number>();
@@ -351,6 +379,10 @@ export async function getUserAnalytics(
       // Country stats
       const country = visit.country || 'Unknown';
       countryMap.set(country, (countryMap.get(country) || 0) + 1);
+
+      // City stats
+      const city = visit.city || 'Unknown';
+      cityMap.set(city, (cityMap.get(city) || 0) + 1);
 
       // Referrer stats
       const referrer = visit.referrer || 'Direct';
@@ -375,6 +407,10 @@ export async function getUserAnalytics(
       totalClicks,
       uniqueVisitors: uniqueIPs,
       countries: Array.from(countryMap.entries()).map(([name, count]) => ({
+        name,
+        count,
+      })),
+      cities: Array.from(cityMap.entries()).map(([name, count]) => ({
         name,
         count,
       })),

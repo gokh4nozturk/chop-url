@@ -22,6 +22,7 @@ interface AnalyticsData {
   totalClicks: number;
   uniqueVisitors: number;
   countries: { name: string; count: number }[];
+  cities: { name: string; count: number }[];
   referrers: { name: string; count: number }[];
   devices: { name: string; count: number }[];
   browsers: { name: string; count: number }[];
@@ -48,9 +49,7 @@ export default function AnalyticsPage() {
       setAnalyticsData(response.data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
-      setError(
-        'Analytics verilerini alırken bir hata oluştu. Lütfen daha sonra tekrar deneyin.'
-      );
+      setError('Failed to fetch analytics data. Please try again later.');
     } finally {
       setIsLoading(false);
     }
@@ -188,6 +187,185 @@ export default function AnalyticsPage() {
               : '0% of total traffic'
           }
         />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Visitor Trends</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="h-[350px] w-full animate-pulse bg-muted" />
+            ) : (
+              <BarChart
+                data={(analyticsData?.clicksByDate || []).map((item) => ({
+                  name: new Date(item.date).toLocaleDateString('en-US', {
+                    day: 'numeric',
+                    month: 'short',
+                  }),
+                  total: item.count,
+                }))}
+              />
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Geographic Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="h-[150px] w-full animate-pulse bg-muted" />
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">Top Cities</div>
+                    {analyticsData?.cities.slice(0, 3).map((city) => (
+                      <div key={city.name} className="flex items-center">
+                        <div className="w-1/3 text-sm">{city.name}</div>
+                        <div className="flex-1">
+                          <div className="h-2 w-full rounded-full bg-muted">
+                            <div
+                              className="h-2 rounded-full bg-primary"
+                              style={{
+                                width: `${
+                                  (city.count /
+                                    (analyticsData?.totalClicks || 1)) *
+                                  100
+                                }%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <div className="w-1/6 text-right text-sm">
+                          {(
+                            (city.count / (analyticsData?.totalClicks || 1)) *
+                            100
+                          ).toFixed(1)}
+                          %
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">Top Countries</div>
+                    {analyticsData?.countries.slice(0, 3).map((country) => (
+                      <div key={country.name} className="flex items-center">
+                        <div className="w-1/3 text-sm">{country.name}</div>
+                        <div className="flex-1">
+                          <div className="h-2 w-full rounded-full bg-muted">
+                            <div
+                              className="h-2 rounded-full bg-primary"
+                              style={{
+                                width: `${
+                                  (country.count /
+                                    (analyticsData?.totalClicks || 1)) *
+                                  100
+                                }%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <div className="w-1/6 text-right text-sm">
+                          {(
+                            (country.count /
+                              (analyticsData?.totalClicks || 1)) *
+                            100
+                          ).toFixed(1)}
+                          %
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Device Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="h-[150px] w-full animate-pulse bg-muted" />
+              ) : (
+                <div className="space-y-4">
+                  {analyticsData?.devices.map((device) => (
+                    <div key={device.name} className="flex items-center">
+                      <div className="w-1/3 text-sm">{device.name}</div>
+                      <div className="flex-1">
+                        <div className="h-2 w-full rounded-full bg-muted">
+                          <div
+                            className="h-2 rounded-full bg-primary"
+                            style={{
+                              width: `${
+                                (device.count /
+                                  (analyticsData?.totalClicks || 1)) *
+                                100
+                              }%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div className="w-1/6 text-right text-sm">
+                        {(
+                          (device.count / (analyticsData?.totalClicks || 1)) *
+                          100
+                        ).toFixed(1)}
+                        %
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Browser Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="h-[150px] w-full animate-pulse bg-muted" />
+              ) : (
+                <div className="space-y-4">
+                  {analyticsData?.browsers.map((browser) => (
+                    <div key={browser.name} className="flex items-center">
+                      <div className="w-1/3 text-sm">{browser.name}</div>
+                      <div className="flex-1">
+                        <div className="h-2 w-full rounded-full bg-muted">
+                          <div
+                            className="h-2 rounded-full bg-primary"
+                            style={{
+                              width: `${
+                                (browser.count /
+                                  (analyticsData?.totalClicks || 1)) *
+                                100
+                              }%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div className="w-1/6 text-right text-sm">
+                        {(
+                          (browser.count / (analyticsData?.totalClicks || 1)) *
+                          100
+                        ).toFixed(1)}
+                        %
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
