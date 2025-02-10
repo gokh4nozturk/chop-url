@@ -68,7 +68,9 @@ export const navigate = {
     }`;
   },
   twoFactor: (email: string) => {
-    window.location.href = `/auth/two-factor?email=${email}`;
+    window.location.href = `/auth/two-factor?email=${encodeURIComponent(
+      email
+    )}`;
   },
   forgotPassword: () => {
     window.location.href = '/auth/forgot-password';

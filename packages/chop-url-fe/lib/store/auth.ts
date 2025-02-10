@@ -38,7 +38,7 @@ interface AuthActions {
     qrCodeUrl: string;
     secret: string;
   }>;
-  enableTwoFactor: (code: string) => Promise<void>;
+  enableTwoFactor: () => Promise<void>;
   disableTwoFactor: (code: string) => Promise<void>;
   verifyTwoFactor: (code: string) => Promise<void>;
   verifyTwoFactorLogin: (email: string, code: string) => Promise<void>;
@@ -314,32 +314,34 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           const response = await apiClient.post('/api/auth/setup-2fa');
           return response.data;
         } catch (error) {
-          console.error('Two-factor setup error:', error);
-        }
-      },
-      enableTwoFactor: async (code: string) => {
-        try {
-          await apiClient.post('/api/auth/enable-2fa', {
-            code,
-          });
-        } catch (error) {
-          console.error('Two-factor enable error:', error);
-        }
-      },
-      disableTwoFactor: async (code: string) => {
-        try {
-          await apiClient.post('/api/auth/disable-2fa');
-        } catch (error) {
-          console.error('Two-factor disable error:', error);
+          throw new Error(getErrorMessage(error));
         }
       },
       verifyTwoFactor: async (code: string) => {
         try {
-          await apiClient.post('/api/auth/verify-2fa', {
+          await apiClient.post('/api/auth/verify-2fa-setup', { code });
+        } catch (error) {
+          throw new Error(getErrorMessage(error));
+        }
+      },
+      enableTwoFactor: async () => {
+        try {
+          const response = await apiClient.post('/api/auth/enable-2fa');
+          const { user } = response.data;
+          set({ user });
+        } catch (error) {
+          throw new Error(getErrorMessage(error));
+        }
+      },
+      disableTwoFactor: async (code: string) => {
+        try {
+          const response = await apiClient.post('/api/auth/disable-2fa', {
             code,
           });
+          const { user } = response.data;
+          set({ user });
         } catch (error) {
-          console.error('Two-factor verification error:', error);
+          throw new Error(getErrorMessage(error));
         }
       },
       requestPasswordReset: async (email: string) => {
@@ -368,8 +370,11 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
     }),
     {
-      name: 'auth-storage',
-      partialize: (state) => ({ user: state.user }),
+      name: 'auth-store',
+      partialize: (state) => ({
+        user: state.user,
+        tokenData: state.tokenData,
+      }),
     }
   )
 );
