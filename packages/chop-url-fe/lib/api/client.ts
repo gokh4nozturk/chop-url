@@ -1,4 +1,6 @@
 import { getToken, removeToken } from '@/lib/auth';
+import { useAuthStore } from '@/lib/store/auth';
+import useUrlStore from '@/lib/store/url';
 import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
@@ -30,9 +32,19 @@ client.interceptors.response.use(
     const isLoginOrRegisterRoute = ['login', 'register'].includes(
       error.request.responseURL.split('/').pop()
     );
+
     if (error.response?.status === 401 && !isLoginOrRegisterRoute) {
+      // Clear all stores
+      useAuthStore.getState().logout();
+      useUrlStore.getState().clearStore();
+
+      // Remove token
       removeToken();
-      window.location.href = '/auth';
+
+      // Redirect to auth page
+      if (typeof window !== 'undefined') {
+        window.location.href = '/auth';
+      }
     }
     return Promise.reject(error);
   }

@@ -4,7 +4,12 @@ import { z } from 'zod';
 import { auth } from '../auth/middleware.js';
 import { IUser } from '../auth/types.js';
 import { trackVisitMiddleware } from './middleware.js';
-import { getUrlStats, getVisitsByTimeRange, trackVisit } from './service';
+import {
+  getUrlStats,
+  getUserAnalytics,
+  getVisitsByTimeRange,
+  trackVisit,
+} from './service';
 import { UrlService } from './service.js';
 
 interface Env {
@@ -146,6 +151,38 @@ export const createUrlRoutes = () => {
       return c.json({ success: true });
     } catch (error) {
       return c.json({ error: 'Failed to track visit' }, 500);
+    }
+  });
+
+  router.get('/analytics', auth(), async (c: Context) => {
+    try {
+      console.log('Analytics request received');
+      const user = c.get('user');
+      console.log('User:', user);
+      const period = (c.req.query('period') as Period) || '7d';
+      console.log('Period:', period);
+
+      if (!VALID_PERIODS.includes(period)) {
+        console.log('Invalid period:', period);
+        return c.json({ error: 'Invalid period' }, 400);
+      }
+
+      try {
+        console.log('Fetching analytics for user:', user.id);
+        const analytics = await getUserAnalytics(user.id.toString(), period);
+        console.log('Analytics result:', analytics);
+        if (!analytics) {
+          console.log('No data found');
+          return c.json({ error: 'No data found' }, 404);
+        }
+        return c.json(analytics);
+      } catch (error) {
+        console.error('Error fetching analytics:', error);
+        return c.json({ error: 'Failed to fetch analytics' }, 500);
+      }
+    } catch (error) {
+      console.error('Error in analytics route:', error);
+      return c.json({ error: 'Internal server error' }, 500);
     }
   });
 

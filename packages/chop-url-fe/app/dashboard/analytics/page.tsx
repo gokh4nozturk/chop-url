@@ -11,18 +11,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import apiClient from '@/lib/api/client';
 import useUrlStore from '@/lib/store/url';
 import { useEffect, useState } from 'react';
 
 interface AnalyticsData {
   totalClicks: number;
   uniqueVisitors: number;
-  topCountry: { name: string; percentage: number } | null;
-  topReferrer: { name: string; percentage: number } | null;
+  countries: { name: string; count: number }[];
+  referrers: { name: string; count: number }[];
+  devices: { name: string; count: number }[];
+  browsers: { name: string; count: number }[];
   clicksByDate: { date: string; count: number }[];
-  topLocations: { country: string; count: number; percentage: number }[];
-  topDevices: { type: string; count: number; percentage: number }[];
-  topBrowsers: { name: string; count: number; percentage: number }[];
 }
 
 export default function AnalyticsPage() {
@@ -37,12 +37,10 @@ export default function AnalyticsPage() {
     const fetchAnalytics = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/analytics?period=${timeRange}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch analytics');
-        }
-        const data = await response.json();
-        setAnalyticsData(data);
+        const response = await apiClient.get(
+          `/api/analytics?period=${timeRange}`
+        );
+        setAnalyticsData(response.data);
       } catch (error) {
         console.error('Error fetching analytics:', error);
       } finally {
@@ -52,6 +50,10 @@ export default function AnalyticsPage() {
 
     fetchAnalytics();
   }, [timeRange]);
+
+  // Get top country and referrer
+  const topCountry = analyticsData?.countries[0];
+  const topReferrer = analyticsData?.referrers[0];
 
   return (
     <div className="space-y-6">
@@ -115,13 +117,14 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoading ? '-' : analyticsData?.topCountry?.name || '-'}
+              {isLoading ? '-' : topCountry?.name || '-'}
             </div>
             <p className="text-xs text-muted-foreground">
-              {analyticsData?.topCountry
-                ? `${analyticsData.topCountry.percentage.toFixed(
-                    1
-                  )}% of total traffic`
+              {topCountry
+                ? `${(
+                    (topCountry.count / (analyticsData?.totalClicks || 1)) *
+                    100
+                  ).toFixed(1)}% of total traffic`
                 : '0% of total traffic'}
             </p>
           </CardContent>
@@ -133,13 +136,14 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoading ? '-' : analyticsData?.topReferrer?.name || '-'}
+              {isLoading ? '-' : topReferrer?.name || '-'}
             </div>
             <p className="text-xs text-muted-foreground">
-              {analyticsData?.topReferrer
-                ? `${analyticsData.topReferrer.percentage.toFixed(
-                    1
-                  )}% of total traffic`
+              {topReferrer
+                ? `${(
+                    (topReferrer.count / (analyticsData?.totalClicks || 1)) *
+                    100
+                  ).toFixed(1)}% of total traffic`
                 : '0% of total traffic'}
             </p>
           </CardContent>

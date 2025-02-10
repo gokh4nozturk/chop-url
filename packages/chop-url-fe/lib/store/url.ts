@@ -49,6 +49,7 @@ interface UrlActions {
     shortId: string,
     period: '24h' | '7d' | '30d' | '90d'
   ) => Promise<void>;
+  clearStore: () => void;
 }
 
 const useUrlStore = create<UrlState & UrlActions>((set, get) => ({
@@ -185,6 +186,19 @@ const useUrlStore = create<UrlState & UrlActions>((set, get) => ({
     } finally {
       set({ isLoading: false });
     }
+  },
+
+  clearStore: () => {
+    set({
+      urls: [],
+      urlDetails: null,
+      isLoading: false,
+      error: null,
+      searchTerm: '',
+      filteredUrls: [],
+      urlStats: null,
+      urlVisits: [],
+    });
   },
 }));
 

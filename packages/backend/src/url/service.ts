@@ -302,108 +302,101 @@ export async function getUserAnalytics(
   userId: string,
   period: '24h' | '7d' | '30d' | '90d' = '7d'
 ) {
-  const userUrls = await db
-    .select()
-    .from(urls)
-    .where(eq(urls.userId, parseInt(userId)));
+  try {
+    console.log('Getting analytics for user:', userId, 'period:', period);
 
-  if (!userUrls.length) {
-    return null;
+    // Get user's URLs
+    const userUrls = await db
+      .select()
+      .from(urls)
+      .where(eq(urls.userId, parseInt(userId)));
+
+    console.log('User URLs:', userUrls);
+
+    if (!userUrls.length) {
+      console.log('No URLs found for user');
+      return {
+        totalClicks: 0,
+        uniqueVisitors: 0,
+        countries: [],
+        referrers: [],
+        devices: [],
+        browsers: [],
+        clicksByDate: [],
+      };
+    }
+
+    const urlIds = userUrls.map((url) => url.id);
+    console.log('URL IDs:', urlIds);
+
+    // Get visits for these URLs
+    const urlVisits = await db
+      .select()
+      .from(visits)
+      .where(sql`url_id IN (${urlIds.join(',')})`);
+
+    console.log('URL Visits:', urlVisits);
+
+    const totalClicks = urlVisits.length;
+    const uniqueIPs = new Set(urlVisits.map((visit) => visit.ipAddress)).size;
+
+    // Aggregate data
+    const countryMap = new Map<string, number>();
+    const referrerMap = new Map<string, number>();
+    const deviceMap = new Map<string, number>();
+    const browserMap = new Map<string, number>();
+    const dateMap = new Map<string, number>();
+
+    for (const visit of urlVisits) {
+      // Country stats
+      const country = visit.country || 'Unknown';
+      countryMap.set(country, (countryMap.get(country) || 0) + 1);
+
+      // Referrer stats
+      const referrer = visit.referrer || 'Direct';
+      referrerMap.set(referrer, (referrerMap.get(referrer) || 0) + 1);
+
+      // Device stats
+      const device = visit.deviceType || 'Unknown';
+      deviceMap.set(device, (deviceMap.get(device) || 0) + 1);
+
+      // Browser stats
+      const browser = visit.browser || 'Unknown';
+      browserMap.set(browser, (browserMap.get(browser) || 0) + 1);
+
+      // Date stats
+      const date = visit.visitedAt
+        ? new Date(visit.visitedAt).toISOString().split('T')[0]
+        : new Date().toISOString().split('T')[0];
+      dateMap.set(date, (dateMap.get(date) || 0) + 1);
+    }
+
+    return {
+      totalClicks,
+      uniqueVisitors: uniqueIPs,
+      countries: Array.from(countryMap.entries()).map(([name, count]) => ({
+        name,
+        count,
+      })),
+      referrers: Array.from(referrerMap.entries()).map(([name, count]) => ({
+        name,
+        count,
+      })),
+      devices: Array.from(deviceMap.entries()).map(([name, count]) => ({
+        name,
+        count,
+      })),
+      browsers: Array.from(browserMap.entries()).map(([name, count]) => ({
+        name,
+        count,
+      })),
+      clicksByDate: Array.from(dateMap.entries()).map(([date, count]) => ({
+        date,
+        count,
+      })),
+    };
+  } catch (error) {
+    console.error('Error in getUserAnalytics:', error);
+    throw error;
   }
-
-  const urlIds = userUrls.map((url) => url.id);
-  const urlVisits = await db
-    .select()
-    .from(visits)
-    .where(
-      and(
-        sql`url_id IN (${urlIds.join(',')})`,
-        sql`datetime(visited_at) >= datetime('now', '-${period}')`,
-        sql`datetime(visited_at) <= datetime('now')`
-      )
-    );
-
-  const totalClicks = urlVisits.length;
-  const uniqueIPs = new Set(urlVisits.map((visit) => visit.ipAddress)).size;
-
-  // Aggregate country data
-  const countryMap = new Map<string, number>();
-  const referrerMap = new Map<string, number>();
-  const deviceMap = new Map<string, number>();
-  const browserMap = new Map<string, number>();
-  const dateMap = new Map<string, number>();
-
-  for (const visit of urlVisits) {
-    if (visit.country) {
-      countryMap.set(visit.country, (countryMap.get(visit.country) || 0) + 1);
-    }
-
-    if (visit.referrer) {
-      const domain = new URL(visit.referrer).hostname;
-      referrerMap.set(domain, (referrerMap.get(domain) || 0) + 1);
-    }
-
-    if (visit.deviceType) {
-      deviceMap.set(
-        visit.deviceType,
-        (deviceMap.get(visit.deviceType) || 0) + 1
-      );
-    }
-
-    if (visit.browser) {
-      browserMap.set(visit.browser, (browserMap.get(visit.browser) || 0) + 1);
-    }
-
-    const date = visit.visitedAt
-      ? new Date(visit.visitedAt).toISOString().split('T')[0]
-      : new Date().toISOString().split('T')[0];
-    dateMap.set(date, (dateMap.get(date) || 0) + 1);
-  }
-
-  const sortedCountries = Array.from(countryMap.entries())
-    .sort((a, b) => b[1] - a[1])
-    .map(([country, count]) => ({
-      country,
-      count,
-      percentage: (count / totalClicks) * 100,
-    }));
-
-  const sortedReferrers = Array.from(referrerMap.entries())
-    .sort((a, b) => b[1] - a[1])
-    .map(([name, count]) => ({
-      name,
-      count,
-      percentage: (count / totalClicks) * 100,
-    }));
-
-  const clicksByDate = Array.from(dateMap.entries())
-    .map(([date, count]) => ({ date, count }))
-    .sort((a, b) => a.date.localeCompare(b.date));
-
-  const topDevices = Array.from(deviceMap.entries())
-    .sort((a, b) => b[1] - a[1])
-    .map(([type, count]) => ({
-      type,
-      count,
-      percentage: (count / totalClicks) * 100,
-    }));
-
-  const topBrowsers = Array.from(browserMap.entries())
-    .sort((a, b) => b[1] - a[1])
-    .map(([name, count]) => ({
-      name,
-      count,
-      percentage: (count / totalClicks) * 100,
-    }));
-
-  return {
-    totalClicks,
-    uniqueVisitors: uniqueIPs,
-    topCountry: sortedCountries[0] || null,
-    topReferrer: sortedReferrers[0] || null,
-    clicksByDate,
-    topLocations: sortedCountries,
-    topDevices,
-    topBrowsers,
-  };
 }
