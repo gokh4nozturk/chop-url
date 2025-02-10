@@ -61,7 +61,7 @@ export default function DashboardPage() {
             <Icons.link className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{urls.length}</div>
             <p className="text-xs text-muted-foreground">+0% from last month</p>
           </CardContent>
         </Card>
@@ -71,7 +71,9 @@ export default function DashboardPage() {
             <Icons.barChart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">
+              {urls.reduce((acc, url) => acc + url.visitCount, 0)}
+            </div>
             <p className="text-xs text-muted-foreground">+0% from last month</p>
           </CardContent>
         </Card>
@@ -81,7 +83,9 @@ export default function DashboardPage() {
             <Icons.globe className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">
+              {urls.filter((url) => url.isActive).length}
+            </div>
             <p className="text-xs text-muted-foreground">+0% from last month</p>
           </CardContent>
         </Card>
@@ -91,7 +95,9 @@ export default function DashboardPage() {
             <Icons.barChart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">
+              {urls.reduce((acc, url) => acc + url.visitCount, 0)}
+            </div>
             <p className="text-xs text-muted-foreground">+0% from last 24h</p>
           </CardContent>
         </Card>
@@ -107,7 +113,7 @@ export default function DashboardPage() {
               </Link>
             </Button>
           </CardHeader>
-          <CardContent>
+          <CardContent className="min-h-[220px]">
             {urls.length > 0 ? (
               <div className="flex flex-col gap-2">
                 {urls.slice(0, 4).map((url) => (
@@ -156,16 +162,24 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-center py-10">
-              <div className="space-y-2">
-                <Icons.barChart className="h-8 w-8 mx-auto text-muted-foreground" />
-                <h3 className="text-lg font-semibold">No recent activity</h3>
-                <p className="text-sm text-muted-foreground">
-                  Activity will appear here when your links are clicked.
-                </p>
+          <CardContent className="min-h-[220px]">
+            {urls.length > 0 ? (
+              <div className="text-center py-10">
+                <div className="space-y-2">
+                  <Icons.barChart className="h-8 w-8 mx-auto text-muted-foreground" />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-10">
+                <div className="space-y-2">
+                  <Icons.barChart className="h-8 w-8 mx-auto text-muted-foreground" />
+                  <h3 className="text-lg font-semibold">No recent activity</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Activity will appear here when your links are clicked.
+                  </p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

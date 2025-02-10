@@ -66,11 +66,8 @@ export const createUrlRoutes = () => {
     const urls = await urlService.getUserUrls(user.id.toString());
 
     const response = urls.map((url) => ({
-      id: url.id,
       shortUrl: `${c.env.BASE_URL}/${url.shortId}`,
-      originalUrl: url.originalUrl,
-      clicks: url.visitCount,
-      createdAt: url.createdAt,
+      ...url,
     }));
     return c.json(response);
   });

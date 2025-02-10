@@ -7,15 +7,22 @@ interface UrlError {
   message: string;
 }
 
+interface Url {
+  id: number;
+  shortUrl: string;
+  shortId: string;
+  originalUrl: string;
+  customSlug?: string;
+  userId: number;
+  createdAt: string;
+  lastAccessedAt?: string;
+  visitCount: number;
+  expiresAt?: string;
+  isActive: boolean;
+}
+
 interface UrlState {
-  urls: Array<{
-    id: string;
-    originalUrl: string;
-    shortUrl: string;
-    customAlias?: string;
-    createdAt: string;
-    clicks: number;
-  }>;
+  urls: Url[];
   isLoading: boolean;
   error: UrlError | null;
 }
