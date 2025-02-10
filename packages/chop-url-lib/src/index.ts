@@ -183,8 +183,40 @@ export const verifyTOTP = async (
   code: string,
   secret: string
 ): Promise<boolean> => {
-  const currentCode = await generateTOTP(secret);
-  return code === currentCode;
+  const currentWindow = Math.floor(Date.now() / 30000);
+
+  // Önceki, mevcut ve sonraki zaman pencerelerini kontrol et
+  for (let window = -1; window <= 1; window++) {
+    const counter = new ArrayBuffer(8);
+    const view = new DataView(counter);
+    view.setBigInt64(0, BigInt(currentWindow + window), false);
+
+    const key = await crypto.subtle.importKey(
+      'raw',
+      base32ToBuffer(secret),
+      { name: 'HMAC', hash: 'SHA-1' },
+      false,
+      ['sign']
+    );
+
+    const hmacBuffer = await crypto.subtle.sign('HMAC', key, counter);
+    const hmac = new Uint8Array(hmacBuffer);
+
+    const offset = hmac[hmac.length - 1] & 0xf;
+    const generatedCode =
+      (((hmac[offset] & 0x7f) << 24) |
+        ((hmac[offset + 1] & 0xff) << 16) |
+        ((hmac[offset + 2] & 0xff) << 8) |
+        (hmac[offset + 3] & 0xff)) %
+      1000000;
+
+    const expectedCode = generatedCode.toString().padStart(6, '0');
+
+    if (code === expectedCode) {
+      return true;
+    }
+  }
+  return false;
 };
 
 /**
@@ -194,16 +226,23 @@ export const verifyTOTP = async (
  */
 const base32ToBuffer = (str: string): Uint8Array => {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-  const binary = str
-    .toUpperCase()
-    .replace(/[^A-Z2-7]/g, '')
-    .split('')
-    .map((char) => alphabet.indexOf(char).toString(2).padStart(5, '0'))
-    .join('');
+  const cleanedInput = str.toUpperCase().replace(/[^A-Z2-7]/g, '');
+  const bits: string[] = [];
 
-  const bytes = new Uint8Array(Math.floor(binary.length / 8));
+  // Her karakteri 5-bit binary'ye çevir
+  for (const char of cleanedInput) {
+    const value = alphabet.indexOf(char);
+    if (value === -1) continue;
+    bits.push(value.toString(2).padStart(5, '0'));
+  }
+
+  // 8-bit gruplarına böl
+  const bytes = new Uint8Array(Math.floor(bits.join('').length / 8));
+  const binaryStr = bits.join('');
+
   for (let i = 0; i < bytes.length; i++) {
-    bytes[i] = parseInt(binary.slice(i * 8, (i + 1) * 8), 2);
+    const byte = binaryStr.slice(i * 8, (i + 1) * 8);
+    bytes[i] = parseInt(byte, 2);
   }
 
   return bytes;
