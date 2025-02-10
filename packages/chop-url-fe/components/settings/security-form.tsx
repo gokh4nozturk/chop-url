@@ -91,15 +91,8 @@ export function SecurityForm() {
   });
 
   useEffect(() => {
-    const fetchRecoveryCodes = async () => {
-      const { recoveryCodes } = await getRecoveryCodes();
-      console.log('recoveryCodes', recoveryCodes);
-    };
-
-    fetchRecoveryCodes();
-
     setIsTwoFactorEnabled(user?.isTwoFactorEnabled || false);
-  }, [user, getRecoveryCodes]);
+  }, [user]);
 
   const form = useForm<SecurityFormValues>({
     resolver: zodResolver(securityFormSchema),
