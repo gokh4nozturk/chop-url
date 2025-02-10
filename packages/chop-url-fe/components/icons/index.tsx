@@ -41,7 +41,9 @@ import {
   X,
 } from 'lucide-react';
 
-export type Icon = typeof LucideIcon;
+import { FrameIcon } from './frame';
+
+export type Icon = typeof LucideIcon | typeof FrameIcon;
 
 export const Icons = {
   command: Command,
@@ -99,4 +101,5 @@ export const Icons = {
       />
     </svg>
   ),
+  frame: FrameIcon,
 } as const;

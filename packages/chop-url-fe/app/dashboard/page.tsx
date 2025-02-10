@@ -99,17 +99,38 @@ export default function DashboardPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">
-          <CardHeader>
+          <CardHeader className="flex-row items-center justify-between">
             <CardTitle>Recent Links</CardTitle>
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/dashboard/links">
+                <Icons.frame />
+              </Link>
+            </Button>
           </CardHeader>
           <CardContent>
             {urls.length > 0 ? (
               <div className="flex flex-col gap-2">
-                {urls.map((url) => (
-                  <div key={url.id}>
-                    <Link href={`dashboard/links/${url.id}`}>
+                {urls.slice(0, 4).map((url) => (
+                  <div
+                    key={url.id}
+                    className="group flex items-center justify-between rounded-lg border px-3 py-1 hover:bg-muted/50 transition-colors"
+                  >
+                    <Link
+                      href={`dashboard/links/${url.id}`}
+                      className="font-medium hover:underline"
+                    >
                       {url.shortUrl}
                     </Link>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => {
+                        navigator.clipboard.writeText(url.shortUrl);
+                      }}
+                    >
+                      <Icons.copy className="h-4 w-4" />
+                    </Button>
                   </div>
                 ))}
               </div>
