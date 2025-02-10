@@ -1,6 +1,11 @@
+import { zValidator } from '@hono/zod-validator';
 import { Context, Hono } from 'hono';
+import { ValidationTargets } from 'hono/types';
+import { z } from 'zod';
 import { auth } from '../auth/middleware.js';
 import { IUser } from '../auth/types.js';
+import { trackVisitMiddleware } from '../middleware';
+import { getUrlStats, getVisitsByTimeRange, trackVisit } from './service';
 import { UrlService } from './service.js';
 
 interface Env {
@@ -11,6 +16,30 @@ interface Env {
 interface Variables {
   user: IUser;
 }
+
+type ValidatedContext = Context<{
+  Bindings: Env;
+  Variables: Variables;
+  ValidationTargets: ValidationTargets;
+  ValidatedData: {
+    query: { period?: '24h' | '7d' | '30d' | '90d' };
+    json: z.infer<typeof trackVisitSchema>;
+  };
+}>;
+
+const periodSchema = z.enum(['24h', '7d', '30d', '90d']).default('7d');
+
+const trackVisitSchema = z.object({
+  urlId: z.number(),
+  ipAddress: z.string(),
+  userAgent: z.string(),
+  referrer: z.string().nullable().optional(),
+});
+
+type H = Hono<{ Bindings: Env; Variables: Variables }>;
+
+const VALID_PERIODS = ['24h', '7d', '30d', '90d'] as const;
+type Period = (typeof VALID_PERIODS)[number];
 
 export const createUrlRoutes = () => {
   const router = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -72,23 +101,63 @@ export const createUrlRoutes = () => {
     return c.json(response);
   });
 
-  router.get('/stats/:shortId', auth(), async (c: Context) => {
-    try {
-      const user = c.get('user');
-      if (!user) {
-        return c.json({ error: 'User not authenticated' }, 401);
-      }
+  router.get('/:shortId', trackVisitMiddleware, async (c: Context) => {
+    const shortId = c.req.param('shortId');
+    const urlService = new UrlService(c.env.BASE_URL);
+    const url = await urlService.getUrl(shortId);
 
-      const shortId = c.req.param('shortId');
-      const urlService = new UrlService(c.env.BASE_URL);
-      const stats = await urlService.getUrlInfo(shortId, user.id.toString());
+    if (!url) {
+      return c.json({ error: 'URL not found' }, 404);
+    }
+
+    return c.redirect(url.originalUrl);
+  });
+
+  router.get('/stats/:shortId', auth(), async (c: Context) => {
+    const shortId = c.req.param('shortId');
+    const period = (c.req.query('period') as Period) || '7d';
+
+    if (!VALID_PERIODS.includes(period)) {
+      return c.json({ error: 'Invalid period' }, 400);
+    }
+
+    try {
+      const stats = await getUrlStats(shortId, period);
       return c.json(stats);
     } catch (error) {
-      if (error instanceof Error && error.message === 'URL not found') {
-        return c.json({ error: 'URL not found' }, 404);
-      }
-      console.error('Error getting URL stats:', error);
-      return c.json({ error: 'Internal server error' }, 500);
+      return c.json({ error: 'URL not found' }, 404);
+    }
+  });
+
+  router.get('/stats/:shortId/visits', auth(), async (c: Context) => {
+    const shortId = c.req.param('shortId');
+    const period = (c.req.query('period') as Period) || '7d';
+
+    if (!VALID_PERIODS.includes(period)) {
+      return c.json({ error: 'Invalid period' }, 400);
+    }
+
+    try {
+      const visits = await getVisitsByTimeRange(shortId, period);
+      return c.json(visits);
+    } catch (error) {
+      return c.json({ error: 'URL not found' }, 404);
+    }
+  });
+
+  router.post('/track', async (c: Context) => {
+    const body = await c.req.json();
+    const { urlId, ipAddress, userAgent, referrer } = body;
+
+    if (!urlId || !ipAddress || !userAgent) {
+      return c.json({ error: 'Missing required fields' }, 400);
+    }
+
+    try {
+      await trackVisit(urlId, ipAddress, userAgent, referrer || null);
+      return c.json({ success: true });
+    } catch (error) {
+      return c.json({ error: 'Failed to track visit' }, 500);
     }
   });
 

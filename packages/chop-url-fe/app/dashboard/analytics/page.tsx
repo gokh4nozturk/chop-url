@@ -1,6 +1,7 @@
 'use client';
 
 import { Icons } from '@/components/icons';
+import { BarChart } from '@/components/ui/bar-chart';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -10,11 +11,47 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useState } from 'react';
+import useUrlStore from '@/lib/store/url';
+import { useEffect, useState } from 'react';
+
+interface AnalyticsData {
+  totalClicks: number;
+  uniqueVisitors: number;
+  topCountry: { name: string; percentage: number } | null;
+  topReferrer: { name: string; percentage: number } | null;
+  clicksByDate: { date: string; count: number }[];
+  topLocations: { country: string; count: number; percentage: number }[];
+  topDevices: { type: string; count: number; percentage: number }[];
+  topBrowsers: { name: string; count: number; percentage: number }[];
+}
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('7d');
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(
+    null
+  );
+  const { urls, getUserUrls } = useUrlStore();
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/analytics?period=${timeRange}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch analytics');
+        }
+        const data = await response.json();
+        setAnalyticsData(data);
+      } catch (error) {
+        console.error('Error fetching analytics:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, [timeRange]);
 
   return (
     <div className="space-y-6">
@@ -22,7 +59,7 @@ export default function AnalyticsPage() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Analytics</h2>
           <p className="text-muted-foreground">
-            Track and analyze your link performance.
+            Track and analyze your link performance
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -53,10 +90,9 @@ export default function AnalyticsPage() {
             <Icons.barChart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">
-              +0% from previous period
-            </p>
+            <div className="text-2xl font-bold">
+              {isLoading ? '-' : analyticsData?.totalClicks || 0}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -67,10 +103,9 @@ export default function AnalyticsPage() {
             <Icons.user className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">
-              +0% from previous period
-            </p>
+            <div className="text-2xl font-bold">
+              {isLoading ? '-' : analyticsData?.uniqueVisitors || 0}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -79,8 +114,16 @@ export default function AnalyticsPage() {
             <Icons.globe className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">-</div>
-            <p className="text-xs text-muted-foreground">0% of total traffic</p>
+            <div className="text-2xl font-bold">
+              {isLoading ? '-' : analyticsData?.topCountry?.name || '-'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {analyticsData?.topCountry
+                ? `${analyticsData.topCountry.percentage.toFixed(
+                    1
+                  )}% of total traffic`
+                : '0% of total traffic'}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -89,110 +132,16 @@ export default function AnalyticsPage() {
             <Icons.link className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">-</div>
-            <p className="text-xs text-muted-foreground">0% of total traffic</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Click Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex h-[350px] items-center justify-center">
-                <Icons.spinner className="h-6 w-6 animate-spin" />
-              </div>
-            ) : (
-              <div className="flex h-[350px] items-center justify-center">
-                <div className="text-center">
-                  <Icons.barChart className="mx-auto h-12 w-12 text-muted-foreground" />
-                  <h3 className="mt-4 text-lg font-semibold">
-                    No data available
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Start sharing your links to see click activity.
-                  </p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Top Locations</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex h-[350px] items-center justify-center">
-                <Icons.spinner className="h-6 w-6 animate-spin" />
-              </div>
-            ) : (
-              <div className="flex h-[350px] items-center justify-center">
-                <div className="text-center">
-                  <Icons.globe className="mx-auto h-12 w-12 text-muted-foreground" />
-                  <h3 className="mt-4 text-lg font-semibold">
-                    No data available
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Geographic data will appear here.
-                  </p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Top Links</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex h-[350px] items-center justify-center">
-                <Icons.spinner className="h-6 w-6 animate-spin" />
-              </div>
-            ) : (
-              <div className="flex h-[350px] items-center justify-center">
-                <div className="text-center">
-                  <Icons.link className="mx-auto h-12 w-12 text-muted-foreground" />
-                  <h3 className="mt-4 text-lg font-semibold">
-                    No data available
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Your most clicked links will appear here.
-                  </p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Referrers</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex h-[350px] items-center justify-center">
-                <Icons.spinner className="h-6 w-6 animate-spin" />
-              </div>
-            ) : (
-              <div className="flex h-[350px] items-center justify-center">
-                <div className="text-center">
-                  <Icons.globe className="mx-auto h-12 w-12 text-muted-foreground" />
-                  <h3 className="mt-4 text-lg font-semibold">
-                    No data available
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Traffic sources will appear here.
-                  </p>
-                </div>
-              </div>
-            )}
+            <div className="text-2xl font-bold">
+              {isLoading ? '-' : analyticsData?.topReferrer?.name || '-'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {analyticsData?.topReferrer
+                ? `${analyticsData.topReferrer.percentage.toFixed(
+                    1
+                  )}% of total traffic`
+                : '0% of total traffic'}
+            </p>
           </CardContent>
         </Card>
       </div>

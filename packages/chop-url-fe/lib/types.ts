@@ -40,3 +40,27 @@ export interface AuthState {
   isLoading: boolean;
   error: AuthError | null;
 }
+
+export interface IVisit {
+  visitedAt: Date;
+  ipAddress: string;
+  userAgent: string;
+  referrer: string | null;
+  browser: string | null;
+  browserVersion: string | null;
+  os: string | null;
+  osVersion: string | null;
+  deviceType: string | null;
+  country: string | null;
+  city: string | null;
+}
+
+export interface IUrlStats {
+  shortId: string;
+  originalUrl: string;
+  created: Date;
+  lastAccessed: Date | null;
+  visitCount: number;
+  totalVisits: number;
+  visits: IVisit[];
+}

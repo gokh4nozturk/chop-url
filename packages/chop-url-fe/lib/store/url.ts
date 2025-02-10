@@ -1,5 +1,6 @@
 import apiClient from '@/lib/api/client';
 import { navigate } from '@/lib/navigation';
+import { IUrlStats } from '@/lib/types';
 import { create } from 'zustand';
 
 interface UrlError {
@@ -28,6 +29,8 @@ interface UrlState {
   error: UrlError | null;
   searchTerm: string;
   filteredUrls: Url[];
+  urlStats: IUrlStats | null;
+  urlVisits: { date: string; count: number }[];
 }
 
 interface UrlActions {
@@ -38,6 +41,14 @@ interface UrlActions {
   clearError: () => void;
   getUrlDetails: (shortId: string) => Promise<Url>;
   setSearchTerm: (term: string) => void;
+  getUrlStats: (
+    shortId: string,
+    period: '24h' | '7d' | '30d' | '90d'
+  ) => Promise<void>;
+  getUrlVisits: (
+    shortId: string,
+    period: '24h' | '7d' | '30d' | '90d'
+  ) => Promise<void>;
 }
 
 const useUrlStore = create<UrlState & UrlActions>((set, get) => ({
@@ -48,6 +59,8 @@ const useUrlStore = create<UrlState & UrlActions>((set, get) => ({
   error: null,
   searchTerm: '',
   filteredUrls: [],
+  urlStats: null,
+  urlVisits: [],
 
   // Actions
   setLoading: (isLoading: boolean) => set({ isLoading }),
@@ -120,6 +133,52 @@ const useUrlStore = create<UrlState & UrlActions>((set, get) => ({
           error instanceof Error
             ? error.message
             : 'Failed to fetch URL details',
+      };
+      set({ error: urlError });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  getUrlStats: async (
+    shortId: string,
+    period: '24h' | '7d' | '30d' | '90d' = '7d'
+  ) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await apiClient.get(
+        `/api/stats/${shortId}?period=${period}`
+      );
+      set({ urlStats: response.data });
+    } catch (error) {
+      const urlError: UrlError = {
+        code: 'GET_URL_STATS_ERROR',
+        message:
+          error instanceof Error ? error.message : 'Failed to fetch URL stats',
+      };
+      set({ error: urlError });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  getUrlVisits: async (
+    shortId: string,
+    period: '24h' | '7d' | '30d' | '90d' = '7d'
+  ) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await apiClient.get(
+        `/api/stats/${shortId}/visits?period=${period}`
+      );
+      set({ urlVisits: response.data });
+    } catch (error) {
+      const urlError: UrlError = {
+        code: 'GET_URL_VISITS_ERROR',
+        message:
+          error instanceof Error ? error.message : 'Failed to fetch URL visits',
       };
       set({ error: urlError });
       throw error;

@@ -1,32 +1,40 @@
 export interface IUrl {
   id: number;
-  short_id: string;
-  original_url: string;
-  created_at: Date;
-  last_accessed_at: Date | null;
+  shortId: string;
+  shortUrl: string;
+  originalUrl: string;
+  created_at: string;
+  last_accessed_at: string | null;
   visit_count: number;
+  isActive: boolean;
+  expiresAt: string | null;
+  userId: number | null;
+  customSlug: string | null;
 }
 
 export interface IVisit {
   id: number;
-  url_id: number;
-  visited_at: Date;
-  ip_address: string;
-  user_agent: string;
+  urlId: number;
+  visitedAt: string;
+  ipAddress: string;
+  userAgent: string;
   referrer: string | null;
+  browser: string | null;
+  browserVersion: string | null;
+  os: string | null;
+  osVersion: string | null;
+  deviceType: string | null;
+  country: string | null;
+  city: string | null;
+}
+
+export interface IUrlStats extends IUrl {
+  visits: IVisit[];
 }
 
 export interface ICreateUrlResponse {
   shortUrl: string;
-  originalUrl: string;
-  shortId: string;
-}
-
-export interface IUrlStats {
   shortId: string;
   originalUrl: string;
-  created: Date;
-  lastAccessed: Date | null;
-  visitCount: number;
-  totalVisits: number;
+  createdAt: string | null;
 }

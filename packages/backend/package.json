@@ -15,7 +15,11 @@
     "db:migrate:prod": "wrangler d1 migrations apply chop-url-db --remote",
     "db:studio": "drizzle-kit studio"
   },
-  "keywords": ["url-shortener", "cloudflare-workers", "typescript"],
+  "keywords": [
+    "url-shortener",
+    "cloudflare-workers",
+    "typescript"
+  ],
   "author": "Gokhan Ozturk",
   "license": "MIT",
   "dependencies": {

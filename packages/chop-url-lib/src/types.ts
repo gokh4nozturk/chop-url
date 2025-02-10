@@ -23,19 +23,33 @@ export interface ICreateUrlResponse {
 }
 
 /**
+ * Interface for URL visit information
+ */
+export interface IVisit {
+  visitedAt: Date;
+  ipAddress: string;
+  userAgent: string;
+  referrer: string | null;
+  browser: string | null;
+  browserVersion: string | null;
+  os: string | null;
+  osVersion: string | null;
+  deviceType: string | null;
+  country: string | null;
+  city: string | null;
+}
+
+/**
  * Interface for URL statistics
  */
 export interface IUrlStats {
+  shortId: string;
+  originalUrl: string;
+  created: Date;
+  lastAccessed: Date | null;
   visitCount: number;
-  lastAccessedAt: Date | null;
-  createdAt: Date;
-  expiresAt: Date | null;
-  visits: {
-    visitedAt: Date;
-    ipAddress: string | null;
-    userAgent: string | null;
-    referrer: string | null;
-  }[];
+  totalVisits: number;
+  visits: IVisit[];
 }
 
 /**
