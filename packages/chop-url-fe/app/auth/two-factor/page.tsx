@@ -1,52 +1,18 @@
 'use client';
 
-import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from '@/components/ui/input-otp';
+import { OTPForm, OTPFormValues } from '@/components/ui/otp-form';
 import { navigate } from '@/lib/navigation';
 import { useAuthStore } from '@/lib/store/auth';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useSearchParams } from 'next/navigation';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { z } from 'zod';
-
-const otpFormSchema = z.object({
-  code: z
-    .string()
-    .length(6, 'Code must be 6 digits')
-    .regex(/^\d+$/, 'Code must contain only numbers'),
-});
-
-type OTPFormValues = z.infer<typeof otpFormSchema>;
 
 export default function TwoFactorVerificationPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { verifyTwoFactorLogin } = useAuthStore();
   const searchParams = useSearchParams();
   const email = searchParams.get('email');
-  const router = useRouter();
-  const form = useForm<OTPFormValues>({
-    resolver: zodResolver(otpFormSchema),
-    defaultValues: {
-      code: '',
-    },
-  });
 
   const onSubmit = async (data: OTPFormValues) => {
     if (!email) return;
@@ -101,57 +67,13 @@ export default function TwoFactorVerificationPage() {
           </p>
         </div>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="code"
-              render={({ field }) => (
-                <FormItem className="w-full flex flex-col items-center">
-                  <FormLabel>Verification Code</FormLabel>
-                  <FormControl>
-                    <InputOTP maxLength={6} {...field}>
-                      <InputOTPGroup>
-                        <InputOTPSlot index={0} />
-                        <InputOTPSlot index={1} />
-                        <InputOTPSlot index={2} />
-                        <InputOTPSlot index={3} />
-                        <InputOTPSlot index={4} />
-                        <InputOTPSlot index={5} />
-                      </InputOTPGroup>
-                    </InputOTP>
-                  </FormControl>
-                  <FormDescription>
-                    Enter the 6-digit code from your authenticator app or use a
-                    recovery code
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="space-y-4">
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                    Verifying...
-                  </>
-                ) : (
-                  'Verify'
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => navigate.auth()}
-                disabled={isLoading}
-              >
-                Back to login
-              </Button>
-            </div>
-          </form>
-        </Form>
+        <OTPForm
+          onSubmit={onSubmit}
+          isLoading={isLoading}
+          description="Enter the 6-digit code from your authenticator app or use a recovery code"
+          showBackButton
+          onBack={() => navigate.auth()}
+        />
       </div>
     </div>
   );

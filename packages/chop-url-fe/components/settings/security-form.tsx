@@ -24,6 +24,7 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from '@/components/ui/input-otp';
+import { OTPForm, OTPFormValues } from '@/components/ui/otp-form';
 import { Switch } from '@/components/ui/switch';
 import { useAuthStore } from '@/lib/store/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -48,15 +49,7 @@ const securityFormSchema = z
     path: ['confirmPassword'],
   });
 
-const otpFormSchema = z.object({
-  code: z
-    .string()
-    .length(6, 'OTP code must be 6 digits')
-    .regex(/^\d+$/, 'OTP code must contain only numbers'),
-});
-
 type SecurityFormValues = z.infer<typeof securityFormSchema>;
-type OTPFormValues = z.infer<typeof otpFormSchema>;
 
 export function SecurityForm() {
   const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(false);
@@ -76,24 +69,6 @@ export function SecurityForm() {
     getRecoveryCodes,
   } = useAuthStore();
 
-  const setupForm = useForm<OTPFormValues>({
-    resolver: zodResolver(otpFormSchema),
-    defaultValues: {
-      code: '',
-    },
-  });
-
-  const disableForm = useForm<OTPFormValues>({
-    resolver: zodResolver(otpFormSchema),
-    defaultValues: {
-      code: '',
-    },
-  });
-
-  useEffect(() => {
-    setIsTwoFactorEnabled(user?.isTwoFactorEnabled || false);
-  }, [user]);
-
   const form = useForm<SecurityFormValues>({
     resolver: zodResolver(securityFormSchema),
     defaultValues: {
@@ -102,6 +77,10 @@ export function SecurityForm() {
       confirmPassword: '',
     },
   });
+
+  useEffect(() => {
+    setIsTwoFactorEnabled(user?.isTwoFactorEnabled || false);
+  }, [user]);
 
   async function onSubmit(data: SecurityFormValues) {
     try {
@@ -143,9 +122,6 @@ export function SecurityForm() {
       const { recoveryCodes } = await getRecoveryCodes();
       setIsTwoFactorEnabled(true);
       setShowSetupDialog(false);
-      setupForm.reset();
-
-      // Show recovery codes in a new dialog
       setRecoveryCodes(recoveryCodes);
       setShowRecoveryCodesDialog(true);
       toast.success('Two-factor authentication enabled successfully');
@@ -163,7 +139,6 @@ export function SecurityForm() {
       await disableTwoFactor(data.code);
       setIsTwoFactorEnabled(false);
       setShowDisableDialog(false);
-      disableForm.reset();
       toast.success('Two-factor authentication disabled successfully');
     } catch (error) {
       toast.error(
@@ -271,41 +246,11 @@ export function SecurityForm() {
                 </p>
               </div>
             )}
-            <Form {...setupForm}>
-              <form
-                onSubmit={setupForm.handleSubmit(handleVerifyAndEnable)}
-                className="w-full space-y-4"
-              >
-                <FormField
-                  control={setupForm.control}
-                  name="code"
-                  render={({ field }) => (
-                    <FormItem className="w-full flex flex-col items-center">
-                      <FormLabel>Verification Code</FormLabel>
-                      <FormControl>
-                        <InputOTP maxLength={6} {...field}>
-                          <InputOTPGroup>
-                            <InputOTPSlot index={0} />
-                            <InputOTPSlot index={1} />
-                            <InputOTPSlot index={2} />
-                            <InputOTPSlot index={3} />
-                            <InputOTPSlot index={4} />
-                            <InputOTPSlot index={5} />
-                          </InputOTPGroup>
-                        </InputOTP>
-                      </FormControl>
-                      <FormDescription>
-                        Enter the 6-digit code from your authenticator app
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full">
-                  Verify and Enable
-                </Button>
-              </form>
-            </Form>
+            <OTPForm
+              onSubmit={handleVerifyAndEnable}
+              submitText="Verify and Enable"
+              description="Enter the 6-digit code from your authenticator app"
+            />
           </div>
         </DialogContent>
       </Dialog>
@@ -318,42 +263,11 @@ export function SecurityForm() {
               Please enter your two-factor authentication code to disable 2FA.
             </DialogDescription>
           </DialogHeader>
-          <Form {...disableForm}>
-            <form
-              onSubmit={disableForm.handleSubmit(handleDisableTwoFactor)}
-              className="space-y-4"
-            >
-              <FormField
-                control={disableForm.control}
-                name="code"
-                render={({ field }) => (
-                  <FormItem className="w-full flex flex-col items-center">
-                    <FormLabel>Verification Code</FormLabel>
-                    <FormControl>
-                      <InputOTP maxLength={6} {...field}>
-                        <InputOTPGroup>
-                          <InputOTPSlot index={0} />
-                          <InputOTPSlot index={1} />
-                          <InputOTPSlot index={2} />
-                          <InputOTPSlot index={3} />
-                          <InputOTPSlot index={4} />
-                          <InputOTPSlot index={5} />
-                        </InputOTPGroup>
-                      </InputOTP>
-                    </FormControl>
-
-                    <FormDescription>
-                      Enter the 6-digit code from your authenticator app
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full">
-                Disable Two-Factor Authentication
-              </Button>
-            </form>
-          </Form>
+          <OTPForm
+            onSubmit={handleDisableTwoFactor}
+            submitText="Disable Two-Factor Authentication"
+            description="Enter the 6-digit code from your authenticator app"
+          />
         </DialogContent>
       </Dialog>
 
