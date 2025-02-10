@@ -100,10 +100,8 @@ export class UrlService {
 
     const url = result[0];
     return {
-      originalUrl: url.originalUrl,
-      createdAt: url.createdAt ? new Date(url.createdAt) : new Date(),
-      visitCount: url.visitCount,
-      lastAccessedAt: url.lastAccessedAt ? new Date(url.lastAccessedAt) : null,
+      ...url,
+      shortUrl: `${this.baseUrl}/${url.shortId}`,
     };
   }
 
