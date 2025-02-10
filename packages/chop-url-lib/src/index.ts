@@ -36,6 +36,15 @@ export class ChopUrl {
       shortUrl,
     };
   }
+
+  async getOriginalUrl(shortId: string): Promise<string> {
+    if (!shortId) {
+      throw new Error('Invalid short ID');
+    }
+
+    // Bu metod daha sonra veritabanı entegrasyonu ile tamamlanacak
+    throw new Error('Not implemented');
+  }
 }
 
 /**

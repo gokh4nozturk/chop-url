@@ -11,7 +11,7 @@ type Variables = {
 
 let shouldSimulateDatabaseError = false;
 const mockChopUrl = {
-  createShortUrl: vi.fn().mockImplementation(async (url) => {
+  generateShortUrl: vi.fn().mockImplementation((url) => {
     if (url === 'not-a-url') {
       throw new Error('Invalid URL');
     }
@@ -22,7 +22,6 @@ const mockChopUrl = {
       shortId: 'abc123',
       originalUrl: url,
       shortUrl: 'https://chop.url/abc123',
-      createdAt: new Date(),
     };
   }),
   getOriginalUrl: vi.fn(),
@@ -51,7 +50,7 @@ describe('Backend Service', () => {
     shouldSimulateDatabaseError = false;
     testApp = app;
     vi.clearAllMocks();
-    mockChopUrl.createShortUrl.mockClear();
+    mockChopUrl.generateShortUrl.mockClear();
     mockChopUrl.getOriginalUrl.mockClear();
   });
 

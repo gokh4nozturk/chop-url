@@ -10,4 +10,12 @@ declare global {
       GITHUB_CLIENT_SECRET: string;
     }
   }
+
+  interface Env {
+    DB: D1Database;
+    BASE_URL: string;
+    FRONTEND_URL: string;
+    RESEND_API_KEY: string;
+    ENVIRONMENT: 'development' | 'test' | 'production';
+  }
 }
