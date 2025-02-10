@@ -7,26 +7,103 @@ import { urls } from '../db/schema';
 export class UrlService {
   private chopUrl: ChopUrl;
 
-  constructor(
-    private db: D1Database,
-    private baseUrl: string
-  ) {
-    this.chopUrl = new ChopUrl({
-      baseUrl: this.baseUrl,
-      db: this.db,
-    });
+  constructor(private baseUrl: string) {
+    this.chopUrl = new ChopUrl(this.baseUrl);
   }
 
-  async createShortUrl(url: string, options?: { customSlug?: string }) {
-    return this.chopUrl.createShortUrl(url, options);
+  async createShortUrl(
+    url: string,
+    options?: { customSlug?: string },
+    token?: string
+  ): Promise<{
+    shortUrl: string;
+    shortId: string;
+    originalUrl: string;
+    createdAt: string | null;
+  }> {
+    try {
+      const response = await db
+        .select()
+        .from(urls)
+        .where(eq(urls.originalUrl, url));
+
+      if (response.length > 0) {
+        return {
+          shortUrl: `${this.baseUrl}/${response[0].shortId}`,
+          shortId: response[0].shortId,
+          originalUrl: response[0].originalUrl,
+          createdAt: response[0].createdAt,
+        };
+      }
+
+      const { shortId, originalUrl } = this.chopUrl.generateShortUrl(
+        url,
+        options
+      );
+
+      await db
+        .insert(urls)
+        .values({
+          shortId: shortId,
+          originalUrl: url,
+          customSlug: options?.customSlug,
+          userId: null,
+          createdAt: new Date().toISOString(),
+          lastAccessedAt: null,
+          visitCount: 0,
+          expiresAt: !token
+            ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+            : null,
+          isActive: true,
+        })
+        .returning();
+
+      return {
+        shortUrl: `${this.baseUrl}/${shortId}`,
+        shortId,
+        originalUrl,
+        createdAt: new Date().toISOString(),
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error('Failed to create short URL');
+      }
+      throw error;
+    }
   }
 
   async getOriginalUrl(shortId: string) {
-    return this.chopUrl.getOriginalUrl(shortId);
+    const result = await db
+      .select()
+      .from(urls)
+      .where(eq(urls.shortId, shortId))
+      .limit(1);
+
+    if (!result.length) {
+      throw new Error('URL not found');
+    }
+
+    return result[0].originalUrl;
   }
 
   async getUrlInfo(shortId: string) {
-    return this.chopUrl.getUrlInfo(shortId);
+    const result = await db
+      .select()
+      .from(urls)
+      .where(eq(urls.shortId, shortId))
+      .limit(1);
+
+    if (!result.length) {
+      throw new Error('URL not found');
+    }
+
+    const url = result[0];
+    return {
+      originalUrl: url.originalUrl,
+      createdAt: url.createdAt ? new Date(url.createdAt) : new Date(),
+      visitCount: url.visitCount,
+      lastAccessedAt: url.lastAccessedAt ? new Date(url.lastAccessedAt) : null,
+    };
   }
 
   async getUserUrls(userId: string) {

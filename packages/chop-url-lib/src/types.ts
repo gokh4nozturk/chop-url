@@ -1,5 +1,3 @@
-import type { D1Database } from '@cloudflare/workers-types';
-
 /**
  * Information about a shortened URL
  */
@@ -38,15 +36,6 @@ export interface IUrlStats {
     userAgent: string | null;
     referrer: string | null;
   }[];
-}
-
-/**
- * Configuration interface for ChopUrl instance
- */
-export interface IChopUrlConfig {
-  db: D1Database;
-  baseUrl: string;
-  shortIdLength?: number;
 }
 
 /**

@@ -1,129 +1,39 @@
-import type { D1Database } from '@cloudflare/workers-types';
 import { customAlphabet } from 'nanoid';
-import { CreateUrlOptions, IChopUrlConfig, IUrlInfo } from './types';
+import { CreateUrlOptions } from './types';
 
 /**
  * Main class for URL shortening and management
  */
 export class ChopUrl {
   private baseUrl: string;
-  private db: D1Database;
 
-  constructor(config: IChopUrlConfig) {
-    if (!isValidUrl(config.baseUrl)) {
+  constructor(baseUrl: string) {
+    if (!isValidUrl(baseUrl)) {
       throw new Error('Invalid base URL');
     }
 
-    if (!config.db) {
-      throw new Error('Database is required');
-    }
-
-    // Remove trailing slash from base URL
-    this.baseUrl = config.baseUrl.replace(/\/$/, '');
-    this.db = config.db;
+    this.baseUrl = baseUrl.replace(/\/$/, '');
   }
 
-  async createShortUrl(
+  generateShortUrl(
     url: string,
     options?: CreateUrlOptions
-  ): Promise<{
+  ): {
     shortId: string;
     originalUrl: string;
     shortUrl: string;
-    createdAt: Date;
-  }> {
+  } {
     if (!isValidUrl(url)) {
       throw new Error('Invalid URL');
     }
 
-    try {
-      let shortId: string;
-
-      if (options?.customSlug) {
-        // Custom slug kullanılmak isteniyorsa, önce bu slug'ın kullanılabilir olup olmadığını kontrol et
-        const existingUrl = await this.db
-          .prepare('SELECT short_id FROM urls WHERE short_id = ?')
-          .bind(options.customSlug)
-          .first<{ short_id: string }>();
-
-        if (existingUrl) {
-          throw new Error('Custom slug is already taken');
-        }
-
-        shortId = options.customSlug;
-      } else {
-        shortId = generateShortId();
-      }
-
-      const shortUrl = `${this.baseUrl}/${shortId}`;
-
-      await this.db
-        .prepare('INSERT INTO urls (short_id, original_url) VALUES (?, ?)')
-        .bind(shortId, url)
-        .run();
-
-      return {
-        shortId,
-        originalUrl: url,
-        shortUrl,
-        createdAt: new Date(),
-      };
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        error.message === 'Custom slug is already taken'
-      ) {
-        throw error;
-      }
-      throw new Error('Database error');
-    }
-  }
-
-  async getOriginalUrl(shortId: string): Promise<string> {
-    if (!shortId) {
-      throw new Error('Invalid short ID');
-    }
-
-    const result = await this.db
-      .prepare('SELECT original_url FROM urls WHERE short_id = ?')
-      .bind(shortId)
-      .first<{ original_url: string }>();
-
-    if (!result) {
-      throw new Error('URL not found');
-    }
-
-    return result.original_url;
-  }
-
-  async getUrlInfo(shortId: string): Promise<IUrlInfo> {
-    if (!shortId) {
-      throw new Error('Invalid short ID');
-    }
-
-    const result = await this.db
-      .prepare(
-        'SELECT original_url, created_at, visit_count, last_accessed_at FROM urls WHERE short_id = ?'
-      )
-      .bind(shortId)
-      .first<{
-        original_url: string;
-        created_at: string;
-        visit_count: number;
-        last_accessed_at: string | null;
-      }>();
-
-    if (!result) {
-      throw new Error('URL not found');
-    }
+    const shortId = options?.customSlug || generateShortId();
+    const shortUrl = `${this.baseUrl}/${shortId}`;
 
     return {
-      originalUrl: result.original_url,
-      createdAt: new Date(result.created_at),
-      visitCount: result.visit_count,
-      lastAccessedAt: result.last_accessed_at
-        ? new Date(result.last_accessed_at)
-        : null,
+      shortId,
+      originalUrl: url,
+      shortUrl,
     };
   }
 }
@@ -185,7 +95,6 @@ export const verifyTOTP = async (
 ): Promise<boolean> => {
   const currentWindow = Math.floor(Date.now() / 30000);
 
-  // Önceki, mevcut ve sonraki zaman pencerelerini kontrol et
   for (let window = -1; window <= 1; window++) {
     const counter = new ArrayBuffer(8);
     const view = new DataView(counter);
@@ -229,14 +138,12 @@ const base32ToBuffer = (str: string): Uint8Array => {
   const cleanedInput = str.toUpperCase().replace(/[^A-Z2-7]/g, '');
   const bits: string[] = [];
 
-  // Her karakteri 5-bit binary'ye çevir
   for (const char of cleanedInput) {
     const value = alphabet.indexOf(char);
     if (value === -1) continue;
     bits.push(value.toString(2).padStart(5, '0'));
   }
 
-  // 8-bit gruplarına böl
   const bytes = new Uint8Array(Math.floor(bits.join('').length / 8));
   const binaryStr = bits.join('');
 

@@ -24,15 +24,19 @@ export const createUrlRoutes = () => {
     }
 
     try {
-      const urlService = new UrlService(c.env.DB, c.env.BASE_URL);
-      const result = await urlService.createShortUrl(url, { customSlug });
+      const urlService = new UrlService(c.env.BASE_URL);
+      const result = await urlService.createShortUrl(
+        url,
+        { customSlug },
+        token
+      );
 
       return c.json(
         {
           shortUrl: result.shortUrl,
           shortId: result.shortId,
           originalUrl: result.originalUrl,
-          createdAt: result.createdAt.toISOString(),
+          createdAt: result.createdAt,
         },
         200
       );
@@ -52,7 +56,7 @@ export const createUrlRoutes = () => {
 
   router.get('/urls', auth(), async (c: Context) => {
     const user = c.get('user');
-    const urlService = new UrlService(c.env.DB, c.env.BASE_URL);
+    const urlService = new UrlService(c.env.BASE_URL);
     const urls = await urlService.getUserUrls(user.id.toString());
     return c.json(urls);
   });
@@ -60,7 +64,7 @@ export const createUrlRoutes = () => {
   router.get('/stats/:shortId', async (c: Context) => {
     try {
       const shortId = c.req.param('shortId');
-      const urlService = new UrlService(c.env.DB, c.env.BASE_URL);
+      const urlService = new UrlService(c.env.BASE_URL);
       const stats = await urlService.getUrlInfo(shortId);
       return c.json(stats);
     } catch (error) {
