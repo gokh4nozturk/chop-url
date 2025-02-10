@@ -68,6 +68,11 @@ interface Variables {
 export const createAuthRoutes = () => {
   const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
+  router.get('/me', auth(), async (c: Context) => {
+    const user = c.get('user');
+    return c.json({ user });
+  });
+
   router.post(
     '/register',
     zValidator('json', registerSchema),

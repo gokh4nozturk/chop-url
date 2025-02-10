@@ -5,10 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/lib/store/auth';
 import Link from 'next/link';
+import { useEffect } from 'react';
 
 export default function DashboardPage() {
+  const { getUser } = useAuthStore();
   const user = useAuthStore((state) => state.user);
   const isLoading = useAuthStore((state) => state.isLoading);
+
+  useEffect(() => {
+    getUser();
+  }, [getUser]);
 
   if (isLoading) {
     return (

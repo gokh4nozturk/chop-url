@@ -139,6 +139,35 @@ export const openApiSchema = {
       },
     },
     // Auth Routes
+    '/api/auth/me': {
+      get: {
+        tags: ['Authentication'],
+        summary: 'Get current user',
+        security: [{ bearerAuth: [] }],
+      },
+      responses: {
+        '200': {
+          description: 'Current user retrieved successfully',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/User',
+              },
+            },
+          },
+        },
+      },
+      '401': {
+        description: 'Unauthorized',
+        content: {
+          'application/json': {
+            schema: {
+              $ref: '#/components/schemas/Error',
+            },
+          },
+        },
+      },
+    },
     '/api/auth/register': {
       post: {
         tags: ['Authentication'],

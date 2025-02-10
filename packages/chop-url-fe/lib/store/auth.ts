@@ -7,6 +7,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface AuthActions {
+  getUser: () => Promise<void>;
   updateProfile: (data: {
     email: string;
     name: string;
@@ -82,6 +83,11 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         } finally {
           set({ isLoading: false });
         }
+      },
+
+      getUser: async () => {
+        const response = await apiClient.get('/api/auth/me');
+        set({ user: response.data.user });
       },
 
       updateProfile: async (data: {
@@ -329,8 +335,13 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           const response = await apiClient.post('/api/auth/enable-2fa', {
             code,
           });
-          const { user } = response.data;
-          set({ user });
+          const { success } = response.data;
+          if (success) {
+            const user = get().user;
+            if (user) {
+              set({ user: { ...user, isTwoFactorEnabled: true } });
+            }
+          }
         } catch (error) {
           throw new Error(getErrorMessage(error));
         }
@@ -340,8 +351,13 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           const response = await apiClient.post('/api/auth/disable-2fa', {
             code,
           });
-          const { user } = response.data;
-          set({ user });
+          const { success } = response.data;
+          if (success) {
+            const user = get().user;
+            if (user) {
+              set({ user: { ...user, isTwoFactorEnabled: false } });
+            }
+          }
         } catch (error) {
           throw new Error(getErrorMessage(error));
         }

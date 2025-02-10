@@ -88,6 +88,8 @@ export function SecurityForm() {
   });
 
   useEffect(() => {
+    console.log(user);
+
     setIsTwoFactorEnabled(user?.isTwoFactorEnabled || false);
   }, [user]);
 
@@ -136,7 +138,7 @@ export function SecurityForm() {
   async function handleVerifyAndEnable(data: OTPFormValues) {
     try {
       await verifyTwoFactor(data.code);
-      await enableTwoFactor();
+      await enableTwoFactor(data.code);
       setIsTwoFactorEnabled(true);
       setShowSetupDialog(false);
       setupForm.reset();
