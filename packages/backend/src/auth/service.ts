@@ -1,5 +1,5 @@
 import { generateTOTP, verifyTOTP } from '@chop-url/lib';
-import { and, eq, gt, sql } from 'drizzle-orm';
+import { and, eq, gt, not, sql } from 'drizzle-orm';
 import { createDb, db } from '../db/client';
 import {
   authAttempts,
@@ -698,7 +698,7 @@ export class AuthService {
     const existingUser = await db
       .select({ id: users.id })
       .from(users)
-      .where(and(eq(users.email, data.email), eq(users.id, userId)))
+      .where(and(eq(users.email, data.email), not(eq(users.id, userId))))
       .get();
 
     if (existingUser) {
