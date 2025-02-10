@@ -62,8 +62,10 @@ export function SecurityForm() {
   const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(false);
   const [showSetupDialog, setShowSetupDialog] = useState(false);
   const [showDisableDialog, setShowDisableDialog] = useState(false);
+  const [showRecoveryCodesDialog, setShowRecoveryCodesDialog] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const [secret, setSecret] = useState<string | null>(null);
+  const [recoveryCodes, setRecoveryCodes] = useState<string>(''); // 'asdf-asdf-asdf-asdf'
   const {
     user,
     disableTwoFactor,
@@ -71,6 +73,7 @@ export function SecurityForm() {
     updatePassword,
     setupTwoFactor,
     verifyTwoFactor,
+    getRecoveryCodes,
   } = useAuthStore();
 
   const setupForm = useForm<OTPFormValues>({
@@ -88,8 +91,6 @@ export function SecurityForm() {
   });
 
   useEffect(() => {
-    console.log(user);
-
     setIsTwoFactorEnabled(user?.isTwoFactorEnabled || false);
   }, [user]);
 
@@ -139,9 +140,14 @@ export function SecurityForm() {
     try {
       await verifyTwoFactor(data.code);
       await enableTwoFactor(data.code);
+      const { recoveryCodes } = await getRecoveryCodes();
       setIsTwoFactorEnabled(true);
       setShowSetupDialog(false);
       setupForm.reset();
+
+      // Show recovery codes in a new dialog
+      setRecoveryCodes(recoveryCodes);
+      setShowRecoveryCodesDialog(true);
       toast.success('Two-factor authentication enabled successfully');
     } catch (error) {
       toast.error(
@@ -274,7 +280,7 @@ export function SecurityForm() {
                   control={setupForm.control}
                   name="code"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="w-full flex flex-col items-center">
                       <FormLabel>Verification Code</FormLabel>
                       <FormControl>
                         <InputOTP maxLength={6} {...field}>
@@ -321,7 +327,7 @@ export function SecurityForm() {
                 control={disableForm.control}
                 name="code"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="w-full flex flex-col items-center">
                     <FormLabel>Verification Code</FormLabel>
                     <FormControl>
                       <InputOTP maxLength={6} {...field}>
@@ -348,6 +354,51 @@ export function SecurityForm() {
               </Button>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={showRecoveryCodesDialog}
+        onOpenChange={setShowRecoveryCodesDialog}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Save Your Recovery Codes</DialogTitle>
+            <DialogDescription>
+              Please save these recovery codes in a secure location. You will
+              need them to access your account if you lose access to your
+              authenticator app. Each code can only be used once.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center space-y-6">
+            <div className="grid grid-cols-2 gap-4 w-full">
+              {recoveryCodes.split('-').map((code) => (
+                <div
+                  key={code}
+                  className="p-2 bg-muted rounded-md text-center font-mono"
+                >
+                  {code}
+                </div>
+              ))}
+            </div>
+            <Button
+              onClick={() => {
+                const codesText = recoveryCodes.split('-').join('\n');
+                navigator.clipboard.writeText(codesText);
+                toast.success('Recovery codes copied to clipboard');
+              }}
+              className="w-full"
+            >
+              Copy All Codes
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowRecoveryCodesDialog(false)}
+              className="w-full"
+            >
+              I Have Saved My Codes
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </>

@@ -40,6 +40,9 @@ interface AuthActions {
     secret: string;
   }>;
   enableTwoFactor: (code: string) => Promise<void>;
+  getRecoveryCodes: () => Promise<{
+    recoveryCodes: string;
+  }>;
   disableTwoFactor: (code: string) => Promise<void>;
   verifyTwoFactor: (code: string) => Promise<void>;
   verifyTwoFactorLogin: (email: string, code: string) => Promise<void>;
@@ -342,6 +345,14 @@ export const useAuthStore = create<AuthState & AuthActions>()(
               set({ user: { ...user, isTwoFactorEnabled: true } });
             }
           }
+        } catch (error) {
+          throw new Error(getErrorMessage(error));
+        }
+      },
+      getRecoveryCodes: async () => {
+        try {
+          const response = await apiClient.get('/api/auth/recovery-codes');
+          return response.data;
         } catch (error) {
           throw new Error(getErrorMessage(error));
         }
