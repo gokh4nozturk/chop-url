@@ -22,6 +22,8 @@ interface Url {
   isActive: boolean;
 }
 
+type SortOption = 'recent' | 'clicks' | 'alphabetical';
+
 interface UrlState {
   urls: Url[];
   urlDetails: Url | null;
@@ -31,16 +33,23 @@ interface UrlState {
   filteredUrls: Url[];
   urlStats: IUrlStats | null;
   urlVisits: { date: string; count: number }[];
+  sortOption: SortOption;
+}
+
+interface CreateUrlOptions {
+  customSlug?: string;
+  expiresAt?: string;
 }
 
 interface UrlActions {
-  createShortUrl: (url: string, customAlias?: string) => Promise<void>;
+  createShortUrl: (url: string, options?: CreateUrlOptions) => Promise<void>;
   getUserUrls: () => Promise<void>;
   setLoading: (isLoading: boolean) => void;
   setError: (error: UrlError | null) => void;
   clearError: () => void;
   getUrlDetails: (shortId: string) => Promise<Url>;
   setSearchTerm: (term: string) => void;
+  setSortOption: (option: SortOption) => void;
   getUrlStats: (
     shortId: string,
     period: '24h' | '7d' | '30d' | '90d'
@@ -62,30 +71,83 @@ const useUrlStore = create<UrlState & UrlActions>((set, get) => ({
   filteredUrls: [],
   urlStats: null,
   urlVisits: [],
+  sortOption: 'recent',
 
   // Actions
   setLoading: (isLoading: boolean) => set({ isLoading }),
   setError: (error: UrlError | null) => set({ error }),
   clearError: () => set({ error: null }),
+  setSortOption: (option: SortOption) => {
+    const urls = get().urls;
+    const searchTerm = get().searchTerm;
+    const sortedUrls = [...urls];
+
+    switch (option) {
+      case 'recent':
+        sortedUrls.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        break;
+      case 'clicks':
+        sortedUrls.sort((a, b) => b.visitCount - a.visitCount);
+        break;
+      case 'alphabetical':
+        sortedUrls.sort((a, b) => a.originalUrl.localeCompare(b.originalUrl));
+        break;
+    }
+
+    const filteredUrls = searchTerm
+      ? sortedUrls.filter(
+          (url) =>
+            url.originalUrl.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            url.shortUrl.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            url.customSlug?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      : sortedUrls;
+
+    set({ sortOption: option, urls: sortedUrls, filteredUrls });
+  },
+
   setSearchTerm: (term: string) => {
     const urls = get().urls;
+    const sortOption = get().sortOption;
+    const sortedUrls = [...urls];
+
+    switch (sortOption) {
+      case 'recent':
+        sortedUrls.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        break;
+      case 'clicks':
+        sortedUrls.sort((a, b) => b.visitCount - a.visitCount);
+        break;
+      case 'alphabetical':
+        sortedUrls.sort((a, b) => a.originalUrl.localeCompare(b.originalUrl));
+        break;
+    }
+
     const filteredUrls = term
-      ? urls.filter(
+      ? sortedUrls.filter(
           (url) =>
             url.originalUrl.toLowerCase().includes(term.toLowerCase()) ||
             url.shortUrl.toLowerCase().includes(term.toLowerCase()) ||
             url.customSlug?.toLowerCase().includes(term.toLowerCase())
         )
-      : urls;
+      : sortedUrls;
+
     set({ searchTerm: term, filteredUrls });
   },
 
-  createShortUrl: async (url: string, customAlias?: string) => {
+  createShortUrl: async (url: string, options?: CreateUrlOptions) => {
     set({ isLoading: true, error: null });
     try {
       const response = await apiClient.post('/api/shorten', {
         url,
-        customAlias,
+        customSlug: options?.customSlug,
+        expiresAt: options?.expiresAt,
       });
       const urls = get().urls;
       set({ urls: [response.data, ...urls] });
@@ -198,6 +260,7 @@ const useUrlStore = create<UrlState & UrlActions>((set, get) => ({
       filteredUrls: [],
       urlStats: null,
       urlVisits: [],
+      sortOption: 'recent',
     });
   },
 }));

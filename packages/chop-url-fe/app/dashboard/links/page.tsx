@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/table';
 import useUrlStore from '@/lib/store/url';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 export default function LinksPage() {
   const {
@@ -29,6 +29,8 @@ export default function LinksPage() {
     filteredUrls,
     searchTerm,
     setSearchTerm,
+    setSortOption,
+    sortOption,
     getUserUrls,
     isLoading: isLoadingUrls,
     error,
@@ -81,9 +83,24 @@ export default function LinksPage() {
           <DropdownMenuContent align="end" className="w-[200px]">
             <DropdownMenuLabel>Sort by</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Most Recent</DropdownMenuItem>
-            <DropdownMenuItem>Most Clicked</DropdownMenuItem>
-            <DropdownMenuItem>Alphabetical</DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setSortOption('recent')}
+              className={sortOption === 'recent' ? 'bg-accent' : ''}
+            >
+              Most Recent
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setSortOption('clicks')}
+              className={sortOption === 'clicks' ? 'bg-accent' : ''}
+            >
+              Most Clicked
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setSortOption('alphabetical')}
+              className={sortOption === 'alphabetical' ? 'bg-accent' : ''}
+            >
+              Alphabetical
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -131,9 +148,9 @@ export default function LinksPage() {
                     {new Date(link.createdAt).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">
-                    {/* {link.lastClickedAt
-                      ? new Date(link.lastClickedAt).toLocaleDateString()
-                      : 'Never'} */}
+                    {link.lastAccessedAt
+                      ? new Date(link.lastAccessedAt).toLocaleDateString()
+                      : 'Never'}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -143,8 +160,11 @@ export default function LinksPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>Analytics</DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/dashboard/links/${link.shortId}`}>
+                            Analytics
+                          </Link>
+                        </DropdownMenuItem>
                         <DropdownMenuItem>QR Code</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive">

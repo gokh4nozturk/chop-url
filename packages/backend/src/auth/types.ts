@@ -97,6 +97,7 @@ export enum AuthErrorCode {
   OAUTH_ERROR = 'OAUTH_ERROR',
   INVALID_2FA_CODE = 'INVALID_2FA_CODE',
   EXPIRED_TOKEN = 'EXPIRED_TOKEN',
+  NO_TOKEN = 'NO_TOKEN',
 }
 
 /**

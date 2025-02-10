@@ -49,7 +49,7 @@ export const createUrlRoutes = () => {
   const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
   router.post('/shorten', auth(), async (c: Context) => {
-    const { url, customSlug } = await c.req.json();
+    const { url, customSlug, expiresAt } = await c.req.json();
     const user = c.get('user');
     const token = c.req.header('Authorization')?.split(' ')[1];
 
@@ -61,7 +61,7 @@ export const createUrlRoutes = () => {
       const urlService = new UrlService(c.env.BASE_URL);
       const result = await urlService.createShortUrl(
         url,
-        { customSlug },
+        { customSlug, expiresAt },
         token,
         user.id.toString()
       );

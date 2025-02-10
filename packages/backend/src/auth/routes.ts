@@ -192,6 +192,7 @@ export const createAuthRoutes = () => {
               'Authentication error occurred. Please try again.',
             [AuthErrorCode.EXPIRED_TOKEN]:
               'Your session has expired. Please log in again.',
+            [AuthErrorCode.NO_TOKEN]: 'No token provided',
           };
 
           return c.json(
@@ -279,6 +280,7 @@ export const createAuthRoutes = () => {
               'Authentication error occurred. Please try again.',
             [AuthErrorCode.EXPIRED_TOKEN]:
               'Token has expired. Please log in again.',
+            [AuthErrorCode.NO_TOKEN]: 'No token provided',
           };
 
           return c.json(
@@ -403,6 +405,7 @@ export const createAuthRoutes = () => {
               'Authentication error. Please try logging in again.',
             [AuthErrorCode.EXPIRED_TOKEN]:
               'Your session has expired. Please log in again to continue.',
+            [AuthErrorCode.NO_TOKEN]: 'No token provided',
           };
 
           return c.json(

@@ -6,6 +6,11 @@ import { db } from '../db/client';
 import { urls, visits } from '../db/schema';
 import { ICreateUrlResponse, IUrl, IUrlStats, IVisit } from './index';
 
+interface CreateUrlOptions {
+  customSlug?: string;
+  expiresAt?: string;
+}
+
 export class UrlService {
   private chopUrl: ChopUrl;
 
@@ -15,7 +20,7 @@ export class UrlService {
 
   async createShortUrl(
     url: string,
-    options?: { customSlug?: string },
+    options?: CreateUrlOptions,
     token?: string,
     userId?: string
   ): Promise<ICreateUrlResponse> {
@@ -63,9 +68,11 @@ export class UrlService {
           createdAt: new Date().toISOString(),
           lastAccessedAt: null,
           visitCount: 0,
-          expiresAt: !token
-            ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-            : null,
+          expiresAt:
+            options?.expiresAt ||
+            (!token
+              ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+              : null),
           isActive: true,
         })
         .returning();

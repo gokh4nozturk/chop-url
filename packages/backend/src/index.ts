@@ -29,7 +29,21 @@ app.use(
       'https://app.chop-url.com',
       'http://localhost:3000',
       'http://localhost:8787',
+      'http://localhost:8788',
     ],
+    credentials: true,
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
+    allowHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',
+      'Origin',
+      'Access-Control-Request-Method',
+      'Access-Control-Request-Headers',
+    ],
+    exposeHeaders: ['Content-Length', 'X-Requested-With', 'Authorization'],
+    maxAge: 86400,
   })
 );
 

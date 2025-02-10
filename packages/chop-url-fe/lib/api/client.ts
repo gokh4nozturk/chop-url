@@ -1,28 +1,31 @@
-import { getToken, removeToken } from '@/lib/auth';
+import { removeToken } from '@/lib/auth';
 import { useAuthStore } from '@/lib/store/auth';
 import useUrlStore from '@/lib/store/url';
 import axios from 'axios';
+import Cookies from 'js-cookie';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
 
 const client = axios.create({
   baseURL: API_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
-    Accept: 'application/json',
   },
 });
 
 // Request interceptor
 client.interceptors.request.use(
   (config) => {
-    const token = getToken();
+    const token = Cookies.get('auth_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
 // Response interceptor
