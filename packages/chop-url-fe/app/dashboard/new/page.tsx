@@ -63,7 +63,7 @@ export default function NewLinkPage() {
     value: 24,
     unit: 'hours',
   });
-  const { createShortUrl, error: urlError } = useUrlStore();
+  const { createShortUrl } = useUrlStore();
 
   const calculateExpirationDate = () => {
     if (!expiration.enabled) return null;
@@ -113,8 +113,8 @@ export default function NewLinkPage() {
       router.push('/dashboard/links');
       toast.success('Link created successfully');
     } catch (error) {
-      console.error('Failed to create link:', error);
-      toast.error(urlError?.message);
+      console.log(error);
+      toast.error((error as Error).message);
     } finally {
       setIsLoading(false);
     }

@@ -152,23 +152,12 @@ const useUrlStore = create<UrlState & UrlActions>((set, get) => ({
       const urls = get().urls;
       set({ urls: [response.data, ...urls] });
     } catch (error) {
-      const message =
-        error instanceof Error &&
-        'response' in error &&
-        error.response &&
-        typeof error.response === 'object' &&
-        'data' in error.response &&
-        typeof error.response.data === 'object' &&
-        error.response.data &&
-        'error' in error.response.data
-          ? error.response.data.error
-          : 'Failed to create short URL';
       const urlError: UrlError = {
         code: 'CREATE_URL_ERROR',
-        message: message as string,
+        message: (error as Error).message,
       };
       set({ error: urlError });
-      throw error;
+      throw urlError;
     } finally {
       set({ isLoading: false });
     }
