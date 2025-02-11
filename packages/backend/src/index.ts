@@ -13,11 +13,18 @@ export interface Env {
   RESEND_API_KEY: string;
 }
 
-const app = new Hono<{ Bindings: Env }>();
+interface Variables {
+  db: ReturnType<typeof createDb>;
+}
+
+const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // Initialize database
 app.use('*', async (c, next) => {
-  createDb(c.env.DB);
+  if (!c.get('db')) {
+    const db = createDb(c.env.DB);
+    c.set('db', db);
+  }
   await next();
 });
 

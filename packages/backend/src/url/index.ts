@@ -37,4 +37,5 @@ export interface ICreateUrlResponse {
   shortId: string;
   originalUrl: string;
   createdAt: string | null;
+  userId?: number | null;
 }
