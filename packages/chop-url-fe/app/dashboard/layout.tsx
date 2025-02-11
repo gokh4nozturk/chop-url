@@ -1,4 +1,4 @@
-import { Sidebar } from '@/components/dashboard/sidebar';
+import { DashboardSidebar } from '@/components/dashboard/sidebar';
 
 export default function DashboardLayout({
   children,
@@ -7,7 +7,7 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="flex min-h-screen gap-4 mt-header">
-      <Sidebar />
+      <DashboardSidebar />
       <div className="flex-1">
         <main className="p-6">{children}</main>
       </div>

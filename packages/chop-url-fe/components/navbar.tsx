@@ -1,11 +1,11 @@
 'use client';
 
+import { Icons } from '@/components/icons';
+import { ThemeSwitcher } from '@/components/theme-switcher';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useMediaQuery } from 'usehooks-ts';
-import { Icons } from './icons';
-import { ThemeSwitcher } from './theme-switcher';
 export function Navbar() {
   const isMobile = useMediaQuery('(max-width: 640px)');
 
