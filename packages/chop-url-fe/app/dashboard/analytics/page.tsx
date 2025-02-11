@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import apiClient from '@/lib/api/client';
-import useUrlStore from '@/lib/store/url';
+import { AnimatePresence, motion } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -29,7 +29,7 @@ interface AnalyticsData {
   clicksByDate: { date: string; count: number }[];
 }
 
-const REFRESH_INTERVAL = 30000; // 30 saniye
+const REFRESH_INTERVAL = 30000; // 30 seconds
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('7d');
@@ -38,7 +38,6 @@ export default function AnalyticsPage() {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(
     null
   );
-  const { urls, getUserUrls } = useUrlStore();
 
   const fetchAnalytics = useCallback(async () => {
     try {
@@ -80,44 +79,80 @@ export default function AnalyticsPage() {
     loading: boolean;
     subtitle?: string;
   }) => (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-24" />
-            {subtitle && <Skeleton className="h-4 w-32" />}
-          </div>
-        ) : (
-          <>
-            <div className="text-2xl font-bold">{value}</div>
-            {subtitle && (
-              <p className="text-xs text-muted-foreground">{subtitle}</p>
-            )}
-          </>
-        )}
-      </CardContent>
-    </Card>
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      transition={{ type: 'spring', stiffness: 300 }}
+    >
+      <Card className="transition-all duration-300 hover:shadow-md hover:border-primary/50">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">{title}</CardTitle>
+          <motion.div
+            whileHover={{ rotate: 15 }}
+            transition={{ type: 'spring', stiffness: 300 }}
+          >
+            <Icon className="h-4 w-4 text-muted-foreground" />
+          </motion.div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-24" />
+              {subtitle && <Skeleton className="h-4 w-32" />}
+            </div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="text-2xl font-bold">{value}</div>
+              {subtitle && (
+                <p className="text-xs text-muted-foreground">{subtitle}</p>
+              )}
+            </motion.div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-6"
+    >
       <div className="flex flex-col gap-4 xs:flex-row xs:items-center xs:justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Analytics</h2>
-          <p className="text-muted-foreground">
+          <motion.h2
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-2xl font-bold tracking-tight"
+          >
+            Analytics
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-muted-foreground"
+          >
             Track and analyze your link performance
-          </p>
+          </motion.p>
         </div>
-        <div className="flex items-center gap-2">
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="flex items-center gap-2"
+        >
           <Select
             value={timeRange}
             onValueChange={(value) => setTimeRange(value)}
           >
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-[140px] transition-all duration-300 hover:shadow-md">
               <SelectValue placeholder="Select range" />
             </SelectTrigger>
             <SelectContent>
@@ -127,24 +162,35 @@ export default function AnalyticsPage() {
               <SelectItem value="90d">Last 90 Days</SelectItem>
             </SelectContent>
           </Select>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => {
-              setIsLoading(true);
-              fetchAnalytics();
-            }}
-          >
-            <Icons.loading className="h-4 w-4" />
-          </Button>
-        </div>
+          <motion.div whileHover={{ scale: 1.05 }}>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                setIsLoading(true);
+                fetchAnalytics();
+              }}
+              className="transition-all duration-300 hover:shadow-md"
+            >
+              <Icons.loading className="h-4 w-4" />
+            </Button>
+          </motion.div>
+        </motion.div>
       </div>
 
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
@@ -190,29 +236,46 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Visitor Trends</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="h-[350px] w-full animate-pulse bg-muted" />
-            ) : (
-              <BarChart
-                data={(analyticsData?.clicksByDate || []).map((item) => ({
-                  name: new Date(item.date).toLocaleDateString('en-US', {
-                    day: 'numeric',
-                    month: 'short',
-                  }),
-                  total: item.count,
-                }))}
-              />
-            )}
-          </CardContent>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <Card className="transition-all duration-300 hover:shadow-md">
+            <CardHeader>
+              <CardTitle>Visitor Trends</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="h-[350px] w-full animate-pulse bg-muted" />
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <BarChart
+                    data={(analyticsData?.clicksByDate || []).map((item) => ({
+                      name: new Date(item.date).toLocaleDateString('en-US', {
+                        day: 'numeric',
+                        month: 'short',
+                      }),
+                      total: item.count,
+                    }))}
+                  />
+                </motion.div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
 
-        <div className="grid gap-4">
-          <Card>
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          className="grid gap-4"
+        >
+          <Card className="transition-all duration-300 hover:shadow-md">
             <CardHeader>
               <CardTitle>Geographic Distribution</CardTitle>
             </CardHeader>
@@ -220,23 +283,36 @@ export default function AnalyticsPage() {
               {isLoading ? (
                 <div className="h-[150px] w-full animate-pulse bg-muted" />
               ) : (
-                <div className="space-y-4">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="space-y-4"
+                >
                   <div className="space-y-2">
                     <div className="text-sm font-medium">Top Cities</div>
-                    {analyticsData?.cities.slice(0, 3).map((city) => (
-                      <div key={city.name} className="flex items-center">
+                    {analyticsData?.cities.slice(0, 3).map((city, index) => (
+                      <motion.div
+                        key={city.name}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                        className="flex items-center"
+                      >
                         <div className="w-1/3 text-sm">{city.name}</div>
                         <div className="flex-1">
                           <div className="h-2 w-full rounded-full bg-muted">
-                            <div
-                              className="h-2 rounded-full bg-primary"
-                              style={{
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{
                                 width: `${
                                   (city.count /
                                     (analyticsData?.totalClicks || 1)) *
                                   100
                                 }%`,
                               }}
+                              transition={{ duration: 0.5, delay: index * 0.1 }}
+                              className="h-2 rounded-full bg-primary"
                             />
                           </div>
                         </div>
@@ -247,126 +323,15 @@ export default function AnalyticsPage() {
                           ).toFixed(1)}
                           %
                         </div>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
-
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium">Top Countries</div>
-                    {analyticsData?.countries.slice(0, 3).map((country) => (
-                      <div key={country.name} className="flex items-center">
-                        <div className="w-1/3 text-sm">{country.name}</div>
-                        <div className="flex-1">
-                          <div className="h-2 w-full rounded-full bg-muted">
-                            <div
-                              className="h-2 rounded-full bg-primary"
-                              style={{
-                                width: `${
-                                  (country.count /
-                                    (analyticsData?.totalClicks || 1)) *
-                                  100
-                                }%`,
-                              }}
-                            />
-                          </div>
-                        </div>
-                        <div className="w-1/6 text-right text-sm">
-                          {(
-                            (country.count /
-                              (analyticsData?.totalClicks || 1)) *
-                            100
-                          ).toFixed(1)}
-                          %
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                </motion.div>
               )}
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Device Distribution</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="h-[150px] w-full animate-pulse bg-muted" />
-              ) : (
-                <div className="space-y-4">
-                  {analyticsData?.devices.map((device) => (
-                    <div key={device.name} className="flex items-center">
-                      <div className="w-1/3 text-sm">{device.name}</div>
-                      <div className="flex-1">
-                        <div className="h-2 w-full rounded-full bg-muted">
-                          <div
-                            className="h-2 rounded-full bg-primary"
-                            style={{
-                              width: `${
-                                (device.count /
-                                  (analyticsData?.totalClicks || 1)) *
-                                100
-                              }%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                      <div className="w-1/6 text-right text-sm">
-                        {(
-                          (device.count / (analyticsData?.totalClicks || 1)) *
-                          100
-                        ).toFixed(1)}
-                        %
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Browser Distribution</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="h-[150px] w-full animate-pulse bg-muted" />
-              ) : (
-                <div className="space-y-4">
-                  {analyticsData?.browsers.map((browser) => (
-                    <div key={browser.name} className="flex items-center">
-                      <div className="w-1/3 text-sm">{browser.name}</div>
-                      <div className="flex-1">
-                        <div className="h-2 w-full rounded-full bg-muted">
-                          <div
-                            className="h-2 rounded-full bg-primary"
-                            style={{
-                              width: `${
-                                (browser.count /
-                                  (analyticsData?.totalClicks || 1)) *
-                                100
-                              }%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                      <div className="w-1/6 text-right text-sm">
-                        {(
-                          (browser.count / (analyticsData?.totalClicks || 1)) *
-                          100
-                        ).toFixed(1)}
-                        %
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

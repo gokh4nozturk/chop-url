@@ -60,7 +60,7 @@ export function UserSwitch() {
               <DropdownMenuShortcut>⌘1</DropdownMenuShortcut>
             </DropdownMenuItem>
             <DropdownMenuItem className="gap-2 p-2" asChild>
-              <Link href="/settings">
+              <Link href="/dashboard/settings">
                 <div className="flex size-6 items-center justify-center rounded-sm border">
                   <Icons.settings className="size-4 shrink-0" />
                 </div>

@@ -1,7 +1,7 @@
 'use client';
 
-import { ProfileForm } from '@/components/settings/profile-form';
-import { SecurityForm } from '@/components/settings/security-form';
+import { ProfileForm } from '@/components/dashboard/settings/profile-form';
+import { SecurityForm } from '@/components/dashboard/settings/security-form';
 import {
   Card,
   CardContent,

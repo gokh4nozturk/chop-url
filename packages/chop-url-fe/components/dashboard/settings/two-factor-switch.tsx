@@ -1,4 +1,8 @@
-import { OTPForm, OTPFormValues } from '@/components/settings/otp-form';
+import {
+  OTPForm,
+  OTPFormValues,
+} from '@/components/dashboard/settings/otp-form';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -12,10 +16,8 @@ import { useAuthStore } from '@/lib/store/auth';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '../ui/button';
 
 export function TwoFactorSwitch() {
-  const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(false);
   const [showSetupDialog, setShowSetupDialog] = useState(false);
   const [showDisableDialog, setShowDisableDialog] = useState(false);
   const [showRecoveryCodesDialog, setShowRecoveryCodesDialog] = useState(false);
@@ -50,7 +52,6 @@ export function TwoFactorSwitch() {
       await verifyTwoFactor(data.code);
       await enableTwoFactor(data.code);
       const { recoveryCodes } = await getRecoveryCodes();
-      setIsTwoFactorEnabled(true);
       setShowSetupDialog(false);
       setRecoveryCodes(recoveryCodes);
       setShowRecoveryCodesDialog(true);
@@ -67,7 +68,6 @@ export function TwoFactorSwitch() {
   async function handleDisableTwoFactor(data: OTPFormValues) {
     try {
       await disableTwoFactor(data.code);
-      setIsTwoFactorEnabled(false);
       setShowDisableDialog(false);
       toast.success('Two-factor authentication disabled successfully');
     } catch (error) {

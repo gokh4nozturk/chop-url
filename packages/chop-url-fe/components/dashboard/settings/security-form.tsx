@@ -1,6 +1,6 @@
 'use client';
 
-import { TwoFactorSwitch } from '@/components/settings/two-factor-switch';
+import { TwoFactorSwitch } from '@/components/dashboard/settings/two-factor-switch';
 import { Button } from '@/components/ui/button';
 import {
   Form,
