@@ -15,10 +15,10 @@ export const createNavigation = (router: ReturnType<typeof useRouter>) => ({
 
   settings: {
     profile: () => {
-      router.push('/settings/profile');
+      router.push('/dashboard/settings/profile');
     },
     twoFactor: () => {
-      router.push('/settings/two-factor');
+      router.push('/dashboard/settings/two-factor');
     },
   },
 

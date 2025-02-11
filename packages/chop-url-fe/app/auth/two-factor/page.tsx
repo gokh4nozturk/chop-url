@@ -1,6 +1,9 @@
 'use client';
 
-import { OTPForm, OTPFormValues } from '@/components/settings/otp-form';
+import {
+  OTPForm,
+  OTPFormValues,
+} from '@/components/dashboard/settings/otp-form';
 import { Button } from '@/components/ui/button';
 import { navigate } from '@/lib/navigation';
 import { useAuthStore } from '@/lib/store/auth';
