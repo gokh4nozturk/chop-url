@@ -65,13 +65,7 @@ export class UrlService {
         .where(eq(urls.originalUrl, url));
 
       if (response.length > 0) {
-        return {
-          shortUrl: `${this.baseUrl}/${response[0].shortId}`,
-          shortId: response[0].shortId,
-          originalUrl: response[0].originalUrl,
-          createdAt: response[0].createdAt,
-          userId: response[0].userId,
-        };
+        throw new Error(`URL already exists: ${response[0].originalUrl}`);
       }
 
       // If custom slug is provided, check if it's available
@@ -109,7 +103,7 @@ export class UrlService {
           isActive: true,
         };
 
-        const result = await this.db.insert(urls).values(urlData).returning({
+        await this.db.insert(urls).values(urlData).returning({
           shortId: urls.shortId,
           originalUrl: urls.originalUrl,
           createdAt: urls.createdAt,
@@ -175,7 +169,10 @@ export class UrlService {
     } catch (error) {
       console.error('Error in createShortUrl:', error);
       if (error instanceof Error) {
-        if (error.message === 'Custom slug already exists') {
+        if (
+          error.message === 'Custom slug already exists' ||
+          error.message.includes('URL already exists')
+        ) {
           throw error;
         }
       }

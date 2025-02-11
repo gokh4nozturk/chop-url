@@ -99,7 +99,10 @@ export const createUrlRoutes = () => {
       }
 
       if (error instanceof Error) {
-        if (error.message === 'Custom slug already exists') {
+        if (
+          error.message === 'Custom slug already exists' ||
+          error.message.includes('URL already exists')
+        ) {
           return c.json({ error: 'Custom slug already exists' }, 409);
         }
       }
