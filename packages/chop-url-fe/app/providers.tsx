@@ -8,6 +8,10 @@ import { useEffect } from 'react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const initialize = useAuthStore((state) => state.initialize);
+  const sidebarCookie = document.cookie
+    .split('; ')
+    .find((row) => row.startsWith('sidebar'));
+  const sidebarState = sidebarCookie ? sidebarCookie.split('=')[1] : 'true';
 
   useEffect(() => {
     initialize();
@@ -21,7 +25,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       disableTransitionOnChange
     >
       <AuthProvider>
-        <SidebarProvider defaultOpen>{children}</SidebarProvider>
+        <SidebarProvider defaultOpen={sidebarState === 'true'}>
+          {children}
+        </SidebarProvider>
       </AuthProvider>
     </ThemeProvider>
   );
