@@ -109,16 +109,12 @@ export class UrlService {
           isActive: true,
         };
 
-        console.log('Creating URL with custom slug:', urlData);
-
         const result = await this.db.insert(urls).values(urlData).returning({
           shortId: urls.shortId,
           originalUrl: urls.originalUrl,
           createdAt: urls.createdAt,
           userId: urls.userId,
         });
-
-        console.log('Insert result:', result);
 
         return {
           shortUrl: `${this.baseUrl}/${shortId}`,
@@ -162,16 +158,12 @@ export class UrlService {
         isActive: true,
       };
 
-      console.log('Creating URL with generated shortId:', urlData);
-
-      const result = await this.db.insert(urls).values(urlData).returning({
+      await this.db.insert(urls).values(urlData).returning({
         shortId: urls.shortId,
         originalUrl: urls.originalUrl,
         createdAt: urls.createdAt,
         userId: urls.userId,
       });
-
-      console.log('Insert result:', result);
 
       return {
         shortUrl: `${this.baseUrl}/${shortId}`,

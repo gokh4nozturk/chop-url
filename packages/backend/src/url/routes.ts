@@ -48,6 +48,12 @@ const trackVisitSchema = z.object({
   referrer: z.string().nullable().optional(),
 });
 
+const createUrlSchema = z.object({
+  url: z.string().url(),
+  customSlug: z.string().optional(),
+  expiresAt: z.string().datetime().optional(),
+});
+
 type H = Hono<{ Bindings: Env; Variables: Variables }>;
 
 const VALID_PERIODS = ['24h', '7d', '30d', '90d'] as const;
@@ -57,16 +63,13 @@ export const createUrlRoutes = () => {
   const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
   router.post('/shorten', auth(), async (c: Context) => {
-    const { url, customSlug, expiresAt } = await c.req.json();
-    const token = c.req.header('Authorization')?.split(' ')[1];
-    const user = c.get('user');
-    const db = c.get('db');
-
-    if (!url) {
-      return c.json({ error: 'Invalid URL' }, 400);
-    }
-
     try {
+      const body = await c.req.json();
+      const { url, customSlug, expiresAt } = createUrlSchema.parse(body);
+      const token = c.req.header('Authorization')?.split(' ')[1];
+      const user = c.get('user');
+      const db = c.get('db');
+
       const urlService = new UrlService(c.env.BASE_URL, db);
       const result = await urlService.createShortUrl(
         url,
@@ -88,10 +91,14 @@ export const createUrlRoutes = () => {
     } catch (error) {
       console.error('Error creating short URL:', error);
 
+      if (error instanceof z.ZodError) {
+        return c.json(
+          { error: 'Invalid request body', details: error.errors },
+          400
+        );
+      }
+
       if (error instanceof Error) {
-        if (error.message === 'Invalid URL') {
-          return c.json({ error: 'Invalid URL' }, 400);
-        }
         if (error.message === 'Custom slug already exists') {
           return c.json({ error: 'Custom slug already exists' }, 409);
         }
