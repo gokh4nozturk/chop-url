@@ -48,10 +48,10 @@ type Period = (typeof VALID_PERIODS)[number];
 export const createUrlRoutes = () => {
   const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-  router.post('/shorten', auth(), async (c: Context) => {
+  router.post('/shorten', async (c: Context) => {
     const { url, customSlug, expiresAt } = await c.req.json();
-    const user = c.get('user');
     const token = c.req.header('Authorization')?.split(' ')[1];
+    const user = token ? c.get('user') : null;
 
     if (!url) {
       return c.json({ error: 'Invalid URL' }, 400);
@@ -63,7 +63,7 @@ export const createUrlRoutes = () => {
         url,
         { customSlug, expiresAt },
         token,
-        user.id.toString()
+        user?.id?.toString()
       );
 
       return c.json(
