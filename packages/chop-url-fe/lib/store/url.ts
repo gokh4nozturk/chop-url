@@ -1,36 +1,21 @@
 import apiClient from '@/lib/api/client';
-import { navigate } from '@/lib/navigation';
-import { IUrlStats } from '@/lib/types';
+import { IUrl, IUrlStats } from '@/lib/types';
 import { create } from 'zustand';
 
-interface UrlError {
+interface IUrlError {
   code: string;
   message: string;
 }
 
-interface Url {
-  id: number;
-  shortUrl: string;
-  shortId: string;
-  originalUrl: string;
-  customSlug?: string;
-  userId: number;
-  createdAt: string;
-  lastAccessedAt?: string;
-  visitCount: number;
-  expiresAt?: string;
-  isActive: boolean;
-}
-
 type SortOption = 'recent' | 'clicks' | 'alphabetical';
 
-interface UrlState {
-  urls: Url[];
-  urlDetails: Url | null;
+interface IUrlState {
+  urls: IUrl[];
+  urlDetails: IUrl | null;
   isLoading: boolean;
-  error: UrlError | null;
+  error: IUrlError | null;
   searchTerm: string;
-  filteredUrls: Url[];
+  filteredUrls: IUrl[];
   urlStats: IUrlStats | null;
   urlVisits: { date: string; count: number }[];
   sortOption: SortOption;
@@ -41,13 +26,13 @@ interface CreateUrlOptions {
   expiresAt?: string;
 }
 
-interface UrlActions {
+interface IUrlActions {
   createShortUrl: (url: string, options?: CreateUrlOptions) => Promise<void>;
   getUserUrls: () => Promise<void>;
   setLoading: (isLoading: boolean) => void;
-  setError: (error: UrlError | null) => void;
+  setError: (error: IUrlError | null) => void;
   clearError: () => void;
-  getUrlDetails: (shortId: string) => Promise<Url>;
+  getUrlDetails: (shortId: string) => Promise<IUrl>;
   setSearchTerm: (term: string) => void;
   setSortOption: (option: SortOption) => void;
   getUrlStats: (
@@ -61,7 +46,7 @@ interface UrlActions {
   clearStore: () => void;
 }
 
-const useUrlStore = create<UrlState & UrlActions>((set, get) => ({
+const useUrlStore = create<IUrlState & IUrlActions>((set, get) => ({
   // State
   urls: [],
   urlDetails: null,
@@ -75,7 +60,7 @@ const useUrlStore = create<UrlState & UrlActions>((set, get) => ({
 
   // Actions
   setLoading: (isLoading: boolean) => set({ isLoading }),
-  setError: (error: UrlError | null) => set({ error }),
+  setError: (error: IUrlError | null) => set({ error }),
   clearError: () => set({ error: null }),
   setSortOption: (option: SortOption) => {
     const urls = get().urls;
@@ -152,7 +137,7 @@ const useUrlStore = create<UrlState & UrlActions>((set, get) => ({
       const urls = get().urls;
       set({ urls: [response.data, ...urls] });
     } catch (error) {
-      const urlError: UrlError = {
+      const urlError: IUrlError = {
         code: 'CREATE_URL_ERROR',
         message: (error as Error).message,
       };
@@ -169,7 +154,7 @@ const useUrlStore = create<UrlState & UrlActions>((set, get) => ({
       const response = await apiClient.get('/api/urls');
       set({ urls: response.data });
     } catch (error) {
-      const urlError: UrlError = {
+      const urlError: IUrlError = {
         code: 'GET_URLS_ERROR',
         message:
           error instanceof Error ? error.message : 'Failed to fetch URLs',
@@ -188,7 +173,7 @@ const useUrlStore = create<UrlState & UrlActions>((set, get) => ({
       set({ urlDetails: response.data });
       return response.data;
     } catch (error) {
-      const urlError: UrlError = {
+      const urlError: IUrlError = {
         code: 'GET_URL_DETAILS_ERROR',
         message:
           error instanceof Error
@@ -213,7 +198,7 @@ const useUrlStore = create<UrlState & UrlActions>((set, get) => ({
       );
       set({ urlStats: response.data });
     } catch (error) {
-      const urlError: UrlError = {
+      const urlError: IUrlError = {
         code: 'GET_URL_STATS_ERROR',
         message:
           error instanceof Error ? error.message : 'Failed to fetch URL stats',
@@ -236,7 +221,7 @@ const useUrlStore = create<UrlState & UrlActions>((set, get) => ({
       );
       set({ urlVisits: response.data });
     } catch (error) {
-      const urlError: UrlError = {
+      const urlError: IUrlError = {
         code: 'GET_URL_VISITS_ERROR',
         message:
           error instanceof Error ? error.message : 'Failed to fetch URL visits',

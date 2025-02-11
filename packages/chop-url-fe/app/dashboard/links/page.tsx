@@ -162,6 +162,11 @@ export default function LinksPage() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
                           <Link href={`/dashboard/links/${link.shortId}`}>
+                            Details
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/dashboard/analytics/${link.shortId}`}>
                             Analytics
                           </Link>
                         </DropdownMenuItem>

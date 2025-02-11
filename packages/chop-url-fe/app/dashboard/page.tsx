@@ -1,5 +1,6 @@
 'use client';
 
+import LoadingSpinner from '@/components/custom/loading-spinner';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,15 +45,6 @@ const StatCard = ({ title, value, icon: Icon, helperText }: StatCardProps) => {
     </Card>
   );
 };
-
-const LoadingSpinner = () => (
-  <div className="flex w-full h-[calc(100vh-theme(spacing.header))] items-center justify-center">
-    <div className="text-center">
-      <Icons.spinner className="mx-auto h-6 w-6 animate-spin" />
-      <h2 className="mt-2 text-lg font-semibold">Loading...</h2>
-    </div>
-  </div>
-);
 
 const RecentLinks = ({ urls }: { urls: Url[] }) => {
   if (urls.length === 0) {

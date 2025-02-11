@@ -64,3 +64,17 @@ export interface IUrlStats {
   totalVisits: number;
   visits: IVisit[];
 }
+
+export interface IUrl {
+  id: number;
+  shortUrl: string;
+  shortId: string;
+  originalUrl: string;
+  customSlug?: string;
+  userId: number;
+  createdAt: string;
+  lastAccessedAt?: string;
+  visitCount: number;
+  expiresAt?: string;
+  isActive: boolean;
+}
