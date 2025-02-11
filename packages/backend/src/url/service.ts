@@ -479,9 +479,12 @@ export async function getUserAnalytics(
         uniqueVisitors: 0,
         countries: [],
         cities: [],
+        regions: [],
+        timezones: [],
         referrers: [],
         devices: [],
         browsers: [],
+        operatingSystems: [],
         clicksByDate: [],
       };
     }
@@ -520,9 +523,12 @@ export async function getUserAnalytics(
       // Aggregate data
       const countryMap = new Map<string, number>();
       const cityMap = new Map<string, number>();
+      const regionMap = new Map<string, number>();
+      const timezoneMap = new Map<string, number>();
       const referrerMap = new Map<string, number>();
       const deviceMap = new Map<string, number>();
       const browserMap = new Map<string, number>();
+      const osMap = new Map<string, number>();
       const dateMap = new Map<string, number>();
 
       for (const visit of urlVisits) {
@@ -534,17 +540,29 @@ export async function getUserAnalytics(
         const city = visit.city || 'Unknown';
         cityMap.set(city, (cityMap.get(city) || 0) + 1);
 
+        // Region stats
+        const region = visit.region || 'Unknown';
+        regionMap.set(region, (regionMap.get(region) || 0) + 1);
+
+        // Timezone stats
+        const timezone = visit.timezone || 'Unknown';
+        timezoneMap.set(timezone, (timezoneMap.get(timezone) || 0) + 1);
+
         // Referrer stats
         const referrer = visit.referrer || 'Direct';
         referrerMap.set(referrer, (referrerMap.get(referrer) || 0) + 1);
 
         // Device stats
-        const device = visit.deviceType || 'Unknown';
+        const device = visit.deviceType || 'Desktop';
         deviceMap.set(device, (deviceMap.get(device) || 0) + 1);
 
         // Browser stats
         const browser = visit.browser || 'Unknown';
         browserMap.set(browser, (browserMap.get(browser) || 0) + 1);
+
+        // OS stats
+        const os = visit.os || 'Unknown';
+        osMap.set(os, (osMap.get(os) || 0) + 1);
 
         // Date stats
         const date = visit.visitedAt
@@ -568,6 +586,18 @@ export async function getUserAnalytics(
             count,
           }))
           .sort((a, b) => b.count - a.count),
+        regions: Array.from(regionMap.entries())
+          .map(([name, count]) => ({
+            name,
+            count,
+          }))
+          .sort((a, b) => b.count - a.count),
+        timezones: Array.from(timezoneMap.entries())
+          .map(([name, count]) => ({
+            name,
+            count,
+          }))
+          .sort((a, b) => b.count - a.count),
         referrers: Array.from(referrerMap.entries())
           .map(([name, count]) => ({
             name,
@@ -581,6 +611,12 @@ export async function getUserAnalytics(
           }))
           .sort((a, b) => b.count - a.count),
         browsers: Array.from(browserMap.entries())
+          .map(([name, count]) => ({
+            name,
+            count,
+          }))
+          .sort((a, b) => b.count - a.count),
+        operatingSystems: Array.from(osMap.entries())
           .map(([name, count]) => ({
             name,
             count,

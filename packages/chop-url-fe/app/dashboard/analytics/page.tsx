@@ -23,9 +23,12 @@ interface AnalyticsData {
   uniqueVisitors: number;
   countries: { name: string; count: number }[];
   cities: { name: string; count: number }[];
+  regions: { name: string; count: number }[];
+  timezones: { name: string; count: number }[];
   referrers: { name: string; count: number }[];
   devices: { name: string; count: number }[];
   browsers: { name: string; count: number }[];
+  operatingSystems: { name: string; count: number }[];
   clicksByDate: { date: string; count: number }[];
 }
 
@@ -325,6 +328,213 @@ export default function AnalyticsPage() {
                         </div>
                       </motion.div>
                     ))}
+                  </div>
+                </motion.div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="transition-all duration-300 hover:shadow-md">
+            <CardHeader>
+              <CardTitle>Browser & OS Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="h-[150px] w-full animate-pulse bg-muted" />
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="space-y-4"
+                >
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">Top Browsers</div>
+                    {analyticsData?.browsers
+                      .slice(0, 3)
+                      .map((browser, index) => (
+                        <motion.div
+                          key={browser.name}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
+                          className="flex items-center"
+                        >
+                          <div className="w-1/3 text-sm">{browser.name}</div>
+                          <div className="flex-1">
+                            <div className="h-2 w-full rounded-full bg-muted">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{
+                                  width: `${
+                                    (browser.count /
+                                      (analyticsData?.totalClicks || 1)) *
+                                    100
+                                  }%`,
+                                }}
+                                transition={{
+                                  duration: 0.5,
+                                  delay: index * 0.1,
+                                }}
+                                className="h-2 rounded-full bg-primary"
+                              />
+                            </div>
+                          </div>
+                          <div className="w-1/6 text-right text-sm">
+                            {(
+                              (browser.count /
+                                (analyticsData?.totalClicks || 1)) *
+                              100
+                            ).toFixed(1)}
+                            %
+                          </div>
+                        </motion.div>
+                      ))}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">
+                      Top Operating Systems
+                    </div>
+                    {analyticsData?.operatingSystems
+                      .slice(0, 3)
+                      .map((os, index) => (
+                        <motion.div
+                          key={os.name}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
+                          className="flex items-center"
+                        >
+                          <div className="w-1/3 text-sm">{os.name}</div>
+                          <div className="flex-1">
+                            <div className="h-2 w-full rounded-full bg-muted">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{
+                                  width: `${
+                                    (os.count /
+                                      (analyticsData?.totalClicks || 1)) *
+                                    100
+                                  }%`,
+                                }}
+                                transition={{
+                                  duration: 0.5,
+                                  delay: index * 0.1,
+                                }}
+                                className="h-2 rounded-full bg-primary"
+                              />
+                            </div>
+                          </div>
+                          <div className="w-1/6 text-right text-sm">
+                            {(
+                              (os.count / (analyticsData?.totalClicks || 1)) *
+                              100
+                            ).toFixed(1)}
+                            %
+                          </div>
+                        </motion.div>
+                      ))}
+                  </div>
+                </motion.div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="transition-all duration-300 hover:shadow-md">
+            <CardHeader>
+              <CardTitle>Regional Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="h-[150px] w-full animate-pulse bg-muted" />
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="space-y-4"
+                >
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">Top Regions</div>
+                    {analyticsData?.regions.slice(0, 3).map((region, index) => (
+                      <motion.div
+                        key={region.name}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                        className="flex items-center"
+                      >
+                        <div className="w-1/3 text-sm">{region.name}</div>
+                        <div className="flex-1">
+                          <div className="h-2 w-full rounded-full bg-muted">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{
+                                width: `${
+                                  (region.count /
+                                    (analyticsData?.totalClicks || 1)) *
+                                  100
+                                }%`,
+                              }}
+                              transition={{ duration: 0.5, delay: index * 0.1 }}
+                              className="h-2 rounded-full bg-primary"
+                            />
+                          </div>
+                        </div>
+                        <div className="w-1/6 text-right text-sm">
+                          {(
+                            (region.count / (analyticsData?.totalClicks || 1)) *
+                            100
+                          ).toFixed(1)}
+                          %
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">Top Timezones</div>
+                    {analyticsData?.timezones
+                      .slice(0, 3)
+                      .map((timezone, index) => (
+                        <motion.div
+                          key={timezone.name}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
+                          className="flex items-center"
+                        >
+                          <div className="w-1/3 text-sm">{timezone.name}</div>
+                          <div className="flex-1">
+                            <div className="h-2 w-full rounded-full bg-muted">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{
+                                  width: `${
+                                    (timezone.count /
+                                      (analyticsData?.totalClicks || 1)) *
+                                    100
+                                  }%`,
+                                }}
+                                transition={{
+                                  duration: 0.5,
+                                  delay: index * 0.1,
+                                }}
+                                className="h-2 rounded-full bg-primary"
+                              />
+                            </div>
+                          </div>
+                          <div className="w-1/6 text-right text-sm">
+                            {(
+                              (timezone.count /
+                                (analyticsData?.totalClicks || 1)) *
+                              100
+                            ).toFixed(1)}
+                            %
+                          </div>
+                        </motion.div>
+                      ))}
                   </div>
                 </motion.div>
               )}
