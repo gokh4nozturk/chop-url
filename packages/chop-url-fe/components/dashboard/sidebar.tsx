@@ -15,6 +15,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import useUrlStore from '@/lib/store/url';
+import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'motion/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -50,40 +51,47 @@ export function DashboardSidebar() {
       collapsible="icon"
       className="hidden h-[calc(100vh-theme(spacing.header))] border-r bg-background md:block mt-header"
     >
-      <SidebarHeader className="border-b px-2 py-2">
-        <div className="flex items-center justify-end">
-          <SidebarTrigger size={'icon'} />
-        </div>
-        <div className="relative">
-          <AnimatePresence>
-            {open ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Icons.search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground transition-all duration-200" />
-                <Input
-                  placeholder="Search URLs..."
-                  className="pl-8 h-8"
-                  type="search"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="flex items-center justify-center h-8"
-              >
-                <Icons.search className="h-4 w-4 transition-all duration-200" />
-              </motion.div>
-            )}
-          </AnimatePresence>
+      <SidebarHeader className={cn('border-b', !open ? 'px-1 py-2' : 'p-2')}>
+        <div
+          className={cn(
+            !open &&
+              'bg-background rounded flex flex-col items-center justify-center p-2'
+          )}
+        >
+          <div className="flex items-center justify-end">
+            <SidebarTrigger size={'icon'} />
+          </div>
+          <div className="relative">
+            <AnimatePresence>
+              {open ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Icons.search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground transition-all duration-200" />
+                  <Input
+                    placeholder="Search URLs..."
+                    className="pl-8 h-8"
+                    type="search"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center justify-center h-8"
+                >
+                  <Icons.search className="h-4 w-4 transition-all duration-200" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </SidebarHeader>
       <SidebarContent>
