@@ -9,4 +9,26 @@ export function createDb(d1: D1Database) {
   return db;
 }
 
+type D1Result<T> = { results?: T[] };
+
+export async function executeRawQuery<T>(
+  db: ReturnType<typeof drizzle>,
+  query: string,
+  params: (string | number)[] = []
+): Promise<T[]> {
+  try {
+    console.log('Executing raw query:', { query, params });
+    const result = await db.$client
+      .prepare(query)
+      .bind(...params)
+      .all();
+    const data = (result as D1Result<T>).results || [];
+    console.log('Query results:', { count: data.length });
+    return data;
+  } catch (error) {
+    console.error('Error executing raw query:', error);
+    throw error;
+  }
+}
+
 export { db };

@@ -1,7 +1,8 @@
 import { ChopUrl } from '@chop-url/lib';
-import { and, desc, eq, or, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, or, sql } from 'drizzle-orm';
 import { UAParser } from 'ua-parser-js';
 import { createDb } from '../db/client';
+import { executeRawQuery } from '../db/client';
 import { urls, visits } from '../db/schema';
 import { ICreateUrlResponse, IUrl, IUrlStats, IVisit } from './index';
 
@@ -462,18 +463,21 @@ export async function getUserAnalytics(
   period: '24h' | '7d' | '30d' | '90d' = '7d'
 ) {
   try {
-    console.log('Getting analytics for user:', userId, 'period:', period);
+    console.log('=== getUserAnalytics Started ===');
+    console.log('Input params:', { userId, period });
 
     // Get user's URLs
+    console.log('Fetching user URLs...');
     const userUrls = await db
       .select()
       .from(urls)
       .where(eq(urls.userId, parseInt(userId)));
 
-    console.log('User URLs:', JSON.stringify(userUrls, null, 2));
+    console.log('User URLs found:', userUrls.length);
+    console.log('User URLs details:', JSON.stringify(userUrls, null, 2));
 
     if (!userUrls.length) {
-      console.log('No URLs found for user');
+      console.log('No URLs found for user, returning empty data');
       return {
         totalClicks: 0,
         uniqueVisitors: 0,
@@ -490,7 +494,7 @@ export async function getUserAnalytics(
     }
 
     const urlIds = userUrls.map((url: Url) => url.id);
-    console.log('URL IDs:', urlIds);
+    console.log('URL IDs to query:', urlIds);
 
     // Get visits for these URLs within the specified period
     try {
@@ -501,24 +505,32 @@ export async function getUserAnalytics(
         '90d': '90 days',
       };
 
-      const urlVisits = await db
-        .select()
-        .from(visits)
-        .where(
-          and(
-            sql`url_id IN (${urlIds.join(',')})`,
-            sql`datetime(visited_at) >= datetime('now', '-${periodMap[period]}')`,
-            sql`datetime(visited_at) <= datetime('now')`
-          )
-        )
-        .orderBy(desc(visits.visitedAt));
+      console.log('Building SQL query with period:', periodMap[period]);
+      const placeholders = urlIds.map(() => '?').join(',');
+      const startDate = `strftime('%Y-%m-%d %H:%M:%S', 'now', '-${periodMap[period]}')`;
 
-      console.log('URL Visits:', JSON.stringify(urlVisits, null, 2));
+      const query = `SELECT * FROM visits WHERE url_id IN (${placeholders}) AND visited_at >= ${startDate} ORDER BY visited_at DESC`;
+      console.log('SQL query:', query);
+      console.log('SQL parameters:', urlIds);
+
+      const urlVisits = await executeRawQuery<Visit>(db, query, urlIds);
+      console.log('Visits found:', urlVisits.length);
 
       const totalClicks = urlVisits.length;
       const uniqueIPs = new Set(
         urlVisits.map((visit: Visit) => visit.ipAddress)
       ).size;
+
+      console.log('Analytics summary:', {
+        totalClicks,
+        uniqueVisitors: uniqueIPs,
+        uniqueCountries: new Set(urlVisits.map((v) => v.country)).size,
+        uniqueCities: new Set(urlVisits.map((v) => v.city)).size,
+        dateRange: {
+          oldest: urlVisits[urlVisits.length - 1]?.visitedAt,
+          newest: urlVisits[0]?.visitedAt,
+        },
+      });
 
       // Aggregate data
       const countryMap = new Map<string, number>();
