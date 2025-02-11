@@ -11,9 +11,11 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuthStore } from '@/lib/store/auth';
 import { motion } from 'framer-motion';
-
 export default function SettingsPage() {
+  const { user } = useAuthStore();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -53,7 +55,11 @@ export default function SettingsPage() {
             value="security"
             className="transition-all duration-300 data-[state=active]:shadow-sm"
           >
-            <Icons.shield className="mr-2 h-4 w-4" />
+            {user?.isTwoFactorEnabled ? (
+              <Icons.shieldCheck className="mr-2 h-4 w-4" />
+            ) : (
+              <Icons.shield className="mr-2 h-4 w-4" />
+            )}
             Security
           </TabsTrigger>
         </TabsList>
@@ -101,7 +107,11 @@ export default function SettingsPage() {
                     whileHover={{ rotate: 15 }}
                     transition={{ type: 'spring', stiffness: 300 }}
                   >
-                    <Icons.shield className="h-5 w-5 text-primary" />
+                    {user?.isTwoFactorEnabled ? (
+                      <Icons.shieldCheck className="h-5 w-5 text-primary" />
+                    ) : (
+                      <Icons.shield className="h-5 w-5 text-primary" />
+                    )}
                   </motion.div>
                   <div>
                     <CardTitle>Security</CardTitle>

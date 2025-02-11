@@ -56,8 +56,8 @@ export function UserSwitch() {
               <div className="flex size-6 items-center justify-center rounded-sm border">
                 <Icons.user2 className="size-4 shrink-0" />
               </div>
-              {user.email}
-              <DropdownMenuShortcut>⌘1</DropdownMenuShortcut>
+              <p className="truncate">{user.email}</p>
+              {/* <DropdownMenuShortcut>⌘1</DropdownMenuShortcut> */}
             </DropdownMenuItem>
             <DropdownMenuItem className="gap-2 p-2" asChild>
               <Link href="/dashboard/settings">
@@ -65,7 +65,7 @@ export function UserSwitch() {
                   <Icons.settings className="size-4 shrink-0" />
                 </div>
                 Settings
-                <DropdownMenuShortcut>⌘2</DropdownMenuShortcut>
+                <DropdownMenuShortcut>⌘1</DropdownMenuShortcut>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -79,7 +79,7 @@ export function UserSwitch() {
                 <Icons.logout className="size-4 shrink-0" />
               </div>
               Sign out
-              <DropdownMenuShortcut>⌘3</DropdownMenuShortcut>
+              <DropdownMenuShortcut>⌘2</DropdownMenuShortcut>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
