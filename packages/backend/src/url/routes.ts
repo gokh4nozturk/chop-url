@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { auth } from '../auth/middleware.js';
 import { AuthService } from '../auth/service.js';
 import { IUser } from '../auth/types.js';
+import { createDb } from '../db/client';
 import { IUrl } from './index.js';
 import { trackVisitMiddleware } from './middleware.js';
 import {
@@ -159,7 +160,7 @@ export const createUrlRoutes = () => {
   router.post('/track', async (c: Context) => {
     const body = await c.req.json();
     const { urlId, ipAddress, userAgent, referrer } = body;
-    const db = c.get('db');
+    const db = createDb(c.env.DB);
 
     if (!urlId || !ipAddress || !userAgent) {
       return c.json({ error: 'Missing required fields' }, 400);
@@ -177,7 +178,7 @@ export const createUrlRoutes = () => {
     try {
       console.log('Analytics request received');
       const user = c.get('user');
-      const db = c.get('db');
+      const db = createDb(c.env.DB);
       console.log('User:', user);
       const period = (c.req.query('period') as Period) || '7d';
       console.log('Period:', period);
@@ -212,7 +213,7 @@ export const createUrlRoutes = () => {
 
   router.get('/:shortId', trackVisitMiddleware, async (c: Context) => {
     const shortId = c.req.param('shortId');
-    const db = c.get('db');
+    const db = createDb(c.env.DB);
     const urlService = new UrlService(c.env.BASE_URL, db);
     const url = await urlService.getUrl(shortId);
 

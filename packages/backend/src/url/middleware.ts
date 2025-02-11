@@ -18,7 +18,7 @@ export async function trackVisitMiddleware(c: Context, next: Next) {
     const userAgent = c.req.header('user-agent') || 'unknown';
     const referrer = c.req.header('referer') || null;
 
-    await trackVisit(url[0].id, ipAddress, userAgent, referrer);
+    await trackVisit(db, url[0].id, ipAddress, userAgent, referrer);
     await next();
   } catch (error) {
     console.error('Error in trackVisitMiddleware:', error);
