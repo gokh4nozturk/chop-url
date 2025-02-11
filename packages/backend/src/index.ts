@@ -32,25 +32,22 @@ app.use('*', async (c, next) => {
 app.use(
   '*',
   cors({
-    origin: [
-      'https://app.chop-url.com',
-      'http://localhost:3000',
-      'http://localhost:8787',
-      'http://localhost:8788',
-    ],
+    origin: ['https://app.chop-url.com', 'http://localhost:3000'],
     credentials: true,
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
     allowHeaders: [
       'Content-Type',
       'Authorization',
-      'X-Requested-With',
       'Accept',
       'Origin',
-      'Access-Control-Request-Method',
-      'Access-Control-Request-Headers',
+      'X-Requested-With',
+      'X-Custom-Header',
+      'Upgrade-Insecure-Requests',
+      'Access-Control-Allow-Origin',
+      'Access-Control-Allow-Credentials',
     ],
-    exposeHeaders: ['Content-Length', 'X-Requested-With', 'Authorization'],
-    maxAge: 86400,
+    exposeHeaders: ['Content-Length', 'X-Kuma-Revision', 'Authorization'],
+    maxAge: 600,
   })
 );
 
