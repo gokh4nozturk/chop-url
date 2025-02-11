@@ -1,5 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
-import { Hono } from 'hono';
+import { Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
 
@@ -8,6 +8,13 @@ interface Env {
   FRONTEND_URL: string;
 }
 
+type Variables = Record<string, never>;
+
+type CFContext = Context<{
+  Bindings: Env;
+  Variables: Variables;
+}>;
+
 const app = new Hono<{ Bindings: Env }>();
 
 app.use('*', cors());
@@ -15,8 +22,11 @@ app.use('*', cors());
 app.get('/health', (c) => c.json({ status: 'ok' }));
 
 // this endpoint is used to redirect the user to the original URL
-app.get('/:shortId', async (c) => {
+app.get('/:shortId', async (c: CFContext) => {
   try {
+    // CF objesi doğrudan request üzerinde geliyor
+    const cf = c.req.raw.cf;
+    console.log('CF Object:', cf);
     const shortId = c.req.param('shortId');
 
     if (!shortId) {
@@ -24,25 +34,70 @@ app.get('/:shortId', async (c) => {
     }
 
     const result = await c.env.DB.prepare(
-      'SELECT original_url FROM urls WHERE short_id = ?'
+      'SELECT id, original_url FROM urls WHERE short_id = ?'
     )
       .bind(shortId)
-      .first<{ original_url: string }>();
+      .first<{ id: number; original_url: string }>();
 
     if (!result) {
       return c.json({ message: 'Short URL not found' }, 404);
     }
 
-    // Ziyaret sayısını artır
+    // Ziyaret bilgilerini kaydet
     try {
+      const ipAddress =
+        c.req.header('cf-connecting-ip') ||
+        c.req.header('x-forwarded-for') ||
+        c.req.header('x-real-ip') ||
+        'unknown';
+      const userAgent = c.req.header('user-agent') || 'unknown';
+      const referrer = c.req.header('referer') || null;
+      const country = cf?.country || 'Unknown';
+      const city = cf?.city || 'Unknown';
+
+      console.log('Visit Info:', {
+        ip: ipAddress,
+        userAgent,
+        referrer,
+        country,
+        city,
+      });
+
+      // Ziyaret sayısını artır
       await c.env.DB.prepare(
-        'UPDATE urls SET visit_count = visit_count + 1, last_accessed_at = CURRENT_TIMESTAMP WHERE short_id = ?'
+        'UPDATE urls SET visit_count = visit_count + 1, last_accessed_at = CURRENT_TIMESTAMP WHERE id = ?'
       )
-        .bind(shortId)
+        .bind(result.id)
+        .run();
+
+      // Ziyaret kaydı ekle
+      await c.env.DB.prepare(`
+        INSERT INTO visits (
+          url_id, ip_address, user_agent, referrer, 
+          browser, browser_version, os, os_version, 
+          device_type, country, city, region, region_code,
+          timezone, longitude, latitude, postal_code,
+          visited_at
+        ) VALUES (?, ?, ?, ?, NULL, NULL, NULL, NULL, NULL, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      `)
+        .bind(
+          result.id,
+          ipAddress,
+          userAgent,
+          referrer,
+          country,
+          city,
+          cf?.region || 'Unknown',
+          cf?.regionCode || 'Unknown',
+          cf?.timezone || 'Unknown',
+          cf?.longitude || null,
+          cf?.latitude || null,
+          cf?.postalCode || null
+        )
         .run();
     } catch (error) {
-      console.error('Error updating visit count:', error);
-      // Ziyaret sayısı güncellenemese bile yönlendirmeye devam et
+      console.error('Error tracking visit:', error);
+      // Ziyaret kaydı başarısız olsa bile yönlendirmeye devam et
     }
 
     // Orijinal URL'ye yönlendir

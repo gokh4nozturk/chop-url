@@ -4,8 +4,25 @@ import { db } from '../db/client';
 import { urls } from '../db/schema/urls';
 import { trackVisit } from './service';
 
-export async function trackVisitMiddleware(c: Context, next: Next) {
+interface Env {
+  DB: D1Database;
+  BASE_URL: string;
+  FRONTEND_URL: string;
+}
+
+interface CFContext extends Context<{ Bindings: Env }> {
+  req: {
+    cf?: {
+      country?: string;
+      city?: string;
+    };
+  } & Context<{ Bindings: Env }>['req'];
+}
+
+export async function trackVisitMiddleware(c: CFContext, next: Next) {
   try {
+    console.log('CF Object:', c.req.cf);
+
     const shortId = c.req.param('shortId');
     const url = await db.select().from(urls).where(eq(urls.shortId, shortId));
 
@@ -18,7 +35,14 @@ export async function trackVisitMiddleware(c: Context, next: Next) {
     const userAgent = c.req.header('user-agent') || 'unknown';
     const referrer = c.req.header('referer') || null;
 
-    await trackVisit(db, url[0].id, ipAddress, userAgent, referrer);
+    console.log('Request Headers:', {
+      ip: ipAddress,
+      userAgent,
+      referrer,
+      cf: c.req.cf,
+    });
+
+    await trackVisit(db, url[0].id, ipAddress, userAgent, referrer, c.req.cf);
     await next();
   } catch (error) {
     console.error('Error in trackVisitMiddleware:', error);

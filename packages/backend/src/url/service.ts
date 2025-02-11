@@ -1,5 +1,4 @@
 import { ChopUrl } from '@chop-url/lib';
-import { Reader } from '@maxmind/geoip2-node';
 import { and, desc, eq, or, sql } from 'drizzle-orm';
 import { UAParser } from 'ua-parser-js';
 import { createDb } from '../db/client';
@@ -13,6 +12,11 @@ type DbClient = ReturnType<typeof createDb>;
 interface CreateUrlOptions {
   customSlug?: string;
   expiresAt?: string;
+}
+
+interface CFProperties {
+  country?: string;
+  city?: string;
 }
 
 export class UrlService {
@@ -313,33 +317,22 @@ export async function trackVisit(
   urlId: number,
   ipAddress: string,
   userAgent: string,
-  referrer: string | null
+  referrer: string | null,
+  cf?: CFProperties
 ): Promise<void> {
   try {
+    console.log('TrackVisit CF Object:', cf);
+
     const parser = new UAParser(userAgent);
     const browser = parser.getBrowser();
     const os = parser.getOS();
     const device = parser.getDevice();
 
-    // Simple IP to location mapping for testing
-    let country = null;
-    let city = null;
+    // Cloudflare'dan gelen lokasyon bilgilerini kullan
+    const country = cf?.country || 'Unknown';
+    const city = cf?.city || 'Unknown';
 
-    // Extract first two octets of IP for basic geo mapping
-    const ipParts = ipAddress.split('.');
-    if (ipParts.length === 4) {
-      const firstOctet = parseInt(ipParts[0]);
-      if (firstOctet >= 1 && firstOctet <= 126) {
-        country = 'United States';
-        city = 'New York';
-      } else if (firstOctet >= 128 && firstOctet <= 191) {
-        country = 'United Kingdom';
-        city = 'London';
-      } else if (firstOctet >= 192 && firstOctet <= 223) {
-        country = 'Turkey';
-        city = 'Istanbul';
-      }
-    }
+    console.log('Location Info:', { country, city });
 
     // Get current visit count
     const [currentUrl] = await db.select().from(urls).where(eq(urls.id, urlId));
@@ -497,39 +490,31 @@ export async function getUserAnalytics(
     console.log('URL IDs:', urlIds);
 
     // Get visits for these URLs within the specified period
-    console.log('URL IDs:', urlIds);
-
     try {
-      const urlVisits = await Promise.all(
-        urlIds.map((urlId) =>
-          db
-            .select()
-            .from(visits)
-            .where(eq(visits.urlId, urlId))
-            .orderBy(desc(visits.visitedAt))
+      const periodMap = {
+        '24h': '1 day',
+        '7d': '7 days',
+        '30d': '30 days',
+        '90d': '90 days',
+      };
+
+      const urlVisits = await db
+        .select()
+        .from(visits)
+        .where(
+          and(
+            sql`url_id IN (${urlIds.join(',')})`,
+            sql`datetime(visited_at) >= datetime('now', '-${periodMap[period]}')`,
+            sql`datetime(visited_at) <= datetime('now')`
+          )
         )
-      ).then((results) => results.flat());
+        .orderBy(desc(visits.visitedAt));
 
       console.log('URL Visits:', JSON.stringify(urlVisits, null, 2));
 
-      // Filter visits by period
-      const now = new Date();
-      const periodMap = {
-        '24h': 24 * 60 * 60 * 1000,
-        '7d': 7 * 24 * 60 * 60 * 1000,
-        '30d': 30 * 24 * 60 * 60 * 1000,
-        '90d': 90 * 24 * 60 * 60 * 1000,
-      };
-      const periodMs = periodMap[period];
-      const filteredVisits = urlVisits.filter((visit) => {
-        if (!visit.visitedAt) return false;
-        const visitDate = new Date(visit.visitedAt);
-        return now.getTime() - visitDate.getTime() <= periodMs;
-      });
-
-      const totalClicks = filteredVisits.length;
+      const totalClicks = urlVisits.length;
       const uniqueIPs = new Set(
-        filteredVisits.map((visit: Visit) => visit.ipAddress)
+        urlVisits.map((visit: Visit) => visit.ipAddress)
       ).size;
 
       // Aggregate data
@@ -540,7 +525,7 @@ export async function getUserAnalytics(
       const browserMap = new Map<string, number>();
       const dateMap = new Map<string, number>();
 
-      for (const visit of filteredVisits) {
+      for (const visit of urlVisits) {
         // Country stats
         const country = visit.country || 'Unknown';
         countryMap.set(country, (countryMap.get(country) || 0) + 1);
