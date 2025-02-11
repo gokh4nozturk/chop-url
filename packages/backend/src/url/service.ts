@@ -18,6 +18,15 @@ export class UrlService {
     this.chopUrl = new ChopUrl(this.baseUrl);
   }
 
+  private async isShortIdUnique(shortId: string): Promise<boolean> {
+    const existing = await db
+      .select()
+      .from(urls)
+      .where(eq(urls.shortId, shortId))
+      .limit(1);
+    return existing.length === 0;
+  }
+
   async createShortUrl(
     url: string,
     options?: CreateUrlOptions,
@@ -53,10 +62,21 @@ export class UrlService {
         };
       }
 
-      const { shortId, originalUrl } = this.chopUrl.generateShortUrl(
-        url,
-        options
-      );
+      let shortId: string;
+      let isUnique = false;
+      let attempts = 0;
+      const maxAttempts = 5;
+
+      do {
+        const generated = this.chopUrl.generateShortUrl(url, options);
+        shortId = generated.shortId;
+        isUnique = await this.isShortIdUnique(shortId);
+        attempts++;
+      } while (!isUnique && attempts < maxAttempts);
+
+      if (!isUnique) {
+        throw new Error('Failed to generate unique short ID');
+      }
 
       await db
         .insert(urls)
@@ -80,7 +100,7 @@ export class UrlService {
       return {
         shortUrl: `${this.baseUrl}/${shortId}`,
         shortId,
-        originalUrl,
+        originalUrl: url,
         createdAt: new Date().toISOString(),
       };
     } catch (error) {
