@@ -20,7 +20,6 @@ import {
   Link as LinkIcon,
   MousePointerClick,
 } from 'lucide-react';
-import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useRef } from 'react';
@@ -96,26 +95,60 @@ const LinkDetails = ({ urlDetails }: { urlDetails: IUrl }) => {
     }
   );
 
-  const handleDownloadQR = () => {
+  const handleDownloadQR = async () => {
     const svg = qrRef.current?.querySelector('svg');
     if (svg) {
-      const svgData = new XMLSerializer().serializeToString(svg);
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = document.createElement('img');
-      img.onload = () => {
+      try {
+        const svgData = new XMLSerializer().serializeToString(svg);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
         if (ctx) {
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
-          const pngFile = canvas.toDataURL('image/png');
-          const downloadLink = document.createElement('a');
-          downloadLink.download = `qr-${urlDetails.shortId}.png`;
-          downloadLink.href = pngFile;
-          downloadLink.click();
+          // Create a high-quality canvas
+          const scale = 4; // 4x magnification
+          canvas.width = 170 * scale;
+          canvas.height = 170 * scale;
+
+          // Increase image quality
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+
+          // Make the background white
+          ctx.fillStyle = 'white';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // For the main QR code
+          const qrImg = document.createElement('img');
+          const logoImg = document.createElement('img');
+
+          await new Promise<void>((resolve) => {
+            qrImg.onload = async () => {
+              // Draw the QR code in the scaled size
+              ctx.drawImage(qrImg, 0, 0, canvas.width, canvas.height);
+
+              // For the logo
+              logoImg.onload = () => {
+                // Center and scale the logo
+                const logoSize = 40 * scale;
+                const logoX = (canvas.width - logoSize) / 2;
+                const logoY = (canvas.height - logoSize) / 2;
+                ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+
+                // Create a high-quality PNG
+                const pngFile = canvas.toDataURL('image/png', 1.0);
+                const downloadLink = document.createElement('a');
+                downloadLink.download = `qr-${urlDetails.shortId}.png`;
+                downloadLink.href = pngFile;
+                downloadLink.click();
+              };
+              logoImg.src = '/logo.svg';
+            };
+            qrImg.src = `data:image/svg+xml;base64,${btoa(svgData)}`;
+          });
         }
-      };
-      img.src = `data:image/svg+xml;base64,${btoa(svgData)}`;
+      } catch (error) {
+        console.error('QR code download error:', error);
+      }
     }
   };
 
