@@ -148,7 +148,7 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center justify-center relative overflow-hidden">
       <DecorativeBackground />
 
-      <div className="container relative flex flex-col items-center justify-center gap-8 px-4 py-16">
+      <div className="relative flex flex-col items-center justify-center gap-8 px-4 py-16">
         <div className="flex flex-col items-center gap-2">
           <h1 className="text-4xl sm:text-6xl md:text-7xl">
             <GradientText>Chop URL</GradientText>

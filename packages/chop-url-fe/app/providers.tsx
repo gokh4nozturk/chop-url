@@ -26,7 +26,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     >
       <AuthProvider>
         <SidebarProvider defaultOpen={sidebarState === 'true'}>
-          {children}
+          <div className="w-full">{children}</div>
         </SidebarProvider>
       </AuthProvider>
     </ThemeProvider>
