@@ -16,13 +16,11 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from '@/components/ui/sidebar';
 import { useAuthStore } from '@/lib/store/auth';
 import Link from 'next/link';
 
 export function UserSwitch() {
-  const { isMobile } = useSidebar();
   const { user, logout } = useAuthStore();
 
   if (!user) return null;

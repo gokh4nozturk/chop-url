@@ -14,7 +14,6 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { useAuthStore } from '@/lib/store/auth';
 import useUrlStore from '@/lib/store/url';
 import { AnimatePresence, motion } from 'motion/react';
 import Link from 'next/link';
@@ -40,11 +39,8 @@ const items = [
 
 export function DashboardSidebar() {
   const pathname = usePathname();
-  const { user } = useAuthStore();
   const { setSearchTerm, searchTerm, filteredUrls, urls } = useUrlStore();
   const { open } = useSidebar();
-
-  if (!user) return null;
 
   const displayedUrls = searchTerm ? filteredUrls : urls;
   const showSearchResults = searchTerm.length > 0;
