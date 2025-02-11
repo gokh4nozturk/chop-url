@@ -348,6 +348,9 @@ importers:
       hono:
         specifier: ^4.0.7
         version: 4.7.0
+      ua-parser-js:
+        specifier: ^2.0.2
+        version: 2.0.2
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20240208.0

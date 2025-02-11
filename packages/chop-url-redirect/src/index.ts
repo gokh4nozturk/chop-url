@@ -2,6 +2,7 @@ import type { D1Database } from '@cloudflare/workers-types';
 import { Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
+import { UAParser } from 'ua-parser-js';
 
 interface Env {
   DB: D1Database;
@@ -55,12 +56,23 @@ app.get('/:shortId', async (c: CFContext) => {
       const country = cf?.country || 'Unknown';
       const city = cf?.city || 'Unknown';
 
+      // Parse user agent
+      const parser = new UAParser(userAgent);
+      const browser = parser.getBrowser();
+      const os = parser.getOS();
+      const device = parser.getDevice();
+
       console.log('Visit Info:', {
         ip: ipAddress,
         userAgent,
         referrer,
         country,
         city,
+        browser: browser.name,
+        browserVersion: browser.version,
+        os: os.name,
+        osVersion: os.version,
+        deviceType: device.type,
       });
 
       // Ziyaret sayısını artır
@@ -78,13 +90,18 @@ app.get('/:shortId', async (c: CFContext) => {
           device_type, country, city, region, region_code,
           timezone, longitude, latitude, postal_code,
           visited_at
-        ) VALUES (?, ?, ?, ?, NULL, NULL, NULL, NULL, NULL, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       `)
         .bind(
           result.id,
           ipAddress,
           userAgent,
           referrer,
+          browser.name || null,
+          browser.version || null,
+          os.name || null,
+          os.version || null,
+          device.type || null,
           country,
           city,
           cf?.region || 'Unknown',
