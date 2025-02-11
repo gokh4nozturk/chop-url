@@ -1,6 +1,7 @@
 'use client';
 
 import LoadingSpinner from '@/components/custom/loading-spinner';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -13,13 +14,16 @@ import useUrlStore from '@/lib/store/url';
 import { IUrl } from '@/lib/types';
 import {
   CalendarDays,
+  Download,
   Globe,
   Hash,
   Link as LinkIcon,
   MousePointerClick,
 } from 'lucide-react';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+import { useEffect, useRef } from 'react';
 
 interface IUrlError {
   code: string;
@@ -82,6 +86,7 @@ const ErrorState = ({ error }: { error: IUrlError }) => {
 };
 
 const LinkDetails = ({ urlDetails }: { urlDetails: IUrl }) => {
+  const qrRef = useRef<HTMLDivElement>(null);
   const formattedDate = new Date(urlDetails.createdAt).toLocaleDateString(
     'en-US',
     {
@@ -91,43 +96,104 @@ const LinkDetails = ({ urlDetails }: { urlDetails: IUrl }) => {
     }
   );
 
+  const handleDownloadQR = () => {
+    const svg = qrRef.current?.querySelector('svg');
+    if (svg) {
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = document.createElement('img');
+      img.onload = () => {
+        if (ctx) {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+          const pngFile = canvas.toDataURL('image/png');
+          const downloadLink = document.createElement('a');
+          downloadLink.download = `qr-${urlDetails.shortId}.png`;
+          downloadLink.href = pngFile;
+          downloadLink.click();
+        }
+      };
+      img.src = `data:image/svg+xml;base64,${btoa(svgData)}`;
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Link Details</CardTitle>
-          <CardDescription>Detailed information about the link</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-2">
-            <InfoCard
-              icon={<Globe className="h-4 w-4" />}
-              title="Original URL"
-              value={urlDetails.originalUrl}
-            />
-            <InfoCard
-              icon={<LinkIcon className="h-4 w-4" />}
-              title="Short URL"
-              value={urlDetails.shortUrl}
-            />
-            <InfoCard
-              icon={<Hash className="h-4 w-4" />}
-              title="Short ID"
-              value={urlDetails.shortId}
-            />
-            <InfoCard
-              icon={<MousePointerClick className="h-4 w-4" />}
-              title="Visit Count"
-              value={urlDetails?.visitCount?.toString() || '0'}
-            />
-            <InfoCard
-              icon={<CalendarDays className="h-4 w-4" />}
-              title="Created Date"
-              value={formattedDate}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 md:grid-cols-3">
+        <div className="md:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Link Details</CardTitle>
+              <CardDescription>
+                Detailed information about the link
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                <InfoCard
+                  icon={<Globe className="h-4 w-4" />}
+                  title="Original URL"
+                  value={urlDetails.originalUrl}
+                />
+                <InfoCard
+                  icon={<LinkIcon className="h-4 w-4" />}
+                  title="Short URL"
+                  value={urlDetails.shortUrl}
+                />
+                <InfoCard
+                  icon={<Hash className="h-4 w-4" />}
+                  title="Short ID"
+                  value={urlDetails.shortId}
+                />
+                <InfoCard
+                  icon={<MousePointerClick className="h-4 w-4" />}
+                  title="Visit Count"
+                  value={urlDetails?.visitCount?.toString() || '0'}
+                />
+                <InfoCard
+                  icon={<CalendarDays className="h-4 w-4" />}
+                  title="Created Date"
+                  value={formattedDate}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>QR Code</CardTitle>
+            <CardDescription>Scan or download the QR code</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center space-y-4">
+            <div ref={qrRef} className="bg-white p-4 rounded-lg">
+              <QRCodeSVG
+                value={urlDetails.shortUrl}
+                size={170}
+                level="H"
+                includeMargin
+                imageSettings={{
+                  src: '/logo.svg',
+                  x: undefined,
+                  y: undefined,
+                  height: 40,
+                  width: 40,
+                  excavate: true,
+                }}
+              />
+            </div>
+            <Button
+              onClick={handleDownloadQR}
+              className="w-full"
+              variant="outline"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Download QR
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
