@@ -1,28 +1,57 @@
 'use client';
 
 import LoadingSpinner from '@/components/custom/loading-spinner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import useUrlStore from '@/lib/store/url';
 import { IUrl } from '@/lib/types';
+import { motion } from 'framer-motion';
 import {
   CalendarDays,
+  Copy,
   Download,
   Globe,
   Hash,
   Link as LinkIcon,
   MousePointerClick,
+  Pencil,
+  Share2,
+  Trash2,
 } from 'lucide-react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 interface IUrlError {
   code: string;
@@ -86,6 +115,11 @@ const ErrorState = ({ error }: { error: IUrlError }) => {
 
 const LinkDetails = ({ urlDetails }: { urlDetails: IUrl }) => {
   const qrRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editedUrl, setEditedUrl] = useState(urlDetails.originalUrl);
+  const { deleteUrl, updateUrl } = useUrlStore();
+
   const formattedDate = new Date(urlDetails.createdAt).toLocaleDateString(
     'en-US',
     {
@@ -94,6 +128,47 @@ const LinkDetails = ({ urlDetails }: { urlDetails: IUrl }) => {
       year: 'numeric',
     }
   );
+
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(urlDetails.shortUrl);
+      toast.success('URL kopyalandı!');
+    } catch (err) {
+      toast.error('URL kopyalanırken bir hata oluştu');
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      await navigator.share({
+        title: 'Kısaltılmış Link',
+        text: 'Kısaltılmış linkimi kontrol et!',
+        url: urlDetails.shortUrl,
+      });
+    } catch (err) {
+      toast.error('Paylaşım yapılırken bir hata oluştu');
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteUrl(urlDetails.shortId);
+      toast.success('Link başarıyla silindi');
+      router.push('/dashboard/links');
+    } catch (err) {
+      toast.error('Link silinirken bir hata oluştu');
+    }
+  };
+
+  const handleUpdate = async () => {
+    try {
+      await updateUrl(urlDetails.shortId, { originalUrl: editedUrl });
+      toast.success('Link başarıyla güncellendi');
+      setIsEditDialogOpen(false);
+    } catch (err) {
+      toast.error('Link güncellenirken bir hata oluştu');
+    }
+  };
 
   const handleDownloadQR = async () => {
     const svg = qrRef.current?.querySelector('svg');
@@ -153,15 +228,40 @@ const LinkDetails = ({ urlDetails }: { urlDetails: IUrl }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-6"
+    >
       <div className="grid gap-6 md:grid-cols-3">
         <div className="md:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Link Details</CardTitle>
-              <CardDescription>
-                Detailed information about the link
-              </CardDescription>
+          <Card className="group transition-all duration-300 hover:shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Link Details</CardTitle>
+                <CardDescription>
+                  Detailed information about the link
+                </CardDescription>
+              </div>
+              <div className="flex space-x-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleCopyUrl}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleShare}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Share2 className="h-4 w-4" />
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid gap-4 md:grid-cols-2">
@@ -192,42 +292,121 @@ const LinkDetails = ({ urlDetails }: { urlDetails: IUrl }) => {
                 />
               </div>
             </CardContent>
+            <CardFooter className="justify-end space-x-2">
+              <Dialog
+                open={isEditDialogOpen}
+                onOpenChange={setIsEditDialogOpen}
+              >
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Link</DialogTitle>
+                    <DialogDescription>
+                      Update the original URL. The short URL will remain the
+                      same.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="originalUrl">Original URL</Label>
+                      <Input
+                        id="originalUrl"
+                        value={editedUrl}
+                        onChange={(e) => setEditedUrl(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsEditDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button onClick={handleUpdate}>Update</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This link will be
+                      permanently deleted.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      className="bg-destructive"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </CardFooter>
           </Card>
         </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>QR Code</CardTitle>
-            <CardDescription>Scan or download the QR code</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center space-y-4">
-            <div ref={qrRef} className="bg-white p-4 rounded-lg">
-              <QRCodeSVG
-                value={urlDetails.shortUrl}
-                size={170}
-                level="H"
-                includeMargin
-                imageSettings={{
-                  src: '/logo.svg',
-                  x: undefined,
-                  y: undefined,
-                  height: 40,
-                  width: 40,
-                  excavate: true,
-                }}
-              />
-            </div>
-            <Button
-              onClick={handleDownloadQR}
-              className="w-full"
-              variant="outline"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Download QR
-            </Button>
-          </CardContent>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <Card className="group transition-all duration-300 hover:shadow-lg">
+            <CardHeader>
+              <CardTitle>QR Code</CardTitle>
+              <CardDescription>Scan or download the QR code</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center space-y-4">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+                ref={qrRef}
+                className="bg-white p-4 rounded-lg"
+              >
+                <QRCodeSVG
+                  value={urlDetails.shortUrl}
+                  size={190}
+                  level="H"
+                  includeMargin
+                  imageSettings={{
+                    src: '/logo.svg',
+                    x: undefined,
+                    y: undefined,
+                    height: 40,
+                    width: 40,
+                    excavate: true,
+                  }}
+                />
+              </motion.div>
+              <Button
+                onClick={handleDownloadQR}
+                className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                variant="outline"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Download QR
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -241,16 +420,21 @@ const InfoCard = ({
   value: string;
 }) => {
   return (
-    <Card>
-      <CardContent className="flex items-center space-x-4 p-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-          {icon}
-        </div>
-        <div className="space-y-1">
-          <p className="text-sm font-medium">{title}</p>
-          <p className="text-sm text-muted-foreground break-all">{value}</p>
-        </div>
-      </CardContent>
-    </Card>
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      transition={{ type: 'spring', stiffness: 300 }}
+    >
+      <Card className="transition-all duration-300 hover:shadow-md hover:border-primary/50">
+        <CardContent className="flex items-center space-x-4 p-4">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+            {icon}
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium">{title}</p>
+            <p className="text-sm text-muted-foreground break-all">{value}</p>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };

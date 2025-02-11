@@ -43,6 +43,8 @@ interface IUrlActions {
     shortId: string,
     period: '24h' | '7d' | '30d' | '90d'
   ) => Promise<void>;
+  deleteUrl: (shortId: string) => Promise<void>;
+  updateUrl: (shortId: string, data: { originalUrl: string }) => Promise<void>;
   clearStore: () => void;
 }
 
@@ -225,6 +227,46 @@ const useUrlStore = create<IUrlState & IUrlActions>((set, get) => ({
         code: 'GET_URL_VISITS_ERROR',
         message:
           error instanceof Error ? error.message : 'Failed to fetch URL visits',
+      };
+      set({ error: urlError });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  deleteUrl: async (shortId: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      await apiClient.delete(`/api/urls/${shortId}`);
+      const urls = get().urls.filter((url) => url.shortId !== shortId);
+      set({ urls });
+    } catch (error) {
+      const urlError: IUrlError = {
+        code: 'DELETE_URL_ERROR',
+        message:
+          error instanceof Error ? error.message : 'Failed to delete URL',
+      };
+      set({ error: urlError });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  updateUrl: async (shortId: string, data: { originalUrl: string }) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await apiClient.patch(`/api/urls/${shortId}`, data);
+      const urls = get().urls.map((url) =>
+        url.shortId === shortId ? { ...url, ...response.data } : url
+      );
+      set({ urls, urlDetails: response.data });
+    } catch (error) {
+      const urlError: IUrlError = {
+        code: 'UPDATE_URL_ERROR',
+        message:
+          error instanceof Error ? error.message : 'Failed to update URL',
       };
       set({ error: urlError });
       throw error;
