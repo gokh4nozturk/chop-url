@@ -45,9 +45,9 @@ export default function LinksPage() {
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success('URL kopyalandı!');
+      toast.success('URL copied to clipboard!');
     } catch (err) {
-      toast.error('URL kopyalanırken bir hata oluştu');
+      toast.error('Failed to copy URL');
     }
   };
 

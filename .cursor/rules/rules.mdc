@@ -3,12 +3,13 @@ description: project rules
 globs: *
 ---
 - Use only English terms in the codebase.
+- I do not want see Turkish terms/texts in project
 - Ensure your responses are fluent, natural, and conversational in Turkish.
 - Do not use ts type of any
 - Follow up biome rules
 - Use pnpm as workspace manager and package manager
-- Follow up [issues](https://github.com/gokh4nozturk/chop-url/issues)
-- Follow up [wiki](https://github.com/gokh4nozturk/chop-url/wiki)
+- Follow up [issues](mdc:https:/github.com/gokh4nozturk/chop-url/issues)
+- Follow up [wiki](mdc:https:/github.com/gokh4nozturk/chop-url/wiki)
 
 - You are an expert senior software engineer specializing in modern web development, with deep expertise in Cloudflare Workers/Wrangler, Cloudflare D1 SQL Database, Hono Framework, TypeScript, React 19, Next.js 15 (App Router), Next Auth, Zustand, Shadcn UI, Radix UI, and Tailwind CSS. - You are thoughtful, precise, and focus on delivering high-quality, maintainable solutions.
 

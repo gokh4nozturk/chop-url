@@ -132,41 +132,41 @@ const LinkDetails = ({ urlDetails }: { urlDetails: IUrl }) => {
   const handleCopyUrl = async () => {
     try {
       await navigator.clipboard.writeText(urlDetails.shortUrl);
-      toast.success('URL kopyalandı!');
+      toast.success('URL copied to clipboard!');
     } catch (err) {
-      toast.error('URL kopyalanırken bir hata oluştu');
+      toast.error('Failed to copy URL');
     }
   };
 
   const handleShare = async () => {
     try {
       await navigator.share({
-        title: 'Kısaltılmış Link',
-        text: 'Kısaltılmış linkimi kontrol et!',
+        title: 'Shortened Link',
+        text: 'Check out my shortened link!',
         url: urlDetails.shortUrl,
       });
     } catch (err) {
-      toast.error('Paylaşım yapılırken bir hata oluştu');
+      toast.error('Failed to share URL');
     }
   };
 
   const handleDelete = async () => {
     try {
       await deleteUrl(urlDetails.shortId);
-      toast.success('Link başarıyla silindi');
+      toast.success('Link deleted successfully');
       router.push('/dashboard/links');
     } catch (err) {
-      toast.error('Link silinirken bir hata oluştu');
+      toast.error('Failed to delete link');
     }
   };
 
   const handleUpdate = async () => {
     try {
       await updateUrl(urlDetails.shortId, { originalUrl: editedUrl });
-      toast.success('Link başarıyla güncellendi');
+      toast.success('Link updated successfully');
       setIsEditDialogOpen(false);
     } catch (err) {
-      toast.error('Link güncellenirken bir hata oluştu');
+      toast.error('Failed to update link');
     }
   };
 
