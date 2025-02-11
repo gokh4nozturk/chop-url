@@ -27,6 +27,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useUrlStore from '@/lib/store/url';
 import { addDays, addHours, addMonths, addWeeks } from 'date-fns';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -121,198 +122,335 @@ export default function NewLinkPage() {
   };
 
   return (
-    <div className="container max-w-3xl">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="container max-w-3xl"
+    >
       <div className="flex items-center justify-between space-y-2">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Create New Link</h2>
-          <p className="text-muted-foreground">
+          <motion.h2
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-2xl font-bold tracking-tight"
+          >
+            Create New Link
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-muted-foreground"
+          >
             Create a new shortened URL for your long link.
-          </p>
+          </motion.p>
         </div>
       </div>
 
-      <Tabs defaultValue="single" className="mt-8">
-        <TabsList>
-          <TabsTrigger value="single">Single URL</TabsTrigger>
-          <TabsTrigger value="bulk" asChild>
-            <Button
-              variant="ghost"
-              className="data-[state=active]:bg-accent"
-              asChild
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+      >
+        <Tabs defaultValue="single" className="mt-8">
+          <TabsList className="transition-all duration-300 hover:shadow-md">
+            <TabsTrigger
+              value="single"
+              className="transition-all duration-300 data-[state=active]:shadow-sm"
             >
-              <a href="/dashboard/new/bulk">Bulk Creation</a>
-            </Button>
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="single">
-          <Card>
-            <CardHeader>
-              <CardTitle>Create Single URL</CardTitle>
-              <CardDescription>
-                Create a single shortened URL with optional custom alias.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="url">Destination URL</Label>
-                  <Input
-                    id="url"
-                    placeholder="https://example.com/very-long-url"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="alias">Custom Alias (Optional)</Label>
-                  <Input
-                    id="alias"
-                    placeholder="my-custom-url"
-                    value={customAlias}
-                    onChange={(e) => setCustomAlias(e.target.value)}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Leave empty for an automatically generated short URL.
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="expiration">Link Expiration</Label>
-                    <Switch
-                      id="expiration"
-                      checked={expiration.enabled}
-                      onCheckedChange={(checked) =>
-                        setExpiration({ ...expiration, enabled: checked })
-                      }
-                    />
-                  </div>
-                  {expiration.enabled && (
-                    <div className="flex items-center gap-2">
+              Single URL
+            </TabsTrigger>
+            <TabsTrigger value="bulk" asChild>
+              <Button
+                variant="ghost"
+                className="transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:shadow-sm"
+                asChild
+              >
+                <a href="/dashboard/new/bulk">Bulk Creation</a>
+              </Button>
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="single">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card className="transition-all duration-300 hover:shadow-md">
+                <CardHeader>
+                  <CardTitle>Create Single URL</CardTitle>
+                  <CardDescription>
+                    Create a single shortened URL with optional custom alias.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.1 }}
+                      className="space-y-2"
+                    >
+                      <Label htmlFor="url">Destination URL</Label>
                       <Input
-                        type="number"
-                        min="1"
-                        value={expiration.value}
-                        onChange={(e) =>
-                          setExpiration({
-                            ...expiration,
-                            value: parseInt(e.target.value) || 1,
-                          })
-                        }
-                        className="w-24"
+                        id="url"
+                        placeholder="https://example.com/very-long-url"
+                        value={url}
+                        onChange={(e) => setUrl(e.target.value)}
+                        required
+                        className="transition-all duration-300 focus:shadow-md"
                       />
-                      <Select
-                        value={expiration.unit}
-                        onValueChange={(value: ExpirationConfig['unit']) =>
-                          setExpiration({ ...expiration, unit: value })
-                        }
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                      className="space-y-2"
+                    >
+                      <Label htmlFor="alias">Custom Alias (Optional)</Label>
+                      <Input
+                        id="alias"
+                        placeholder="my-custom-url"
+                        value={customAlias}
+                        onChange={(e) => setCustomAlias(e.target.value)}
+                        className="transition-all duration-300 focus:shadow-md"
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Leave empty for an automatically generated short URL.
+                      </p>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.3 }}
+                      className="space-y-4"
+                    >
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="expiration">Link Expiration</Label>
+                        <Switch
+                          id="expiration"
+                          checked={expiration.enabled}
+                          onCheckedChange={(checked) =>
+                            setExpiration({ ...expiration, enabled: checked })
+                          }
+                          className="transition-all duration-300"
+                        />
+                      </div>
+                      <AnimatePresence>
+                        {expiration.enabled && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="flex items-center gap-2"
+                          >
+                            <Input
+                              type="number"
+                              min="1"
+                              value={expiration.value}
+                              onChange={(e) =>
+                                setExpiration({
+                                  ...expiration,
+                                  value: parseInt(e.target.value) || 1,
+                                })
+                              }
+                              className="w-24 transition-all duration-300 focus:shadow-md"
+                            />
+                            <Select
+                              value={expiration.unit}
+                              onValueChange={(
+                                value: ExpirationConfig['unit']
+                              ) =>
+                                setExpiration({ ...expiration, unit: value })
+                              }
+                            >
+                              <SelectTrigger className="transition-all duration-300 hover:shadow-md">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="hours">Hours</SelectItem>
+                                <SelectItem value="days">Days</SelectItem>
+                                <SelectItem value="weeks">Weeks</SelectItem>
+                                <SelectItem value="months">Months</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.4 }}
+                    >
+                      <Collapsible
+                        open={isUtmOpen}
+                        onOpenChange={setIsUtmOpen}
+                        className="space-y-2"
                       >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="hours">Hours</SelectItem>
-                          <SelectItem value="days">Days</SelectItem>
-                          <SelectItem value="weeks">Weeks</SelectItem>
-                          <SelectItem value="months">Months</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                </div>
+                        <div className="flex items-center justify-between">
+                          <Label>Campaign Parameters (UTM)</Label>
+                          <CollapsibleTrigger asChild>
+                            <motion.div whileHover={{ scale: 1.1 }}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="w-9 p-0 transition-all duration-300"
+                              >
+                                <motion.div
+                                  animate={{ rotate: isUtmOpen ? 180 : 0 }}
+                                  transition={{ duration: 0.3 }}
+                                >
+                                  <Icons.chevronUpDown className="h-4 w-4" />
+                                </motion.div>
+                                <span className="sr-only">
+                                  Toggle UTM parameters
+                                </span>
+                              </Button>
+                            </motion.div>
+                          </CollapsibleTrigger>
+                        </div>
+                        <CollapsibleContent className="space-y-4">
+                          <AnimatePresence>
+                            {isUtmOpen && (
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="space-y-4"
+                              >
+                                <div className="space-y-2">
+                                  <Label htmlFor="utm_source">
+                                    Campaign Source
+                                  </Label>
+                                  <Input
+                                    id="utm_source"
+                                    placeholder="google"
+                                    value={utmParams.source}
+                                    onChange={(e) =>
+                                      setUtmParams({
+                                        ...utmParams,
+                                        source: e.target.value,
+                                      })
+                                    }
+                                    className="transition-all duration-300 focus:shadow-md"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="utm_medium">
+                                    Campaign Medium
+                                  </Label>
+                                  <Input
+                                    id="utm_medium"
+                                    placeholder="cpc"
+                                    value={utmParams.medium}
+                                    onChange={(e) =>
+                                      setUtmParams({
+                                        ...utmParams,
+                                        medium: e.target.value,
+                                      })
+                                    }
+                                    className="transition-all duration-300 focus:shadow-md"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="utm_campaign">
+                                    Campaign Name
+                                  </Label>
+                                  <Input
+                                    id="utm_campaign"
+                                    placeholder="spring_sale"
+                                    value={utmParams.campaign}
+                                    onChange={(e) =>
+                                      setUtmParams({
+                                        ...utmParams,
+                                        campaign: e.target.value,
+                                      })
+                                    }
+                                    className="transition-all duration-300 focus:shadow-md"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="utm_term">
+                                    Campaign Term
+                                  </Label>
+                                  <Input
+                                    id="utm_term"
+                                    placeholder="running+shoes"
+                                    value={utmParams.term}
+                                    onChange={(e) =>
+                                      setUtmParams({
+                                        ...utmParams,
+                                        term: e.target.value,
+                                      })
+                                    }
+                                    className="transition-all duration-300 focus:shadow-md"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="utm_content">
+                                    Campaign Content
+                                  </Label>
+                                  <Input
+                                    id="utm_content"
+                                    placeholder="logolink"
+                                    value={utmParams.content}
+                                    onChange={(e) =>
+                                      setUtmParams({
+                                        ...utmParams,
+                                        content: e.target.value,
+                                      })
+                                    }
+                                    className="transition-all duration-300 focus:shadow-md"
+                                  />
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    </motion.div>
 
-                <Collapsible
-                  open={isUtmOpen}
-                  onOpenChange={setIsUtmOpen}
-                  className="space-y-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <Label>Campaign Parameters (UTM)</Label>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm" className="w-9 p-0">
-                        <Icons.chevronUpDown className="h-4 w-4" />
-                        <span className="sr-only">Toggle UTM parameters</span>
-                      </Button>
-                    </CollapsibleTrigger>
-                  </div>
-                  <CollapsibleContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="utm_source">Campaign Source</Label>
-                      <Input
-                        id="utm_source"
-                        placeholder="google"
-                        value={utmParams.source}
-                        onChange={(e) =>
-                          setUtmParams({ ...utmParams, source: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="utm_medium">Campaign Medium</Label>
-                      <Input
-                        id="utm_medium"
-                        placeholder="cpc"
-                        value={utmParams.medium}
-                        onChange={(e) =>
-                          setUtmParams({ ...utmParams, medium: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="utm_campaign">Campaign Name</Label>
-                      <Input
-                        id="utm_campaign"
-                        placeholder="spring_sale"
-                        value={utmParams.campaign}
-                        onChange={(e) =>
-                          setUtmParams({
-                            ...utmParams,
-                            campaign: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="utm_term">Campaign Term</Label>
-                      <Input
-                        id="utm_term"
-                        placeholder="running+shoes"
-                        value={utmParams.term}
-                        onChange={(e) =>
-                          setUtmParams({ ...utmParams, term: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="utm_content">Campaign Content</Label>
-                      <Input
-                        id="utm_content"
-                        placeholder="logolink"
-                        value={utmParams.content}
-                        onChange={(e) =>
-                          setUtmParams({
-                            ...utmParams,
-                            content: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-
-                <Button disabled={isLoading} className="w-full">
-                  {isLoading && (
-                    <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Create Link
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.5 }}
+                      className="flex justify-end"
+                    >
+                      <motion.div whileHover={{ scale: 1.02 }}>
+                        <Button
+                          type="submit"
+                          disabled={isLoading}
+                          className="transition-all duration-300 hover:shadow-md"
+                        >
+                          {isLoading ? (
+                            <>
+                              <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                              Creating...
+                            </>
+                          ) : (
+                            <>
+                              <Icons.plus className="mr-2 h-4 w-4" />
+                              Create Link
+                            </>
+                          )}
+                        </Button>
+                      </motion.div>
+                    </motion.div>
+                  </form>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </TabsContent>
+        </Tabs>
+      </motion.div>
+    </motion.div>
   );
 }

@@ -377,7 +377,7 @@ const LinkDetails = ({ urlDetails }: { urlDetails: IUrl }) => {
                 whileHover={{ scale: 1.05 }}
                 transition={{ type: 'spring', stiffness: 300 }}
                 ref={qrRef}
-                className="bg-white p-4 rounded-lg"
+                className="bg-foreground p-2 rounded-lg"
               >
                 <QRCodeSVG
                   value={urlDetails.shortUrl}
