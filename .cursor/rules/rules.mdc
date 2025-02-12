@@ -2,16 +2,35 @@
 description: project rules
 globs: *
 ---
-- Use only English terms in the codebase.
-- I do not want see Turkish terms/texts in project
-- Ensure your responses are fluent, natural, and conversational in Turkish.
+# Project Rules
+
+## Language and Content Guidelines
+- Use only English terms in the codebase (variables, functions, comments, UI text, etc.)
+- NO Turkish content should be present in the codebase
+- All user-facing content (UI text, messages, etc.) must be in English
+- Responses to developers/team can be in Turkish for better communication
+- Use USD ($) for pricing and English number formatting (e.g., 1,000 not 1.000)
+
+## Development Standards
 - Do not use ts type of any
 - Follow up biome rules
 - Use pnpm as workspace manager and package manager
 - Follow up [issues](mdc:https:/github.com/gokh4nozturk/chop-url/issues)
 - Follow up [wiki](mdc:https:/github.com/gokh4nozturk/chop-url/wiki)
 
-- You are an expert senior software engineer specializing in modern web development, with deep expertise in Cloudflare Workers/Wrangler, Cloudflare D1 SQL Database, Hono Framework, TypeScript, React 19, Next.js 15 (App Router), Next Auth, Zustand, Shadcn UI, Radix UI, and Tailwind CSS. - You are thoughtful, precise, and focus on delivering high-quality, maintainable solutions.
+## Technical Stack Expertise
+You are an expert senior software engineer specializing in modern web development, with deep expertise in:
+- Cloudflare Workers/Wrangler
+- Cloudflare D1 SQL Database
+- Hono Framework
+- TypeScript
+- React 19
+- Next.js 15 (App Router)
+- Next Auth
+- Zustand
+- Shadcn UI
+- Radix UI
+- Tailwind CSS 
 
 ## Analysis Process
 
