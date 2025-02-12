@@ -249,7 +249,7 @@ export const createUrlRoutes = () => {
   });
 
   // URL Group endpoints
-  router.post('/groups', auth(), async (c: Context) => {
+  router.post('/url-groups', auth(), async (c: Context) => {
     try {
       const body = await c.req.json();
       const { name, description } = createUrlGroupSchema.parse(body);
@@ -278,7 +278,7 @@ export const createUrlRoutes = () => {
     }
   });
 
-  router.put('/groups/:id', auth(), async (c: Context) => {
+  router.put('/url-groups/:id', auth(), async (c: Context) => {
     try {
       const groupId = parseInt(c.req.param('id'));
       const body = await c.req.json();
@@ -308,7 +308,7 @@ export const createUrlRoutes = () => {
     }
   });
 
-  router.delete('/groups/:id', auth(), async (c: Context) => {
+  router.delete('/url-groups/:id', auth(), async (c: Context) => {
     try {
       const groupId = parseInt(c.req.param('id'));
       const user = c.get('user');
@@ -329,7 +329,7 @@ export const createUrlRoutes = () => {
     }
   });
 
-  router.get('/groups', auth(), async (c: Context) => {
+  router.get('/url-groups', auth(), async (c: Context) => {
     try {
       const user = c.get('user');
       const db = c.get('db');
