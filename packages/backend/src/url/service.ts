@@ -2,8 +2,15 @@ import { ChopUrl } from '@chop-url/lib';
 import { and, desc, eq, gte, inArray, or, sql } from 'drizzle-orm';
 import { UAParser } from 'ua-parser-js';
 import { createDb } from '../db/client';
-import { urls, visits } from '../db/schema';
-import { ICreateUrlResponse, IUrl, IUrlStats, IVisit } from './index';
+import { urlGroups, urls, visits } from '../db/schema';
+import {
+  ICreateUrlResponse,
+  IUrl,
+  IUrlGroup,
+  IUrlStats,
+  IVisit,
+  UpdateUrlOptions,
+} from './types';
 
 type Visit = typeof visits.$inferSelect;
 type Url = typeof urls.$inferSelect;
@@ -22,13 +29,12 @@ interface CFProperties {
 export class UrlService {
   private chopUrl: ChopUrl;
   private db: DbClient;
+  private baseUrl: string;
 
-  constructor(
-    private baseUrl: string,
-    db: DbClient
-  ) {
-    this.chopUrl = new ChopUrl(this.baseUrl);
+  constructor(baseUrl: string, db: DbClient) {
+    this.chopUrl = new ChopUrl(baseUrl);
     this.db = db;
+    this.baseUrl = baseUrl;
   }
 
   private async isShortIdUnique(shortId: string): Promise<boolean> {
@@ -42,7 +48,12 @@ export class UrlService {
 
   async createShortUrl(
     url: string,
-    options?: CreateUrlOptions,
+    options?: {
+      customSlug?: string;
+      expiresAt?: string;
+      tags?: string[];
+      groupId?: number;
+    },
     token?: string,
     userId?: string
   ): Promise<ICreateUrlResponse> {
@@ -105,21 +116,21 @@ export class UrlService {
               ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
               : null),
           isActive: true,
+          tags: options?.tags ? JSON.stringify(options.tags) : null,
+          groupId: options?.groupId || null,
         };
 
-        await this.db.insert(urls).values(urlData).returning({
-          shortId: urls.shortId,
-          originalUrl: urls.originalUrl,
-          createdAt: urls.createdAt,
-          userId: urls.userId,
-        });
+        const [result] = await this.db.insert(urls).values(urlData).returning();
 
         return {
-          shortUrl: `${this.baseUrl}/${shortId}`,
-          shortId,
-          originalUrl: url,
-          createdAt: new Date().toISOString(),
-          userId: urlData.userId,
+          shortUrl: `${this.baseUrl}/${result.shortId}`,
+          shortId: result.shortId,
+          originalUrl: result.originalUrl,
+          createdAt: result.createdAt || '',
+          userId: result.userId,
+          expiresAt: result.expiresAt || '',
+          tags: result.tags ? JSON.parse(result.tags) : undefined,
+          groupId: result.groupId || undefined,
         };
       }
 
@@ -154,23 +165,21 @@ export class UrlService {
             ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
             : new Date(Date.now() + 7 * 60 * 60 * 24 * 1000).toISOString()),
         isActive: true,
+        tags: options?.tags ? JSON.stringify(options.tags) : null,
+        groupId: options?.groupId || null,
       };
 
-      await this.db.insert(urls).values(urlData).returning({
-        shortId: urls.shortId,
-        originalUrl: urls.originalUrl,
-        createdAt: urls.createdAt,
-        userId: urls.userId,
-        expiresAt: urls.expiresAt,
-      });
+      const [result] = await this.db.insert(urls).values(urlData).returning();
 
       return {
-        shortUrl: `${this.baseUrl}/${shortId}`,
-        shortId,
-        originalUrl: url,
-        createdAt: new Date().toISOString(),
-        userId: urlData.userId,
-        expiresAt: urlData.expiresAt,
+        shortUrl: `${this.baseUrl}/${result.shortId}`,
+        shortId: result.shortId,
+        originalUrl: result.originalUrl,
+        createdAt: result.createdAt || '',
+        userId: result.userId,
+        expiresAt: result.expiresAt || '',
+        tags: result.tags ? JSON.parse(result.tags) : undefined,
+        groupId: result.groupId || undefined,
       };
     } catch (error) {
       console.error('Error in createShortUrl:', error);
@@ -255,9 +264,9 @@ export class UrlService {
       shortId: url.shortId,
       shortUrl: `${this.baseUrl}/${url.shortId}`,
       originalUrl: url.originalUrl,
-      created_at: url.createdAt || '',
-      last_accessed_at: url.lastAccessedAt || '',
-      visit_count: url.visitCount || 0,
+      createdAt: url.createdAt || '',
+      lastAccessedAt: url.lastAccessedAt || '',
+      visitCount: url.visitCount || 0,
       isActive: url.isActive || false,
       expiresAt: url.expiresAt || '',
       userId: url.userId || 0,
@@ -500,6 +509,126 @@ export class UrlService {
       console.error('Error in getUserAnalytics:', error);
       throw error;
     }
+  }
+
+  async createUrlGroup(
+    name: string,
+    description: string | null,
+    userId: number
+  ): Promise<IUrlGroup> {
+    const [group] = await this.db
+      .insert(urlGroups)
+      .values({
+        name,
+        description,
+        userId,
+        createdAt: new Date().toISOString(),
+      })
+      .returning();
+
+    return {
+      ...group,
+      description: group.description || undefined,
+      createdAt: group.createdAt || '',
+      updatedAt: group.updatedAt || undefined,
+    };
+  }
+
+  async updateUrlGroup(
+    groupId: number,
+    userId: number,
+    data: Partial<IUrlGroup>
+  ): Promise<IUrlGroup> {
+    const [group] = await this.db
+      .update(urlGroups)
+      .set({
+        ...data,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(and(eq(urlGroups.id, groupId), eq(urlGroups.userId, userId)))
+      .returning();
+
+    if (!group) {
+      throw new Error('URL group not found');
+    }
+
+    return {
+      ...group,
+      description: group.description || undefined,
+      createdAt: group.createdAt || '',
+      updatedAt: group.updatedAt || undefined,
+    };
+  }
+
+  async deleteUrlGroup(groupId: number, userId: number): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      // Remove group association from URLs
+      await tx
+        .update(urls)
+        .set({ groupId: null })
+        .where(eq(urls.groupId, groupId));
+
+      // Delete the group
+      const result = await tx
+        .delete(urlGroups)
+        .where(and(eq(urlGroups.id, groupId), eq(urlGroups.userId, userId)));
+
+      if (!result) {
+        throw new Error('URL group not found');
+      }
+    });
+  }
+
+  async getUserUrlGroups(userId: number): Promise<IUrlGroup[]> {
+    const groups = await this.db
+      .select()
+      .from(urlGroups)
+      .where(eq(urlGroups.userId, userId))
+      .orderBy(desc(urlGroups.createdAt));
+
+    return groups.map((group) => ({
+      ...group,
+      description: group.description || undefined,
+      createdAt: group.createdAt || '',
+      updatedAt: group.updatedAt || undefined,
+    }));
+  }
+
+  async updateUrl(
+    shortId: string,
+    userId: number,
+    data: UpdateUrlOptions
+  ): Promise<IUrl> {
+    const [url] = await this.db
+      .update(urls)
+      .set({
+        originalUrl: data.originalUrl,
+        customSlug: data.customSlug,
+        expiresAt: data.expiresAt,
+        tags: data.tags ? JSON.stringify(data.tags) : undefined,
+        groupId: data.groupId,
+        isActive: data.isActive,
+      })
+      .where(and(eq(urls.shortId, shortId), eq(urls.userId, userId)))
+      .returning();
+
+    if (!url) {
+      throw new Error('URL not found');
+    }
+
+    return {
+      ...url,
+      tags: url.tags ? JSON.parse(url.tags) : [],
+      shortUrl: `${this.baseUrl}/${url.shortId}`,
+      createdAt: url.createdAt || '',
+      lastAccessedAt: url.lastAccessedAt || undefined,
+      visitCount: url.visitCount || 0,
+      isActive: url.isActive || false,
+      expiresAt: url.expiresAt || undefined,
+      userId: url.userId || undefined,
+      customSlug: url.customSlug || undefined,
+      groupId: url.groupId || undefined,
+    };
   }
 }
 

@@ -12,4 +12,6 @@ export const urls = sqliteTable('urls', {
   expiresAt: text('expires_at'),
   userId: integer('user_id'),
   customSlug: text('custom_slug'),
+  tags: text('tags'),
+  groupId: integer('group_id'),
 });

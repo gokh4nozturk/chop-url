@@ -4,6 +4,7 @@ import { auth } from '../auth/middleware.js';
 import { IUser } from '../auth/types.js';
 import { getVisitsByTimeRange } from './service';
 import { UrlService } from './service.js';
+import { H } from './types';
 
 // Rate limit constants
 const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour in milliseconds
@@ -16,7 +17,7 @@ interface RateLimitInfo {
 
 const rateLimitStore = new Map<string, RateLimitInfo>();
 
-const rateLimit = () => {
+const rateLimitHandler = () => {
   return async (c: Context, next: () => Promise<void>) => {
     const ip =
       c.req.header('cf-connecting-ip') ||
@@ -66,15 +67,26 @@ interface Variables {
   user: IUser;
 }
 
+const VALID_PERIODS = ['24h', '7d', '30d', '90d'] as const;
+
 const createUrlSchema = z.object({
   url: z.string().url(),
   customSlug: z.string().optional(),
   expiresAt: z.string().datetime().optional(),
+  tags: z.array(z.string()).optional(),
+  groupId: z.number().optional(),
 });
 
-type H = { Bindings: Env; Variables: Variables };
+const createUrlGroupSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+});
 
-const VALID_PERIODS = ['24h', '7d', '30d', '90d'] as const;
+const updateUrlGroupSchema = z.object({
+  name: z.string().min(1).optional(),
+  description: z.string().optional(),
+});
+
 type Period = (typeof VALID_PERIODS)[number];
 
 export const createUrlRoutes = () => {
@@ -130,7 +142,7 @@ export const createUrlRoutes = () => {
   });
 
   // This endpoint is used by any user to create a short URL, not just authenticated users
-  router.post('/chop', rateLimit(), async (c: Context) => {
+  router.post('/chop', rateLimitHandler(), async (c: Context) => {
     try {
       const body = await c.req.json();
       const { url, customSlug } = createUrlSchema.parse(body);
@@ -233,6 +245,102 @@ export const createUrlRoutes = () => {
       return c.json(analytics);
     } catch (error) {
       return c.json({ error: 'Failed to get analytics' }, 500);
+    }
+  });
+
+  // URL Group endpoints
+  router.post('/groups', auth(), async (c: Context) => {
+    try {
+      const body = await c.req.json();
+      const { name, description } = createUrlGroupSchema.parse(body);
+      const user = c.get('user');
+      const db = c.get('db');
+
+      const urlService = new UrlService(c.env.BASE_URL, db);
+      const group = await urlService.createUrlGroup(
+        name,
+        description || null,
+        user.id
+      );
+
+      return c.json(group, 200);
+    } catch (error) {
+      console.error('Error creating URL group:', error);
+
+      if (error instanceof z.ZodError) {
+        return c.json(
+          { error: 'Invalid request body', details: error.errors },
+          400
+        );
+      }
+
+      return c.json({ error: 'Failed to create URL group' }, 500);
+    }
+  });
+
+  router.put('/groups/:id', auth(), async (c: Context) => {
+    try {
+      const groupId = parseInt(c.req.param('id'));
+      const body = await c.req.json();
+      const data = updateUrlGroupSchema.parse(body);
+      const user = c.get('user');
+      const db = c.get('db');
+
+      const urlService = new UrlService(c.env.BASE_URL, db);
+      const group = await urlService.updateUrlGroup(groupId, user.id, data);
+
+      return c.json(group, 200);
+    } catch (error) {
+      console.error('Error updating URL group:', error);
+
+      if (error instanceof z.ZodError) {
+        return c.json(
+          { error: 'Invalid request body', details: error.errors },
+          400
+        );
+      }
+
+      if (error instanceof Error && error.message === 'URL group not found') {
+        return c.json({ error: 'URL group not found' }, 404);
+      }
+
+      return c.json({ error: 'Failed to update URL group' }, 500);
+    }
+  });
+
+  router.delete('/groups/:id', auth(), async (c: Context) => {
+    try {
+      const groupId = parseInt(c.req.param('id'));
+      const user = c.get('user');
+      const db = c.get('db');
+
+      const urlService = new UrlService(c.env.BASE_URL, db);
+      await urlService.deleteUrlGroup(groupId, user.id);
+
+      return c.json({ message: 'URL group deleted successfully' }, 200);
+    } catch (error) {
+      console.error('Error deleting URL group:', error);
+
+      if (error instanceof Error && error.message === 'URL group not found') {
+        return c.json({ error: 'URL group not found' }, 404);
+      }
+
+      return c.json({ error: 'Failed to delete URL group' }, 500);
+    }
+  });
+
+  router.get('/groups', auth(), async (c: Context) => {
+    try {
+      const user = c.get('user');
+      const db = c.get('db');
+
+      const urlService = new UrlService(c.env.BASE_URL, db);
+      const groups = await urlService.getUserUrlGroups(user.id);
+
+      return c.json(groups, 200);
+    } catch (error) {
+      console.error('Error fetching URL groups:', error);
+      return c.json({ error: 'Failed to fetch URL groups' }, 500);
     }
   });
 

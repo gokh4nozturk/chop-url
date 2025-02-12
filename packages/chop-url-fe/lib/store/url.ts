@@ -1,32 +1,26 @@
 import apiClient from '@/lib/api/client';
-import { IUrl, IUrlStats } from '@/lib/types';
+import {
+  CreateUrlOptions,
+  IUrl,
+  IUrlError,
+  IUrlGroup,
+  IUrlStats,
+  Period,
+  SortOption,
+  UpdateUrlOptions,
+} from '@/lib/types';
 import { create } from 'zustand';
 
-interface IUrlError {
-  code: string;
-  message: string;
-}
-
-type SortOption = 'recent' | 'clicks' | 'alphabetical';
-
-interface IUrlState {
+interface IUrlStore {
   urls: IUrl[];
+  urlGroups: IUrlGroup[];
   urlDetails: IUrl | null;
+  urlStats: IUrlStats | null;
   isLoading: boolean;
   error: IUrlError | null;
   searchTerm: string;
-  filteredUrls: IUrl[];
-  urlStats: IUrlStats | null;
-  urlVisits: { date: string; count: number }[];
   sortOption: SortOption;
-}
-
-interface CreateUrlOptions {
-  customSlug?: string;
-  expiresAt?: string;
-}
-
-interface IUrlActions {
+  filteredUrls: IUrl[];
   createShortUrl: (url: string, options?: CreateUrlOptions) => Promise<void>;
   getUserUrls: () => Promise<void>;
   setLoading: (isLoading: boolean) => void;
@@ -35,258 +29,327 @@ interface IUrlActions {
   getUrlDetails: (shortId: string) => Promise<IUrl>;
   setSearchTerm: (term: string) => void;
   setSortOption: (option: SortOption) => void;
-  getUrlStats: (
-    shortId: string,
-    period: '24h' | '7d' | '30d' | '90d'
-  ) => Promise<void>;
-  getUrlVisits: (
-    shortId: string,
-    period: '24h' | '7d' | '30d' | '90d'
-  ) => Promise<void>;
+  getUrlStats: (shortId: string, period: Period) => Promise<void>;
+  getUrlVisits: (shortId: string, period: Period) => Promise<void>;
   deleteUrl: (shortId: string) => Promise<void>;
-  updateUrl: (shortId: string, data: { originalUrl: string }) => Promise<void>;
+  updateUrl: (shortId: string, data: UpdateUrlOptions) => Promise<void>;
   clearStore: () => void;
+  createUrlGroup: (name: string, description?: string) => Promise<void>;
+  updateUrlGroup: (groupId: number, data: Partial<IUrlGroup>) => Promise<void>;
+  deleteUrlGroup: (groupId: number) => Promise<void>;
+  getUserUrlGroups: () => Promise<void>;
 }
 
-const useUrlStore = create<IUrlState & IUrlActions>((set, get) => ({
-  // State
+const useUrlStore = create<IUrlStore>((set, get) => ({
   urls: [],
+  urlGroups: [],
   urlDetails: null,
+  urlStats: null,
   isLoading: false,
   error: null,
   searchTerm: '',
+  sortOption: 'newest',
   filteredUrls: [],
-  urlStats: null,
-  urlVisits: [],
-  sortOption: 'recent',
 
-  // Actions
   setLoading: (isLoading: boolean) => set({ isLoading }),
   setError: (error: IUrlError | null) => set({ error }),
   clearError: () => set({ error: null }),
-  setSortOption: (option: SortOption) => {
-    const urls = get().urls;
-    const searchTerm = get().searchTerm;
-    const sortedUrls = [...urls];
-
-    switch (option) {
-      case 'recent':
-        sortedUrls.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        break;
-      case 'clicks':
-        sortedUrls.sort((a, b) => b.visitCount - a.visitCount);
-        break;
-      case 'alphabetical':
-        sortedUrls.sort((a, b) => a.originalUrl.localeCompare(b.originalUrl));
-        break;
-    }
-
-    const filteredUrls = searchTerm
-      ? sortedUrls.filter(
-          (url) =>
-            url.originalUrl.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            url.shortUrl.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            url.customSlug?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      : sortedUrls;
-
-    set({ sortOption: option, urls: sortedUrls, filteredUrls });
-  },
-
   setSearchTerm: (term: string) => {
+    set({ searchTerm: term });
     const urls = get().urls;
-    const sortOption = get().sortOption;
-    const sortedUrls = [...urls];
-
-    switch (sortOption) {
-      case 'recent':
-        sortedUrls.sort(
+    const filtered = urls.filter(
+      (url) =>
+        url.shortUrl.toLowerCase().includes(term.toLowerCase()) ||
+        url.originalUrl.toLowerCase().includes(term.toLowerCase())
+    );
+    set({ filteredUrls: filtered });
+  },
+  setSortOption: (option: SortOption) => {
+    set({ sortOption: option });
+    const urls = [...get().urls];
+    switch (option) {
+      case 'newest':
+        urls.sort(
           (a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         break;
-      case 'clicks':
-        sortedUrls.sort((a, b) => b.visitCount - a.visitCount);
+      case 'oldest':
+        urls.sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
         break;
-      case 'alphabetical':
-        sortedUrls.sort((a, b) => a.originalUrl.localeCompare(b.originalUrl));
+      case 'most-visited':
+        urls.sort((a, b) => (b.visitCount || 0) - (a.visitCount || 0));
+        break;
+      case 'least-visited':
+        urls.sort((a, b) => (a.visitCount || 0) - (b.visitCount || 0));
         break;
     }
-
-    const filteredUrls = term
-      ? sortedUrls.filter(
-          (url) =>
-            url.originalUrl.toLowerCase().includes(term.toLowerCase()) ||
-            url.shortUrl.toLowerCase().includes(term.toLowerCase()) ||
-            url.customSlug?.toLowerCase().includes(term.toLowerCase())
-        )
-      : sortedUrls;
-
-    set({ searchTerm: term, filteredUrls });
+    set({ urls, filteredUrls: [...urls] });
   },
+  clearStore: () =>
+    set({
+      urls: [],
+      urlGroups: [],
+      urlDetails: null,
+      urlStats: null,
+      error: null,
+    }),
 
   createShortUrl: async (url: string, options?: CreateUrlOptions) => {
-    set({ isLoading: true, error: null });
     try {
-      const response = await apiClient.post('/api/shorten', {
+      set({ isLoading: true, error: null });
+      const { data } = await apiClient.post('/api/shorten', {
         url,
-        customSlug: options?.customSlug,
-        expiresAt: options?.expiresAt,
+        ...options,
       });
-      const urls = get().urls;
-      set({ urls: [response.data, ...urls] });
+      set((state) => ({
+        urls: [data, ...state.urls],
+      }));
     } catch (error) {
-      const urlError: IUrlError = {
-        code: 'CREATE_URL_ERROR',
-        message: (error as Error).message,
-      };
-      set({ error: urlError });
-      throw urlError;
+      set({
+        error: {
+          code: 'CREATE_ERROR',
+          message:
+            error instanceof Error ? error.message : 'Failed to create URL',
+        },
+      });
+      throw error;
     } finally {
       set({ isLoading: false });
     }
   },
 
   getUserUrls: async () => {
-    set({ isLoading: true, error: null });
     try {
-      const response = await apiClient.get('/api/urls');
-      set({ urls: response.data });
+      set({ isLoading: true, error: null });
+      const { data } = await apiClient.get('/api/urls');
+      set({ urls: data });
     } catch (error) {
-      const urlError: IUrlError = {
-        code: 'GET_URLS_ERROR',
-        message:
-          error instanceof Error ? error.message : 'Failed to fetch URLs',
-      };
-      set({ error: urlError });
-      throw error;
+      set({
+        error: {
+          code: 'FETCH_ERROR',
+          message:
+            error instanceof Error ? error.message : 'Failed to fetch URLs',
+        },
+      });
     } finally {
       set({ isLoading: false });
     }
   },
 
   getUrlDetails: async (shortId: string) => {
-    set({ isLoading: true, error: null });
     try {
-      const response = await apiClient.get(`/api/stats/${shortId}`);
-      set({ urlDetails: response.data });
-      return response.data;
+      set({ isLoading: true, error: null });
+      const { data } = await apiClient.get(`/api/stats/${shortId}`);
+      set({ urlDetails: data });
+      return data;
     } catch (error) {
-      const urlError: IUrlError = {
-        code: 'GET_URL_DETAILS_ERROR',
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Failed to fetch URL details',
-      };
-      set({ error: urlError });
+      set({
+        error: {
+          code: 'FETCH_ERROR',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Failed to fetch URL details',
+        },
+      });
       throw error;
     } finally {
       set({ isLoading: false });
     }
   },
 
-  getUrlStats: async (
-    shortId: string,
-    period: '24h' | '7d' | '30d' | '90d' = '7d'
-  ) => {
-    set({ isLoading: true, error: null });
+  getUrlStats: async (shortId: string, period: Period) => {
     try {
-      const response = await apiClient.get(
+      set({ isLoading: true, error: null });
+      const { data } = await apiClient.get(
         `/api/stats/${shortId}?period=${period}`
       );
-      set({ urlStats: response.data });
+      set({ urlStats: data });
     } catch (error) {
-      const urlError: IUrlError = {
-        code: 'GET_URL_STATS_ERROR',
-        message:
-          error instanceof Error ? error.message : 'Failed to fetch URL stats',
-      };
-      set({ error: urlError });
-      throw error;
+      set({
+        error: {
+          code: 'FETCH_ERROR',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Failed to fetch URL stats',
+        },
+      });
     } finally {
       set({ isLoading: false });
     }
   },
 
-  getUrlVisits: async (
-    shortId: string,
-    period: '24h' | '7d' | '30d' | '90d' = '7d'
-  ) => {
-    set({ isLoading: true, error: null });
+  getUrlVisits: async (shortId: string, period: Period) => {
     try {
-      const response = await apiClient.get(
-        `/api/stats/${shortId}/visits?period=${period}`
-      );
-      set({ urlVisits: response.data });
+      set({ isLoading: true, error: null });
+      await apiClient.get(`/api/stats/${shortId}/visits?period=${period}`);
     } catch (error) {
-      const urlError: IUrlError = {
-        code: 'GET_URL_VISITS_ERROR',
-        message:
-          error instanceof Error ? error.message : 'Failed to fetch URL visits',
-      };
-      set({ error: urlError });
-      throw error;
+      set({
+        error: {
+          code: 'FETCH_ERROR',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Failed to fetch URL visits',
+        },
+      });
     } finally {
       set({ isLoading: false });
     }
   },
 
   deleteUrl: async (shortId: string) => {
-    set({ isLoading: true, error: null });
     try {
+      set({ isLoading: true, error: null });
       await apiClient.delete(`/api/urls/${shortId}`);
-      const urls = get().urls.filter((url) => url.shortId !== shortId);
-      set({ urls });
+      set((state) => ({
+        urls: state.urls.filter((url) => url.shortId !== shortId),
+      }));
     } catch (error) {
-      const urlError: IUrlError = {
-        code: 'DELETE_URL_ERROR',
-        message:
-          error instanceof Error ? error.message : 'Failed to delete URL',
-      };
-      set({ error: urlError });
+      set({
+        error: {
+          code: 'DELETE_ERROR',
+          message:
+            error instanceof Error ? error.message : 'Failed to delete URL',
+        },
+      });
       throw error;
     } finally {
       set({ isLoading: false });
     }
   },
 
-  updateUrl: async (shortId: string, data: { originalUrl: string }) => {
-    set({ isLoading: true, error: null });
+  updateUrl: async (shortId: string, data: UpdateUrlOptions) => {
     try {
-      const response = await apiClient.patch(`/api/urls/${shortId}`, data);
-      const urls = get().urls.map((url) =>
-        url.shortId === shortId ? { ...url, ...response.data } : url
+      set({ isLoading: true, error: null });
+      const { data: updatedUrl } = await apiClient.patch(
+        `/api/urls/${shortId}`,
+        data
       );
-      set({ urls, urlDetails: response.data });
+      set((state) => ({
+        urls: state.urls.map((url) =>
+          url.shortId === shortId ? updatedUrl : url
+        ),
+        urlDetails:
+          state.urlDetails?.shortId === shortId ? updatedUrl : state.urlDetails,
+      }));
     } catch (error) {
-      const urlError: IUrlError = {
-        code: 'UPDATE_URL_ERROR',
-        message:
-          error instanceof Error ? error.message : 'Failed to update URL',
-      };
-      set({ error: urlError });
+      set({
+        error: {
+          code: 'UPDATE_ERROR',
+          message:
+            error instanceof Error ? error.message : 'Failed to update URL',
+        },
+      });
       throw error;
     } finally {
       set({ isLoading: false });
     }
   },
 
-  clearStore: () => {
-    set({
-      urls: [],
-      urlDetails: null,
-      isLoading: false,
-      error: null,
-      searchTerm: '',
-      filteredUrls: [],
-      urlStats: null,
-      urlVisits: [],
-      sortOption: 'recent',
-    });
+  createUrlGroup: async (name: string, description?: string) => {
+    try {
+      set({ isLoading: true, error: null });
+      const { data: group } = await apiClient.post('/api/url-groups', {
+        name,
+        description,
+      });
+      set((state) => ({
+        urlGroups: [group, ...state.urlGroups],
+      }));
+    } catch (error) {
+      set({
+        error: {
+          code: 'CREATE_ERROR',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Failed to create URL group',
+        },
+      });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  updateUrlGroup: async (groupId: number, data: Partial<IUrlGroup>) => {
+    try {
+      set({ isLoading: true, error: null });
+      const { data: updatedGroup } = await apiClient.put(
+        `/api/url-groups/${groupId}`,
+        data
+      );
+      set((state) => ({
+        urlGroups: state.urlGroups.map((group) =>
+          group.id === groupId ? updatedGroup : group
+        ),
+      }));
+    } catch (error) {
+      set({
+        error: {
+          code: 'UPDATE_ERROR',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Failed to update URL group',
+        },
+      });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  deleteUrlGroup: async (groupId: number) => {
+    try {
+      set({ isLoading: true, error: null });
+      await apiClient.delete(`/api/url-groups/${groupId}`);
+      set((state) => ({
+        urlGroups: state.urlGroups.filter((group) => group.id !== groupId),
+        urls: state.urls.map((url) =>
+          url.groupId === groupId ? { ...url, groupId: undefined } : url
+        ),
+      }));
+    } catch (error) {
+      set({
+        error: {
+          code: 'DELETE_ERROR',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Failed to delete URL group',
+        },
+      });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  getUserUrlGroups: async () => {
+    try {
+      set({ isLoading: true, error: null });
+      const { data } = await apiClient.get('/api/url-groups');
+      set({ urlGroups: data });
+    } catch (error) {
+      set({
+        error: {
+          code: 'FETCH_ERROR',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Failed to fetch URL groups',
+        },
+      });
+    } finally {
+      set({ isLoading: false });
+    }
   },
 }));
 

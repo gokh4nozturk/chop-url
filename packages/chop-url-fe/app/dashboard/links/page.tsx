@@ -20,6 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import useUrlStore from '@/lib/store/url';
+import { IUrl } from '@/lib/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useEffect } from 'react';
@@ -123,28 +124,36 @@ export default function LinksPage() {
             <DropdownMenuLabel>Sort by</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => setSortOption('recent')}
+              onClick={() => setSortOption('newest')}
               className={`transition-colors duration-200 ${
-                sortOption === 'recent' ? 'bg-accent' : ''
+                sortOption === 'newest' ? 'bg-accent' : ''
               }`}
             >
               Most Recent
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => setSortOption('clicks')}
+              onClick={() => setSortOption('most-visited')}
               className={`transition-colors duration-200 ${
-                sortOption === 'clicks' ? 'bg-accent' : ''
+                sortOption === 'most-visited' ? 'bg-accent' : ''
               }`}
             >
               Most Clicked
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => setSortOption('alphabetical')}
+              onClick={() => setSortOption('least-visited')}
               className={`transition-colors duration-200 ${
-                sortOption === 'alphabetical' ? 'bg-accent' : ''
+                sortOption === 'least-visited' ? 'bg-accent' : ''
               }`}
             >
-              Alphabetical
+              Least Clicked
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setSortOption('oldest')}
+              className={`transition-colors duration-200 ${
+                sortOption === 'oldest' ? 'bg-accent' : ''
+              }`}
+            >
+              Oldest
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -189,81 +198,83 @@ export default function LinksPage() {
               </TableHeader>
               <TableBody>
                 <AnimatePresence>
-                  {(searchTerm ? filteredUrls : urls).map((link, index) => (
-                    <motion.tr
-                      key={link.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{
-                        duration: 0.3,
-                        delay: index * 0.05,
-                      }}
-                      className="group"
-                    >
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          {link.shortUrl}
-                          <motion.div whileHover={{ scale: 1.1 }}>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-all duration-300"
-                              onClick={() => copyToClipboard(link.shortUrl)}
-                            >
-                              <Icons.copy className="h-4 w-4" />
-                            </Button>
-                          </motion.div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden max-w-[200px] truncate md:table-cell">
-                        {link.originalUrl}
-                      </TableCell>
-                      <TableCell>{link.visitCount}</TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        {new Date(link.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell">
-                        {link.lastAccessedAt
-                          ? new Date(link.lastAccessedAt).toLocaleDateString()
-                          : 'Never'}
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
+                  {(searchTerm ? filteredUrls : urls).map(
+                    (link: IUrl, index: number) => (
+                      <motion.tr
+                        key={link.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{
+                          duration: 0.3,
+                          delay: index * 0.05,
+                        }}
+                        className="group"
+                      >
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {link.shortUrl}
                             <motion.div whileHover={{ scale: 1.1 }}>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 transition-all duration-300"
+                                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-all duration-300"
+                                onClick={() => copyToClipboard(link.shortUrl)}
                               >
-                                <Icons.moreVertical className="h-4 w-4" />
+                                <Icons.copy className="h-4 w-4" />
                               </Button>
                             </motion.div>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link href={`/dashboard/links/${link.shortId}`}>
-                                Details
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link
-                                href={`/dashboard/analytics/${link.shortId}`}
-                              >
-                                Analytics
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>QR Code</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive">
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </motion.tr>
-                  ))}
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden max-w-[200px] truncate md:table-cell">
+                          {link.originalUrl}
+                        </TableCell>
+                        <TableCell>{link.visitCount}</TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          {new Date(link.createdAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {link.lastAccessedAt
+                            ? new Date(link.lastAccessedAt).toLocaleDateString()
+                            : 'Never'}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <motion.div whileHover={{ scale: 1.1 }}>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 transition-all duration-300"
+                                >
+                                  <Icons.moreVertical className="h-4 w-4" />
+                                </Button>
+                              </motion.div>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem asChild>
+                                <Link href={`/dashboard/links/${link.shortId}`}>
+                                  Details
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link
+                                  href={`/dashboard/analytics/${link.shortId}`}
+                                >
+                                  Analytics
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>QR Code</DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="text-destructive">
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </motion.tr>
+                    )
+                  )}
                 </AnimatePresence>
               </TableBody>
             </Table>

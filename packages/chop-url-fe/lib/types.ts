@@ -72,14 +72,50 @@ export interface IUrlStats {
 
 export interface IUrl {
   id: number;
-  shortUrl: string;
   shortId: string;
+  shortUrl: string;
   originalUrl: string;
-  customSlug?: string;
-  userId: number;
   createdAt: string;
   lastAccessedAt?: string;
   visitCount: number;
-  expiresAt?: string;
   isActive: boolean;
+  expiresAt?: string;
+  userId?: number;
+  customSlug?: string;
+  tags?: string[];
+  groupId?: number;
 }
+
+export interface IUrlGroup {
+  id: number;
+  name: string;
+  description?: string;
+  userId: number;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateUrlOptions {
+  customSlug?: string;
+  expiresAt?: string;
+  tags?: string[];
+  groupId?: number;
+}
+
+export interface UpdateUrlOptions {
+  originalUrl?: string;
+  customSlug?: string;
+  expiresAt?: string;
+  tags?: string[];
+  groupId?: number;
+  isActive?: boolean;
+}
+
+export interface IUrlError {
+  code: string;
+  message: string;
+}
+
+export type SortOption = 'newest' | 'oldest' | 'most-visited' | 'least-visited';
+
+export type Period = '24h' | '7d' | '30d' | '90d';
