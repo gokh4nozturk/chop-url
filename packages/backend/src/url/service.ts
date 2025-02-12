@@ -2,7 +2,6 @@ import { ChopUrl } from '@chop-url/lib';
 import { and, desc, eq, gte, inArray, or, sql } from 'drizzle-orm';
 import { UAParser } from 'ua-parser-js';
 import { createDb } from '../db/client';
-import { executeRawQuery } from '../db/client';
 import { urls, visits } from '../db/schema';
 import { ICreateUrlResponse, IUrl, IUrlStats, IVisit } from './index';
 

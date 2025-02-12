@@ -1,13 +1,8 @@
 import { Context, Hono } from 'hono';
-import { ValidationTargets } from 'hono/types';
 import { z } from 'zod';
 import { auth } from '../auth/middleware.js';
-import { AuthService } from '../auth/service.js';
 import { IUser } from '../auth/types.js';
-import { createDb } from '../db/client';
-import { IUrl } from './index.js';
-import { trackVisitMiddleware } from './middleware.js';
-import { getVisitsByTimeRange, trackVisit } from './service';
+import { getVisitsByTimeRange } from './service';
 import { UrlService } from './service.js';
 
 interface Env {
@@ -25,39 +20,21 @@ interface Variables {
   user: IUser;
 }
 
-type ValidatedContext = Context<{
-  Bindings: Env;
-  Variables: Variables;
-  ValidationTargets: ValidationTargets;
-  ValidatedData: {
-    query: { period?: '24h' | '7d' | '30d' | '90d' };
-    json: z.infer<typeof trackVisitSchema>;
-  };
-}>;
-
-const periodSchema = z.enum(['24h', '7d', '30d', '90d']).default('7d');
-
-const trackVisitSchema = z.object({
-  urlId: z.number(),
-  ipAddress: z.string(),
-  userAgent: z.string(),
-  referrer: z.string().nullable().optional(),
-});
-
 const createUrlSchema = z.object({
   url: z.string().url(),
   customSlug: z.string().optional(),
   expiresAt: z.string().datetime().optional(),
 });
 
-type H = Hono<{ Bindings: Env; Variables: Variables }>;
+type H = { Bindings: Env; Variables: Variables };
 
 const VALID_PERIODS = ['24h', '7d', '30d', '90d'] as const;
 type Period = (typeof VALID_PERIODS)[number];
 
 export const createUrlRoutes = () => {
-  const router = new Hono<{ Bindings: Env; Variables: Variables }>();
+  const router = new Hono<H>();
 
+  // This endpoint is used by authenticated users to create a short URL
   router.post('/shorten', auth(), async (c: Context) => {
     try {
       const body = await c.req.json();
@@ -81,6 +58,46 @@ export const createUrlRoutes = () => {
           originalUrl: result.originalUrl,
           createdAt: result.createdAt,
           userId: result.userId,
+        },
+        200
+      );
+    } catch (error) {
+      console.error('Error creating short URL:', error);
+
+      if (error instanceof z.ZodError) {
+        return c.json(
+          { error: 'Invalid request body', details: error.errors },
+          400
+        );
+      }
+
+      if (error instanceof Error) {
+        if (
+          error.message === 'Custom slug already exists' ||
+          error.message.includes('URL already exists')
+        ) {
+          return c.json({ error: 'Custom slug already exists' }, 409);
+        }
+      }
+      return c.json({ error: 'Failed to create short URL' }, 500);
+    }
+  });
+
+  // This endpoint is used by any user to create a short URL, not just authenticated users
+  router.post('/chop', async (c: Context) => {
+    try {
+      const body = await c.req.json();
+      const { url, customSlug } = createUrlSchema.parse(body);
+      const db = c.get('db');
+
+      const urlService = new UrlService(c.env.BASE_URL, db);
+      const result = await urlService.createShortUrl(url, { customSlug });
+
+      return c.json(
+        {
+          shortUrl: result.shortUrl,
+          shortId: result.shortId,
+          expiresAt: result.expiresAt,
         },
         200
       );
@@ -152,23 +169,6 @@ export const createUrlRoutes = () => {
     }
   });
 
-  router.post('/track', async (c: Context) => {
-    const body = await c.req.json();
-    const { urlId, ipAddress, userAgent, referrer } = body;
-    const db = createDb(c.env.DB);
-
-    if (!urlId || !ipAddress || !userAgent) {
-      return c.json({ error: 'Missing required fields' }, 400);
-    }
-
-    try {
-      await trackVisit(db, urlId, ipAddress, userAgent, referrer || null);
-      return c.json({ success: true });
-    } catch (error) {
-      return c.json({ error: 'Failed to track visit' }, 500);
-    }
-  });
-
   router.get('/analytics', auth(), async (c: Context) => {
     const period = (c.req.query('period') as Period) || '7d';
     const db = c.get('db');
@@ -188,19 +188,6 @@ export const createUrlRoutes = () => {
     } catch (error) {
       return c.json({ error: 'Failed to get analytics' }, 500);
     }
-  });
-
-  router.get('/:shortId', trackVisitMiddleware, async (c: Context) => {
-    const shortId = c.req.param('shortId');
-    const db = createDb(c.env.DB);
-    const urlService = new UrlService(c.env.BASE_URL, db);
-    const url = await urlService.getUrl(shortId);
-
-    if (!url) {
-      return c.json({ error: 'URL not found' }, 404);
-    }
-
-    return c.redirect(url.originalUrl);
   });
 
   return router;

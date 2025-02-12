@@ -47,7 +47,8 @@ export interface IUrlStats {
 export interface ICreateUrlResponse {
   shortUrl: string;
   shortId: string;
-  originalUrl: string;
-  createdAt: string | null;
+  originalUrl?: string;
+  createdAt?: string | null;
   userId?: number | null;
+  expiresAt?: string | null;
 }

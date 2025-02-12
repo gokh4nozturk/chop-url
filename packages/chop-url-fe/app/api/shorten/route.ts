@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/shorten`;
+    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/chop`;
 
     const response = await fetch(backendUrl, {
       method: 'POST',
@@ -86,7 +86,9 @@ export async function POST(request: Request) {
       );
     }
 
-    let data: { shortUrl: string; shortId: string } | undefined;
+    let data:
+      | { shortUrl: string; shortId: string; expiresAt: string | null }
+      | undefined;
     try {
       data = JSON.parse(responseText);
     } catch {
