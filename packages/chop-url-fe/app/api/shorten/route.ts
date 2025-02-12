@@ -70,7 +70,6 @@ export async function POST(request: Request) {
         errorData = { error: 'Failed to parse error response' };
       }
 
-      // Custom slug hatası için özel durum
       if (response.status === 409) {
         return NextResponse.json(
           {
@@ -97,6 +96,8 @@ export async function POST(request: Request) {
         { status: 500, headers: corsHeaders() }
       );
     }
+
+    console.log(data);
 
     return NextResponse.json(data, { headers: corsHeaders() });
   } catch (error) {

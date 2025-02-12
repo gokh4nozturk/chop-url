@@ -152,7 +152,7 @@ export class UrlService {
           options?.expiresAt ||
           (!token
             ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-            : null),
+            : new Date(Date.now() + 7 * 60 * 60 * 24 * 1000).toISOString()),
         isActive: true,
       };
 
@@ -161,6 +161,7 @@ export class UrlService {
         originalUrl: urls.originalUrl,
         createdAt: urls.createdAt,
         userId: urls.userId,
+        expiresAt: urls.expiresAt,
       });
 
       return {
@@ -169,6 +170,7 @@ export class UrlService {
         originalUrl: url,
         createdAt: new Date().toISOString(),
         userId: urlData.userId,
+        expiresAt: urlData.expiresAt,
       };
     } catch (error) {
       console.error('Error in createShortUrl:', error);
