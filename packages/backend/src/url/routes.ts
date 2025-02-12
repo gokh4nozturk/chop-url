@@ -235,6 +235,18 @@ export const createUrlRoutes = () => {
     }
   });
 
+  router.get('/urls/:shortId', auth(), async (c: Context) => {
+    try {
+      const shortId = c.req.param('shortId');
+      const db = c.get('db');
+      const urlService = new UrlService(c.env.BASE_URL, db);
+      const url = await urlService.getUrl(shortId);
+      return c.json(url);
+    } catch (error) {
+      return c.json({ error: 'URL not found' }, 404);
+    }
+  });
+
   router.get('/stats/:shortId', auth(), async (c: Context) => {
     const shortId = c.req.param('shortId');
     const period = (c.req.query('period') as Period) || '7d';

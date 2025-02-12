@@ -26,7 +26,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { UrlForm } from '@/components/url/url-form';
 import useUrlStore from '@/lib/store/url';
 import { IUrl } from '@/lib/types';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -310,7 +309,13 @@ export default function LinksPage() {
                                 </Link>
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <UrlForm url={link} />
+                              <DropdownMenuItem asChild>
+                                <Link
+                                  href={`/dashboard/links/${link.shortId}/edit`}
+                                >
+                                  Edit
+                                </Link>
+                              </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="text-destructive"
                                 onClick={() => handleDeleteUrl(link.shortId)}

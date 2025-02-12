@@ -21,17 +21,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import useUrlStore from '@/lib/store/url';
 import { IUrl } from '@/lib/types';
@@ -48,6 +37,7 @@ import {
   Share2,
   Trash2,
 } from 'lucide-react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useRef, useState } from 'react';
@@ -116,9 +106,7 @@ const ErrorState = ({ error }: { error: IUrlError }) => {
 const LinkDetails = ({ urlDetails }: { urlDetails: IUrl }) => {
   const qrRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editedUrl, setEditedUrl] = useState(urlDetails.originalUrl);
-  const { deleteUrl, updateUrl } = useUrlStore();
+  const { deleteUrl } = useUrlStore();
 
   const formattedDate = new Date(urlDetails.createdAt).toLocaleDateString(
     'en-US',
@@ -157,16 +145,6 @@ const LinkDetails = ({ urlDetails }: { urlDetails: IUrl }) => {
       router.push('/dashboard/links');
     } catch (err) {
       toast.error('Failed to delete link');
-    }
-  };
-
-  const handleUpdate = async () => {
-    try {
-      await updateUrl(urlDetails.shortId, { originalUrl: editedUrl });
-      toast.success('Link updated successfully');
-      setIsEditDialogOpen(false);
-    } catch (err) {
-      toast.error('Failed to update link');
     }
   };
 
@@ -293,45 +271,15 @@ const LinkDetails = ({ urlDetails }: { urlDetails: IUrl }) => {
               </div>
             </CardContent>
             <CardFooter className="justify-end space-x-2">
-              <Dialog
-                open={isEditDialogOpen}
-                onOpenChange={setIsEditDialogOpen}
-              >
-                <DialogTrigger asChild>
-                  <Button variant="outline">
-                    <Pencil className="mr-2 h-4 w-4" />
-                    Edit
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Edit Link</DialogTitle>
-                    <DialogDescription>
-                      Update the original URL. The short URL will remain the
-                      same.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="originalUrl">Original URL</Label>
-                      <Input
-                        id="originalUrl"
-                        value={editedUrl}
-                        onChange={(e) => setEditedUrl(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsEditDialogOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button onClick={handleUpdate}>Update</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+              <Button variant="outline" asChild>
+                <Link
+                  className="flex items-center"
+                  href={`/dashboard/links/${urlDetails.shortId}/edit`}
+                >
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit
+                </Link>
+              </Button>
 
               <AlertDialog>
                 <AlertDialogTrigger asChild>

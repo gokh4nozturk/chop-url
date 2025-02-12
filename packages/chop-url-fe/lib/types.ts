@@ -73,17 +73,28 @@ export interface IUrlStats {
 export interface IUrl {
   id: number;
   shortId: string;
-  shortUrl: string;
   originalUrl: string;
-  createdAt: string;
-  lastAccessedAt?: string;
+  shortUrl: string;
+  customSlug?: string;
+  userId: number;
+  groupId?: number;
   visitCount: number;
   isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lastAccessedAt?: string;
   expiresAt?: string;
-  userId?: number;
-  customSlug?: string;
   tags?: string[];
-  groupId?: number;
+  // UTM Parameters
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmTerm?: string;
+  utmContent?: string;
+  // Expiration Config
+  expirationEnabled?: boolean;
+  expirationValue?: number;
+  expirationUnit?: 'hours' | 'days' | 'weeks' | 'months';
 }
 
 export interface IUrlGroup {
@@ -103,12 +114,22 @@ export interface CreateUrlOptions {
 }
 
 export interface UpdateUrlOptions {
-  originalUrl?: string;
+  originalUrl: string;
   customSlug?: string;
-  expiresAt?: string;
   tags?: string[];
   groupId?: number;
-  isActive?: boolean;
+  isActive: boolean;
+  expiresAt?: string;
+  // UTM Parameters
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmTerm?: string;
+  utmContent?: string;
+  // Expiration Config
+  expirationEnabled?: boolean;
+  expirationValue?: number;
+  expirationUnit?: 'hours' | 'days' | 'weeks' | 'months';
 }
 
 export interface IUrlError {

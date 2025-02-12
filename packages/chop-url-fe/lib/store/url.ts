@@ -144,7 +144,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   getUrlDetails: async (shortId: string) => {
     try {
       set({ isLoading: true, error: null });
-      const { data } = await apiClient.get(`/api/stats/${shortId}`);
+      const { data } = await apiClient.get(`/api/urls/${shortId}`);
       set({ urlDetails: data });
       return data;
     } catch (error) {
