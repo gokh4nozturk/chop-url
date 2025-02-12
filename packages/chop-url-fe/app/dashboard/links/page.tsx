@@ -90,7 +90,7 @@ export default function LinksPage() {
       transition={{ duration: 0.5 }}
       className="space-y-6"
     >
-      <div className="flex flex-col gap-4 xs:flex-row xs:items-center xs:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <motion.h2
             initial={{ opacity: 0, x: -20 }}
@@ -131,7 +131,7 @@ export default function LinksPage() {
         transition={{ duration: 0.5, delay: 0.3 }}
         className="flex items-center gap-2"
       >
-        <div className="flex-1">
+        <div className="flex-1 flex items-center gap-2">
           <Input
             placeholder="Search URLs..."
             value={searchTerm}
@@ -217,9 +217,9 @@ export default function LinksPage() {
         ) : (searchTerm ? filteredUrls : urls).length > 0 ? (
           <motion.div
             key="table"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
             className="rounded-md border shadow-sm hover:shadow-md transition-all duration-300"
           >

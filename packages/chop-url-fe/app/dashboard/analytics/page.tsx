@@ -90,7 +90,7 @@ export default function AnalyticsPage() {
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">{title}</CardTitle>
           <motion.div
-            whileHover={{ rotate: 15 }}
+            whileHover={{ scale: 1.1 }}
             transition={{ type: 'spring', stiffness: 300 }}
           >
             <Icon className="h-4 w-4 text-muted-foreground" />
@@ -165,19 +165,20 @@ export default function AnalyticsPage() {
               <SelectItem value="90d">Last 90 Days</SelectItem>
             </SelectContent>
           </Select>
-          <motion.div whileHover={{ scale: 1.05 }}>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => {
-                setIsLoading(true);
-                fetchAnalytics();
-              }}
-              className="transition-all duration-300 hover:shadow-md"
-            >
-              <Icons.loading className="h-4 w-4" />
-            </Button>
-          </motion.div>
+
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => {
+              setIsLoading(true);
+              fetchAnalytics();
+            }}
+            className="transition-all duration-300 hover:shadow-md"
+          >
+            <Icons.loading
+              className={`${isLoading ? 'animate-spin' : ''} h-4 w-4`}
+            />
+          </Button>
         </motion.div>
       </div>
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -51,7 +52,14 @@ export function UrlGroupForm({ group, onSuccess }: UrlGroupFormProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant={group ? 'outline' : 'default'}>
-          {group ? 'Edit' : 'Create New Group'}
+          {group ? (
+            'Edit'
+          ) : (
+            <>
+              <Icons.plus className="mr-2 h-4 w-4" />
+              New URL Group
+            </>
+          )}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
