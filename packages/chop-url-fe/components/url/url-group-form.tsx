@@ -35,15 +35,15 @@ export function UrlGroupForm({ group, onSuccess }: UrlGroupFormProps) {
     try {
       if (group) {
         await updateUrlGroup(group.id, { name, description });
-        toast.success('URL grubu başarıyla güncellendi');
+        toast.success('URL group updated successfully');
       } else {
         await createUrlGroup(name, description);
-        toast.success('URL grubu başarıyla oluşturuldu');
+        toast.success('URL group created successfully');
       }
       setOpen(false);
       onSuccess?.();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Bir hata oluştu');
+      toast.error(error instanceof Error ? error.message : 'An error occurred');
     }
   };
 
@@ -51,23 +51,23 @@ export function UrlGroupForm({ group, onSuccess }: UrlGroupFormProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant={group ? 'outline' : 'default'}>
-          {group ? 'Düzenle' : 'Yeni Grup Oluştur'}
+          {group ? 'Edit' : 'Create New Group'}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {group ? 'URL Grubunu Düzenle' : 'Yeni URL Grubu'}
+            {group ? 'Edit URL Group' : 'New URL Group'}
           </DialogTitle>
           <DialogDescription>
-            URL'lerinizi organize etmek için gruplar oluşturun.
+            Create groups to organize your URLs.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="name" className="text-right">
-                İsim
+                Name
               </Label>
               <Input
                 id="name"
@@ -79,7 +79,7 @@ export function UrlGroupForm({ group, onSuccess }: UrlGroupFormProps) {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="description" className="text-right">
-                Açıklama
+                Description
               </Label>
               <Textarea
                 id="description"
@@ -90,7 +90,7 @@ export function UrlGroupForm({ group, onSuccess }: UrlGroupFormProps) {
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit">{group ? 'Güncelle' : 'Oluştur'}</Button>
+            <Button type="submit">{group ? 'Update' : 'Create'}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

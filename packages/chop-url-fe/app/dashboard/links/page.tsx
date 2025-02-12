@@ -12,6 +12,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Table,
   TableBody,
   TableCell,
@@ -23,25 +30,31 @@ import useUrlStore from '@/lib/store/url';
 import { IUrl } from '@/lib/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 export default function LinksPage() {
   const {
     urls,
+    urlGroups,
     filteredUrls,
     searchTerm,
     setSearchTerm,
     setSortOption,
     sortOption,
     getUserUrls,
+    getUserUrlGroups,
     isLoading: isLoadingUrls,
     error,
+    filterByGroup,
   } = useUrlStore();
+
+  const [selectedGroup, setSelectedGroup] = useState<string>('all');
 
   useEffect(() => {
     getUserUrls();
-  }, [getUserUrls]);
+    getUserUrlGroups();
+  }, [getUserUrls, getUserUrlGroups]);
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -50,6 +63,11 @@ export default function LinksPage() {
     } catch (err) {
       toast.error('Failed to copy URL');
     }
+  };
+
+  const handleGroupChange = (value: string) => {
+    setSelectedGroup(value);
+    filterByGroup(value);
   };
 
   return (
@@ -102,11 +120,24 @@ export default function LinksPage() {
       >
         <div className="flex-1">
           <Input
-            placeholder="Search links..."
+            placeholder="Search URLs..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm transition-all duration-300 focus:shadow-md"
+            className="max-w-[300px]"
           />
+          <Select value={selectedGroup} onValueChange={handleGroupChange}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select group" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Groups</SelectItem>
+              {urlGroups.map((group) => (
+                <SelectItem key={group.id} value={group.id.toString()}>
+                  {group.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

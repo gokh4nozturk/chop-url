@@ -15,6 +15,7 @@ import {
   Download,
   File,
   FileText,
+  Folder,
   Frame as FrameIcon,
   Github,
   Globe,
@@ -59,6 +60,7 @@ export const Icons = {
   link: FrameIcon,
   share: Share2,
   check: Check,
+  command: Command,
   download: Download,
   hash: Hash,
   barChart: BarChart2,
@@ -68,6 +70,7 @@ export const Icons = {
   frame: FrameIcon,
   fileText: FileText,
   file: File,
+  folder: Folder,
   image: Image,
   moreVertical: MoreVertical,
   plus: Plus,
@@ -101,6 +104,7 @@ export const Icons = {
   creditCard: CreditCard,
   close: X,
   loading: Loader2,
+  trash: Trash,
   google: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden="true"

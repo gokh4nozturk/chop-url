@@ -32,9 +32,19 @@ const items = [
     icon: Icons.link2,
   },
   {
+    title: 'Groups',
+    href: '/dashboard/groups',
+    icon: Icons.folder,
+  },
+  {
     title: 'Analytics',
     href: '/dashboard/analytics',
     icon: Icons.barChart,
+  },
+  {
+    title: 'Settings',
+    href: '/dashboard/settings',
+    icon: Icons.settings,
   },
 ];
 

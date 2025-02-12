@@ -38,6 +38,7 @@ interface IUrlStore {
   updateUrlGroup: (groupId: number, data: Partial<IUrlGroup>) => Promise<void>;
   deleteUrlGroup: (groupId: number) => Promise<void>;
   getUserUrlGroups: () => Promise<void>;
+  filterByGroup: (groupId: string) => void;
 }
 
 const useUrlStore = create<IUrlStore>((set, get) => ({
@@ -350,6 +351,27 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
     } finally {
       set({ isLoading: false });
     }
+  },
+
+  filterByGroup: (groupId: string) => {
+    const urls = get().urls;
+    const searchTerm = get().searchTerm;
+
+    let filtered = [...urls];
+
+    if (groupId !== 'all') {
+      filtered = filtered.filter((url) => url.groupId === parseInt(groupId));
+    }
+
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (url) =>
+          url.shortUrl.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          url.originalUrl.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    set({ filteredUrls: filtered });
   },
 }));
 
