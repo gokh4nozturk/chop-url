@@ -4,36 +4,18 @@ import DecorativeBackground from '@/components/custom/decorative-background';
 import GradientButton from '@/components/custom/gradient-button';
 import GradientText from '@/components/custom/gradient-text';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import {
-  BarChart2,
-  Check,
-  Copy,
-  Download,
-  Hash,
-  Link as LinkIcon,
-  Share2,
-} from 'lucide-react';
+import { Check, Copy, Hash, Link as LinkIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-
-interface UrlStats {
-  visitCount: number;
-  lastAccessedAt: string | null;
-  createdAt: string;
-  originalUrl: string;
-}
 
 export default function Home() {
   const [url, setUrl] = useState('');
   const [customSlug, setCustomSlug] = useState('');
   const [shortenedUrl, setShortenedUrl] = useState('');
-  const [qrCode, setQrCode] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
-  const [stats, setStats] = useState<UrlStats | null>(null);
-  const [showStats, setShowStats] = useState(false);
 
   useEffect(() => {
     // Reset copied state after 2 seconds
@@ -49,8 +31,6 @@ export default function Home() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    setStats(null);
-    setShowStats(false);
 
     try {
       // Basic URL validation
@@ -96,7 +76,6 @@ export default function Home() {
 
       const data = await response.json();
       setShortenedUrl(data.shortUrl);
-      setQrCode(data.qrCode);
     } catch (error) {
       console.error('Error shortening URL:', error);
       setError(
@@ -115,32 +94,6 @@ export default function Home() {
       setCopied(true);
     } catch (error) {
       console.error('Failed to copy:', error);
-    }
-  };
-
-  const fetchStats = async () => {
-    if (!shortenedUrl) return;
-
-    try {
-      const shortId = shortenedUrl.split('/').pop();
-      const response = await fetch(`/api/stats/${shortId}`, {
-        headers: {
-          Accept: 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch stats');
-      }
-
-      const data = await response.json();
-      setStats(data);
-      setShowStats(true);
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to fetch stats'
-      );
     }
   };
 
@@ -195,126 +148,28 @@ export default function Home() {
         </form>
 
         {shortenedUrl && (
-          <div className="space-y-4 animate-in fade-in-50 duration-500">
+          <div className="w-full max-w-lg animate-in fade-in-50 duration-500">
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between space-x-2">
                   <p className="text-base font-medium truncate flex-1">
                     {shortenedUrl}
                   </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={copyToClipboard}
-                      className="h-10 w-10 rounded-full transition-all duration-300 hover:bg-gradient-to-r hover:from-[#FF0080]/10 hover:to-[#7928CA]/10"
-                    >
-                      {copied ? (
-                        <Check className="h-5 w-5 text-green-500" />
-                      ) : (
-                        <Copy className="h-5 w-5 text-[#FF0080] transition-colors" />
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={fetchStats}
-                      className="h-10 w-10 rounded-full transition-all duration-300 hover:bg-gradient-to-r hover:from-[#7928CA]/10 hover:to-[#FF0080]/10"
-                    >
-                      <BarChart2 className="h-5 w-5 text-[#7928CA] transition-colors" />
-                    </Button>
-                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={copyToClipboard}
+                    className="h-10 w-10 rounded-full transition-all duration-300 hover:bg-gradient-to-r hover:from-[#FF0080]/10 hover:to-[#7928CA]/10"
+                  >
+                    {copied ? (
+                      <Check className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <Copy className="h-5 w-5 text-[#FF0080] transition-colors" />
+                    )}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
-
-            {qrCode && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-medium flex items-center justify-between">
-                    QR Code
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          const link = document.createElement('a');
-                          link.href = qrCode;
-                          link.download = 'qr-code.png';
-                          link.click();
-                        }}
-                        className="h-10 w-10"
-                      >
-                        <Download className="h-5 w-5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          if (navigator.share) {
-                            navigator.share({
-                              title: 'QR Code',
-                              text: 'Check out this QR code for my shortened URL!',
-                              url: shortenedUrl,
-                            });
-                          }
-                        }}
-                        className="h-10 w-10"
-                      >
-                        <Share2 className="h-5 w-5" />
-                      </Button>
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex justify-center bg-white p-6 rounded-lg">
-                    <img
-                      src={qrCode}
-                      alt="QR Code"
-                      className="h-[250px] w-[250px] object-contain"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {showStats && stats && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-medium">
-                    Statistics
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-muted-foreground">
-                        Visit Count
-                      </p>
-                      <p className="text-3xl font-bold">{stats.visitCount}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-muted-foreground">
-                        Created At
-                      </p>
-                      <p className="text-base">
-                        {new Date(stats.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    {stats.lastAccessedAt && (
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Last Accessed
-                        </p>
-                        <p className="text-base">
-                          {new Date(stats.lastAccessedAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
         )}
       </div>
