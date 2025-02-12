@@ -56,6 +56,14 @@ app.get('/:shortId', async (c: CFContext) => {
       const country = cf?.country || 'Unknown';
       const city = cf?.city || 'Unknown';
 
+      // Parse URL for UTM parameters
+      const url = new URL(c.req.url);
+      const utmSource = url.searchParams.get('utm_source');
+      const utmMedium = url.searchParams.get('utm_medium');
+      const utmCampaign = url.searchParams.get('utm_campaign');
+      const utmTerm = url.searchParams.get('utm_term');
+      const utmContent = url.searchParams.get('utm_content');
+
       // Parse user agent
       const parser = new UAParser(userAgent);
       const browser = parser.getBrowser();
@@ -73,6 +81,13 @@ app.get('/:shortId', async (c: CFContext) => {
         os: os.name,
         osVersion: os.version,
         deviceType: device.type,
+        utm: {
+          source: utmSource,
+          medium: utmMedium,
+          campaign: utmCampaign,
+          term: utmTerm,
+          content: utmContent,
+        },
       });
 
       // Ziyaret sayısını artır
@@ -89,8 +104,9 @@ app.get('/:shortId', async (c: CFContext) => {
           browser, browser_version, os, os_version, 
           device_type, country, city, region, region_code,
           timezone, longitude, latitude, postal_code,
+          utm_source, utm_medium, utm_campaign, utm_term, utm_content,
           visited_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       `)
         .bind(
           result.id,
@@ -109,7 +125,12 @@ app.get('/:shortId', async (c: CFContext) => {
           cf?.timezone || 'Unknown',
           cf?.longitude || null,
           cf?.latitude || null,
-          cf?.postalCode || null
+          cf?.postalCode || null,
+          utmSource,
+          utmMedium,
+          utmCampaign,
+          utmTerm,
+          utmContent
         )
         .run();
     } catch (error) {

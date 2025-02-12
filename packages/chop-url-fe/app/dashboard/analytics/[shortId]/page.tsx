@@ -140,7 +140,9 @@ export default function LinkDetailsPage() {
               <Skeleton className="h-8 w-24" />
             ) : (
               <div className="text-2xl font-bold">
-                {(urlStats?.visitCount || 0) > 0 ? 'Active' : 'Inactive'}
+                {urlStats?.totalVisits && urlStats.totalVisits > 0
+                  ? 'Active'
+                  : 'Inactive'}
               </div>
             )}
           </CardContent>
@@ -332,6 +334,145 @@ export default function LinkDetailsPage() {
                           </div>
                         ))
                     : null}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Campaign Analytics</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="h-[150px] w-full animate-pulse bg-muted" />
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">UTM Sources</div>
+                    {urlStats?.visits
+                      ? Object.entries(
+                          urlStats.visits.reduce(
+                            (acc, visit) => {
+                              const source = visit.utmSource || 'Direct';
+                              acc[source] = (acc[source] || 0) + 1;
+                              return acc;
+                            },
+                            {} as Record<string, number>
+                          )
+                        )
+                          .sort(([, a], [, b]) => b - a)
+                          .map(([source, count]) => (
+                            <div key={source} className="flex items-center">
+                              <div className="w-1/3 text-sm">{source}</div>
+                              <div className="flex-1">
+                                <div className="h-2 w-full rounded-full bg-muted">
+                                  <div
+                                    className="h-2 rounded-full bg-primary"
+                                    style={{
+                                      width: `${
+                                        (count / (urlStats?.totalVisits || 1)) *
+                                        100
+                                      }%`,
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                              <div className="w-1/6 text-right text-sm">
+                                {(
+                                  (count / (urlStats?.totalVisits || 1)) *
+                                  100
+                                ).toFixed(1)}
+                                %
+                              </div>
+                            </div>
+                          ))
+                      : null}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">UTM Mediums</div>
+                    {urlStats?.visits
+                      ? Object.entries(
+                          urlStats.visits.reduce(
+                            (acc, visit) => {
+                              const medium = visit.utmMedium || 'None';
+                              acc[medium] = (acc[medium] || 0) + 1;
+                              return acc;
+                            },
+                            {} as Record<string, number>
+                          )
+                        )
+                          .sort(([, a], [, b]) => b - a)
+                          .map(([medium, count]) => (
+                            <div key={medium} className="flex items-center">
+                              <div className="w-1/3 text-sm">{medium}</div>
+                              <div className="flex-1">
+                                <div className="h-2 w-full rounded-full bg-muted">
+                                  <div
+                                    className="h-2 rounded-full bg-primary"
+                                    style={{
+                                      width: `${
+                                        (count / (urlStats?.totalVisits || 1)) *
+                                        100
+                                      }%`,
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                              <div className="w-1/6 text-right text-sm">
+                                {(
+                                  (count / (urlStats?.totalVisits || 1)) *
+                                  100
+                                ).toFixed(1)}
+                                %
+                              </div>
+                            </div>
+                          ))
+                      : null}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">UTM Campaigns</div>
+                    {urlStats?.visits
+                      ? Object.entries(
+                          urlStats.visits.reduce(
+                            (acc, visit) => {
+                              const campaign = visit.utmCampaign || 'None';
+                              acc[campaign] = (acc[campaign] || 0) + 1;
+                              return acc;
+                            },
+                            {} as Record<string, number>
+                          )
+                        )
+                          .sort(([, a], [, b]) => b - a)
+                          .map(([campaign, count]) => (
+                            <div key={campaign} className="flex items-center">
+                              <div className="w-1/3 text-sm">{campaign}</div>
+                              <div className="flex-1">
+                                <div className="h-2 w-full rounded-full bg-muted">
+                                  <div
+                                    className="h-2 rounded-full bg-primary"
+                                    style={{
+                                      width: `${
+                                        (count / (urlStats?.totalVisits || 1)) *
+                                        100
+                                      }%`,
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                              <div className="w-1/6 text-right text-sm">
+                                {(
+                                  (count / (urlStats?.totalVisits || 1)) *
+                                  100
+                                ).toFixed(1)}
+                                %
+                              </div>
+                            </div>
+                          ))
+                      : null}
+                  </div>
                 </div>
               )}
             </CardContent>

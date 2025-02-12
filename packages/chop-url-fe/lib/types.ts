@@ -53,6 +53,11 @@ export interface IVisit {
   deviceType: string | null;
   country: string | null;
   city: string | null;
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  utmTerm: string | null;
+  utmContent: string | null;
 }
 
 export interface IUrlStats {

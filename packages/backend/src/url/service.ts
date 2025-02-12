@@ -1,5 +1,5 @@
 import { ChopUrl } from '@chop-url/lib';
-import { and, desc, eq, inArray, or, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, or, sql } from 'drizzle-orm';
 import { UAParser } from 'ua-parser-js';
 import { createDb } from '../db/client';
 import { executeRawQuery } from '../db/client';
@@ -264,7 +264,10 @@ export class UrlService {
     };
   }
 
-  async getUrlStats(shortId: string): Promise<IUrlStats | null> {
+  async getUrlStats(
+    shortId: string,
+    period: '24h' | '7d' | '30d' | '90d' = '7d'
+  ): Promise<IUrlStats | null> {
     const [url] = await this.db
       .select()
       .from(urls)
@@ -274,10 +277,33 @@ export class UrlService {
       return null;
     }
 
+    const now = new Date();
+    const startDate = new Date();
+
+    switch (period) {
+      case '24h':
+        startDate.setHours(now.getHours() - 24);
+        break;
+      case '7d':
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case '30d':
+        startDate.setDate(now.getDate() - 30);
+        break;
+      case '90d':
+        startDate.setDate(now.getDate() - 90);
+        break;
+    }
+
     const urlVisits = await this.db
       .select()
       .from(visits)
-      .where(eq(visits.urlId, url.id))
+      .where(
+        and(
+          eq(visits.urlId, url.id),
+          gte(visits.visitedAt, startDate.toISOString())
+        )
+      )
       .orderBy(desc(visits.visitedAt));
 
     const mappedVisits: IVisit[] = urlVisits.map((visit: Visit) => ({
@@ -294,6 +320,11 @@ export class UrlService {
       deviceType: visit.deviceType || '',
       country: visit.country || '',
       city: visit.city || '',
+      utmSource: visit.utmSource || null,
+      utmMedium: visit.utmMedium || null,
+      utmCampaign: visit.utmCampaign || null,
+      utmTerm: visit.utmTerm || null,
+      utmContent: visit.utmContent || null,
     }));
 
     return {
@@ -301,15 +332,173 @@ export class UrlService {
       shortId: url.shortId,
       shortUrl: `${this.baseUrl}/${url.shortId}`,
       originalUrl: url.originalUrl,
-      created_at: url.createdAt || '',
-      last_accessed_at: url.lastAccessedAt || '',
-      visit_count: url.visitCount || 0,
+      created: url.createdAt,
+      lastAccessed: url.lastAccessedAt,
+      visitCount: url.visitCount || 0,
+      totalVisits: urlVisits.length,
       isActive: url.isActive || false,
-      expiresAt: url.expiresAt || '',
-      userId: url.userId || 0,
-      customSlug: url.customSlug || '',
+      expiresAt: url.expiresAt || null,
+      userId: url.userId || null,
+      customSlug: url.customSlug || null,
       visits: mappedVisits,
     };
+  }
+
+  async getUserAnalytics(
+    userId: string,
+    period: '24h' | '7d' | '30d' | '90d' = '7d'
+  ) {
+    try {
+      // Get user's URLs
+      const userUrls = await this.db
+        .select()
+        .from(urls)
+        .where(eq(urls.userId, parseInt(userId)));
+
+      if (!userUrls.length) {
+        return {
+          totalClicks: 0,
+          uniqueVisitors: 0,
+          countries: [],
+          cities: [],
+          regions: [],
+          timezones: [],
+          referrers: [],
+          devices: [],
+          browsers: [],
+          operatingSystems: [],
+          clicksByDate: [],
+        };
+      }
+
+      const urlIds = userUrls.map((url: Url) => url.id);
+
+      // Get visits for these URLs within the specified period
+      const periodMap = {
+        '24h': '1 day',
+        '7d': '7 days',
+        '30d': '30 days',
+        '90d': '90 days',
+      };
+
+      const startDate = new Date();
+      switch (period) {
+        case '24h':
+          startDate.setHours(startDate.getHours() - 24);
+          break;
+        case '7d':
+          startDate.setDate(startDate.getDate() - 7);
+          break;
+        case '30d':
+          startDate.setDate(startDate.getDate() - 30);
+          break;
+        case '90d':
+          startDate.setDate(startDate.getDate() - 90);
+          break;
+      }
+
+      const urlVisits = await this.db
+        .select()
+        .from(visits)
+        .where(
+          and(
+            inArray(visits.urlId, urlIds),
+            gte(visits.visitedAt, startDate.toISOString())
+          )
+        )
+        .orderBy(desc(visits.visitedAt));
+
+      const totalClicks = urlVisits.length;
+      const uniqueIPs = new Set(
+        urlVisits.map((visit: Visit) => visit.ipAddress)
+      ).size;
+
+      // Aggregate data
+      const countryMap = new Map<string, number>();
+      const cityMap = new Map<string, number>();
+      const regionMap = new Map<string, number>();
+      const timezoneMap = new Map<string, number>();
+      const referrerMap = new Map<string, number>();
+      const deviceMap = new Map<string, number>();
+      const browserMap = new Map<string, number>();
+      const osMap = new Map<string, number>();
+      const dateMap = new Map<string, number>();
+
+      for (const visit of urlVisits) {
+        // Country stats
+        const country = visit.country || 'Unknown';
+        countryMap.set(country, (countryMap.get(country) || 0) + 1);
+
+        // City stats
+        const city = visit.city || 'Unknown';
+        cityMap.set(city, (cityMap.get(city) || 0) + 1);
+
+        // Region stats
+        const region = visit.region || 'Unknown';
+        regionMap.set(region, (regionMap.get(region) || 0) + 1);
+
+        // Timezone stats
+        const timezone = visit.timezone || 'Unknown';
+        timezoneMap.set(timezone, (timezoneMap.get(timezone) || 0) + 1);
+
+        // Referrer stats
+        const referrer = visit.referrer || 'Direct';
+        referrerMap.set(referrer, (referrerMap.get(referrer) || 0) + 1);
+
+        // Device stats
+        const device = visit.deviceType || 'Desktop';
+        deviceMap.set(device, (deviceMap.get(device) || 0) + 1);
+
+        // Browser stats
+        const browser = visit.browser || 'Unknown';
+        browserMap.set(browser, (browserMap.get(browser) || 0) + 1);
+
+        // OS stats
+        const os = visit.os || 'Unknown';
+        osMap.set(os, (osMap.get(os) || 0) + 1);
+
+        // Date stats
+        const date = visit.visitedAt
+          ? new Date(visit.visitedAt).toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0];
+        dateMap.set(date, (dateMap.get(date) || 0) + 1);
+      }
+
+      return {
+        totalClicks,
+        uniqueVisitors: uniqueIPs,
+        countries: Array.from(countryMap.entries())
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count),
+        cities: Array.from(cityMap.entries())
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count),
+        regions: Array.from(regionMap.entries())
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count),
+        timezones: Array.from(timezoneMap.entries())
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count),
+        referrers: Array.from(referrerMap.entries())
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count),
+        devices: Array.from(deviceMap.entries())
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count),
+        browsers: Array.from(browserMap.entries())
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count),
+        operatingSystems: Array.from(osMap.entries())
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count),
+        clicksByDate: Array.from(dateMap.entries())
+          .map(([date, count]) => ({ date, count }))
+          .sort((a, b) => a.date.localeCompare(b.date)),
+      };
+    } catch (error) {
+      console.error('Error in getUserAnalytics:', error);
+      throw error;
+    }
   }
 }
 
@@ -372,62 +561,6 @@ export async function trackVisit(
   }
 }
 
-export async function getUrlStats(
-  db: DbClient,
-  shortId: string,
-  baseUrl: string,
-  period: '24h' | '7d' | '30d' | '90d' = '7d'
-): Promise<IUrlStats> {
-  const [url] = await db.select().from(urls).where(eq(urls.shortId, shortId));
-
-  if (!url) {
-    throw new Error('URL not found');
-  }
-
-  const urlVisits = await db
-    .select()
-    .from(visits)
-    .where(
-      and(
-        eq(visits.urlId, url.id),
-        sql`datetime(visitedAt) >= datetime('now', '-${period}')`,
-        sql`datetime(visitedAt) <= datetime('now')`
-      )
-    )
-    .orderBy(desc(visits.visitedAt));
-
-  const mappedVisits: IVisit[] = urlVisits.map((visit: Visit) => ({
-    id: visit.id,
-    urlId: visit.urlId,
-    visitedAt: visit.visitedAt || '',
-    ipAddress: visit.ipAddress || '',
-    userAgent: visit.userAgent || '',
-    referrer: visit.referrer || '',
-    browser: visit.browser || '',
-    browserVersion: visit.browserVersion || '',
-    os: visit.os || '',
-    osVersion: visit.osVersion || '',
-    deviceType: visit.deviceType || '',
-    country: visit.country || '',
-    city: visit.city || '',
-  }));
-
-  return {
-    id: url.id,
-    shortId: url.shortId,
-    shortUrl: `${baseUrl}/${url.shortId}`,
-    originalUrl: url.originalUrl,
-    created_at: url.createdAt || '',
-    last_accessed_at: url.lastAccessedAt || '',
-    visit_count: url.visitCount || 0,
-    isActive: url.isActive || false,
-    expiresAt: url.expiresAt || '',
-    userId: url.userId || 0,
-    customSlug: url.customSlug || '',
-    visits: mappedVisits,
-  };
-}
-
 export async function getVisitsByTimeRange(
   db: DbClient,
   shortId: string,
@@ -455,201 +588,4 @@ export async function getVisitsByTimeRange(
     .groupBy(sql`date(visited_at)`);
 
   return result;
-}
-
-export async function getUserAnalytics(
-  db: DbClient,
-  userId: string,
-  period: '24h' | '7d' | '30d' | '90d' = '7d'
-) {
-  try {
-    console.log('=== getUserAnalytics Started ===');
-    console.log('Input params:', { userId, period });
-
-    // Get user's URLs
-    console.log('Fetching user URLs...');
-    const userUrls = await db
-      .select()
-      .from(urls)
-      .where(eq(urls.userId, parseInt(userId)));
-
-    console.log('User URLs found:', userUrls.length);
-    console.log('User URLs details:', JSON.stringify(userUrls, null, 2));
-
-    if (!userUrls.length) {
-      console.log('No URLs found for user, returning empty data');
-      return {
-        totalClicks: 0,
-        uniqueVisitors: 0,
-        countries: [],
-        cities: [],
-        regions: [],
-        timezones: [],
-        referrers: [],
-        devices: [],
-        browsers: [],
-        operatingSystems: [],
-        clicksByDate: [],
-      };
-    }
-
-    const urlIds = userUrls.map((url: Url) => url.id);
-    console.log('URL IDs to query:', urlIds);
-
-    // Get visits for these URLs within the specified period
-    try {
-      const periodMap = {
-        '24h': '1 day',
-        '7d': '7 days',
-        '30d': '30 days',
-        '90d': '90 days',
-      };
-
-      console.log('Building SQL query with period:', periodMap[period]);
-      const placeholders = urlIds.map(() => '?').join(',');
-      const startDate = `strftime('%Y-%m-%d %H:%M:%S', 'now', '-${periodMap[period]}')`;
-
-      const query = `SELECT * FROM visits WHERE url_id IN (${placeholders}) AND visited_at >= ${startDate} ORDER BY visited_at DESC`;
-      console.log('SQL query:', query);
-      console.log('SQL parameters:', urlIds);
-
-      const urlVisits = await executeRawQuery<Visit>(db, query, urlIds);
-      console.log('Visits found:', urlVisits.length);
-
-      const totalClicks = urlVisits.length;
-      const uniqueIPs = new Set(
-        urlVisits.map((visit: Visit) => visit.ipAddress)
-      ).size;
-
-      console.log('Analytics summary:', {
-        totalClicks,
-        uniqueVisitors: uniqueIPs,
-        uniqueCountries: new Set(urlVisits.map((v) => v.country)).size,
-        uniqueCities: new Set(urlVisits.map((v) => v.city)).size,
-        dateRange: {
-          oldest: urlVisits[urlVisits.length - 1]?.visitedAt,
-          newest: urlVisits[0]?.visitedAt,
-        },
-      });
-
-      // Aggregate data
-      const countryMap = new Map<string, number>();
-      const cityMap = new Map<string, number>();
-      const regionMap = new Map<string, number>();
-      const timezoneMap = new Map<string, number>();
-      const referrerMap = new Map<string, number>();
-      const deviceMap = new Map<string, number>();
-      const browserMap = new Map<string, number>();
-      const osMap = new Map<string, number>();
-      const dateMap = new Map<string, number>();
-
-      for (const visit of urlVisits) {
-        // Country stats
-        const country = visit.country || 'Unknown';
-        countryMap.set(country, (countryMap.get(country) || 0) + 1);
-
-        // City stats
-        const city = visit.city || 'Unknown';
-        cityMap.set(city, (cityMap.get(city) || 0) + 1);
-
-        // Region stats
-        const region = visit.region || 'Unknown';
-        regionMap.set(region, (regionMap.get(region) || 0) + 1);
-
-        // Timezone stats
-        const timezone = visit.timezone || 'Unknown';
-        timezoneMap.set(timezone, (timezoneMap.get(timezone) || 0) + 1);
-
-        // Referrer stats
-        const referrer = visit.referrer || 'Direct';
-        referrerMap.set(referrer, (referrerMap.get(referrer) || 0) + 1);
-
-        // Device stats
-        const device = visit.deviceType || 'Desktop';
-        deviceMap.set(device, (deviceMap.get(device) || 0) + 1);
-
-        // Browser stats
-        const browser = visit.browser || 'Unknown';
-        browserMap.set(browser, (browserMap.get(browser) || 0) + 1);
-
-        // OS stats
-        const os = visit.os || 'Unknown';
-        osMap.set(os, (osMap.get(os) || 0) + 1);
-
-        // Date stats
-        const date = visit.visitedAt
-          ? new Date(visit.visitedAt).toISOString().split('T')[0]
-          : new Date().toISOString().split('T')[0];
-        dateMap.set(date, (dateMap.get(date) || 0) + 1);
-      }
-
-      const result = {
-        totalClicks,
-        uniqueVisitors: uniqueIPs,
-        countries: Array.from(countryMap.entries())
-          .map(([name, count]) => ({
-            name,
-            count,
-          }))
-          .sort((a, b) => b.count - a.count),
-        cities: Array.from(cityMap.entries())
-          .map(([name, count]) => ({
-            name,
-            count,
-          }))
-          .sort((a, b) => b.count - a.count),
-        regions: Array.from(regionMap.entries())
-          .map(([name, count]) => ({
-            name,
-            count,
-          }))
-          .sort((a, b) => b.count - a.count),
-        timezones: Array.from(timezoneMap.entries())
-          .map(([name, count]) => ({
-            name,
-            count,
-          }))
-          .sort((a, b) => b.count - a.count),
-        referrers: Array.from(referrerMap.entries())
-          .map(([name, count]) => ({
-            name,
-            count,
-          }))
-          .sort((a, b) => b.count - a.count),
-        devices: Array.from(deviceMap.entries())
-          .map(([name, count]) => ({
-            name,
-            count,
-          }))
-          .sort((a, b) => b.count - a.count),
-        browsers: Array.from(browserMap.entries())
-          .map(([name, count]) => ({
-            name,
-            count,
-          }))
-          .sort((a, b) => b.count - a.count),
-        operatingSystems: Array.from(osMap.entries())
-          .map(([name, count]) => ({
-            name,
-            count,
-          }))
-          .sort((a, b) => b.count - a.count),
-        clicksByDate: Array.from(dateMap.entries())
-          .map(([date, count]) => ({
-            date,
-            count,
-          }))
-          .sort((a, b) => a.date.localeCompare(b.date)),
-      };
-
-      console.log('Analytics result:', JSON.stringify(result, null, 2));
-      return result;
-    } catch (error) {
-      console.error('Error executing visits query:', error);
-      throw error;
-    }
-  } catch (error) {
-    console.error('Error in getUserAnalytics:', error);
-    throw error;
-  }
 }

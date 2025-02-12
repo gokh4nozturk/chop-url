@@ -7,12 +7,7 @@ import { IUser } from '../auth/types.js';
 import { createDb } from '../db/client';
 import { IUrl } from './index.js';
 import { trackVisitMiddleware } from './middleware.js';
-import {
-  getUrlStats,
-  getUserAnalytics,
-  getVisitsByTimeRange,
-  trackVisit,
-} from './service';
+import { getVisitsByTimeRange, trackVisit } from './service';
 import { UrlService } from './service.js';
 
 interface Env {
@@ -130,7 +125,7 @@ export const createUrlRoutes = () => {
 
     try {
       const urlService = new UrlService(c.env.BASE_URL, db);
-      const stats = await urlService.getUrlStats(shortId);
+      const stats = await urlService.getUrlStats(shortId, period);
       if (!stats) {
         return c.json({ error: 'URL not found' }, 404);
       }
@@ -175,39 +170,23 @@ export const createUrlRoutes = () => {
   });
 
   router.get('/analytics', auth(), async (c: Context) => {
+    const period = (c.req.query('period') as Period) || '7d';
+    const db = c.get('db');
+    const user = c.get('user') as IUser;
+
+    if (!VALID_PERIODS.includes(period)) {
+      return c.json({ error: 'Invalid period' }, 400);
+    }
+
     try {
-      console.log('Analytics request received');
-      const user = c.get('user');
-      const db = createDb(c.env.DB);
-      console.log('User:', user);
-      const period = (c.req.query('period') as Period) || '7d';
-      console.log('Period:', period);
-
-      if (!VALID_PERIODS.includes(period)) {
-        console.log('Invalid period:', period);
-        return c.json({ error: 'Invalid period' }, 400);
-      }
-
-      try {
-        console.log('Fetching analytics for user:', user.id);
-        const analytics = await getUserAnalytics(
-          db,
-          user.id.toString(),
-          period
-        );
-        console.log('Analytics result:', analytics);
-        if (!analytics) {
-          console.log('No data found');
-          return c.json({ error: 'No data found' }, 404);
-        }
-        return c.json(analytics);
-      } catch (error) {
-        console.error('Error fetching analytics:', error);
-        return c.json({ error: 'Failed to fetch analytics' }, 500);
-      }
+      const urlService = new UrlService(c.env.BASE_URL, db);
+      const analytics = await urlService.getUserAnalytics(
+        user.id.toString(),
+        period
+      );
+      return c.json(analytics);
     } catch (error) {
-      console.error('Error in analytics route:', error);
-      return c.json({ error: 'Internal server error' }, 500);
+      return c.json({ error: 'Failed to get analytics' }, 500);
     }
   });
 

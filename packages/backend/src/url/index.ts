@@ -28,7 +28,19 @@ export interface IVisit {
   city: string | null;
 }
 
-export interface IUrlStats extends IUrl {
+export interface IUrlStats {
+  id: number;
+  shortId: string;
+  shortUrl: string;
+  originalUrl: string;
+  created: string | null;
+  lastAccessed: string | null;
+  visitCount: number;
+  totalVisits: number;
+  isActive: boolean;
+  expiresAt: string | null;
+  userId: number | null;
+  customSlug: string | null;
   visits: IVisit[];
 }
 
