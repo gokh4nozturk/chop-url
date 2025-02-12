@@ -239,9 +239,9 @@ export class UrlService {
       shortId: url.shortId,
       shortUrl: `${this.baseUrl}/${url.shortId}`,
       originalUrl: url.originalUrl,
-      created_at: url.createdAt || '',
-      last_accessed_at: url.lastAccessedAt || '',
-      visit_count: url.visitCount || 0,
+      createdAt: url.createdAt || '',
+      lastAccessedAt: url.lastAccessedAt || '',
+      visitCount: url.visitCount || 0,
       isActive: url.isActive || false,
       expiresAt: url.expiresAt || '',
       userId: url.userId || 0,
@@ -629,6 +629,16 @@ export class UrlService {
       customSlug: url.customSlug || undefined,
       groupId: url.groupId || undefined,
     };
+  }
+
+  async deleteUrl(shortId: string, userId: number): Promise<void> {
+    const result = await this.db
+      .delete(urls)
+      .where(and(eq(urls.shortId, shortId), eq(urls.userId, userId)));
+
+    if (!result) {
+      throw new Error('URL not found');
+    }
   }
 }
 

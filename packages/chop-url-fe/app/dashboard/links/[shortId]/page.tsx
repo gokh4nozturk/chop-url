@@ -92,7 +92,7 @@ const LoadingState = () => {
     <div className="space-y-4">
       <LoadingSpinner />
       <div className="grid gap-4">
-        {[1, 2, 3].map((i) => (
+        {[1, 2, 3, 4, 5].map((i) => (
           <Skeleton key={i} className="h-24 w-full" />
         ))}
       </div>

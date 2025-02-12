@@ -26,6 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { UrlForm } from '@/components/url/url-form';
 import useUrlStore from '@/lib/store/url';
 import { IUrl } from '@/lib/types';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -47,6 +48,7 @@ export default function LinksPage() {
     isLoading: isLoadingUrls,
     error,
     filterByGroup,
+    deleteUrl,
   } = useUrlStore();
 
   const [selectedGroup, setSelectedGroup] = useState<string>('all');
@@ -68,6 +70,18 @@ export default function LinksPage() {
   const handleGroupChange = (value: string) => {
     setSelectedGroup(value);
     filterByGroup(value);
+  };
+
+  const handleDeleteUrl = (shortId: string) => {
+    deleteUrl(shortId)
+      .then(() => {
+        toast.success('URL deleted successfully');
+      })
+      .catch((err) => {
+        toast.error(
+          err instanceof Error ? err.message : 'Failed to delete URL'
+        );
+      });
   };
 
   return (
@@ -217,12 +231,12 @@ export default function LinksPage() {
                   <TableHead className="hidden md:table-cell">
                     Long URL
                   </TableHead>
-                  <TableHead>Clicks</TableHead>
+                  <TableHead>Visits</TableHead>
                   <TableHead className="hidden sm:table-cell">
                     Created
                   </TableHead>
                   <TableHead className="hidden lg:table-cell">
-                    Last Click
+                    Last Accessed
                   </TableHead>
                   <TableHead className="w-[100px]">Actions</TableHead>
                 </TableRow>
@@ -295,9 +309,12 @@ export default function LinksPage() {
                                   Analytics
                                 </Link>
                               </DropdownMenuItem>
-                              <DropdownMenuItem>QR Code</DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-destructive">
+                              <UrlForm url={link} />
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => handleDeleteUrl(link.shortId)}
+                              >
                                 Delete
                               </DropdownMenuItem>
                             </DropdownMenuContent>

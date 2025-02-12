@@ -87,6 +87,15 @@ const updateUrlGroupSchema = z.object({
   description: z.string().optional(),
 });
 
+const updateUrlSchema = z.object({
+  originalUrl: z.string().url().optional(),
+  customSlug: z.string().optional(),
+  expiresAt: z.string().datetime().optional(),
+  tags: z.array(z.string()).optional(),
+  groupId: z.number().optional(),
+  isActive: z.boolean().optional(),
+});
+
 type Period = (typeof VALID_PERIODS)[number];
 
 export const createUrlRoutes = () => {
@@ -187,6 +196,43 @@ export const createUrlRoutes = () => {
     const urlService = new UrlService(c.env.BASE_URL, db);
     const urls = await urlService.getUserUrls(user.id.toString());
     return c.json(urls);
+  });
+
+  router.patch('/urls/:shortId', auth(), async (c: Context) => {
+    try {
+      const shortId = c.req.param('shortId');
+      const user = c.get('user');
+      const db = c.get('db');
+      const urlService = new UrlService(c.env.BASE_URL, db);
+      const body = await c.req.json();
+      const data = updateUrlSchema.parse(body);
+      const url = await urlService.updateUrl(shortId, user.id.toString(), data);
+
+      return c.json(url, 200);
+    } catch (error) {
+      if (error instanceof Error && error.message === 'URL not found') {
+        return c.json({ error: 'URL not found' }, 404);
+      }
+      return c.json({ error: 'Failed to update URL' }, 500);
+    }
+  });
+
+  router.delete('/urls/:shortId', auth(), async (c: Context) => {
+    try {
+      const shortId = c.req.param('shortId');
+      const user = c.get('user');
+      const db = c.get('db');
+
+      const urlService = new UrlService(c.env.BASE_URL, db);
+      await urlService.deleteUrl(shortId, user.id.toString());
+
+      return c.json({ message: 'URL deleted successfully' }, 200);
+    } catch (error) {
+      if (error instanceof Error && error.message === 'URL not found') {
+        return c.json({ error: 'URL not found' }, 404);
+      }
+      return c.json({ error: 'Failed to delete URL' }, 500);
+    }
   });
 
   router.get('/stats/:shortId', auth(), async (c: Context) => {
