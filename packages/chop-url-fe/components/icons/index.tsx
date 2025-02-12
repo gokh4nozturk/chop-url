@@ -52,13 +52,13 @@ import {
 } from 'lucide-react';
 import { FrameIcon } from './frame';
 
-export type Icon = LucideIcon;
+export type Icon = LucideIcon | typeof FrameIcon;
 
 export const Icons = {
   logo: FrameIcon,
   spinner: Loader2,
   copy: Copy,
-  link: FrameIcon,
+  link: Frame,
   share: Share2,
   check: Check,
   command: Command,
