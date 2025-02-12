@@ -16,7 +16,7 @@ import {
   File,
   FileText,
   Folder,
-  Frame as FrameIcon,
+  Frame,
   Github,
   Globe,
   Hash,
@@ -50,6 +50,7 @@ import {
   User2,
   X,
 } from 'lucide-react';
+import { FrameIcon } from './frame';
 
 export type Icon = LucideIcon;
 
@@ -67,7 +68,8 @@ export const Icons = {
   user: User,
   user2: User2,
   globe: Globe,
-  frame: FrameIcon,
+  frame: Frame,
+  frameIcon: FrameIcon,
   fileText: FileText,
   file: File,
   folder: Folder,

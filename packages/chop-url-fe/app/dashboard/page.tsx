@@ -254,13 +254,12 @@ export default function DashboardPage() {
           <Card className="h-full transition-all duration-300 hover:shadow-md">
             <CardHeader className="flex-row items-center justify-between">
               <CardTitle>Recent Links</CardTitle>
-              <motion.div whileHover={{ rotate: 15 }}>
-                <Button variant="ghost" size="icon" asChild>
-                  <Link href="/dashboard/links">
-                    <Icons.frame />
-                  </Link>
-                </Button>
-              </motion.div>
+
+              <Button variant="ghost" size="icon" asChild>
+                <Link href="/dashboard/links">
+                  <Icons.frameIcon />
+                </Link>
+              </Button>
             </CardHeader>
             <CardContent className="min-h-[220px]">
               <RecentLinks urls={urls} />
