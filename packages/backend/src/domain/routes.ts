@@ -1,3 +1,4 @@
+import { zValidator } from '@hono/zod-validator';
 import { Context, Hono } from 'hono';
 import { z } from 'zod';
 import { auth } from '../auth/middleware';
@@ -261,6 +262,68 @@ export const createDomainRoutes = () => {
         }
       }
       return c.json({ error: 'Failed to get DNS records' }, 500);
+    }
+  });
+
+  // SSL Management
+  router.get('/domains/:id/ssl/status', async (c: Context) => {
+    const domainId = parseInt(c.req.param('id'));
+    const userId = c.get('userId');
+
+    try {
+      const domainService = new DomainService(c.get('db'), {
+        cloudflareApiToken: c.env.CLOUDFLARE_API_TOKEN,
+        cloudflareAccountId: c.env.CLOUDFLARE_ACCOUNT_ID,
+        cloudflareZoneId: c.env.CLOUDFLARE_ZONE_ID,
+      });
+
+      const status = await domainService.checkAndUpdateSslStatus(
+        domainId,
+        userId
+      );
+      return c.json({ status });
+    } catch (error) {
+      console.error('Error getting SSL status:', error);
+      return c.json({ error: 'Failed to get SSL status' }, 500);
+    }
+  });
+
+  router.post('/domains/:id/ssl/renew', async (c: Context) => {
+    const domainId = parseInt(c.req.param('id'));
+    const userId = c.get('userId');
+
+    try {
+      const domainService = new DomainService(c.get('db'), {
+        cloudflareApiToken: c.env.CLOUDFLARE_API_TOKEN,
+        cloudflareAccountId: c.env.CLOUDFLARE_ACCOUNT_ID,
+        cloudflareZoneId: c.env.CLOUDFLARE_ZONE_ID,
+      });
+
+      await domainService.renewSslCertificate(domainId, userId);
+      return c.json({ message: 'SSL certificate renewal initiated' });
+    } catch (error) {
+      console.error('Error renewing SSL certificate:', error);
+      return c.json({ error: 'Failed to renew SSL certificate' }, 500);
+    }
+  });
+
+  // Health Monitoring
+  router.get('/domains/:id/health', async (c: Context) => {
+    const domainId = parseInt(c.req.param('id'));
+    const userId = c.get('userId');
+
+    try {
+      const domainService = new DomainService(c.get('db'), {
+        cloudflareApiToken: c.env.CLOUDFLARE_API_TOKEN,
+        cloudflareAccountId: c.env.CLOUDFLARE_ACCOUNT_ID,
+        cloudflareZoneId: c.env.CLOUDFLARE_ZONE_ID,
+      });
+
+      const health = await domainService.checkDomainHealth(domainId, userId);
+      return c.json(health);
+    } catch (error) {
+      console.error('Error checking domain health:', error);
+      return c.json({ error: 'Failed to check domain health' }, 500);
     }
   });
 

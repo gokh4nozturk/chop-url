@@ -14,11 +14,12 @@ export const domains = sqliteTable('domains', {
     enum: ['DNS_TXT', 'DNS_CNAME', 'FILE'],
   }).default('DNS_TXT'),
   sslStatus: text('sslStatus', {
-    enum: ['PENDING', 'ACTIVE', 'FAILED'],
+    enum: ['PENDING', 'ACTIVE', 'FAILED', 'EXPIRED', 'INITIALIZING'],
   }).default('PENDING'),
   isActive: integer('isActive', { mode: 'boolean' }).default(false),
   createdAt: text('createdAt').notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text('updatedAt').notNull().default(sql`CURRENT_TIMESTAMP`),
+  lastHealthCheck: text('lastHealthCheck'),
 });
 
 export const domainSettings = sqliteTable('domain_settings', {

@@ -296,22 +296,130 @@ export class DomainService {
     }
   }
 
-  private async initializeSSL(domain: Domain): Promise<void> {
+  async checkAndUpdateSslStatus(
+    domainId: number,
+    userId: number
+  ): Promise<string> {
+    const domain = await this.getDomain(domainId, userId);
+    if (!domain) {
+      throw new Error('Domain not found');
+    }
+
+    try {
+      const cloudflareStatus = await this.cloudflare.getSslStatus(
+        domain.domain
+      );
+      const sslStatus = this.mapCloudflareStatusToInternal(cloudflareStatus);
+      await this.updateDomain(domainId, userId, { sslStatus });
+      return sslStatus;
+    } catch (error) {
+      console.error('Error checking SSL status:', error);
+      throw new Error('Failed to check SSL status');
+    }
+  }
+
+  private mapCloudflareStatusToInternal(
+    status: string
+  ): 'PENDING' | 'ACTIVE' | 'FAILED' | 'EXPIRED' | 'INITIALIZING' {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'ACTIVE';
+      case 'pending_validation':
+      case 'pending_issuance':
+        return 'PENDING';
+      case 'expired':
+        return 'EXPIRED';
+      case 'initializing':
+        return 'INITIALIZING';
+      default:
+        return 'FAILED';
+    }
+  }
+
+  async renewSslCertificate(domainId: number, userId: number): Promise<void> {
+    const domain = await this.getDomain(domainId, userId);
+    if (!domain) {
+      throw new Error('Domain not found');
+    }
+
     try {
       await this.cloudflare.requestSslCertificate(domain.domain);
-      await this.database
-        .update(domains)
-        .set({ sslStatus: 'ACTIVE' })
-        .where(eq(domains.id, domain.id))
-        .run();
+      await this.updateDomain(domainId, userId, {
+        sslStatus: 'PENDING' as const,
+        lastHealthCheck: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Error renewing SSL certificate:', error);
+      throw new Error('Failed to renew SSL certificate');
+    }
+  }
+
+  async checkDomainHealth(
+    domainId: number,
+    userId: number
+  ): Promise<{
+    dnsStatus: boolean;
+    sslStatus: string;
+    isHealthy: boolean;
+    lastChecked: string;
+  }> {
+    const domain = await this.getDomain(domainId, userId);
+    if (!domain) {
+      throw new Error('Domain not found');
+    }
+
+    try {
+      // Check DNS records
+      const txtRecords = await this.cloudflare.getDnsTxtRecords(domain.domain);
+      const cnameRecords = await this.cloudflare.getDnsCnameRecords(
+        domain.domain
+      );
+      const dnsStatus = txtRecords.length > 0 || cnameRecords.length > 0;
+
+      // Check SSL status
+      const cloudflareStatus = await this.cloudflare.getSslStatus(
+        domain.domain
+      );
+      const sslStatus = this.mapCloudflareStatusToInternal(cloudflareStatus);
+
+      const now = new Date().toISOString();
+
+      // Update domain status
+      await this.updateDomain(domainId, userId, {
+        isActive: dnsStatus,
+        sslStatus,
+        lastHealthCheck: now,
+      });
+
+      return {
+        dnsStatus,
+        sslStatus,
+        isHealthy: dnsStatus && sslStatus === 'ACTIVE',
+        lastChecked: now,
+      };
+    } catch (error) {
+      console.error('Error checking domain health:', error);
+      throw new Error('Failed to check domain health');
+    }
+  }
+
+  private async initializeSSL(domain: Domain): Promise<void> {
+    try {
+      // Configure SSL settings
+      await this.cloudflare.configureSsl('full');
+      await this.cloudflare.enableAlwaysUseHttps(domain.domain);
+
+      // Request SSL certificate
+      await this.cloudflare.requestSslCertificate(domain.domain);
+
+      // Update domain status
+      await this.updateDomain(domain.id, domain.userId, {
+        sslStatus: 'INITIALIZING' as const,
+        lastHealthCheck: new Date().toISOString(),
+      });
     } catch (error) {
       console.error('Error initializing SSL:', error);
-      await this.database
-        .update(domains)
-        .set({ sslStatus: 'FAILED' })
-        .where(eq(domains.id, domain.id))
-        .run();
-      throw new Error('Failed to initialize SSL certificate');
+      throw new Error('Failed to initialize SSL');
     }
   }
 }
