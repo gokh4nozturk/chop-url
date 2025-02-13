@@ -32,7 +32,7 @@ import { Switch } from '@/components/ui/switch';
 import apiClient from '@/lib/api/client';
 import { ApiError } from '@/lib/api/error';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Network, Shield, Trash, Plus, Loader2 } from 'lucide-react';
+import { Loader2, Network, Plus, Shield, Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -83,9 +83,15 @@ export default function DomainsPage() {
       setError(null);
       const response = await apiClient.get('/api/domains');
       setDomains(response.data);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching domains:', error);
-      setError('Failed to fetch domains. Please try again later.');
+      const apiError = error as ApiError;
+      setError(
+        apiError.message || 'Failed to fetch domains. Please try again later.'
+      );
+      toast.error('Failed to fetch domains', {
+        description: apiError.message || 'An unexpected error occurred',
+      });
     } finally {
       setIsLoading(false);
     }

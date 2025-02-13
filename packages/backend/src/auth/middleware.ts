@@ -8,6 +8,7 @@ export const auth = () => {
       const token = c.req.header('Authorization')?.split(' ')[1];
 
       if (!token) {
+        console.error('Auth middleware: No token provided');
         throw new AuthError(AuthErrorCode.NO_TOKEN, 'No token provided');
       }
 
@@ -19,16 +20,28 @@ export const auth = () => {
         githubClientId: c.env.GITHUB_CLIENT_ID,
         githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
       });
-      const user = await authService.verifyToken(token);
 
-      c.set('user', user);
-      await next();
+      try {
+        const user = await authService.verifyToken(token);
+        if (!user) {
+          console.error('Auth middleware: User not found for token');
+          throw new AuthError(AuthErrorCode.INVALID_TOKEN, 'Invalid token');
+        }
+        c.set('user', user);
+        await next();
+      } catch (verifyError) {
+        console.error(
+          'Auth middleware: Token verification failed:',
+          verifyError
+        );
+        throw new AuthError(AuthErrorCode.INVALID_TOKEN, 'Invalid token');
+      }
     } catch (error) {
       console.error('Auth middleware error:', error);
-      return c.json(
-        { error: error instanceof Error ? error.message : 'Unauthorized' },
-        401
-      );
+      if (error instanceof AuthError) {
+        return c.json({ error: error.message }, 401);
+      }
+      return c.json({ error: 'Unauthorized' }, 401);
     }
   };
 };

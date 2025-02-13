@@ -157,11 +157,34 @@ export class DomainService {
   }
 
   async getUserDomains(userId: number): Promise<Domain[]> {
-    return this.database
-      .select()
-      .from(domains)
-      .where(eq(domains.userId, userId))
-      .all();
+    try {
+      console.log('Getting domains for user:', userId);
+
+      if (!this.database) {
+        console.error('Database instance is null');
+        throw new Error('Database connection error');
+      }
+
+      const userDomains = await this.database
+        .select()
+        .from(domains)
+        .where(eq(domains.userId, userId))
+        .all();
+
+      console.log('Retrieved domains:', {
+        count: userDomains.length,
+        domains: userDomains,
+      });
+
+      return userDomains;
+    } catch (error) {
+      console.error('Error in getUserDomains:', {
+        userId,
+        error,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      throw error;
+    }
   }
 
   async updateDomain(

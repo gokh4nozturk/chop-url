@@ -80,6 +80,10 @@ export const useAuthStore = create<AuthState & AuthActions>()(
             set({ isLoading: false });
             return;
           }
+
+          // Fetch user data if token exists
+          const response = await apiClient.get('/api/auth/me');
+          set({ user: response.data.user });
         } catch (error) {
           console.error('Session initialization error:', error);
           get().logout();

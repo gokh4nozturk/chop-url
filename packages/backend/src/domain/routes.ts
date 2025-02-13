@@ -72,16 +72,36 @@ export const createDomainRoutes = () => {
   // Get all domains for user
   router.get('/domains', auth(), async (c: Context) => {
     try {
+      console.log('Handling GET /domains request');
+
+      const user = c.get('user');
+      console.log('User from context:', user);
+
+      if (!user || !user.id) {
+        console.error('No user or user ID in context');
+        return c.json({ error: 'User not found' }, 401);
+      }
+
       const domainService = new DomainService(c.get('db'), {
         cloudflareApiToken: c.env.CLOUDFLARE_API_TOKEN,
         cloudflareAccountId: c.env.CLOUDFLARE_ACCOUNT_ID,
         cloudflareZoneId: c.env.CLOUDFLARE_ZONE_ID,
       });
 
-      const user = c.get('user');
       const domains = await domainService.getUserDomains(user.id);
+      console.log('Successfully retrieved domains:', { count: domains.length });
+
       return c.json(domains);
     } catch (error) {
+      console.error('Error in GET /domains:', {
+        error,
+        stack: error instanceof Error ? error.stack : undefined,
+        user: c.get('user'),
+      });
+
+      if (error instanceof Error) {
+        return c.json({ error: error.message }, 500);
+      }
       return c.json({ error: 'Failed to get domains' }, 500);
     }
   });
