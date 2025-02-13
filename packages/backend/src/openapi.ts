@@ -62,24 +62,6 @@ export const openApiSchema = {
           },
         },
       },
-      AuthResponse: {
-        type: 'object',
-        properties: {
-          user: {
-            $ref: '#/components/schemas/User',
-          },
-          token: {
-            type: 'string',
-          },
-          expiresAt: {
-            type: 'string',
-            format: 'date-time',
-          },
-          requiresTwoFactor: {
-            type: 'boolean',
-          },
-        },
-      },
       URLInfo: {
         type: 'object',
         properties: {
@@ -104,6 +86,90 @@ export const openApiSchema = {
           visits: {
             type: 'integer',
             example: 42,
+          },
+          expiresAt: {
+            type: 'string',
+            format: 'date-time',
+            nullable: true,
+          },
+          tags: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+          groupId: {
+            type: 'integer',
+            nullable: true,
+          },
+          isActive: {
+            type: 'boolean',
+            default: true,
+          },
+        },
+      },
+      URLGroup: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          name: {
+            type: 'string',
+          },
+          description: {
+            type: 'string',
+            nullable: true,
+          },
+          userId: {
+            type: 'integer',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'date-time',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'date-time',
+          },
+        },
+      },
+      URLStats: {
+        type: 'object',
+        properties: {
+          visitCount: {
+            type: 'integer',
+          },
+          lastAccessedAt: {
+            type: 'string',
+            format: 'date-time',
+            nullable: true,
+          },
+          createdAt: {
+            type: 'string',
+            format: 'date-time',
+          },
+          originalUrl: {
+            type: 'string',
+            format: 'uri',
+          },
+        },
+      },
+      AuthResponse: {
+        type: 'object',
+        properties: {
+          user: {
+            $ref: '#/components/schemas/User',
+          },
+          token: {
+            type: 'string',
+          },
+          expiresAt: {
+            type: 'string',
+            format: 'date-time',
+          },
+          requiresTwoFactor: {
+            type: 'boolean',
           },
         },
       },
@@ -682,12 +748,175 @@ export const openApiSchema = {
         },
       },
     },
+    '/api/auth/oauth/{provider}': {
+      get: {
+        tags: ['Authentication'],
+        summary: 'Initiate OAuth flow',
+        parameters: [
+          {
+            name: 'provider',
+            in: 'path',
+            required: true,
+            schema: {
+              type: 'string',
+              enum: ['google', 'github'],
+            },
+            description: 'OAuth provider',
+          },
+        ],
+        responses: {
+          '302': {
+            description: 'Redirect to OAuth provider',
+          },
+          '400': {
+            description: 'Invalid provider',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/auth/oauth/{provider}/callback': {
+      get: {
+        tags: ['Authentication'],
+        summary: 'OAuth callback',
+        parameters: [
+          {
+            name: 'provider',
+            in: 'path',
+            required: true,
+            schema: {
+              type: 'string',
+              enum: ['google', 'github'],
+            },
+            description: 'OAuth provider',
+          },
+          {
+            name: 'code',
+            in: 'query',
+            required: true,
+            schema: {
+              type: 'string',
+            },
+            description: 'OAuth authorization code',
+          },
+          {
+            name: 'state',
+            in: 'query',
+            required: true,
+            schema: {
+              type: 'string',
+            },
+            description: 'OAuth state for CSRF protection',
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'OAuth authentication successful',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/AuthResponse',
+                },
+              },
+            },
+          },
+          '400': {
+            description: 'Invalid OAuth callback',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
     // URL Routes
     '/api/shorten': {
       post: {
         tags: ['URL'],
-        summary: 'Shorten a URL',
+        summary: 'Create a short URL (authenticated)',
         security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['url'],
+                properties: {
+                  url: {
+                    type: 'string',
+                    format: 'uri',
+                  },
+                  customSlug: {
+                    type: 'string',
+                    pattern: '^[a-zA-Z0-9-_]+$',
+                  },
+                  expiresAt: {
+                    type: 'string',
+                    format: 'date-time',
+                  },
+                  tags: {
+                    type: 'array',
+                    items: {
+                      type: 'string',
+                    },
+                  },
+                  groupId: {
+                    type: 'integer',
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'URL shortened successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/URLInfo',
+                },
+              },
+            },
+          },
+          '400': {
+            description: 'Invalid input',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+          '409': {
+            description: 'Custom slug already exists',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/chop': {
+      post: {
+        tags: ['URL'],
+        summary: 'Create a short URL (public)',
         requestBody: {
           required: true,
           content: {
@@ -715,7 +944,41 @@ export const openApiSchema = {
             content: {
               'application/json': {
                 schema: {
-                  $ref: '#/components/schemas/URLInfo',
+                  type: 'object',
+                  properties: {
+                    shortUrl: {
+                      type: 'string',
+                      format: 'uri',
+                    },
+                    shortId: {
+                      type: 'string',
+                    },
+                    expiresAt: {
+                      type: 'string',
+                      format: 'date-time',
+                      nullable: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '400': {
+            description: 'Invalid input',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+          '409': {
+            description: 'Custom slug already exists',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
                 },
               },
             },
@@ -725,13 +988,9 @@ export const openApiSchema = {
     },
     '/api/urls': {
       get: {
-        tags: ['URLs'],
+        tags: ['URL'],
         summary: 'Get all URLs for current user',
-        security: [
-          {
-            bearerAuth: [],
-          },
-        ],
+        security: [{ bearerAuth: [] }],
         responses: {
           '200': {
             description: 'URLs retrieved successfully',
@@ -759,10 +1018,11 @@ export const openApiSchema = {
         },
       },
     },
-    '/api/stats/{shortId}': {
+    '/api/urls/{shortId}': {
       get: {
-        tags: ['Statistics'],
-        summary: 'Get URL statistics',
+        tags: ['URL'],
+        summary: 'Get URL details',
+        security: [{ bearerAuth: [] }],
         parameters: [
           {
             name: 'shortId',
@@ -771,12 +1031,11 @@ export const openApiSchema = {
             schema: {
               type: 'string',
             },
-            description: 'Short URL identifier',
           },
         ],
         responses: {
           '200': {
-            description: 'URL statistics retrieved successfully',
+            description: 'URL details retrieved successfully',
             content: {
               'application/json': {
                 schema: {
@@ -787,6 +1046,433 @@ export const openApiSchema = {
           },
           '404': {
             description: 'URL not found',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+        },
+      },
+      patch: {
+        tags: ['URL'],
+        summary: 'Update URL',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'shortId',
+            in: 'path',
+            required: true,
+            schema: {
+              type: 'string',
+            },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  originalUrl: {
+                    type: 'string',
+                    format: 'uri',
+                  },
+                  customSlug: {
+                    type: 'string',
+                    pattern: '^[a-zA-Z0-9-_]+$',
+                  },
+                  expiresAt: {
+                    type: 'string',
+                    format: 'date-time',
+                  },
+                  tags: {
+                    type: 'array',
+                    items: {
+                      type: 'string',
+                    },
+                  },
+                  groupId: {
+                    type: 'integer',
+                  },
+                  isActive: {
+                    type: 'boolean',
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'URL updated successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/URLInfo',
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'URL not found',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+        },
+      },
+      delete: {
+        tags: ['URL'],
+        summary: 'Delete URL',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'shortId',
+            in: 'path',
+            required: true,
+            schema: {
+              type: 'string',
+            },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'URL deleted successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'URL not found',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/stats/{shortId}': {
+      get: {
+        tags: ['Statistics'],
+        summary: 'Get URL statistics',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'shortId',
+            in: 'path',
+            required: true,
+            schema: {
+              type: 'string',
+            },
+          },
+          {
+            name: 'period',
+            in: 'query',
+            required: false,
+            schema: {
+              type: 'string',
+              enum: ['24h', '7d', '30d', '90d'],
+              default: '7d',
+            },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'URL statistics retrieved successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/URLStats',
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'URL not found',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/stats/{shortId}/visits': {
+      get: {
+        tags: ['Statistics'],
+        summary: 'Get URL visit history',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'shortId',
+            in: 'path',
+            required: true,
+            schema: {
+              type: 'string',
+            },
+          },
+          {
+            name: 'period',
+            in: 'query',
+            required: false,
+            schema: {
+              type: 'string',
+              enum: ['24h', '7d', '30d', '90d'],
+              default: '7d',
+            },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'URL visit history retrieved successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      date: {
+                        type: 'string',
+                        format: 'date-time',
+                      },
+                      visits: {
+                        type: 'integer',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'URL not found',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/analytics': {
+      get: {
+        tags: ['Statistics'],
+        summary: 'Get user analytics',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'period',
+            in: 'query',
+            required: false,
+            schema: {
+              type: 'string',
+              enum: ['24h', '7d', '30d', '90d'],
+              default: '7d',
+            },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'User analytics retrieved successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    totalVisits: {
+                      type: 'integer',
+                    },
+                    totalUrls: {
+                      type: 'integer',
+                    },
+                    topUrls: {
+                      type: 'array',
+                      items: {
+                        $ref: '#/components/schemas/URLInfo',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/url-groups': {
+      get: {
+        tags: ['URL Groups'],
+        summary: 'Get all URL groups for current user',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          '200': {
+            description: 'URL groups retrieved successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: {
+                    $ref: '#/components/schemas/URLGroup',
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      post: {
+        tags: ['URL Groups'],
+        summary: 'Create a new URL group',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['name'],
+                properties: {
+                  name: {
+                    type: 'string',
+                  },
+                  description: {
+                    type: 'string',
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'URL group created successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/URLGroup',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/url-groups/{id}': {
+      put: {
+        tags: ['URL Groups'],
+        summary: 'Update a URL group',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: {
+              type: 'integer',
+            },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  name: {
+                    type: 'string',
+                  },
+                  description: {
+                    type: 'string',
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'URL group updated successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/URLGroup',
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'URL group not found',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+        },
+      },
+      delete: {
+        tags: ['URL Groups'],
+        summary: 'Delete a URL group',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: {
+              type: 'integer',
+            },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'URL group deleted successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    message: {
+                      type: 'string',
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'URL group not found',
             content: {
               'application/json': {
                 schema: {

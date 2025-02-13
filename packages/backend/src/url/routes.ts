@@ -306,6 +306,67 @@ export const createUrlRoutes = () => {
     }
   });
 
+  router.get('/analytics/export', auth(), async (c: Context) => {
+    const period = (c.req.query('period') as Period) || '7d';
+    const db = c.get('db');
+    const user = c.get('user') as IUser;
+
+    if (!VALID_PERIODS.includes(period)) {
+      return c.json({ error: 'Invalid period' }, 400);
+    }
+
+    try {
+      const urlService = new UrlService(c.env.BASE_URL, db);
+      const analytics = await urlService.getUserAnalytics(
+        user.id.toString(),
+        period
+      );
+
+      // Convert analytics data to CSV format
+      const csvRows = [
+        // Headers
+        ['Date', 'Total Clicks', 'Unique Visitors'].join(','),
+        // Data rows
+        ...analytics.clicksByDate.map(
+          (item) => `${item.date},${item.count},${analytics.uniqueVisitors}`
+        ),
+        '', // Empty line
+        ['Top Countries'].join(','),
+        ['Country', 'Visits'].join(','),
+        ...analytics.countries.map((item) => `${item.name},${item.count}`),
+        '', // Empty line
+        ['Top Referrers'].join(','),
+        ['Referrer', 'Visits'].join(','),
+        ...analytics.referrers.map((item) => `${item.name},${item.count}`),
+        '', // Empty line
+        ['Device Types'].join(','),
+        ['Device', 'Visits'].join(','),
+        ...analytics.devices.map((item) => `${item.name},${item.count}`),
+        '', // Empty line
+        ['Browsers'].join(','),
+        ['Browser', 'Visits'].join(','),
+        ...analytics.browsers.map((item) => `${item.name},${item.count}`),
+        '', // Empty line
+        ['Operating Systems'].join(','),
+        ['OS', 'Visits'].join(','),
+        ...analytics.operatingSystems.map(
+          (item) => `${item.name},${item.count}`
+        ),
+      ].join('\n');
+
+      // Set response headers for CSV download
+      c.header('Content-Type', 'text/csv');
+      c.header(
+        'Content-Disposition',
+        `attachment; filename="analytics-${period}-${new Date().toISOString()}.csv"`
+      );
+
+      return c.text(csvRows);
+    } catch (error) {
+      return c.json({ error: 'Failed to export analytics' }, 500);
+    }
+  });
+
   // URL Group endpoints
   router.post('/url-groups', auth(), async (c: Context) => {
     try {

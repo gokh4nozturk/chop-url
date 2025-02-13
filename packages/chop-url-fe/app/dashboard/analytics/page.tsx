@@ -179,6 +179,18 @@ export default function AnalyticsPage() {
               className={`${isLoading ? 'animate-spin' : ''} h-4 w-4`}
             />
           </Button>
+
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => {
+              window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/analytics/export?period=${timeRange}`;
+            }}
+            className="transition-all duration-300 hover:shadow-md"
+            title="Export as CSV"
+          >
+            <Icons.download className="h-4 w-4" />
+          </Button>
         </motion.div>
       </div>
 
