@@ -33,11 +33,12 @@ You are an expert senior software engineer specializing in modern web developmen
 - Tailwind CSS
 - React Hook Form
 - Zod
-- [Motion](https://motion.dev/docs)
+- Framer Motion
 - [Drizzle](https://orm.drizzle.team/docs/overview)
 - Use only [Sonner](https://ui.shadcn.com/docs/components/sonner) for notifications
 - Use only [Lucide](https://lucide.dev/icons/) for icons
 - Use only [Motion](https://motion.dev/docs) for animations
+- We have to use [Zustand](https://zustand.docs.pmnd.rs/) for state management, cache data and fetch data from API
 
 ## Project Structure
 

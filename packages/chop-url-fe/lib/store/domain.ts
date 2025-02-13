@@ -36,6 +36,8 @@ interface DomainState {
   dnsRecords: Record<number, DnsRecord[]>;
   isLoading: boolean;
   error: string | null;
+  lastFetch: number | null;
+  isFetching: boolean;
   fetchDomains: () => Promise<void>;
   fetchDnsRecords: (domainId: number) => Promise<void>;
   addDomain: (domain: Partial<Domain>) => Promise<void>;
@@ -45,18 +47,42 @@ interface DomainState {
   deleteDnsRecord: (domainId: number, recordId: number) => Promise<void>;
 }
 
+const CACHE_DURATION = 30 * 1000; // 30 seconds
+
 export const useDomainStore = create<DomainState>()(
   devtools((set, get) => ({
     domains: [],
     dnsRecords: {},
     isLoading: false,
     error: null,
+    lastFetch: null,
+    isFetching: false,
 
     fetchDomains: async () => {
+      const state = get();
+      const now = Date.now();
+
+      // Return cached data if it's fresh enough
+      if (
+        state.lastFetch &&
+        now - state.lastFetch < CACHE_DURATION &&
+        state.domains.length > 0
+      ) {
+        return;
+      }
+
+      // Prevent multiple simultaneous fetches
+      if (state.isFetching) {
+        return;
+      }
+
       try {
-        set({ isLoading: true, error: null });
+        set({ isLoading: true, error: null, isFetching: true });
         const response = await apiClient.get('/api/domains');
-        set({ domains: response.data });
+        set({
+          domains: response.data,
+          lastFetch: now,
+        });
       } catch (error) {
         const apiError = error as ApiError;
         set({ error: apiError.message || 'Failed to fetch domains' });
@@ -64,11 +90,23 @@ export const useDomainStore = create<DomainState>()(
           description: apiError.message || 'An unexpected error occurred',
         });
       } finally {
-        set({ isLoading: false });
+        set({ isLoading: false, isFetching: false });
       }
     },
 
     fetchDnsRecords: async (domainId: number) => {
+      const state = get();
+      const now = Date.now();
+
+      // Return cached data if it's fresh enough
+      if (
+        state.dnsRecords[domainId] &&
+        state.lastFetch &&
+        now - state.lastFetch < CACHE_DURATION
+      ) {
+        return;
+      }
+
       try {
         const response = await apiClient.get(`/api/domains/${domainId}/dns`);
         set((state) => ({
@@ -76,6 +114,7 @@ export const useDomainStore = create<DomainState>()(
             ...state.dnsRecords,
             [domainId]: response.data,
           },
+          lastFetch: now,
         }));
       } catch (error) {
         const apiError = error as ApiError;
@@ -90,6 +129,7 @@ export const useDomainStore = create<DomainState>()(
         const response = await apiClient.post('/api/domains', domain);
         set((state) => ({
           domains: [...state.domains, response.data],
+          lastFetch: Date.now(), // Update cache timestamp
         }));
         toast.success('Domain added successfully', {
           description:
@@ -113,6 +153,7 @@ export const useDomainStore = create<DomainState>()(
             ...state.dnsRecords,
             [domainId]: [],
           },
+          lastFetch: Date.now(), // Update cache timestamp
         }));
         toast.success('Domain deleted successfully');
       } catch (error) {
@@ -134,6 +175,7 @@ export const useDomainStore = create<DomainState>()(
             domains: state.domains.map((d) =>
               d.id === domainId ? { ...d, isVerified: true } : d
             ),
+            lastFetch: Date.now(), // Update cache timestamp
           }));
           toast.success('Domain verified successfully');
         } else {
@@ -161,6 +203,7 @@ export const useDomainStore = create<DomainState>()(
             ...state.dnsRecords,
             [domainId]: [...(state.dnsRecords[domainId] || []), response.data],
           },
+          lastFetch: Date.now(), // Update cache timestamp
         }));
         toast.success('DNS record added successfully');
       } catch (error) {
@@ -182,6 +225,7 @@ export const useDomainStore = create<DomainState>()(
               (r) => r.id !== recordId
             ),
           },
+          lastFetch: Date.now(), // Update cache timestamp
         }));
         toast.success('DNS record deleted successfully');
       } catch (error) {
