@@ -22,5 +22,11 @@
   },
   "[jsonc]": {
     "editor.defaultFormatter": "biomejs.biome"
-  }
+  },
+  "typescript.preferences.autoImportFileExcludePatterns": [
+    "@radix-ui/**",
+    "node_modules/**",
+    "dist/**",
+    "build/**"
+  ]
 }
