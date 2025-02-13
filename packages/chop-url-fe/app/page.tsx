@@ -339,7 +339,7 @@ export default function Home() {
                           <p className="text-sm text-primary">
                             Sign up for unlimited duration links
                           </p>
-                          <Link href="/auth/register">
+                          <Link href="/auth">
                             <Button
                               variant="ghost"
                               className="text-primary hover:bg-primary/10 hover:text-primary/80"
