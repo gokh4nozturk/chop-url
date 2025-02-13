@@ -1,6 +1,5 @@
 'use client';
 
-import { Icons } from '@/components/icons';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,24 +29,12 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
-import apiClient from '@/lib/api/client';
-import { ApiError } from '@/lib/api/error';
+import { useDomainStore } from '@/lib/store/domain';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Plus, Trash } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-
-interface DnsRecord {
-  id: number;
-  type: 'A' | 'AAAA' | 'CNAME' | 'TXT' | 'MX' | 'NS';
-  name: string;
-  content: string;
-  ttl: number;
-  priority?: number;
-  proxied: boolean;
-  createdAt: string;
-}
 
 interface AddDnsRecordForm {
   type: 'A' | 'AAAA' | 'CNAME' | 'TXT' | 'MX' | 'NS';
@@ -60,11 +47,10 @@ interface AddDnsRecordForm {
 
 export default function DnsRecordsPage() {
   const params = useParams();
-  const domainId = params.id as string;
-  const [records, setRecords] = useState<DnsRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isAddingRecord, setIsAddingRecord] = useState(false);
+  const domainId = Number(params.id);
+  const { dnsRecords, fetchDnsRecords, addDnsRecord, deleteDnsRecord } =
+    useDomainStore();
+  const records = dnsRecords[domainId] || [];
 
   const {
     register,
@@ -81,56 +67,17 @@ export default function DnsRecordsPage() {
 
   const recordType = watch('type');
 
-  const fetchRecords = useCallback(async () => {
-    try {
-      setError(null);
-      const response = await apiClient.get(`/api/domains/${domainId}/dns`);
-      setRecords(response.data);
-    } catch (error) {
-      console.error('Error fetching DNS records:', error);
-      setError('Failed to fetch DNS records. Please try again later.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [domainId]);
-
   useEffect(() => {
-    fetchRecords();
-  }, [fetchRecords]);
+    fetchDnsRecords(domainId);
+  }, [fetchDnsRecords, domainId]);
 
   const onSubmit = async (data: AddDnsRecordForm) => {
     try {
-      setIsAddingRecord(true);
-      await apiClient.post(`/api/domains/${domainId}/dns`, data);
-
-      toast.success('DNS record added', {
-        description: 'Your DNS record has been added successfully.',
-      });
-
+      await addDnsRecord(domainId, data);
       reset();
-      fetchRecords();
-    } catch (error: unknown) {
-      const apiError = error as ApiError;
-      toast.error('Failed to add DNS record', {
-        description: apiError.message || 'An error occurred',
-      });
-    } finally {
-      setIsAddingRecord(false);
-    }
-  };
-
-  const handleDeleteRecord = async (recordId: number) => {
-    try {
-      await apiClient.delete(`/api/domains/${domainId}/dns/${recordId}`);
-      toast.success('DNS record deleted', {
-        description: 'Your DNS record has been deleted successfully.',
-      });
-      fetchRecords();
-    } catch (error: unknown) {
-      const apiError = error as ApiError;
-      toast.error('Failed to delete DNS record', {
-        description: apiError.message || 'An error occurred',
-      });
+    } catch (error) {
+      // Error is already handled by the store
+      console.error('Error adding DNS record:', error);
     }
   };
 
@@ -169,7 +116,7 @@ export default function DnsRecordsPage() {
           <Dialog>
             <DialogTrigger asChild>
               <Button>
-                <Icons.plus className="mr-2 h-4 w-4" />
+                <Plus className="mr-2 h-4 w-4" />
                 Add Record
               </Button>
             </DialogTrigger>
@@ -246,13 +193,12 @@ export default function DnsRecordsPage() {
                       placeholder="10"
                       {...register('priority', {
                         valueAsNumber: true,
-                        min: 0,
-                        max: 65535,
+                        required: true,
                       })}
                     />
                     {errors.priority && (
                       <p className="text-sm text-destructive">
-                        Priority must be between 0 and 65535
+                        Priority is required for MX records
                       </p>
                     )}
                   </div>
@@ -265,6 +211,7 @@ export default function DnsRecordsPage() {
                     type="number"
                     {...register('ttl', {
                       valueAsNumber: true,
+                      required: true,
                       min: 60,
                       max: 86400,
                     })}
@@ -276,42 +223,21 @@ export default function DnsRecordsPage() {
                   )}
                 </div>
 
-                {(recordType === 'A' ||
-                  recordType === 'AAAA' ||
-                  recordType === 'CNAME') && (
+                {(recordType === 'A' || recordType === 'AAAA') && (
                   <div className="flex items-center space-x-2">
                     <Switch id="proxied" {...register('proxied')} />
                     <Label htmlFor="proxied">Proxy through Cloudflare</Label>
                   </div>
                 )}
 
-                <DialogFooter>
-                  <Button type="submit" disabled={isAddingRecord}>
-                    {isAddingRecord && (
-                      <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    Add Record
-                  </Button>
-                </DialogFooter>
+                <Button type="submit" className="w-full">
+                  Add Record
+                </Button>
               </form>
             </DialogContent>
           </Dialog>
         </motion.div>
       </div>
-
-      <AnimatePresence>
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-          >
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <motion.div
         initial={{ opacity: 0 }}
@@ -329,7 +255,7 @@ export default function DnsRecordsPage() {
           <CardContent>
             <div className="space-y-4">
               <AnimatePresence mode="popLayout">
-                {isLoading ? (
+                {!records ? (
                   // Loading skeletons
                   Array.from({ length: 3 }, (_, i) => `dns-skeleton-${i}`).map(
                     (key) => (
@@ -354,12 +280,14 @@ export default function DnsRecordsPage() {
                   )
                 ) : records.length === 0 ? (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="rounded-lg border p-8 text-center"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="rounded-lg border p-4 text-center"
                   >
                     <p className="text-sm text-muted-foreground">
-                      No DNS records found. Click "Add Record" to create one.
+                      No DNS records found. Click the "Add Record" button to get
+                      started.
                     </p>
                   </motion.div>
                 ) : (
@@ -369,8 +297,10 @@ export default function DnsRecordsPage() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.2, delay: index * 0.1 }}
-                      layout
+                      transition={{
+                        duration: 0.2,
+                        delay: index * 0.1,
+                      }}
                       className="flex items-center justify-between space-x-4 rounded-lg border p-4"
                     >
                       <div className="space-y-1">
@@ -399,9 +329,9 @@ export default function DnsRecordsPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDeleteRecord(record.id)}
+                        onClick={() => deleteDnsRecord(domainId, record.id)}
                       >
-                        <Icons.trash className="h-4 w-4" />
+                        <Trash className="h-4 w-4" />
                       </Button>
                     </motion.div>
                   ))

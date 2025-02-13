@@ -1,6 +1,5 @@
 'use client';
 
-import { Icons } from '@/components/icons';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,19 +12,24 @@ import {
 import apiClient from '@/lib/api/client';
 import { ApiError } from '@/lib/api/error';
 import { AnimatePresence, motion } from 'framer-motion';
+import { CheckCircle, Clock, Loader2, XCircle } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface Domain {
   id: number;
-  name: string;
-  ssl: {
-    status: 'pending' | 'active' | 'error';
-    message?: string;
-    expiresAt?: string;
-    provider: string;
-    type: string;
+  domain: string;
+  isVerified: boolean;
+  verificationToken: string;
+  verificationMethod: 'DNS_TXT' | 'DNS_CNAME' | 'FILE';
+  sslStatus: 'PENDING' | 'ACTIVE' | 'FAILED';
+  isActive: boolean;
+  createdAt: string;
+  settings?: {
+    redirectMode: 'PROXY' | 'REDIRECT';
+    customNameservers: string | null;
+    forceSSL: boolean;
   };
 }
 
@@ -150,49 +154,42 @@ export default function SslStatusPage() {
                     <div className="space-y-1">
                       <p className="text-sm font-medium">Status</p>
                       <div className="flex items-center space-x-2">
-                        {domain.ssl.status === 'active' ? (
-                          <Icons.checkCircle className="h-4 w-4 text-green-500" />
-                        ) : domain.ssl.status === 'pending' ? (
-                          <Icons.clock className="h-4 w-4 text-yellow-500" />
+                        {domain.sslStatus === 'ACTIVE' ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : domain.sslStatus === 'PENDING' ? (
+                          <Clock className="h-4 w-4 text-yellow-500" />
                         ) : (
-                          <Icons.xCircle className="h-4 w-4 text-red-500" />
+                          <XCircle className="h-4 w-4 text-red-500" />
                         )}
                         <span
                           className={
-                            domain.ssl.status === 'active'
+                            domain.sslStatus === 'ACTIVE'
                               ? 'text-green-500'
-                              : domain.ssl.status === 'pending'
+                              : domain.sslStatus === 'PENDING'
                                 ? 'text-yellow-500'
                                 : 'text-red-500'
                           }
                         >
-                          {domain.ssl.status.charAt(0).toUpperCase() +
-                            domain.ssl.status.slice(1)}
+                          {domain.sslStatus}
                         </span>
                       </div>
                     </div>
-                    {domain.ssl.status !== 'active' && (
+                    {domain.sslStatus !== 'ACTIVE' && (
                       <Button
                         onClick={handleRequestSsl}
                         disabled={
-                          isRequesting || domain.ssl.status === 'pending'
+                          isRequesting || domain.sslStatus === 'PENDING'
                         }
                       >
                         {isRequesting && (
-                          <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         )}
                         Request SSL Certificate
                       </Button>
                     )}
                   </div>
 
-                  {domain.ssl.message && (
-                    <Alert>
-                      <AlertDescription>{domain.ssl.message}</AlertDescription>
-                    </Alert>
-                  )}
-
-                  {domain.ssl.status === 'active' && (
+                  {domain.sslStatus === 'ACTIVE' && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
@@ -203,29 +200,22 @@ export default function SslStatusPage() {
                       <div className="space-y-1">
                         <p className="text-sm font-medium">Provider</p>
                         <p className="text-sm text-muted-foreground">
-                          {domain.ssl.provider}
+                          {domain.settings?.customNameservers || 'Default'}
                         </p>
                       </div>
 
                       <div className="space-y-1">
                         <p className="text-sm font-medium">Type</p>
                         <p className="text-sm text-muted-foreground">
-                          {domain.ssl.type}
+                          {domain.settings?.redirectMode || 'PROXY'}
                         </p>
                       </div>
 
-                      {domain.ssl.expiresAt && (
+                      {domain.settings?.forceSSL && (
                         <div className="space-y-1">
-                          <p className="text-sm font-medium">Expires</p>
+                          <p className="text-sm font-medium">SSL</p>
                           <p className="text-sm text-muted-foreground">
-                            {new Date(domain.ssl.expiresAt).toLocaleDateString(
-                              'en-US',
-                              {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                              }
-                            )}
+                            Enabled
                           </p>
                         </div>
                       )}

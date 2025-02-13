@@ -1,6 +1,5 @@
 'use client';
 
-import { Icons } from '@/components/icons';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,10 +20,10 @@ import {
 import apiClient from '@/lib/api/client';
 import { ApiError } from '@/lib/api/error';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Copy, Loader2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-
 interface Domain {
   id: number;
   name: string;
@@ -226,7 +225,7 @@ export default function DomainVerificationPage() {
                               )
                             }
                           >
-                            <Icons.copy className="mr-2 h-4 w-4" />
+                            <Copy className="mr-2 h-4 w-4" />
                             Copy
                           </Button>
                         </div>
@@ -248,7 +247,7 @@ export default function DomainVerificationPage() {
                               )
                             }
                           >
-                            <Icons.copy className="mr-2 h-4 w-4" />
+                            <Copy className="mr-2 h-4 w-4" />
                             Copy
                           </Button>
                         </div>
@@ -288,7 +287,7 @@ export default function DomainVerificationPage() {
                               )
                             }
                           >
-                            <Icons.copy className="mr-2 h-4 w-4" />
+                            <Copy className="mr-2 h-4 w-4" />
                             Copy
                           </Button>
                         </div>
@@ -310,7 +309,7 @@ export default function DomainVerificationPage() {
                               )
                             }
                           >
-                            <Icons.copy className="mr-2 h-4 w-4" />
+                            <Copy className="mr-2 h-4 w-4" />
                             Copy
                           </Button>
                         </div>
@@ -350,7 +349,7 @@ export default function DomainVerificationPage() {
                               )
                             }
                           >
-                            <Icons.copy className="mr-2 h-4 w-4" />
+                            <Copy className="mr-2 h-4 w-4" />
                             Copy
                           </Button>
                         </div>
@@ -371,7 +370,7 @@ export default function DomainVerificationPage() {
                               )
                             }
                           >
-                            <Icons.copy className="mr-2 h-4 w-4" />
+                            <Copy className="mr-2 h-4 w-4" />
                             Copy
                           </Button>
                         </div>
@@ -397,7 +396,7 @@ export default function DomainVerificationPage() {
                             )
                           }
                         >
-                          <Icons.copy className="mr-2 h-4 w-4" />
+                          <Copy className="mr-2 h-4 w-4" />
                           Copy
                         </Button>
                       </div>
@@ -417,7 +416,7 @@ export default function DomainVerificationPage() {
                       disabled={isVerifying}
                     >
                       {isVerifying && (
-                        <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       )}
                       Verify Domain
                     </Button>

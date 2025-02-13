@@ -388,7 +388,7 @@ export default function DomainsPage() {
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium">Mode</span>
                         <span className="text-sm">
-                          {domain.settings.redirectMode}
+                          {domain.settings?.redirectMode ?? 'PROXY'}
                         </span>
                       </div>
                     </div>
