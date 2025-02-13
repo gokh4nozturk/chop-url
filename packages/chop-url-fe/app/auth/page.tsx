@@ -2,9 +2,10 @@
 
 import { LoginForm } from '@/components/auth/LoginForm';
 import { RegisterForm } from '@/components/auth/RegisterForm';
-import { Icons } from '@/components/icons';
+import { GoogleIcon } from '@/components/icons/google-icon';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/lib/store/auth';
+import { Github, Loader2 } from 'lucide-react';
 import { Suspense, useState } from 'react';
 
 export default function AuthPage() {
@@ -47,9 +48,9 @@ export default function AuthPage() {
             className="w-full"
           >
             {isLoading ? (
-              <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <Icons.google className="mr-2 h-4 w-4" />
+              <GoogleIcon className="mr-2 h-4 w-4" />
             )}
             Google
           </Button>
@@ -61,9 +62,9 @@ export default function AuthPage() {
             className="w-full"
           >
             {isLoading ? (
-              <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <Icons.gitHub className="mr-2 h-4 w-4" />
+              <Github className="mr-2 h-4 w-4" />
             )}
             GitHub
           </Button>

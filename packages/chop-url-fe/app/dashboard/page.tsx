@@ -1,16 +1,23 @@
 'use client';
 
-import LoadingSpinner from '@/components/custom/loading-spinner';
-import { Icons } from '@/components/icons';
+import { FrameIcon } from '@/components/icons/frame';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/lib/store/auth';
 import useUrlStore from '@/lib/store/url';
 import { motion } from 'framer-motion';
+import {
+  BarChart,
+  Copy as CopyIcon,
+  Globe,
+  Link as LinkIcon,
+  Loader2,
+  type LucideIcon,
+  Plus,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
-
 interface Url {
   id: number;
   shortUrl: string;
@@ -28,12 +35,11 @@ interface Url {
 type StatCardProps = {
   title: string;
   value: number;
-  icon: keyof typeof Icons;
+  icon: LucideIcon;
   helperText: string;
 };
 
 const StatCard = ({ title, value, icon: Icon, helperText }: StatCardProps) => {
-  const IconComponent = Icons[Icon];
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
@@ -46,7 +52,7 @@ const StatCard = ({ title, value, icon: Icon, helperText }: StatCardProps) => {
             whileHover={{ rotate: 15 }}
             transition={{ type: 'spring', stiffness: 300 }}
           >
-            <IconComponent className="h-4 w-4 text-muted-foreground" />
+            <Icon className="h-4 w-4 text-muted-foreground" />
           </motion.div>
         </CardHeader>
         <CardContent>
@@ -87,7 +93,7 @@ const RecentLinks = ({ urls }: { urls: Url[] }) => {
             whileHover={{ rotate: 15 }}
             transition={{ type: 'spring', stiffness: 300 }}
           >
-            <Icons.link className="h-8 w-8 mx-auto text-muted-foreground" />
+            <LinkIcon className="h-8 w-8 mx-auto text-muted-foreground" />
           </motion.div>
           <h3 className="text-lg font-semibold">No links created yet</h3>
           <p className="text-sm text-muted-foreground">
@@ -130,7 +136,7 @@ const RecentLinks = ({ urls }: { urls: Url[] }) => {
               className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-all duration-300"
               onClick={() => handleCopy(url.shortUrl)}
             >
-              <Icons.copy className="h-4 w-4" />
+              <CopyIcon className="h-4 w-4" />
             </Button>
           </div>
         </motion.div>
@@ -151,7 +157,7 @@ const RecentActivity = ({ hasUrls }: { hasUrls: boolean }) => (
         whileHover={{ rotate: 15 }}
         transition={{ type: 'spring', stiffness: 300 }}
       >
-        <Icons.barChart className="h-8 w-8 mx-auto text-muted-foreground" />
+        <BarChart className="h-8 w-8 mx-auto text-muted-foreground" />
       </motion.div>
       {!hasUrls && (
         <motion.div
@@ -185,7 +191,7 @@ export default function DashboardPage() {
   }, [getUser, getUserUrls]);
 
   if (isLoading || isLoadingUrls) {
-    return <LoadingSpinner />;
+    return <Loader2 className="h-4 w-4 animate-spin" />;
   }
 
   const stats = getUrlStats(urls);
@@ -210,7 +216,7 @@ export default function DashboardPage() {
             className="w-full justify-start hover:shadow-md transition-all duration-300"
           >
             <Link href="/dashboard/new">
-              <Icons.plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 h-4 w-4" />
               New Link
             </Link>
           </Button>
@@ -221,25 +227,25 @@ export default function DashboardPage() {
         <StatCard
           title="Total Links"
           value={stats.totalLinks || 0}
-          icon="link"
+          icon={LinkIcon}
           helperText="+0% from last month"
         />
         <StatCard
           title="Total Clicks"
           value={stats.totalClicks || 0}
-          icon="barChart"
+          icon={BarChart}
           helperText="+0% from last month"
         />
         <StatCard
           title="Active Links"
           value={stats.activeLinks || 0}
-          icon="globe"
+          icon={Globe}
           helperText="+0% from last month"
         />
         <StatCard
           title="Recent Clicks"
           value={stats.totalClicks || 0}
-          icon="barChart"
+          icon={BarChart}
           helperText="+0% from last 24h"
         />
       </div>
@@ -257,7 +263,7 @@ export default function DashboardPage() {
 
               <Button variant="ghost" size="icon" asChild>
                 <Link href="/dashboard/links">
-                  <Icons.frameIcon />
+                  <FrameIcon />
                 </Link>
               </Button>
             </CardHeader>

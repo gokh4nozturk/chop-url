@@ -1,6 +1,5 @@
 'use client';
 
-import { Icons } from '@/components/icons';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,11 +32,11 @@ import { Switch } from '@/components/ui/switch';
 import apiClient from '@/lib/api/client';
 import { ApiError } from '@/lib/api/error';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Network, Shield, Trash, Plus, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-
 interface Domain {
   id: number;
   domain: string;
@@ -194,7 +193,7 @@ export default function DomainsPage() {
           <Dialog>
             <DialogTrigger asChild>
               <Button>
-                <Icons.plus className="mr-2 h-4 w-4" />
+                <Plus className="mr-2 h-4 w-4" />
                 Add Domain
               </Button>
             </DialogTrigger>
@@ -246,7 +245,7 @@ export default function DomainsPage() {
                 <DialogFooter>
                   <Button type="submit" disabled={isAddingDomain}>
                     {isAddingDomain && (
-                      <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
                     Add Domain
                   </Button>
@@ -405,7 +404,7 @@ export default function DomainsPage() {
                           router.push(`/dashboard/domains/${domain.id}/dns`)
                         }
                       >
-                        <Icons.network className="mr-2 h-4 w-4" />
+                        <Network className="mr-2 h-4 w-4" />
                         DNS Records
                       </Button>
                       <Button
@@ -415,7 +414,7 @@ export default function DomainsPage() {
                           router.push(`/dashboard/domains/${domain.id}/ssl`)
                         }
                       >
-                        <Icons.shield className="mr-2 h-4 w-4" />
+                        <Shield className="mr-2 h-4 w-4" />
                         SSL
                       </Button>
                       <Button
@@ -423,7 +422,7 @@ export default function DomainsPage() {
                         size="sm"
                         onClick={() => handleDeleteDomain(domain.id)}
                       >
-                        <Icons.trash className="h-4 w-4" />
+                        <Trash className="h-4 w-4" />
                       </Button>
                     </div>
                   </CardContent>

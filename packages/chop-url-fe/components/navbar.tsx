@@ -1,11 +1,12 @@
 'use client';
 
-import { Icons } from '@/components/icons';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import { Button } from '@/components/ui/button';
+import { ArrowRight, Bell, LayoutDashboard } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useMediaQuery } from 'usehooks-ts';
+
 export function Navbar() {
   const isMobile = useMediaQuery('(max-width: 640px)');
 
@@ -38,7 +39,7 @@ export function Navbar() {
             className="w-9 h-9"
             aria-label="Notifications"
           >
-            <Icons.bell className="h-4 w-4" />
+            <Bell className="h-4 w-4" />
           </Button>
           <ThemeSwitcher />
           <Link href="/dashboard" passHref>
@@ -48,8 +49,8 @@ export function Navbar() {
               className="h-9 gap-2 hover:scale-105 transition-all duration-300"
             >
               <span className="hidden sm:inline-block">Dashboard</span>
-              <Icons.arrowRight className="hidden sm:inline-block h-4 w-4" />
-              <Icons.layoutDashboard className="inline-block sm:hidden h-4 w-4" />
+              <ArrowRight className="hidden sm:inline-block h-4 w-4" />
+              <LayoutDashboard className="inline-block sm:hidden h-4 w-4" />
             </Button>
           </Link>
         </div>

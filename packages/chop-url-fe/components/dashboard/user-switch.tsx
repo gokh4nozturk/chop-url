@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 
-import { Icons } from '@/components/icons';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +17,7 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useAuthStore } from '@/lib/store/auth';
+import { ChevronsUpDown, User2 } from 'lucide-react';
 import Link from 'next/link';
 
 export function UserSwitch() {
@@ -35,51 +35,23 @@ export function UserSwitch() {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <Icons.user2 className="size-4" />
+                <User2 className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{user.email}</span>
               </div>
-              <Icons.chevronUpDown className="ml-auto" />
+              <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-            align="start"
-            side="top"
-            sideOffset={4}
-          >
-            <DropdownMenuLabel className="text-xs text-muted-foreground">
-              User
-            </DropdownMenuLabel>
-            <DropdownMenuItem className="gap-2 p-2">
-              <div className="flex size-6 items-center justify-center rounded-sm border">
-                <Icons.user2 className="size-4 shrink-0" />
-              </div>
-              <p className="truncate">{user.email}</p>
-              {/* <DropdownMenuShortcut>⌘1</DropdownMenuShortcut> */}
-            </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2 p-2" asChild>
-              <Link href="/dashboard/settings">
-                <div className="flex size-6 items-center justify-center rounded-sm border">
-                  <Icons.settings className="size-4 shrink-0" />
-                </div>
-                Settings
-                <DropdownMenuShortcut>⌘1</DropdownMenuShortcut>
-              </Link>
-            </DropdownMenuItem>
+          <DropdownMenuContent align="start" className="w-[200px]">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="gap-2 p-2"
-              onClick={() => {
-                logout();
-              }}
-            >
-              <div className="flex size-6 items-center justify-center rounded-sm border">
-                <Icons.logout className="size-4 shrink-0" />
-              </div>
-              Sign out
-              <DropdownMenuShortcut>⌘2</DropdownMenuShortcut>
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/settings">Settings</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => logout()}>
+              Log out
+              <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

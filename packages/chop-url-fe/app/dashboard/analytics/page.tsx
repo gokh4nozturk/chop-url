@@ -1,6 +1,5 @@
 'use client';
 
-import { Icons } from '@/components/icons';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { BarChart } from '@/components/ui/bar-chart';
 import { Button } from '@/components/ui/button';
@@ -15,7 +14,15 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import apiClient from '@/lib/api/client';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LucideIcon } from 'lucide-react';
+import {
+  BarChart2,
+  Download,
+  Frame,
+  Globe,
+  Loader2,
+  type LucideIcon,
+  User,
+} from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
 interface AnalyticsData {
@@ -175,9 +182,7 @@ export default function AnalyticsPage() {
             }}
             className="transition-all duration-300 hover:shadow-md"
           >
-            <Icons.loading
-              className={`${isLoading ? 'animate-spin' : ''} h-4 w-4`}
-            />
+            <Loader2 className={`${isLoading ? 'animate-spin' : ''} h-4 w-4`} />
           </Button>
 
           <Button
@@ -189,7 +194,7 @@ export default function AnalyticsPage() {
             className="transition-all duration-300 hover:shadow-md"
             title="Export as CSV"
           >
-            <Icons.download className="h-4 w-4" />
+            <Download className="h-4 w-4" />
           </Button>
         </motion.div>
       </div>
@@ -212,19 +217,19 @@ export default function AnalyticsPage() {
         <StatCard
           title="Total Clicks"
           value={analyticsData?.totalClicks || 0}
-          icon={Icons.barChart}
+          icon={BarChart2}
           loading={isLoading}
         />
         <StatCard
           title="Unique Visitors"
           value={analyticsData?.uniqueVisitors || 0}
-          icon={Icons.user}
+          icon={User}
           loading={isLoading}
         />
         <StatCard
           title="Top Country"
           value={topCountry?.name || '-'}
-          icon={Icons.globe}
+          icon={Globe}
           loading={isLoading}
           subtitle={
             topCountry
@@ -238,7 +243,7 @@ export default function AnalyticsPage() {
         <StatCard
           title="Top Referrer"
           value={topReferrer?.name || '-'}
-          icon={Icons.link}
+          icon={Frame}
           loading={isLoading}
           subtitle={
             topReferrer

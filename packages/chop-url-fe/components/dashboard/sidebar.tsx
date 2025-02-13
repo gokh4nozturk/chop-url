@@ -1,7 +1,7 @@
 'use client';
 
 import { UserSwitch } from '@/components/dashboard/user-switch';
-import { Icons } from '@/components/icons';
+import { FrameIcon } from '@/components/icons/frame';
 import { Input } from '@/components/ui/input';
 import {
   Sidebar,
@@ -17,6 +17,16 @@ import {
 import useUrlStore from '@/lib/store/url';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
+  ArrowRight,
+  BarChart2,
+  Earth,
+  Folder,
+  Home,
+  Link2,
+  Search,
+  Settings,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -24,32 +34,32 @@ const items = [
   {
     title: 'Overview',
     href: '/dashboard',
-    icon: Icons.home,
+    icon: Home,
   },
   {
     title: 'Links',
     href: '/dashboard/links',
-    icon: Icons.link2,
+    icon: Link2,
   },
   {
     title: 'Groups',
     href: '/dashboard/groups',
-    icon: Icons.folder,
+    icon: Folder,
   },
   {
     title: 'Analytics',
     href: '/dashboard/analytics',
-    icon: Icons.barChart,
+    icon: BarChart2,
   },
   {
     title: 'Domains',
     href: '/dashboard/domains',
-    icon: Icons.earth,
+    icon: Earth,
   },
   {
     title: 'Settings',
     href: '/dashboard/settings',
-    icon: Icons.settings,
+    icon: Settings,
   },
 ];
 
@@ -85,7 +95,8 @@ export function DashboardSidebar() {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Icons.search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground transition-all duration-200" />
+                  <FrameIcon className="absolute left-2 top-2 h-4 w-4 text-muted-foreground transition-all duration-200" />
+                  <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground transition-all duration-200" />
                   <Input
                     placeholder="Search URLs..."
                     className="pl-8 h-8"
@@ -102,7 +113,7 @@ export function DashboardSidebar() {
                   transition={{ duration: 0.2 }}
                   className="flex items-center justify-center h-8"
                 >
-                  <Icons.search className="h-4 w-4 transition-all duration-200" />
+                  <FrameIcon className="h-4 w-4 transition-all duration-200" />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -124,7 +135,7 @@ export function DashboardSidebar() {
                         }
                       >
                         <Link href={`/dashboard/links/${url.shortId}`}>
-                          <Icons.link2 className="mr-2 h-4 w-4" />
+                          <Link2 className="mr-2 h-4 w-4" />
                           <span className="truncate">{url.originalUrl}</span>
                         </Link>
                       </SidebarMenuButton>
@@ -132,7 +143,7 @@ export function DashboardSidebar() {
                   ))
                 ) : (
                   <div className="flex flex-col items-center justify-center gap-2 p-4 text-sm text-muted-foreground">
-                    <Icons.search className="h-8 w-8" />
+                    <Search className="h-8 w-8" />
                     <p>No results found</p>
                   </div>
                 )}
