@@ -40,7 +40,7 @@ export async function sendWeeklyUsageReports(
     const urlService = new UrlService(config.baseUrl, database);
 
     // Get all users
-    const allUsers = await db
+    const allUsers = await database
       .select({
         id: users.id,
         email: users.email,

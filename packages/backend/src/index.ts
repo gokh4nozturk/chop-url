@@ -1,30 +1,35 @@
 import { swaggerUI } from '@hono/swagger-ui';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { createAuthRoutes } from './auth/routes.js';
-import { createDb } from './db/client';
+import { createAuthRoutes } from './auth/routes';
+import { db } from './db';
+import { createDomainRoutes } from './domain/routes';
 import { openApiSchema } from './openapi.js';
-import { createUrlRoutes } from './url/routes.js';
+import { createUrlRoutes } from './url/routes';
 
 export interface Env {
   DB: D1Database;
   BASE_URL: string;
   FRONTEND_URL: string;
   RESEND_API_KEY: string;
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: string;
+  GITHUB_CLIENT_ID: string;
+  GITHUB_CLIENT_SECRET: string;
+  CLOUDFLARE_API_TOKEN: string;
+  CLOUDFLARE_ACCOUNT_ID: string;
+  CLOUDFLARE_ZONE_ID: string;
 }
 
-interface Variables {
-  db: ReturnType<typeof createDb>;
-}
+type Variables = {
+  db: ReturnType<typeof db>;
+};
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// Initialize database
+// Initialize DB middleware
 app.use('*', async (c, next) => {
-  if (!c.get('db')) {
-    const db = createDb(c.env.DB);
-    c.set('db', db);
-  }
+  c.set('db', db(c.env.DB));
   await next();
 });
 
@@ -72,11 +77,10 @@ app.get('/api/health', (c) => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Mount auth routes
+// Mount routes
 app.route('/api/auth', createAuthRoutes());
-
-// Mount URL routes
 app.route('/api', createUrlRoutes());
+app.route('/api', createDomainRoutes());
 
 // Root route - redirect to docs
 app.get('/', (c) => {

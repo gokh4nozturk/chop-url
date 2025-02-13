@@ -58,21 +58,6 @@ export class UrlService {
     userId?: string
   ): Promise<ICreateUrlResponse> {
     try {
-      if (process.env.NODE_ENV === 'test') {
-        const { shortId, originalUrl } = this.chopUrl.generateShortUrl(
-          url,
-          options
-        );
-
-        return {
-          shortUrl: `${this.baseUrl}/${shortId}`,
-          shortId,
-          originalUrl,
-          createdAt: new Date().toISOString(),
-          userId: userId ? parseInt(userId) : null,
-        };
-      }
-
       // Check if URL already exists
       const response = await this.db
         .select()

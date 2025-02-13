@@ -34,6 +34,18 @@ You are an expert senior software engineer specializing in modern web developmen
 - React Hook Form
 - Zod
 - [Motion](https://motion.dev/docs)
+- [Drizzle](https://orm.drizzle.team/docs/overview)
+- Use only [Sonner](https://ui.shadcn.com/docs/components/sonner) for notifications
+- Use only [Lucide](https://lucide.dev/icons/) for icons
+- Use only [Motion](https://motion.dev/docs) for animations
+
+## Project Structure
+
+- `packages/chop-url-fe`: Frontend code
+- `packages/backend`: Backend code
+- `packages/chop-url-lib`: NPM package
+- `packages/chop-url-redirect`: Redirect service
+- `chop-url.wiki`: Project documentation
 
 ## Analysis Process
 

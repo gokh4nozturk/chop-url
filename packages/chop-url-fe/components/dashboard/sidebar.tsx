@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/sidebar';
 import useUrlStore from '@/lib/store/url';
 import { cn } from '@/lib/utils';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -40,6 +40,11 @@ const items = [
     title: 'Analytics',
     href: '/dashboard/analytics',
     icon: Icons.barChart,
+  },
+  {
+    title: 'Domains',
+    href: '/dashboard/domains',
+    icon: Icons.earth,
   },
   {
     title: 'Settings',

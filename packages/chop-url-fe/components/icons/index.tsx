@@ -13,6 +13,7 @@ import {
   Copy,
   CreditCard,
   Download,
+  Earth,
   File,
   FileText,
   Folder,
@@ -34,6 +35,7 @@ import {
   Monitor,
   Moon,
   MoreVertical,
+  Network,
   Pizza,
   Plus,
   PlusCircle,
@@ -65,6 +67,7 @@ export const Icons = {
   download: Download,
   hash: Hash,
   barChart: BarChart2,
+  earth: Earth,
   user: User,
   user2: User2,
   globe: Globe,
@@ -124,4 +127,5 @@ export const Icons = {
       />
     </svg>
   ),
+  network: Network,
 } as const;
