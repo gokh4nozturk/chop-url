@@ -13,6 +13,12 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import apiClient from '@/lib/api/client';
+import type {
+  Event,
+  GeoStats,
+  UrlStats,
+  UtmStats,
+} from '@/lib/store/analytics';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   BarChart2,
@@ -28,15 +34,15 @@ import { useCallback, useEffect, useState } from 'react';
 interface AnalyticsData {
   totalClicks: number;
   uniqueVisitors: number;
-  countries: { name: string; count: number }[];
-  cities: { name: string; count: number }[];
-  regions: { name: string; count: number }[];
+  countries: { name: string; value: number }[];
+  cities: { name: string; value: number }[];
+  regions: { name: string; value: number }[];
   timezones: { name: string; count: number }[];
-  referrers: { name: string; count: number }[];
-  devices: { name: string; count: number }[];
-  browsers: { name: string; count: number }[];
-  operatingSystems: { name: string; count: number }[];
-  clicksByDate: { date: string; count: number }[];
+  referrers: { name: string; value: number }[];
+  devices: { name: string; value: number }[];
+  browsers: { name: string; value: number }[];
+  operatingSystems: { name: string; value: number }[];
+  clicksByDate: { name: string; value: number }[];
 }
 
 const REFRESH_INTERVAL = 30000; // 30 seconds
@@ -52,10 +58,86 @@ export default function AnalyticsPage() {
   const fetchAnalytics = useCallback(async () => {
     try {
       setError(null);
-      const response = await apiClient.get(
-        `/api/analytics?period=${timeRange}`
-      );
-      setAnalyticsData(response.data);
+
+      const response = await apiClient.get<{
+        totalEvents: number;
+        uniqueVisitors: number;
+        geoStats: {
+          countries: Record<string, number>;
+          cities: Record<string, number>;
+          regions: Record<string, number>;
+          timezones: Record<string, number>;
+        };
+        deviceStats: {
+          browsers: Record<string, number>;
+          devices: Record<string, number>;
+          operatingSystems: Record<string, number>;
+        };
+        utmStats: {
+          sources: Record<string, number>;
+          mediums: Record<string, number>;
+          campaigns: Record<string, number>;
+        };
+        clicksByDate: Array<{ name: string; value: number }>;
+      }>(`/api/user/analytics?timeRange=${timeRange}`);
+
+      const data = response.data;
+
+      setAnalyticsData({
+        totalClicks: data.totalEvents,
+        uniqueVisitors: data.uniqueVisitors,
+        countries: Object.entries(data.geoStats.countries).map(
+          ([name, value]) => ({
+            name,
+            value,
+          })
+        ),
+        cities: Object.entries(data.geoStats.cities).map(([name, value]) => ({
+          name,
+          value,
+        })),
+        regions: Object.entries(data.geoStats.regions).map(([name, value]) => ({
+          name,
+          value,
+        })),
+        timezones: Object.entries(data.geoStats.timezones).map(
+          ([name, count]) => ({
+            name,
+            count,
+          })
+        ),
+        referrers: Object.entries(data.utmStats.sources).map(
+          ([name, value]) => ({
+            name: name || 'Direct',
+            value,
+          })
+        ),
+        devices: Object.entries(data.deviceStats.devices).map(
+          ([name, value]) => ({
+            name,
+            value,
+          })
+        ),
+        browsers: Object.entries(data.deviceStats.browsers).map(
+          ([name, value]) => ({
+            name,
+            value,
+          })
+        ),
+        operatingSystems: Object.entries(data.deviceStats.operatingSystems).map(
+          ([name, value]) => ({
+            name,
+            value,
+          })
+        ),
+        clicksByDate: data.clicksByDate.map((item) => ({
+          name: new Date(item.name).toLocaleDateString('en-US', {
+            day: 'numeric',
+            month: 'short',
+          }),
+          value: item.value,
+        })),
+      });
     } catch (error) {
       console.error('Error fetching analytics:', error);
       setError('Failed to fetch analytics data. Please try again later.');
@@ -234,7 +316,7 @@ export default function AnalyticsPage() {
           subtitle={
             topCountry
               ? `${(
-                  (topCountry.count / (analyticsData?.totalClicks || 1)) *
+                  (topCountry.value / (analyticsData?.totalClicks || 1)) *
                   100
                 ).toFixed(1)}% of total traffic`
               : '0% of total traffic'
@@ -248,7 +330,7 @@ export default function AnalyticsPage() {
           subtitle={
             topReferrer
               ? `${(
-                  (topReferrer.count / (analyticsData?.totalClicks || 1)) *
+                  (topReferrer.value / (analyticsData?.totalClicks || 1)) *
                   100
                 ).toFixed(1)}% of total traffic`
               : '0% of total traffic'
@@ -276,13 +358,15 @@ export default function AnalyticsPage() {
                   transition={{ duration: 0.5 }}
                 >
                   <BarChart
-                    data={(analyticsData?.clicksByDate || []).map((item) => ({
-                      name: new Date(item.date).toLocaleDateString('en-US', {
-                        day: 'numeric',
-                        month: 'short',
-                      }),
-                      total: item.count,
-                    }))}
+                    data={analyticsData?.clicksByDate || []}
+                    index="name"
+                    categories={['value']}
+                    colors={['primary']}
+                    valueFormatter={(value) => `${value} clicks`}
+                    showLegend={false}
+                    showXAxis
+                    showYAxis
+                    showTooltip
                   />
                 </motion.div>
               )}
@@ -327,7 +411,7 @@ export default function AnalyticsPage() {
                               initial={{ width: 0 }}
                               animate={{
                                 width: `${
-                                  (city.count /
+                                  (city.value /
                                     (analyticsData?.totalClicks || 1)) *
                                   100
                                 }%`,
@@ -339,7 +423,7 @@ export default function AnalyticsPage() {
                         </div>
                         <div className="w-1/6 text-right text-sm">
                           {(
-                            (city.count / (analyticsData?.totalClicks || 1)) *
+                            (city.value / (analyticsData?.totalClicks || 1)) *
                             100
                           ).toFixed(1)}
                           %
@@ -385,7 +469,7 @@ export default function AnalyticsPage() {
                                 initial={{ width: 0 }}
                                 animate={{
                                   width: `${
-                                    (browser.count /
+                                    (browser.value /
                                       (analyticsData?.totalClicks || 1)) *
                                     100
                                   }%`,
@@ -400,7 +484,7 @@ export default function AnalyticsPage() {
                           </div>
                           <div className="w-1/6 text-right text-sm">
                             {(
-                              (browser.count /
+                              (browser.value /
                                 (analyticsData?.totalClicks || 1)) *
                               100
                             ).toFixed(1)}
@@ -431,7 +515,7 @@ export default function AnalyticsPage() {
                                 initial={{ width: 0 }}
                                 animate={{
                                   width: `${
-                                    (os.count /
+                                    (os.value /
                                       (analyticsData?.totalClicks || 1)) *
                                     100
                                   }%`,
@@ -446,7 +530,7 @@ export default function AnalyticsPage() {
                           </div>
                           <div className="w-1/6 text-right text-sm">
                             {(
-                              (os.count / (analyticsData?.totalClicks || 1)) *
+                              (os.value / (analyticsData?.totalClicks || 1)) *
                               100
                             ).toFixed(1)}
                             %
@@ -490,7 +574,7 @@ export default function AnalyticsPage() {
                               initial={{ width: 0 }}
                               animate={{
                                 width: `${
-                                  (region.count /
+                                  (region.value /
                                     (analyticsData?.totalClicks || 1)) *
                                   100
                                 }%`,
@@ -502,7 +586,7 @@ export default function AnalyticsPage() {
                         </div>
                         <div className="w-1/6 text-right text-sm">
                           {(
-                            (region.count / (analyticsData?.totalClicks || 1)) *
+                            (region.value / (analyticsData?.totalClicks || 1)) *
                             100
                           ).toFixed(1)}
                           %

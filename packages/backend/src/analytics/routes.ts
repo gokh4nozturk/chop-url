@@ -1,9 +1,10 @@
 import { zValidator } from '@hono/zod-validator';
 import { Context, Hono } from 'hono';
 import { z } from 'zod';
+import { auth } from '../auth/middleware';
+import { IUser } from '../auth/types';
 import { createDb } from '../db/client';
 import { AnalyticsService } from './service';
-
 const timeRangeSchema = z.enum(['24h', '7d', '30d', '90d']);
 type TimeRange = z.infer<typeof timeRangeSchema>;
 
@@ -13,6 +14,7 @@ interface Env {
 
 type Variables = {
   db: ReturnType<typeof createDb>;
+  user: IUser;
 };
 
 type HandlerContext = Context<{
@@ -205,6 +207,23 @@ export const createAnalyticsRoutes = () => {
       timeRange as TimeRange
     );
     return c.json(clickHistory);
+  });
+
+  // User Analytics -> Dashboard
+  router.get('/user/analytics', auth(), async (c) => {
+    const analyticsService = new AnalyticsService({ database: c.get('db') });
+    const timeRange = c.req.query('timeRange') || '7d';
+    const user = c.get('user') as IUser;
+
+    if (!timeRangeSchema.safeParse(timeRange).success) {
+      return c.json({ error: 'Invalid time range' }, 400);
+    }
+
+    const analytics = await analyticsService.getUserAnalytics(
+      user.id,
+      timeRange as TimeRange
+    );
+    return c.json(analytics);
   });
 
   return router;

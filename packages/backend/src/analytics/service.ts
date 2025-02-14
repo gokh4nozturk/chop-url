@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { createDb } from '../db/client';
 import { events, customEvents } from '../db/schema/analytics';
 import { urls } from '../db/schema/urls';
@@ -198,27 +198,30 @@ export class AnalyticsService {
           countries: Record<string, number>;
           cities: Record<string, number>;
           regions: Record<string, number>;
+          timezones: Record<string, number>;
         },
         event
       ) => {
         if (!event.geoInfo) return acc;
 
-        const geoInfo = JSON.parse(event.geoInfo);
-        const country = geoInfo.country || 'Unknown';
-        const city = geoInfo.city || 'Unknown';
-        const region = geoInfo.region || 'Unknown';
+        try {
+          const geoInfo = JSON.parse(event.geoInfo);
+          const country = geoInfo.country || 'Unknown';
+          const city = geoInfo.city || 'Unknown';
+          const region = geoInfo.region || 'Unknown';
+          const timezone = geoInfo.timezone || 'Unknown';
 
-        acc.countries[country] = (acc.countries[country] || 0) + 1;
-        acc.cities[city] = (acc.cities[city] || 0) + 1;
-        acc.regions[region] = (acc.regions[region] || 0) + 1;
+          acc.countries[country] = (acc.countries[country] || 0) + 1;
+          acc.cities[city] = (acc.cities[city] || 0) + 1;
+          acc.regions[region] = (acc.regions[region] || 0) + 1;
+          acc.timezones[timezone] = (acc.timezones[timezone] || 0) + 1;
+        } catch (error) {
+          console.error('Error parsing geo info:', error);
+        }
 
         return acc;
       },
-      {
-        countries: {},
-        cities: {},
-        regions: {},
-      }
+      { countries: {}, cities: {}, regions: {}, timezones: {} }
     );
 
     return geoStats;
@@ -245,29 +248,29 @@ export class AnalyticsService {
       (
         acc: {
           browsers: Record<string, number>;
-          operatingSystems: Record<string, number>;
           devices: Record<string, number>;
+          operatingSystems: Record<string, number>;
         },
         event
       ) => {
         if (!event.deviceInfo) return acc;
 
-        const deviceInfo = JSON.parse(event.deviceInfo);
-        const browser = deviceInfo.browser || 'Unknown';
-        const os = deviceInfo.os || 'Unknown';
-        const device = deviceInfo.device || 'Unknown';
+        try {
+          const deviceInfo = JSON.parse(event.deviceInfo);
+          const browser = deviceInfo.browser || 'Unknown';
+          const device = deviceInfo.device || 'Unknown';
+          const os = deviceInfo.os || 'Unknown';
 
-        acc.browsers[browser] = (acc.browsers[browser] || 0) + 1;
-        acc.operatingSystems[os] = (acc.operatingSystems[os] || 0) + 1;
-        acc.devices[device] = (acc.devices[device] || 0) + 1;
+          acc.browsers[browser] = (acc.browsers[browser] || 0) + 1;
+          acc.devices[device] = (acc.devices[device] || 0) + 1;
+          acc.operatingSystems[os] = (acc.operatingSystems[os] || 0) + 1;
+        } catch (error) {
+          console.error('Error parsing device info:', error);
+        }
 
         return acc;
       },
-      {
-        browsers: {},
-        operatingSystems: {},
-        devices: {},
-      }
+      { browsers: {}, devices: {}, operatingSystems: {} }
     );
 
     return deviceStats;
@@ -378,9 +381,211 @@ export class AnalyticsService {
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    return dates.map((date) => ({
-      date,
-      clicks: clicksByDate[date] || 0,
+    const filledClicksByDate = dates.map((date) => ({
+      name: date,
+      value: clicksByDate[date] || 0,
     }));
+
+    return filledClicksByDate;
+  }
+
+  async getUserAnalytics(userId: number, timeRange: TimeRange) {
+    // Get all URLs for the user
+    const userUrls = await this.database
+      .select()
+      .from(urls)
+      .where(eq(urls.userId, userId));
+
+    if (!userUrls.length) {
+      return {
+        totalEvents: 0,
+        uniqueVisitors: 0,
+        geoStats: { countries: {}, cities: {}, regions: {}, timezones: {} },
+        deviceStats: { browsers: {}, devices: {}, operatingSystems: {} },
+        utmStats: { sources: {}, mediums: {}, campaigns: {} },
+        clicksByDate: [],
+      };
+    }
+
+    const timeCondition = getTimeRangeCondition(timeRange);
+    const urlIds = userUrls.map((url) => url.id);
+
+    console.log('urlIds:', urlIds);
+    console.log('timeCondition:', timeCondition);
+
+    // Get all events for user's URLs
+    const eventResults = await this.database
+      .select()
+      .from(events)
+      .where(and(inArray(events.urlId, urlIds), timeCondition));
+
+    console.log(
+      'SQL Query:',
+      this.database
+        .select()
+        .from(events)
+        .where(and(inArray(events.urlId, urlIds), timeCondition))
+        .toSQL()
+    );
+    console.log('eventResults:', eventResults);
+
+    // Calculate total events and unique visitors
+    const totalEvents = eventResults.length;
+    const uniqueVisitors = new Set(
+      eventResults
+        .filter((e) => e.deviceInfo)
+        .map((e) => {
+          try {
+            const deviceInfo = JSON.parse(e.deviceInfo || '{}');
+            return deviceInfo.ip || 'unknown';
+          } catch {
+            return 'unknown';
+          }
+        })
+    ).size;
+
+    // Process device stats
+    const deviceStats = eventResults.reduce(
+      (
+        acc: {
+          browsers: Record<string, number>;
+          devices: Record<string, number>;
+          operatingSystems: Record<string, number>;
+        },
+        event
+      ) => {
+        if (!event.deviceInfo) return acc;
+
+        try {
+          const deviceInfo = JSON.parse(event.deviceInfo);
+          const browser = deviceInfo.browser || 'Unknown';
+          const device = deviceInfo.device || 'Unknown';
+          const os = deviceInfo.os || 'Unknown';
+
+          acc.browsers[browser] = (acc.browsers[browser] || 0) + 1;
+          acc.devices[device] = (acc.devices[device] || 0) + 1;
+          acc.operatingSystems[os] = (acc.operatingSystems[os] || 0) + 1;
+        } catch (error) {
+          console.error('Error parsing device info:', error);
+        }
+
+        return acc;
+      },
+      { browsers: {}, devices: {}, operatingSystems: {} }
+    );
+
+    // Process geo stats with timezones
+    const geoStats = eventResults.reduce(
+      (
+        acc: {
+          countries: Record<string, number>;
+          cities: Record<string, number>;
+          regions: Record<string, number>;
+          timezones: Record<string, number>;
+        },
+        event
+      ) => {
+        if (!event.geoInfo) return acc;
+
+        try {
+          const geoInfo = JSON.parse(event.geoInfo);
+          const country = geoInfo.country || 'Unknown';
+          const city = geoInfo.city || 'Unknown';
+          const region = geoInfo.region || 'Unknown';
+          const timezone = geoInfo.timezone || 'Unknown';
+
+          acc.countries[country] = (acc.countries[country] || 0) + 1;
+          acc.cities[city] = (acc.cities[city] || 0) + 1;
+          acc.regions[region] = (acc.regions[region] || 0) + 1;
+          acc.timezones[timezone] = (acc.timezones[timezone] || 0) + 1;
+        } catch (error) {
+          console.error('Error parsing geo info:', error);
+        }
+
+        return acc;
+      },
+      { countries: {}, cities: {}, regions: {}, timezones: {} }
+    );
+
+    // Process UTM stats
+    const utmStats = eventResults.reduce(
+      (
+        acc: {
+          sources: Record<string, number>;
+          mediums: Record<string, number>;
+          campaigns: Record<string, number>;
+        },
+        event
+      ) => {
+        if (!event.properties) return acc;
+
+        try {
+          const properties = JSON.parse(event.properties);
+          const source = properties.utm_source || 'direct';
+          const medium = properties.utm_medium || 'none';
+          const campaign = properties.utm_campaign || 'none';
+
+          acc.sources[source] = (acc.sources[source] || 0) + 1;
+          acc.mediums[medium] = (acc.mediums[medium] || 0) + 1;
+          acc.campaigns[campaign] = (acc.campaigns[campaign] || 0) + 1;
+        } catch (error) {
+          console.error('Error parsing UTM properties:', error);
+        }
+
+        return acc;
+      },
+      { sources: {}, mediums: {}, campaigns: {} }
+    );
+
+    // Process clicks by date
+    const clicksByDate = eventResults.reduce(
+      (acc: Record<string, number>, event) => {
+        if (!event.createdAt) return acc;
+        const date = new Date(event.createdAt).toISOString().split('T')[0];
+        acc[date] = (acc[date] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
+
+    // Fill in missing dates with 0 clicks
+    const startDate = new Date();
+    switch (timeRange) {
+      case '24h':
+        startDate.setDate(startDate.getDate() - 1);
+        break;
+      case '7d':
+        startDate.setDate(startDate.getDate() - 7);
+        break;
+      case '30d':
+        startDate.setDate(startDate.getDate() - 30);
+        break;
+      case '90d':
+        startDate.setDate(startDate.getDate() - 90);
+        break;
+    }
+
+    const endDate = new Date();
+    const dates: string[] = [];
+    const currentDate = new Date(startDate);
+
+    while (currentDate <= endDate) {
+      dates.push(currentDate.toISOString().split('T')[0]);
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    const filledClicksByDate = dates.map((date) => ({
+      name: date,
+      value: clicksByDate[date] || 0,
+    }));
+
+    return {
+      totalEvents,
+      uniqueVisitors,
+      geoStats,
+      deviceStats,
+      utmStats,
+      clicksByDate: filledClicksByDate,
+    };
   }
 }

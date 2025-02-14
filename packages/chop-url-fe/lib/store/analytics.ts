@@ -27,12 +27,13 @@ export interface Event {
   createdAt: string;
 }
 
-interface GeoStats {
+export interface GeoStats {
   countries: Record<string, number>;
   cities: Record<string, number>;
+  regions: Record<string, number>;
 }
 
-interface UrlStats {
+export interface UrlStats {
   totalEvents: number;
   uniqueVisitors: number;
   lastEventAt: string | null;
@@ -49,7 +50,7 @@ interface ClickHistory {
   clicks: number;
 }
 
-interface UtmStats {
+export interface UtmStats {
   sources: Record<string, number>;
   mediums: Record<string, number>;
   campaigns: Record<string, number>;
