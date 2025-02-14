@@ -41,9 +41,9 @@ export interface Event {
   userId?: number;
   eventType: 'REDIRECT' | 'PAGE_VIEW' | 'CLICK' | 'CONVERSION' | 'CUSTOM';
   eventName: string;
-  properties: string; // JSON string of EventProperties
-  deviceInfo: string; // JSON string of DeviceInfo
-  geoInfo: string; // JSON string of GeoInfo
+  properties: string | null; // JSON string of EventProperties
+  deviceInfo: string | null; // JSON string of DeviceInfo
+  geoInfo: string | null; // JSON string of GeoInfo
   referrer?: string;
   createdAt: string;
 }
@@ -63,7 +63,7 @@ export interface UrlStats {
     id: number;
     shortId: string;
     originalUrl: string;
-    createdAt: string;
+    createdAt: string | null;
   };
 }
 

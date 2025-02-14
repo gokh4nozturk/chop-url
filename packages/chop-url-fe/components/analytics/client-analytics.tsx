@@ -36,31 +36,50 @@ import { useEffect, useMemo } from 'react';
 
 type TimeRange = '24h' | '7d' | '30d' | '90d';
 
+// Safe JSON parse utility
+const safeJsonParse = <T,>(json: string | null, fallback: T): T => {
+  if (!json) return fallback;
+  try {
+    return JSON.parse(json) as T;
+  } catch (error) {
+    console.error('Error parsing JSON:', error);
+    return fallback;
+  }
+};
+
 const processDeviceStats = (events: Event[]) => {
   const browsers: Record<string, number> = {};
   const operatingSystems: Record<string, number> = {};
   const devices: Record<string, number> = {};
 
-  // Process events for browsers, device types, and operating systems
   for (const event of events) {
-    try {
-      // Parse JSON strings
-      const properties = JSON.parse(event.properties);
-      const deviceInfo = JSON.parse(event.deviceInfo);
+    if (!event.deviceInfo) continue;
 
-      // Browser stats
-      const browserKey = `${properties.browser} ${properties.browserVersion}`;
-      browsers[browserKey] = (browsers[browserKey] || 0) + 1;
+    const deviceInfo = safeJsonParse<DeviceInfo>(event.deviceInfo, {
+      userAgent: '',
+      ip: '',
+      browser: 'Unknown',
+      browserVersion: '',
+      os: 'Unknown',
+      osVersion: '',
+      deviceType: 'unknown',
+    });
 
-      // Device type stats
-      devices[deviceInfo.device] = (devices[deviceInfo.device] || 0) + 1;
+    // Browser stats
+    const browserKey = deviceInfo.browser
+      ? `${deviceInfo.browser} ${deviceInfo.browserVersion}`.trim()
+      : 'Unknown';
+    browsers[browserKey] = (browsers[browserKey] || 0) + 1;
 
-      // Operating system stats
-      operatingSystems[deviceInfo.os] =
-        (operatingSystems[deviceInfo.os] || 0) + 1;
-    } catch (error) {
-      console.error('Error parsing event data:', error);
-    }
+    // Device type stats
+    const deviceType = deviceInfo.deviceType || 'unknown';
+    devices[deviceType] = (devices[deviceType] || 0) + 1;
+
+    // Operating system stats
+    const osKey = deviceInfo.os
+      ? `${deviceInfo.os} ${deviceInfo.osVersion}`.trim()
+      : 'Unknown';
+    operatingSystems[osKey] = (operatingSystems[osKey] || 0) + 1;
   }
 
   return { browsers, operatingSystems, devices };
@@ -111,26 +130,61 @@ export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
     const campaigns: Record<string, number> = {};
 
     for (const event of events) {
-      try {
-        const deviceInfo = JSON.parse(event.deviceInfo) as DeviceInfo;
-        const geoInfo = JSON.parse(event.geoInfo) as GeoInfo;
-        const properties = JSON.parse(event.properties) as EventProperties;
+      if (event.deviceInfo) {
+        const deviceInfo = safeJsonParse<DeviceInfo>(event.deviceInfo, {
+          userAgent: '',
+          ip: '',
+          browser: 'Unknown',
+          browserVersion: '',
+          os: 'Unknown',
+          osVersion: '',
+          deviceType: 'unknown',
+        });
 
         // Process device info
-        devices[deviceInfo.deviceType] =
-          (devices[deviceInfo.deviceType] || 0) + 1;
-        browsers[`${deviceInfo.browser} ${deviceInfo.browserVersion}`] =
-          (browsers[`${deviceInfo.browser} ${deviceInfo.browserVersion}`] ||
-            0) + 1;
-        operatingSystems[`${deviceInfo.os} ${deviceInfo.osVersion}`] =
-          (operatingSystems[`${deviceInfo.os} ${deviceInfo.osVersion}`] || 0) +
-          1;
+        const deviceType = deviceInfo.deviceType || 'unknown';
+        devices[deviceType] = (devices[deviceType] || 0) + 1;
+
+        const browserKey = deviceInfo.browser
+          ? `${deviceInfo.browser} ${deviceInfo.browserVersion}`.trim()
+          : 'Unknown';
+        browsers[browserKey] = (browsers[browserKey] || 0) + 1;
+
+        const osKey = deviceInfo.os
+          ? `${deviceInfo.os} ${deviceInfo.osVersion}`.trim()
+          : 'Unknown';
+        operatingSystems[osKey] = (operatingSystems[osKey] || 0) + 1;
+      }
+
+      if (event.geoInfo) {
+        const geoInfo = safeJsonParse<GeoInfo>(event.geoInfo, {
+          country: 'Unknown',
+          city: 'Unknown',
+          region: 'Unknown',
+          regionCode: '',
+          timezone: 'Unknown',
+          longitude: '',
+          latitude: '',
+          postalCode: '',
+        });
 
         // Process geo info
         countries[geoInfo.country] = (countries[geoInfo.country] || 0) + 1;
         cities[geoInfo.city] = (cities[geoInfo.city] || 0) + 1;
         regions[geoInfo.region] = (regions[geoInfo.region] || 0) + 1;
         timezones[geoInfo.timezone] = (timezones[geoInfo.timezone] || 0) + 1;
+      }
+
+      if (event.properties) {
+        const properties = safeJsonParse<EventProperties>(event.properties, {
+          source: null,
+          medium: null,
+          campaign: null,
+          term: null,
+          content: null,
+          shortId: '',
+          originalUrl: '',
+        });
 
         // Process UTM info
         if (properties.source) {
@@ -143,8 +197,6 @@ export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
           campaigns[properties.campaign] =
             (campaigns[properties.campaign] || 0) + 1;
         }
-      } catch (error) {
-        console.error('Error parsing event data:', error);
       }
     }
 
