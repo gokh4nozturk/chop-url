@@ -3,7 +3,7 @@
 import { ErrorBoundary } from '@/components/error-boundary';
 import { useAnalyticsStore } from '@/lib/store/analytics';
 import { useWebSocketStore } from '@/lib/store/websocket';
-import { Activity, Clock, Users } from 'lucide-react';
+import { Activity, Clock, Users, Wifi, WifiOff } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 interface RealTimeStatsProps {
@@ -14,23 +14,9 @@ function RealTimeStatsContent({ urlId }: RealTimeStatsProps) {
   const { connect, subscribe, unsubscribe, isConnected } = useWebSocketStore();
   const { urlStats, fetchAnalytics, isLoading } = useAnalyticsStore();
   const hasSubscribed = useRef(false);
-  const lastUpdateRef = useRef<Date | null>(null);
-  const [lastUpdateDisplay, setLastUpdateDisplay] = useState<string>('');
   const [retryCount, setRetryCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const MAX_RETRIES = 5;
-
-  // Update display time every second
-  useEffect(() => {
-    const updateDisplayTime = () => {
-      if (lastUpdateRef.current) {
-        setLastUpdateDisplay(lastUpdateRef.current.toLocaleTimeString());
-      }
-    };
-
-    const timer = setInterval(updateDisplayTime, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Initial setup and WebSocket connection
   useEffect(() => {
@@ -52,10 +38,6 @@ function RealTimeStatsContent({ urlId }: RealTimeStatsProps) {
 
         setRetryCount(0);
         await fetchAnalytics(urlId);
-        if (mounted) {
-          lastUpdateRef.current = new Date();
-          setLastUpdateDisplay(lastUpdateRef.current.toLocaleTimeString());
-        }
       } catch (error) {
         if (!mounted) return;
         setError(error instanceof Error ? error.message : 'Connection failed');
@@ -80,45 +62,29 @@ function RealTimeStatsContent({ urlId }: RealTimeStatsProps) {
     };
   }, [urlId, connect, subscribe, unsubscribe, fetchAnalytics]);
 
-  // Update lastUpdate when urlStats changes
-  useEffect(() => {
-    if (urlStats) {
-      lastUpdateRef.current = new Date();
-      setLastUpdateDisplay(lastUpdateRef.current.toLocaleTimeString());
-      setError(null);
-    }
-  }, [urlStats]);
-
-  // Listen for WebSocket events and update lastUpdate time
-  useEffect(() => {
-    const unsubscribe = useWebSocketStore.subscribe((state) => {
-      if (state.lastPongTime) {
-        lastUpdateRef.current = new Date();
-        setLastUpdateDisplay(lastUpdateRef.current.toLocaleTimeString());
-      }
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
-
   // Memoize connection status to prevent unnecessary re-renders
   const connectionStatus = useMemo(() => {
-    return isConnected ? (
-      <span className="px-2 py-1 text-sm bg-green-100 text-green-800 rounded">
-        Connected {lastUpdateDisplay && `(Last update: ${lastUpdateDisplay})`}
-      </span>
-    ) : (
-      <span className="px-2 py-1 text-sm bg-red-100 text-red-800 rounded">
-        {error ||
-          (retryCount >= MAX_RETRIES ? 'Connection Failed' : 'Disconnected')}
-        {retryCount > 0 &&
-          retryCount < MAX_RETRIES &&
-          ` (Retry ${retryCount}/${MAX_RETRIES})`}
-      </span>
+    if (isConnected) {
+      return (
+        <div className="flex items-center gap-2 px-2 py-1 text-sm bg-green-100 text-green-800 rounded">
+          <Wifi className="w-4 h-4" />
+          <span className="hidden sm:inline">Connected</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-2 px-2 py-1 text-sm bg-red-100 text-red-800 rounded">
+        <WifiOff className="w-4 h-4" />
+        <span className="hidden sm:inline">
+          {error || (retryCount >= MAX_RETRIES ? 'Failed' : 'Disconnected')}
+          {retryCount > 0 &&
+            retryCount < MAX_RETRIES &&
+            ` (${retryCount}/${MAX_RETRIES})`}
+        </span>
+      </div>
     );
-  }, [isConnected, lastUpdateDisplay, error, retryCount]);
+  }, [isConnected, error, retryCount]);
 
   return (
     <div className="p-4 bg-background border rounded-lg space-y-4">
