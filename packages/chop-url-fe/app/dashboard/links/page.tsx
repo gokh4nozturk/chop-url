@@ -29,10 +29,10 @@ import useUrlStore from '@/lib/store/url';
 import { IUrl } from '@/lib/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  Copy,
   Link as LinkIcon,
   Loader2,
   MoreVertical,
-  Copy,
   Plus,
 } from 'lucide-react';
 import Link from 'next/link';

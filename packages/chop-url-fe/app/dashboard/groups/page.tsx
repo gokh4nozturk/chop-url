@@ -12,8 +12,8 @@ import { Input } from '@/components/ui/input';
 import { UrlGroupForm } from '@/components/url/url-group-form';
 import useUrlStore from '@/lib/store/url';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Folder, Loader2, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Loader2, Trash2, Folder } from 'lucide-react';
 
 export default function GroupsPage() {
   const { urlGroups, getUserUrlGroups, isLoading } = useUrlStore();
