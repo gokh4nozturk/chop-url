@@ -1,9 +1,10 @@
 'use client';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { BarChart } from '@/components/ui/bar-chart';
+import { AreaChart } from '@/components/ui/area-chart';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PieChart } from '@/components/ui/pie-chart';
 import {
   Select,
   SelectContent,
@@ -12,6 +13,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { StatCard } from '@/components/ui/stat-card';
+import { WorldMap } from '@/components/ui/world-map';
 import apiClient from '@/lib/api/client';
 import type {
   Event,
@@ -21,31 +24,70 @@ import type {
 } from '@/lib/store/analytics';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  Activity,
   BarChart2,
+  Calendar,
+  Chrome,
+  Clock,
   Download,
-  Frame,
   Globe,
+  Laptop,
+  Link2,
   Loader2,
-  type LucideIcon,
+  Monitor,
+  Share2,
   User,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
+interface AnalyticsResponse {
+  totalEvents: number;
+  uniqueVisitors: number;
+  geoStats: {
+    countries: Record<string, number>;
+    cities: Record<string, number>;
+    regions: Record<string, number>;
+    timezones: Record<string, number>;
+  };
+  deviceStats: {
+    browsers: Record<string, number>;
+    devices: Record<string, number>;
+    operatingSystems: Record<string, number>;
+  };
+  utmStats: {
+    sources: Record<string, number>;
+    mediums: Record<string, number>;
+    campaigns: Record<string, number>;
+  };
+  clicksByDate: Array<{ name: string; value: number }>;
+}
+
 interface AnalyticsData {
   totalClicks: number;
   uniqueVisitors: number;
-  countries: { name: string; value: number }[];
-  cities: { name: string; value: number }[];
-  regions: { name: string; value: number }[];
-  timezones: { name: string; count: number }[];
-  referrers: { name: string; value: number }[];
-  devices: { name: string; value: number }[];
-  browsers: { name: string; value: number }[];
-  operatingSystems: { name: string; value: number }[];
-  clicksByDate: { name: string; value: number }[];
+  countries: Record<string, number>;
+  cities: Record<string, number>;
+  regions: Record<string, number>;
+  timezones: Record<string, number>;
+  referrers: Record<string, number>;
+  devices: Record<string, number>;
+  browsers: Record<string, number>;
+  operatingSystems: Record<string, number>;
+  campaigns: Record<string, number>;
+  clicksByDate: Array<{ name: string; value: number }>;
 }
 
 const REFRESH_INTERVAL = 30000; // 30 seconds
+
+// Fix data transformations for pie charts
+const transformDataForPieChart = (data: Record<string, number> = {}) =>
+  Object.entries(data)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5)
+    .map(([name, value]) => ({
+      name: name || 'Direct',
+      value,
+    }));
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('7d');
@@ -58,78 +100,26 @@ export default function AnalyticsPage() {
   const fetchAnalytics = useCallback(async () => {
     try {
       setError(null);
+      const { data } = await apiClient.get<AnalyticsResponse>(
+        `/api/analytics?period=${timeRange}`
+      );
 
-      const response = await apiClient.get<{
-        totalEvents: number;
-        uniqueVisitors: number;
-        geoStats: {
-          countries: Record<string, number>;
-          cities: Record<string, number>;
-          regions: Record<string, number>;
-          timezones: Record<string, number>;
-        };
-        deviceStats: {
-          browsers: Record<string, number>;
-          devices: Record<string, number>;
-          operatingSystems: Record<string, number>;
-        };
-        utmStats: {
-          sources: Record<string, number>;
-          mediums: Record<string, number>;
-          campaigns: Record<string, number>;
-        };
-        clicksByDate: Array<{ name: string; value: number }>;
-      }>(`/api/user/analytics?timeRange=${timeRange}`);
-
-      const data = response.data;
+      if (!data) {
+        throw new Error('No data received from API');
+      }
 
       setAnalyticsData({
         totalClicks: data.totalEvents,
         uniqueVisitors: data.uniqueVisitors,
-        countries: Object.entries(data.geoStats.countries).map(
-          ([name, value]) => ({
-            name,
-            value,
-          })
-        ),
-        cities: Object.entries(data.geoStats.cities).map(([name, value]) => ({
-          name,
-          value,
-        })),
-        regions: Object.entries(data.geoStats.regions).map(([name, value]) => ({
-          name,
-          value,
-        })),
-        timezones: Object.entries(data.geoStats.timezones).map(
-          ([name, count]) => ({
-            name,
-            count,
-          })
-        ),
-        referrers: Object.entries(data.utmStats.sources).map(
-          ([name, value]) => ({
-            name: name || 'Direct',
-            value,
-          })
-        ),
-        devices: Object.entries(data.deviceStats.devices).map(
-          ([name, value]) => ({
-            name,
-            value,
-          })
-        ),
-        browsers: Object.entries(data.deviceStats.browsers).map(
-          ([name, value]) => ({
-            name,
-            value,
-          })
-        ),
-        operatingSystems: Object.entries(data.deviceStats.operatingSystems).map(
-          ([name, value]) => ({
-            name,
-            value,
-          })
-        ),
+        countries: data.geoStats.countries,
+        cities: data.geoStats.cities,
+        regions: data.geoStats.regions,
+        timezones: data.geoStats.timezones,
+        referrers: data.utmStats.sources,
+        devices: data.deviceStats.devices,
+        browsers: data.deviceStats.browsers,
+        operatingSystems: data.deviceStats.operatingSystems,
+        campaigns: data.utmStats.campaigns,
         clicksByDate: data.clicksByDate.map((item) => ({
           name: new Date(item.name).toLocaleDateString('en-US', {
             day: 'numeric',
@@ -154,92 +144,11 @@ export default function AnalyticsPage() {
     return () => clearInterval(interval);
   }, [fetchAnalytics]);
 
-  // Get top country and referrer
-  const topCountry = analyticsData?.countries[0];
-  const topReferrer = analyticsData?.referrers[0];
-
-  const StatCard = ({
-    title,
-    value,
-    icon: Icon,
-    loading,
-    subtitle,
-  }: {
-    title: string;
-    value: string | number;
-    icon: LucideIcon;
-    loading: boolean;
-    subtitle?: string;
-  }) => (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      transition={{ type: 'spring', stiffness: 300 }}
-    >
-      <Card className="transition-all duration-300 hover:shadow-md hover:border-primary/50">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">{title}</CardTitle>
-          <motion.div
-            whileHover={{ scale: 1.1 }}
-            transition={{ type: 'spring', stiffness: 300 }}
-          >
-            <Icon className="h-4 w-4 text-muted-foreground" />
-          </motion.div>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-8 w-24" />
-              {subtitle && <Skeleton className="h-4 w-32" />}
-            </div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="text-2xl font-bold">{value}</div>
-              {subtitle && (
-                <p className="text-xs text-muted-foreground">{subtitle}</p>
-              )}
-            </motion.div>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-6"
-    >
-      <div className="flex flex-col gap-4 xs:flex-row xs:items-center xs:justify-between">
-        <div>
-          <motion.h2
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-2xl font-bold tracking-tight"
-          >
-            Analytics
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-muted-foreground"
-          >
-            Track and analyze your link performance
-          </motion.p>
-        </div>
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="flex items-center gap-2"
-        >
+    <>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Analytics</h1>
+        <div className="flex items-center gap-2">
           <Select
             value={timeRange}
             onValueChange={(value) => setTimeRange(value)}
@@ -278,7 +187,7 @@ export default function AnalyticsPage() {
           >
             <Download className="h-4 w-4" />
           </Button>
-        </motion.div>
+        </div>
       </div>
 
       <AnimatePresence>
@@ -310,13 +219,22 @@ export default function AnalyticsPage() {
         />
         <StatCard
           title="Top Country"
-          value={topCountry?.name || '-'}
+          value={
+            analyticsData?.countries
+              ? Object.entries(analyticsData.countries).sort(
+                  ([, a], [, b]) => b - a
+                )[0]?.[0] || '-'
+              : '-'
+          }
           icon={Globe}
           loading={isLoading}
           subtitle={
-            topCountry
+            analyticsData?.countries
               ? `${(
-                  (topCountry.value / (analyticsData?.totalClicks || 1)) *
+                  (Object.entries(analyticsData.countries).sort(
+                    ([, a], [, b]) => b - a
+                  )[0]?.[1] /
+                    analyticsData.totalClicks) *
                   100
                 ).toFixed(1)}% of total traffic`
               : '0% of total traffic'
@@ -324,13 +242,22 @@ export default function AnalyticsPage() {
         />
         <StatCard
           title="Top Referrer"
-          value={topReferrer?.name || '-'}
-          icon={Frame}
+          value={
+            analyticsData?.referrers
+              ? Object.entries(analyticsData.referrers).sort(
+                  ([, a], [, b]) => b - a
+                )[0]?.[0] || '-'
+              : '-'
+          }
+          icon={Link2}
           loading={isLoading}
           subtitle={
-            topReferrer
+            analyticsData?.referrers
               ? `${(
-                  (topReferrer.value / (analyticsData?.totalClicks || 1)) *
+                  (Object.entries(analyticsData.referrers).sort(
+                    ([, a], [, b]) => b - a
+                  )[0]?.[1] /
+                    analyticsData.totalClicks) *
                   100
                 ).toFixed(1)}% of total traffic`
               : '0% of total traffic'
@@ -339,311 +266,201 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          <Card className="transition-all duration-300 hover:shadow-md">
-            <CardHeader>
-              <CardTitle>Visitor Trends</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="h-[350px] w-full animate-pulse bg-muted" />
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <BarChart
-                    data={analyticsData?.clicksByDate || []}
-                    index="name"
-                    categories={['value']}
-                    colors={['primary']}
-                    valueFormatter={(value) => `${value} clicks`}
-                    showLegend={false}
-                    showXAxis
-                    showYAxis
-                    showTooltip
-                  />
-                </motion.div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
+        <Card className="transition-all duration-300 hover:shadow-md">
+          <CardHeader>
+            <CardTitle>Visitor Trends</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="h-[350px] w-full animate-pulse bg-muted" />
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="h-[350px]"
+              >
+                <AreaChart
+                  data={analyticsData?.clicksByDate || []}
+                  index="name"
+                  categories={['value']}
+                  colors={['primary']}
+                  valueFormatter={(value) => `${value} clicks`}
+                  showLegend={false}
+                  showXAxis
+                  showYAxis
+                  showTooltip
+                />
+              </motion.div>
+            )}
+          </CardContent>
+        </Card>
 
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="grid gap-4"
-        >
-          <Card className="transition-all duration-300 hover:shadow-md">
-            <CardHeader>
-              <CardTitle>Geographic Distribution</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="h-[150px] w-full animate-pulse bg-muted" />
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5 }}
-                  className="space-y-4"
-                >
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium">Top Cities</div>
-                    {analyticsData?.cities.slice(0, 3).map((city, index) => (
-                      <motion.div
-                        key={city.name}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.1 }}
-                        className="flex items-center"
-                      >
-                        <div className="w-1/3 text-sm">{city.name}</div>
-                        <div className="flex-1">
-                          <div className="h-2 w-full rounded-full bg-muted">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{
-                                width: `${
-                                  (city.value /
-                                    (analyticsData?.totalClicks || 1)) *
-                                  100
-                                }%`,
-                              }}
-                              transition={{ duration: 0.5, delay: index * 0.1 }}
-                              className="h-2 rounded-full bg-primary"
-                            />
-                          </div>
-                        </div>
-                        <div className="w-1/6 text-right text-sm">
-                          {(
-                            (city.value / (analyticsData?.totalClicks || 1)) *
-                            100
-                          ).toFixed(1)}
-                          %
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="transition-all duration-300 hover:shadow-md">
-            <CardHeader>
-              <CardTitle>Browser & OS Distribution</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="h-[150px] w-full animate-pulse bg-muted" />
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5 }}
-                  className="space-y-4"
-                >
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium">Top Browsers</div>
-                    {analyticsData?.browsers
-                      .slice(0, 3)
-                      .map((browser, index) => (
-                        <motion.div
-                          key={browser.name}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.1 }}
-                          className="flex items-center"
-                        >
-                          <div className="w-1/3 text-sm">{browser.name}</div>
-                          <div className="flex-1">
-                            <div className="h-2 w-full rounded-full bg-muted">
-                              <motion.div
-                                initial={{ width: 0 }}
-                                animate={{
-                                  width: `${
-                                    (browser.value /
-                                      (analyticsData?.totalClicks || 1)) *
-                                    100
-                                  }%`,
-                                }}
-                                transition={{
-                                  duration: 0.5,
-                                  delay: index * 0.1,
-                                }}
-                                className="h-2 rounded-full bg-primary"
-                              />
-                            </div>
-                          </div>
-                          <div className="w-1/6 text-right text-sm">
-                            {(
-                              (browser.value /
-                                (analyticsData?.totalClicks || 1)) *
-                              100
-                            ).toFixed(1)}
-                            %
-                          </div>
-                        </motion.div>
-                      ))}
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium">
-                      Top Operating Systems
-                    </div>
-                    {analyticsData?.operatingSystems
-                      .slice(0, 3)
-                      .map((os, index) => (
-                        <motion.div
-                          key={os.name}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.1 }}
-                          className="flex items-center"
-                        >
-                          <div className="w-1/3 text-sm">{os.name}</div>
-                          <div className="flex-1">
-                            <div className="h-2 w-full rounded-full bg-muted">
-                              <motion.div
-                                initial={{ width: 0 }}
-                                animate={{
-                                  width: `${
-                                    (os.value /
-                                      (analyticsData?.totalClicks || 1)) *
-                                    100
-                                  }%`,
-                                }}
-                                transition={{
-                                  duration: 0.5,
-                                  delay: index * 0.1,
-                                }}
-                                className="h-2 rounded-full bg-primary"
-                              />
-                            </div>
-                          </div>
-                          <div className="w-1/6 text-right text-sm">
-                            {(
-                              (os.value / (analyticsData?.totalClicks || 1)) *
-                              100
-                            ).toFixed(1)}
-                            %
-                          </div>
-                        </motion.div>
-                      ))}
-                  </div>
-                </motion.div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="transition-all duration-300 hover:shadow-md">
-            <CardHeader>
-              <CardTitle>Regional Distribution</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="h-[150px] w-full animate-pulse bg-muted" />
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5 }}
-                  className="space-y-4"
-                >
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium">Top Regions</div>
-                    {analyticsData?.regions.slice(0, 3).map((region, index) => (
-                      <motion.div
-                        key={region.name}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.1 }}
-                        className="flex items-center"
-                      >
-                        <div className="w-1/3 text-sm">{region.name}</div>
-                        <div className="flex-1">
-                          <div className="h-2 w-full rounded-full bg-muted">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{
-                                width: `${
-                                  (region.value /
-                                    (analyticsData?.totalClicks || 1)) *
-                                  100
-                                }%`,
-                              }}
-                              transition={{ duration: 0.5, delay: index * 0.1 }}
-                              className="h-2 rounded-full bg-primary"
-                            />
-                          </div>
-                        </div>
-                        <div className="w-1/6 text-right text-sm">
-                          {(
-                            (region.value / (analyticsData?.totalClicks || 1)) *
-                            100
-                          ).toFixed(1)}
-                          %
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium">Top Timezones</div>
-                    {analyticsData?.timezones
-                      .slice(0, 3)
-                      .map((timezone, index) => (
-                        <motion.div
-                          key={timezone.name}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.1 }}
-                          className="flex items-center"
-                        >
-                          <div className="w-1/3 text-sm">{timezone.name}</div>
-                          <div className="flex-1">
-                            <div className="h-2 w-full rounded-full bg-muted">
-                              <motion.div
-                                initial={{ width: 0 }}
-                                animate={{
-                                  width: `${
-                                    (timezone.count /
-                                      (analyticsData?.totalClicks || 1)) *
-                                    100
-                                  }%`,
-                                }}
-                                transition={{
-                                  duration: 0.5,
-                                  delay: index * 0.1,
-                                }}
-                                className="h-2 rounded-full bg-primary"
-                              />
-                            </div>
-                          </div>
-                          <div className="w-1/6 text-right text-sm">
-                            {(
-                              (timezone.count /
-                                (analyticsData?.totalClicks || 1)) *
-                              100
-                            ).toFixed(1)}
-                            %
-                          </div>
-                        </motion.div>
-                      ))}
-                  </div>
-                </motion.div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
+        <Card className="transition-all duration-300 hover:shadow-md">
+          <CardHeader>
+            <CardTitle>Geographic Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="h-[350px] w-full animate-pulse bg-muted" />
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <WorldMap data={analyticsData?.countries || {}} />
+              </motion.div>
+            )}
+          </CardContent>
+        </Card>
       </div>
-    </motion.div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="transition-all duration-300 hover:shadow-md">
+          <CardHeader>
+            <CardTitle>Device Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="h-[300px] w-full animate-pulse bg-muted" />
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="h-[300px]"
+              >
+                <PieChart
+                  data={transformDataForPieChart(analyticsData?.devices)}
+                  valueFormatter={(value) =>
+                    `${(
+                      (value / (analyticsData?.totalClicks || 1)) *
+                      100
+                    ).toFixed(1)}%`
+                  }
+                />
+              </motion.div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="transition-all duration-300 hover:shadow-md">
+          <CardHeader>
+            <CardTitle>Browser Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="h-[300px] w-full animate-pulse bg-muted" />
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="h-[300px]"
+              >
+                <PieChart
+                  data={transformDataForPieChart(analyticsData?.browsers)}
+                  valueFormatter={(value) =>
+                    `${(
+                      (value / (analyticsData?.totalClicks || 1)) *
+                      100
+                    ).toFixed(1)}%`
+                  }
+                />
+              </motion.div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="transition-all duration-300 hover:shadow-md">
+          <CardHeader>
+            <CardTitle>Operating System Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="h-[300px] w-full animate-pulse bg-muted" />
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="h-[300px]"
+              >
+                <PieChart
+                  data={transformDataForPieChart(
+                    analyticsData?.operatingSystems
+                  )}
+                  valueFormatter={(value) =>
+                    `${(
+                      (value / (analyticsData?.totalClicks || 1)) *
+                      100
+                    ).toFixed(1)}%`
+                  }
+                />
+              </motion.div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="transition-all duration-300 hover:shadow-md">
+          <CardHeader>
+            <CardTitle>Traffic Sources</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="h-[300px] w-full animate-pulse bg-muted" />
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="h-[300px]"
+              >
+                <PieChart
+                  data={transformDataForPieChart(analyticsData?.referrers)}
+                  valueFormatter={(value) =>
+                    `${(
+                      (value / (analyticsData?.totalClicks || 1)) *
+                      100
+                    ).toFixed(1)}%`
+                  }
+                />
+              </motion.div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="transition-all duration-300 hover:shadow-md">
+          <CardHeader>
+            <CardTitle>Campaigns</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="h-[300px] w-full animate-pulse bg-muted" />
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="h-[300px]"
+              >
+                <PieChart
+                  data={transformDataForPieChart(analyticsData?.campaigns)}
+                  valueFormatter={(value) =>
+                    `${(
+                      (value / (analyticsData?.totalClicks || 1)) *
+                      100
+                    ).toFixed(1)}%`
+                  }
+                />
+              </motion.div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }
