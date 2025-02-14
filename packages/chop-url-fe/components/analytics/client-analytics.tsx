@@ -106,9 +106,16 @@ export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
   const processedDeviceStats = events ? processDeviceStats(events) : null;
 
   useEffect(() => {
-    if (typeof shortId === 'string') {
-      fetchAnalytics(shortId);
-    }
+    const initializeAnalytics = async () => {
+      // WebSocket bağlantısının kurulması için biraz bekleyelim
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      if (typeof shortId === 'string') {
+        fetchAnalytics(shortId);
+      }
+    };
+
+    initializeAnalytics();
   }, [fetchAnalytics, shortId]);
 
   const handleRefresh = () => {
