@@ -246,7 +246,7 @@ export class AnalyticsService {
         acc: {
           browsers: Record<string, number>;
           operatingSystems: Record<string, number>;
-          deviceTypes: Record<string, number>;
+          devices: Record<string, number>;
         },
         event
       ) => {
@@ -255,18 +255,18 @@ export class AnalyticsService {
         const deviceInfo = JSON.parse(event.deviceInfo);
         const browser = deviceInfo.browser || 'Unknown';
         const os = deviceInfo.os || 'Unknown';
-        const deviceType = deviceInfo.deviceType || 'Unknown';
+        const device = deviceInfo.device || 'Unknown';
 
         acc.browsers[browser] = (acc.browsers[browser] || 0) + 1;
         acc.operatingSystems[os] = (acc.operatingSystems[os] || 0) + 1;
-        acc.deviceTypes[deviceType] = (acc.deviceTypes[deviceType] || 0) + 1;
+        acc.devices[device] = (acc.devices[device] || 0) + 1;
 
         return acc;
       },
       {
         browsers: {},
         operatingSystems: {},
-        deviceTypes: {},
+        devices: {},
       }
     );
 

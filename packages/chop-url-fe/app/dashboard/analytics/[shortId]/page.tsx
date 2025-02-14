@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAnalyticsStore } from '@/lib/store/analytics';
+import type { DeviceInfo, Event, Properties } from '@/lib/store/analytics';
 import {
   Activity,
   BarChart2,
@@ -31,6 +32,36 @@ import { useEffect } from 'react';
 
 type TimeRange = '24h' | '7d' | '30d' | '90d';
 
+const processDeviceStats = (events: Event[]) => {
+  const browsers: Record<string, number> = {};
+  const operatingSystems: Record<string, number> = {};
+  const devices: Record<string, number> = {};
+
+  // Process events for browsers, device types, and operating systems
+  for (const event of events) {
+    try {
+      // Parse JSON strings
+      const properties = JSON.parse(event.properties);
+      const deviceInfo = JSON.parse(event.deviceInfo);
+
+      // Browser stats
+      const browserKey = `${properties.browser} ${properties.browserVersion}`;
+      browsers[browserKey] = (browsers[browserKey] || 0) + 1;
+
+      // Device type stats
+      devices[deviceInfo.device] = (devices[deviceInfo.device] || 0) + 1;
+
+      // Operating system stats
+      operatingSystems[deviceInfo.os] =
+        (operatingSystems[deviceInfo.os] || 0) + 1;
+    } catch (error) {
+      console.error('Error parsing event data:', error);
+    }
+  }
+
+  return { browsers, operatingSystems, devices };
+};
+
 export default function LinkDetailsPage() {
   const { shortId } = useParams();
   const {
@@ -38,13 +69,15 @@ export default function LinkDetailsPage() {
     error,
     urlStats,
     geoStats,
-    deviceStats,
+    events,
     utmStats,
     clickHistory,
     timeRange,
     fetchAnalytics,
     setTimeRange,
   } = useAnalyticsStore();
+
+  const processedDeviceStats = events ? processDeviceStats(events) : null;
 
   useEffect(() => {
     if (typeof shortId === 'string') {
@@ -263,9 +296,9 @@ export default function LinkDetailsPage() {
             ) : (
               <div className="space-y-8">
                 <div className="space-y-2">
-                  <div className="text-sm font-medium">Device Types</div>
-                  {deviceStats &&
-                    Object.entries(deviceStats.deviceTypes)
+                  <div className="text-sm font-medium">Devices</div>
+                  {processedDeviceStats &&
+                    Object.entries(processedDeviceStats.devices)
                       .sort(([, a], [, b]) => b - a)
                       .map(([device, count]) => (
                         <div key={device} className="flex items-center">
@@ -314,8 +347,8 @@ export default function LinkDetailsPage() {
               <div className="space-y-8">
                 <div className="space-y-2">
                   <div className="text-sm font-medium">Top Browsers</div>
-                  {deviceStats &&
-                    Object.entries(deviceStats.browsers)
+                  {processedDeviceStats &&
+                    Object.entries(processedDeviceStats.browsers)
                       .sort(([, a], [, b]) => b - a)
                       .slice(0, 5)
                       .map(([browser, count]) => (
@@ -365,8 +398,8 @@ export default function LinkDetailsPage() {
                   <div className="text-sm font-medium">
                     Top Operating Systems
                   </div>
-                  {deviceStats &&
-                    Object.entries(deviceStats.operatingSystems)
+                  {processedDeviceStats &&
+                    Object.entries(processedDeviceStats.operatingSystems)
                       .sort(([, a], [, b]) => b - a)
                       .slice(0, 5)
                       .map(([os, count]) => (

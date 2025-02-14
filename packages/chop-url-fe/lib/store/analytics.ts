@@ -2,9 +2,34 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { apiClient } from '../api-client';
 
-interface ClickHistory {
-  date: string;
-  clicks: number;
+export interface Properties {
+  browser: string;
+  browserVersion: string;
+  source: string;
+  deviceType: string;
+}
+
+export interface DeviceInfo {
+  os: string;
+  device: string;
+}
+
+export interface Event {
+  id: number;
+  urlId: number;
+  userId: number;
+  eventType: string;
+  eventName: string;
+  properties: string;
+  deviceInfo: string;
+  geoInfo: string;
+  referrer: string;
+  createdAt: string;
+}
+
+interface GeoStats {
+  countries: Record<string, number>;
+  cities: Record<string, number>;
 }
 
 interface UrlStats {
@@ -19,16 +44,9 @@ interface UrlStats {
   };
 }
 
-interface GeoStats {
-  countries: Record<string, number>;
-  cities: Record<string, number>;
-  regions: Record<string, number>;
-}
-
-interface DeviceStats {
-  browsers: Record<string, number>;
-  operatingSystems: Record<string, number>;
-  deviceTypes: Record<string, number>;
+interface ClickHistory {
+  date: string;
+  clicks: number;
 }
 
 interface UtmStats {
@@ -42,7 +60,7 @@ interface AnalyticsState {
   error: Error | null;
   urlStats: UrlStats | null;
   geoStats: GeoStats | null;
-  deviceStats: DeviceStats | null;
+  events: Event[] | null;
   utmStats: UtmStats | null;
   clickHistory: ClickHistory[] | null;
   timeRange: '24h' | '7d' | '30d' | '90d';
@@ -56,7 +74,7 @@ const initialState = {
   error: null,
   urlStats: null,
   geoStats: null,
-  deviceStats: null,
+  events: null,
   utmStats: null,
   clickHistory: null,
   timeRange: '7d' as const,
@@ -70,7 +88,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
       set({ isLoading: true, error: null });
 
       try {
-        const [urlStats, geoStats, deviceStats, utmStats, clickHistory] =
+        const [urlStats, geoStats, events, utmStats, clickHistory] =
           await Promise.all([
             apiClient.get<UrlStats>(
               `/api/urls/${shortId}/stats?timeRange=${get().timeRange}`
@@ -78,8 +96,8 @@ export const useAnalyticsStore = create<AnalyticsState>()(
             apiClient.get<GeoStats>(
               `/api/urls/${shortId}/geo?timeRange=${get().timeRange}`
             ),
-            apiClient.get<DeviceStats>(
-              `/api/urls/${shortId}/devices?timeRange=${get().timeRange}`
+            apiClient.get<Event[]>(
+              `/api/urls/${shortId}/events?timeRange=${get().timeRange}`
             ),
             apiClient.get<UtmStats>(
               `/api/urls/${shortId}/utm?timeRange=${get().timeRange}`
@@ -92,7 +110,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
         set({
           urlStats,
           geoStats,
-          deviceStats,
+          events,
           utmStats,
           clickHistory,
           isLoading: false,
