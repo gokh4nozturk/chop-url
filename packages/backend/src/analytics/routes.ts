@@ -4,26 +4,24 @@ import { z } from 'zod';
 import { auth } from '../auth/middleware';
 import { IUser } from '../auth/types';
 import { createDb } from '../db/client';
+import { WebSocketService } from '../websocket/service';
 import { AnalyticsService } from './service';
+import { TimeRange } from './types';
 const timeRangeSchema = z.enum(['24h', '7d', '30d', '90d']);
-type TimeRange = z.infer<typeof timeRangeSchema>;
+
+interface Variables {
+  user?: IUser;
+}
 
 interface Env {
   DB: D1Database;
 }
 
-type Variables = {
-  db: ReturnType<typeof createDb>;
-  user: IUser;
-};
-
-type HandlerContext = Context<{
-  Bindings: Env;
-  Variables: Variables;
-}>;
+type HandlerContext = Context<{ Bindings: Env; Variables: Variables }>;
 
 export const createAnalyticsRoutes = () => {
   const router = new Hono<{ Bindings: Env; Variables: Variables }>();
+  const wsService = new WebSocketService();
 
   const trackEventSchema = z.object({
     urlId: z.number(),
@@ -64,7 +62,12 @@ export const createAnalyticsRoutes = () => {
   type CreateCustomEventInput = z.infer<typeof createCustomEventSchema>;
 
   router.post('/events', async (c: HandlerContext) => {
-    const analyticsService = new AnalyticsService({ database: c.get('db') });
+    const db = createDb(c.env.DB);
+    const analyticsService = new AnalyticsService({
+      database: db,
+      wsService,
+    });
+
     const result = await trackEventSchema.safeParseAsync(await c.req.json());
 
     if (!result.success) {
@@ -76,7 +79,7 @@ export const createAnalyticsRoutes = () => {
   });
 
   router.post('/custom-events', async (c: HandlerContext) => {
-    const analyticsService = new AnalyticsService({ database: c.get('db') });
+    const analyticsService = new AnalyticsService({ database: c.env.DB });
     const result = await createCustomEventSchema.safeParseAsync(
       await c.req.json()
     );
@@ -90,7 +93,7 @@ export const createAnalyticsRoutes = () => {
   });
 
   router.get('/events/:urlId', async (c) => {
-    const analyticsService = new AnalyticsService({ database: c.get('db') });
+    const analyticsService = new AnalyticsService({ database: c.env.DB });
     const urlId = Number(c.req.param('urlId'));
 
     const events = await analyticsService.getEvents(urlId);
@@ -98,7 +101,7 @@ export const createAnalyticsRoutes = () => {
   });
 
   router.get('/custom-events/:userId', async (c) => {
-    const analyticsService = new AnalyticsService({ database: c.get('db') });
+    const analyticsService = new AnalyticsService({ database: c.env.DB });
     const userId = Number(c.req.param('userId'));
 
     const events = await analyticsService.getCustomEvents(userId);
@@ -107,7 +110,12 @@ export const createAnalyticsRoutes = () => {
 
   // URL Stats endpoint
   router.get('/urls/:shortId/stats', async (c) => {
-    const analyticsService = new AnalyticsService({ database: c.get('db') });
+    const db = createDb(c.env.DB);
+    const analyticsService = new AnalyticsService({
+      database: db,
+      wsService,
+    });
+
     const shortId = c.req.param('shortId');
     const timeRange = c.req.query('timeRange') || '7d';
 
@@ -124,7 +132,11 @@ export const createAnalyticsRoutes = () => {
 
   // Event Analytics endpoints
   router.get('/urls/:shortId/events', async (c) => {
-    const analyticsService = new AnalyticsService({ database: c.get('db') });
+    const db = createDb(c.env.DB);
+    const analyticsService = new AnalyticsService({
+      database: db,
+      wsService,
+    });
     const shortId = c.req.param('shortId');
     const timeRange = c.req.query('timeRange') || '7d';
     const eventType = c.req.query('eventType');
@@ -143,7 +155,12 @@ export const createAnalyticsRoutes = () => {
 
   // Geographic Analytics
   router.get('/urls/:shortId/geo', async (c) => {
-    const analyticsService = new AnalyticsService({ database: c.get('db') });
+    const db = createDb(c.env.DB);
+    const analyticsService = new AnalyticsService({
+      database: db,
+      wsService,
+    });
+
     const shortId = c.req.param('shortId');
     const timeRange = c.req.query('timeRange') || '7d';
 
@@ -160,7 +177,7 @@ export const createAnalyticsRoutes = () => {
 
   // Device Analytics
   router.get('/urls/:shortId/devices', async (c) => {
-    const analyticsService = new AnalyticsService({ database: c.get('db') });
+    const analyticsService = new AnalyticsService({ database: c.env.DB });
     const shortId = c.req.param('shortId');
     const timeRange = c.req.query('timeRange') || '7d';
 
@@ -177,7 +194,11 @@ export const createAnalyticsRoutes = () => {
 
   // UTM Analytics
   router.get('/urls/:shortId/utm', async (c) => {
-    const analyticsService = new AnalyticsService({ database: c.get('db') });
+    const db = createDb(c.env.DB);
+    const analyticsService = new AnalyticsService({
+      database: db,
+      wsService,
+    });
     const shortId = c.req.param('shortId');
     const timeRange = c.req.query('timeRange') || '7d';
 
@@ -194,7 +215,11 @@ export const createAnalyticsRoutes = () => {
 
   // Click History
   router.get('/urls/:shortId/clicks', async (c) => {
-    const analyticsService = new AnalyticsService({ database: c.get('db') });
+    const db = createDb(c.env.DB);
+    const analyticsService = new AnalyticsService({
+      database: db,
+      wsService,
+    });
     const shortId = c.req.param('shortId');
     const timeRange = c.req.query('timeRange') || '7d';
 
@@ -211,7 +236,9 @@ export const createAnalyticsRoutes = () => {
 
   // User Analytics -> Dashboard
   router.get('/user/analytics', auth(), async (c) => {
-    const analyticsService = new AnalyticsService({ database: c.get('db') });
+    const analyticsService = new AnalyticsService({
+      database: c.env.DB,
+    });
     const timeRange = c.req.query('timeRange') || '7d';
     const user = c.get('user') as IUser;
 

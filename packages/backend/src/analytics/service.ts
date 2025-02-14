@@ -2,63 +2,29 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 import { createDb } from '../db/client';
 import { events, customEvents } from '../db/schema/analytics';
 import { urls } from '../db/schema/urls';
+import { WebSocketService } from '../websocket/service';
+import {
+  CustomEventData,
+  DeviceStats,
+  EventData,
+  GeoStats,
+  TimeRange,
+  UrlStats,
+  UtmStats,
+} from './types';
 
 interface AnalyticsServiceConfig {
   database: ReturnType<typeof createDb>;
+  wsService: WebSocketService;
 }
-
-export interface EventData {
-  urlId: number;
-  userId?: number;
-  eventType: string;
-  eventName: string;
-  properties?: Record<string, unknown>;
-  deviceInfo?: {
-    userAgent: string;
-    ip: string;
-    device: string;
-    browser: string;
-    os: string;
-  };
-  geoInfo?: {
-    country: string;
-    city: string;
-    region: string;
-    timezone: string;
-    latitude?: number;
-    longitude?: number;
-  };
-  referrer?: string;
-}
-
-export interface CustomEventData {
-  userId: number;
-  name: string;
-  description?: string;
-  properties: string[];
-}
-
-type TimeRange = '24h' | '7d' | '30d' | '90d';
-
-const getTimeRangeCondition = (timeRange: TimeRange) => {
-  const now = new Date();
-  switch (timeRange) {
-    case '24h':
-      return sql`datetime(created_at) >= datetime('now', '-1 day')`;
-    case '7d':
-      return sql`datetime(created_at) >= datetime('now', '-7 days')`;
-    case '30d':
-      return sql`datetime(created_at) >= datetime('now', '-30 days')`;
-    case '90d':
-      return sql`datetime(created_at) >= datetime('now', '-90 days')`;
-  }
-};
 
 export class AnalyticsService {
   private readonly database: ReturnType<typeof createDb>;
+  private readonly wsService: WebSocketService;
 
   constructor(config: AnalyticsServiceConfig) {
     this.database = config.database;
+    this.wsService = config.wsService;
   }
 
   async trackEvent(data: EventData) {
@@ -69,7 +35,12 @@ export class AnalyticsService {
       geoInfo: data.geoInfo ? JSON.stringify(data.geoInfo) : null,
     };
 
-    return this.database.insert(events).values(eventData);
+    await this.database.insert(events).values(eventData);
+
+    // Broadcast event to WebSocket subscribers
+    this.wsService.broadcast(`url:${data.urlId}`, data);
+
+    return true;
   }
 
   async createCustomEvent(data: CustomEventData) {
@@ -107,7 +78,7 @@ export class AnalyticsService {
     }));
   }
 
-  async getUrlStats(shortId: string, timeRange: TimeRange) {
+  async getUrlStats(shortId: string, timeRange: TimeRange): Promise<UrlStats> {
     const url = await this.database
       .select()
       .from(urls)
@@ -124,27 +95,30 @@ export class AnalyticsService {
       .from(events)
       .where(and(eq(events.urlId, url.id), timeCondition));
 
-    const totalEvents = eventResults.length;
-    const uniqueVisitors = new Set(
-      eventResults
-        .filter((e) => e.deviceInfo)
-        .map((e) => {
-          try {
-            const deviceInfo = JSON.parse(e.deviceInfo || '{}');
-            return deviceInfo.ip || 'unknown';
-          } catch {
-            return 'unknown';
-          }
-        })
-    ).size;
-    const lastEvent = eventResults[eventResults.length - 1];
-
-    return {
-      totalEvents,
-      uniqueVisitors,
-      lastEventAt: lastEvent?.createdAt,
-      url,
+    const stats: UrlStats = {
+      totalEvents: eventResults.length,
+      uniqueVisitors: new Set(
+        eventResults
+          .filter((e) => e.deviceInfo)
+          .map((e) => {
+            try {
+              const deviceInfo = JSON.parse(e.deviceInfo || '{}');
+              return deviceInfo.ip || 'unknown';
+            } catch {
+              return 'unknown';
+            }
+          })
+      ).size,
+      lastEventAt: eventResults[eventResults.length - 1]?.createdAt || null,
+      url: {
+        id: url.id,
+        shortId: url.shortId,
+        originalUrl: url.originalUrl,
+        createdAt: url.createdAt,
+      },
     };
+
+    return stats;
   }
 
   async getUrlEvents(
@@ -175,7 +149,7 @@ export class AnalyticsService {
       .where(and(...conditions));
   }
 
-  async getGeoStats(shortId: string, timeRange: TimeRange) {
+  async getGeoStats(shortId: string, timeRange: TimeRange): Promise<GeoStats> {
     const url = await this.database
       .select()
       .from(urls)
@@ -193,15 +167,7 @@ export class AnalyticsService {
       .where(and(eq(events.urlId, url.id), timeCondition));
 
     const geoStats = eventResults.reduce(
-      (
-        acc: {
-          countries: Record<string, number>;
-          cities: Record<string, number>;
-          regions: Record<string, number>;
-          timezones: Record<string, number>;
-        },
-        event
-      ) => {
+      (acc: GeoStats, event) => {
         if (!event.geoInfo) return acc;
 
         try {
@@ -588,4 +554,26 @@ export class AnalyticsService {
       clicksByDate: filledClicksByDate,
     };
   }
+}
+
+function getTimeRangeCondition(timeRange: TimeRange) {
+  const now = new Date();
+  let startDate: Date;
+
+  switch (timeRange) {
+    case '24h':
+      startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      break;
+    case '7d':
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case '30d':
+      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      break;
+    case '90d':
+      startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+      break;
+  }
+
+  return sql`created_at >= ${startDate.toISOString()}`;
 }

@@ -3,6 +3,7 @@ import { Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
 import { UAParser } from 'ua-parser-js';
+import { WebSocketService } from './WebSocketService';
 
 interface Env {
   DB: D1Database;
@@ -18,7 +19,41 @@ type CFContext = Context<{
 
 const app = new Hono<{ Bindings: Env }>();
 
-app.use('*', cors());
+// Create WebSocket service instance
+const wsService = new WebSocketService();
+
+app.use(
+  '*',
+  cors({
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'https://chop-url.com',
+    ],
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
+    allowHeaders: [
+      'Origin',
+      'Content-Type',
+      'Accept',
+      'Authorization',
+      'Upgrade',
+      'Connection',
+      'Sec-WebSocket-Key',
+      'Sec-WebSocket-Version',
+      'Sec-WebSocket-Extensions',
+      'Sec-WebSocket-Protocol',
+    ],
+    exposeHeaders: [
+      'Content-Length',
+      'X-Requested-With',
+      'Upgrade',
+      'Connection',
+      'Sec-WebSocket-Accept',
+    ],
+    credentials: true,
+    maxAge: 86400,
+  })
+);
 
 app.get('/health', (c) => c.json({ status: 'ok' }));
 
@@ -107,7 +142,26 @@ async function trackEvent(
       )
       .run();
 
-    console.log('Event tracked:', {
+    // Create event data for WebSocket
+    const eventData = {
+      urlId,
+      eventType,
+      eventName,
+      properties,
+      deviceInfo,
+      geoInfo,
+      referrer,
+      timestamp: new Date().toISOString(),
+    };
+
+    // Broadcast to WebSocket clients
+    console.log('[WebSocket] Broadcasting to WebSocket clients:', {
+      room: `url:${urlId}`,
+      eventData,
+    });
+    wsService.broadcast(`url:${urlId}`, eventData);
+
+    console.log('[Event] Event tracked successfully:', {
       urlId,
       eventType,
       eventName,
@@ -120,6 +174,125 @@ async function trackEvent(
     console.error('Error tracking event:', error);
   }
 }
+
+// WebSocket endpoint
+app.get('/ws', async (c) => {
+  try {
+    // Log all request headers for debugging
+    console.log(
+      '[WebSocket] Request headers:',
+      Object.fromEntries(
+        Object.entries(c.req.raw.headers).map(([key, value]) => [key, value])
+      )
+    );
+
+    const upgradeHeader = c.req.header('Upgrade');
+    if (!upgradeHeader || upgradeHeader !== 'websocket') {
+      console.log(
+        '[WebSocket] Missing or invalid Upgrade header:',
+        upgradeHeader
+      );
+      return c.json({ error: 'Expected Upgrade: websocket' }, 426);
+    }
+
+    console.log('[WebSocket] New connection request');
+
+    const webSocketPair = new WebSocketPair();
+    const [client, server] = Object.values(webSocketPair);
+
+    server.accept();
+    console.log('[WebSocket] Connection accepted');
+
+    // Add ping/pong to keep connection alive
+    const pingInterval = setInterval(() => {
+      if (server.readyState === WebSocket.OPEN) {
+        server.send(JSON.stringify({ type: 'ping' }));
+      } else {
+        clearInterval(pingInterval);
+      }
+    }, 30000);
+
+    server.addEventListener('message', async (event) => {
+      try {
+        const data =
+          typeof event.data === 'string'
+            ? event.data
+            : new TextDecoder().decode(event.data);
+        const message = JSON.parse(data);
+        console.log('[WebSocket] Received message:', message);
+
+        // Handle ping/pong
+        if (message.type === 'ping') {
+          server.send(JSON.stringify({ type: 'pong' }));
+          return;
+        }
+
+        if (message.type === 'pong') {
+          console.log('[WebSocket] Received pong');
+          return;
+        }
+
+        if (message.type === 'subscribe' && message.room) {
+          const room = message.room;
+          console.log('[WebSocket] Subscribe request for room:', room);
+
+          if (wsService.addToRoom(room, server)) {
+            server.send(
+              JSON.stringify({
+                type: 'subscribed',
+                room,
+              })
+            );
+            console.log('[WebSocket] Subscription confirmed for room:', room);
+          }
+        }
+
+        if (message.type === 'unsubscribe' && message.room) {
+          const room = message.room;
+          console.log('[WebSocket] Unsubscribe request for room:', room);
+
+          if (wsService.removeFromRoom(room, server)) {
+            server.send(
+              JSON.stringify({
+                type: 'unsubscribed',
+                room,
+              })
+            );
+            console.log('[WebSocket] Unsubscription confirmed for room:', room);
+          }
+        }
+      } catch (error) {
+        console.error('[WebSocket] Error handling message:', error);
+      }
+    });
+
+    server.addEventListener('close', () => {
+      console.log('[WebSocket] Connection closed');
+      clearInterval(pingInterval);
+      const rooms = wsService.getAllRooms();
+      for (const room of rooms) {
+        wsService.removeFromRoom(room, server);
+      }
+    });
+
+    server.addEventListener('error', (error) => {
+      console.error('[WebSocket] Error:', error);
+      clearInterval(pingInterval);
+    });
+
+    return new Response(null, {
+      status: 101,
+      webSocket: client,
+      headers: {
+        Upgrade: 'websocket',
+        Connection: 'Upgrade',
+      },
+    });
+  } catch (error) {
+    console.error('[WebSocket] Error establishing connection:', error);
+    return c.json({ error: 'Failed to establish WebSocket connection' }, 500);
+  }
+});
 
 // this endpoint is used to redirect the user to the original URL
 app.get('/:shortId', async (c: CFContext) => {
@@ -140,20 +313,24 @@ app.get('/:shortId', async (c: CFContext) => {
       return c.json({ message: 'Short URL not found' }, 404);
     }
 
-    // Track redirect event
-    await trackEvent(c, result.id, 'REDIRECT', 'url_redirect', {
-      shortId,
-      originalUrl: result.original_url,
-    });
+    // Track event asynchronously using waitUntil
+    c.executionCtx.waitUntil(
+      trackEvent(c, result.id, 'REDIRECT', 'url_redirect', {
+        shortId,
+        originalUrl: result.original_url,
+      })
+    );
 
-    // Update visit count
-    await c.env.DB.prepare(
-      'UPDATE urls SET visit_count = visit_count + 1, last_accessed_at = CURRENT_TIMESTAMP WHERE id = ?'
-    )
-      .bind(result.id)
-      .run();
+    // Update visit count asynchronously
+    c.executionCtx.waitUntil(
+      c.env.DB.prepare(
+        'UPDATE urls SET visit_count = visit_count + 1, last_accessed_at = CURRENT_TIMESTAMP WHERE id = ?'
+      )
+        .bind(result.id)
+        .run()
+    );
 
-    // Redirect to original URL
+    // Redirect to original URL immediately
     return new Response(null, {
       status: 302,
       headers: {

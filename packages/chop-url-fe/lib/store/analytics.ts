@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { apiClient } from '../api-client';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
 
 export interface Properties {
   browser: string;
@@ -56,6 +57,8 @@ export interface UtmStats {
   campaigns: Record<string, number>;
 }
 
+export type TimeRange = '24h' | '7d' | '30d' | '90d';
+
 interface AnalyticsState {
   isLoading: boolean;
   error: Error | null;
@@ -64,73 +67,157 @@ interface AnalyticsState {
   events: Event[] | null;
   utmStats: UtmStats | null;
   clickHistory: ClickHistory[] | null;
-  timeRange: '24h' | '7d' | '30d' | '90d';
+  timeRange: TimeRange;
+  currentUrlId: string | null;
   fetchAnalytics: (shortId: string) => Promise<void>;
-  setTimeRange: (range: '24h' | '7d' | '30d' | '90d') => void;
+  setTimeRange: (range: TimeRange) => void;
   reset: () => void;
 }
 
-const initialState = {
-  isLoading: false,
-  error: null,
-  urlStats: null,
-  geoStats: null,
-  events: null,
-  utmStats: null,
-  clickHistory: null,
-  timeRange: '7d' as const,
-};
-
 export const useAnalyticsStore = create<AnalyticsState>()(
-  devtools((set, get) => ({
-    ...initialState,
+  devtools(
+    (set, get) => ({
+      isLoading: false,
+      error: null,
+      urlStats: null,
+      geoStats: null,
+      events: null,
+      utmStats: null,
+      clickHistory: null,
+      timeRange: '7d',
+      currentUrlId: null,
 
-    fetchAnalytics: async (shortId: string) => {
-      set({ isLoading: true, error: null });
+      fetchAnalytics: async (shortId: string) => {
+        try {
+          console.log('[Analytics] Fetching analytics for shortId:', shortId);
 
-      try {
-        const [urlStats, geoStats, events, utmStats, clickHistory] =
-          await Promise.all([
-            apiClient.get<UrlStats>(
-              `/api/urls/${shortId}/stats?timeRange=${get().timeRange}`
+          // Always set loading to true since we're not using cache
+          set({ isLoading: true, error: null, currentUrlId: shortId });
+
+          const { timeRange } = get();
+          console.log('[Analytics] Using time range:', timeRange);
+
+          // Always force refresh
+          const forceRefresh = '&forceRefresh=true';
+
+          // Fetch all data in parallel
+          const [
+            statsResponse,
+            geoResponse,
+            eventsResponse,
+            utmResponse,
+            clicksResponse,
+          ] = await Promise.all([
+            fetch(
+              `${API_BASE_URL}/api/urls/${shortId}/stats?timeRange=${timeRange}${forceRefresh}`,
+              {
+                mode: 'cors',
+                credentials: 'include',
+                cache: 'no-store', // Never use browser cache
+              }
             ),
-            apiClient.get<GeoStats>(
-              `/api/urls/${shortId}/geo?timeRange=${get().timeRange}`
+            fetch(
+              `${API_BASE_URL}/api/urls/${shortId}/geo?timeRange=${timeRange}${forceRefresh}`,
+              {
+                mode: 'cors',
+                credentials: 'include',
+                cache: 'no-store',
+              }
             ),
-            apiClient.get<Event[]>(
-              `/api/urls/${shortId}/events?timeRange=${get().timeRange}`
+            fetch(
+              `${API_BASE_URL}/api/urls/${shortId}/events?timeRange=${timeRange}${forceRefresh}`,
+              {
+                mode: 'cors',
+                credentials: 'include',
+                cache: 'no-store',
+              }
             ),
-            apiClient.get<UtmStats>(
-              `/api/urls/${shortId}/utm?timeRange=${get().timeRange}`
+            fetch(
+              `${API_BASE_URL}/api/urls/${shortId}/utm?timeRange=${timeRange}${forceRefresh}`,
+              {
+                mode: 'cors',
+                credentials: 'include',
+                cache: 'no-store',
+              }
             ),
-            apiClient.get<ClickHistory[]>(
-              `/api/urls/${shortId}/clicks?timeRange=${get().timeRange}`
+            fetch(
+              `${API_BASE_URL}/api/urls/${shortId}/clicks?timeRange=${timeRange}${forceRefresh}`,
+              {
+                mode: 'cors',
+                credentials: 'include',
+                cache: 'no-store',
+              }
             ),
           ]);
 
+          // Check if any request failed
+          if (!statsResponse.ok) throw new Error('Failed to fetch URL stats');
+          if (!geoResponse.ok) throw new Error('Failed to fetch geo stats');
+          if (!eventsResponse.ok) throw new Error('Failed to fetch events');
+          if (!utmResponse.ok) throw new Error('Failed to fetch UTM stats');
+          if (!clicksResponse.ok)
+            throw new Error('Failed to fetch click history');
+
+          // Parse all responses in parallel
+          const [urlStats, geoStats, events, utmStats, clickHistory] =
+            await Promise.all([
+              statsResponse.json(),
+              geoResponse.json(),
+              eventsResponse.json(),
+              utmResponse.json(),
+              clicksResponse.json(),
+            ]);
+
+          console.log('[Analytics] Data fetched successfully:', {
+            urlStats,
+            geoStats,
+            events,
+            utmStats,
+            clickHistory,
+          });
+
+          set({
+            urlStats,
+            geoStats,
+            events,
+            utmStats,
+            clickHistory,
+            isLoading: false,
+            error: null,
+          });
+        } catch (error) {
+          console.error('[Analytics] Error fetching analytics:', error);
+          set({
+            error: error instanceof Error ? error : new Error('Unknown error'),
+            isLoading: false,
+          });
+        }
+      },
+
+      setTimeRange: (range: TimeRange) => {
+        console.log('[Analytics] Setting time range:', range);
+        set({ timeRange: range });
+        const { currentUrlId } = get();
+        if (currentUrlId) {
+          console.log('[Analytics] Refreshing data for new time range');
+          get().fetchAnalytics(currentUrlId);
+        }
+      },
+
+      reset: () => {
+        console.log('[Analytics] Resetting store');
         set({
-          urlStats,
-          geoStats,
-          events,
-          utmStats,
-          clickHistory,
           isLoading: false,
+          error: null,
+          urlStats: null,
+          geoStats: null,
+          events: null,
+          utmStats: null,
+          clickHistory: null,
+          currentUrlId: null,
         });
-      } catch (error) {
-        set({ error: error as Error, isLoading: false });
-      }
-    },
-
-    setTimeRange: (timeRange) => {
-      set({ timeRange });
-      const shortId = get().urlStats?.url.shortId;
-      if (shortId) {
-        get().fetchAnalytics(shortId);
-      }
-    },
-
-    reset: () => {
-      set(initialState);
-    },
-  }))
+      },
+    }),
+    { name: 'analytics-store' }
+  )
 );

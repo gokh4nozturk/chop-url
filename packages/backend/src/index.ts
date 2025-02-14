@@ -1,12 +1,14 @@
 import { swaggerUI } from '@hono/swagger-ui';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { HTTPException } from 'hono/http-exception';
 import { createAnalyticsRoutes } from './analytics/routes';
 import { createAuthRoutes } from './auth/routes';
 import { createDb } from './db/client';
 import { createDomainRoutes } from './domain/routes';
 import { openApiSchema } from './openapi.js';
 import { createUrlRoutes } from './url/routes';
+import { WebSocketService } from './websocket/service';
 
 export interface Env {
   DB: D1Database;
@@ -27,6 +29,7 @@ type Variables = {
 };
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
+const wsService = new WebSocketService();
 
 // Initialize DB middleware
 app.use('*', async (c, next) => {
@@ -35,26 +38,26 @@ app.use('*', async (c, next) => {
   await next();
 });
 
-// CORS middleware configuration
+// CORS middleware
 app.use(
   '*',
   cors({
-    origin: ['https://app.chop-url.com', 'http://localhost:3000'],
-    credentials: true,
+    origin: ['http://localhost:3000', 'https://chop-url.com'],
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
     allowHeaders: [
-      'Content-Type',
-      'Authorization',
-      'Accept',
       'Origin',
-      'X-Requested-With',
-      'X-Custom-Header',
-      'Upgrade-Insecure-Requests',
-      'Access-Control-Allow-Origin',
-      'Access-Control-Allow-Credentials',
+      'Content-Type',
+      'Accept',
+      'Authorization',
+      'Upgrade',
+      'Connection',
+      'Sec-WebSocket-Key',
+      'Sec-WebSocket-Version',
+      'Sec-WebSocket-Extensions',
     ],
-    exposeHeaders: ['Content-Length', 'X-Kuma-Revision', 'Authorization'],
-    maxAge: 600,
+    exposeHeaders: ['Content-Length', 'X-Requested-With'],
+    credentials: true,
+    maxAge: 86400,
   })
 );
 
@@ -77,6 +80,24 @@ app.get(
 // Health check endpoint
 app.get('/api/health', (c) => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// WebSocket endpoint
+app.get('/ws', async (c) => {
+  const upgradeHeader = c.req.header('Upgrade');
+  if (!upgradeHeader || upgradeHeader !== 'websocket') {
+    return c.json({ error: 'Expected Upgrade: websocket' }, 426);
+  }
+
+  const webSocketPair = new WebSocketPair();
+  const [client, server] = Object.values(webSocketPair);
+
+  wsService.handleConnection(server);
+
+  return new Response(null, {
+    status: 101,
+    webSocket: client,
+  });
 });
 
 // Mount routes

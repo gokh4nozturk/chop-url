@@ -1,5 +1,6 @@
 'use client';
 
+import { RealTimeStats } from '@/components/analytics/real-time-stats';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { BarChart } from '@/components/ui/bar-chart';
 import { Button } from '@/components/ui/button';
@@ -101,6 +102,7 @@ export default function LinkDetailsPage() {
 
   return (
     <div className="space-y-6">
+      <RealTimeStats urlId={shortId} />
       <div className="flex flex-col gap-4 xs:flex-row xs:items-center xs:justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Link Analytics</h2>
