@@ -110,9 +110,8 @@ export const createAnalyticsRoutes = () => {
 
   // URL Stats endpoint
   router.get('/urls/:shortId/stats', async (c) => {
-    const db = createDb(c.env.DB);
     const analyticsService = new AnalyticsService({
-      database: db,
+      database: createDb(c.env.DB),
       wsService,
     });
 
@@ -123,18 +122,22 @@ export const createAnalyticsRoutes = () => {
       return c.json({ error: 'Invalid time range' }, 400);
     }
 
-    const stats = await analyticsService.getUrlStats(
-      shortId,
-      timeRange as TimeRange
-    );
-    return c.json(stats);
+    try {
+      const stats = await analyticsService.getUrlStats(
+        shortId,
+        timeRange as TimeRange
+      );
+      return c.json(stats);
+    } catch (error) {
+      console.error('Error getting URL stats:', error);
+      return c.json({ error: 'Failed to get URL stats' }, 500);
+    }
   });
 
   // Event Analytics endpoints
   router.get('/urls/:shortId/events', async (c) => {
-    const db = createDb(c.env.DB);
     const analyticsService = new AnalyticsService({
-      database: db,
+      database: createDb(c.env.DB),
       wsService,
     });
     const shortId = c.req.param('shortId');
@@ -145,19 +148,23 @@ export const createAnalyticsRoutes = () => {
       return c.json({ error: 'Invalid time range' }, 400);
     }
 
-    const events = await analyticsService.getUrlEvents(
-      shortId,
-      timeRange as TimeRange,
-      eventType || undefined
-    );
-    return c.json(events);
+    try {
+      const events = await analyticsService.getUrlEvents(
+        shortId,
+        timeRange as TimeRange,
+        eventType || undefined
+      );
+      return c.json(events);
+    } catch (error) {
+      console.error('Error getting URL events:', error);
+      return c.json({ error: 'Failed to get URL events' }, 500);
+    }
   });
 
   // Geographic Analytics
   router.get('/urls/:shortId/geo', async (c) => {
-    const db = createDb(c.env.DB);
     const analyticsService = new AnalyticsService({
-      database: db,
+      database: createDb(c.env.DB),
       wsService,
     });
 
@@ -168,16 +175,24 @@ export const createAnalyticsRoutes = () => {
       return c.json({ error: 'Invalid time range' }, 400);
     }
 
-    const geoStats = await analyticsService.getGeoStats(
-      shortId,
-      timeRange as TimeRange
-    );
-    return c.json(geoStats);
+    try {
+      const geoStats = await analyticsService.getGeoStats(
+        shortId,
+        timeRange as TimeRange
+      );
+      return c.json(geoStats);
+    } catch (error) {
+      console.error('Error getting geo stats:', error);
+      return c.json({ error: 'Failed to get geo stats' }, 500);
+    }
   });
 
   // Device Analytics
   router.get('/urls/:shortId/devices', async (c) => {
-    const analyticsService = new AnalyticsService({ database: c.env.DB });
+    const analyticsService = new AnalyticsService({
+      database: createDb(c.env.DB),
+      wsService,
+    });
     const shortId = c.req.param('shortId');
     const timeRange = c.req.query('timeRange') || '7d';
 
@@ -185,18 +200,22 @@ export const createAnalyticsRoutes = () => {
       return c.json({ error: 'Invalid time range' }, 400);
     }
 
-    const deviceStats = await analyticsService.getDeviceStats(
-      shortId,
-      timeRange as TimeRange
-    );
-    return c.json(deviceStats);
+    try {
+      const deviceStats = await analyticsService.getDeviceStats(
+        shortId,
+        timeRange as TimeRange
+      );
+      return c.json(deviceStats);
+    } catch (error) {
+      console.error('Error getting device stats:', error);
+      return c.json({ error: 'Failed to get device stats' }, 500);
+    }
   });
 
   // UTM Analytics
   router.get('/urls/:shortId/utm', async (c) => {
-    const db = createDb(c.env.DB);
     const analyticsService = new AnalyticsService({
-      database: db,
+      database: createDb(c.env.DB),
       wsService,
     });
     const shortId = c.req.param('shortId');
@@ -206,18 +225,22 @@ export const createAnalyticsRoutes = () => {
       return c.json({ error: 'Invalid time range' }, 400);
     }
 
-    const utmStats = await analyticsService.getUtmStats(
-      shortId,
-      timeRange as TimeRange
-    );
-    return c.json(utmStats);
+    try {
+      const utmStats = await analyticsService.getUtmStats(
+        shortId,
+        timeRange as TimeRange
+      );
+      return c.json(utmStats);
+    } catch (error) {
+      console.error('Error getting UTM stats:', error);
+      return c.json({ error: 'Failed to get UTM stats' }, 500);
+    }
   });
 
   // Click History
   router.get('/urls/:shortId/clicks', async (c) => {
-    const db = createDb(c.env.DB);
     const analyticsService = new AnalyticsService({
-      database: db,
+      database: createDb(c.env.DB),
       wsService,
     });
     const shortId = c.req.param('shortId');
@@ -227,11 +250,16 @@ export const createAnalyticsRoutes = () => {
       return c.json({ error: 'Invalid time range' }, 400);
     }
 
-    const clickHistory = await analyticsService.getClickHistory(
-      shortId,
-      timeRange as TimeRange
-    );
-    return c.json(clickHistory);
+    try {
+      const clickHistory = await analyticsService.getClickHistory(
+        shortId,
+        timeRange as TimeRange
+      );
+      return c.json(clickHistory);
+    } catch (error) {
+      console.error('Error getting click history:', error);
+      return c.json({ error: 'Failed to get click history' }, 500);
+    }
   });
 
   // User Analytics -> Dashboard

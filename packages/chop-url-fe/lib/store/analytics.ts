@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+import apiClient from '../api/client';
 
 export interface Properties {
   browser: string;
@@ -90,83 +89,35 @@ export const useAnalyticsStore = create<AnalyticsState>()(
       fetchAnalytics: async (shortId: string) => {
         try {
           console.log('[Analytics] Fetching analytics for shortId:', shortId);
-
-          // Always set loading to true since we're not using cache
           set({ isLoading: true, error: null, currentUrlId: shortId });
 
           const { timeRange } = get();
           console.log('[Analytics] Using time range:', timeRange);
 
-          // Always force refresh
-          const forceRefresh = '&forceRefresh=true';
-
           // Fetch all data in parallel
           const [
-            statsResponse,
-            geoResponse,
-            eventsResponse,
-            utmResponse,
-            clicksResponse,
+            { data: urlStats },
+            { data: geoStats },
+            { data: events },
+            { data: utmStats },
+            { data: clickHistory },
           ] = await Promise.all([
-            fetch(
-              `${API_BASE_URL}/api/urls/${shortId}/stats?timeRange=${timeRange}${forceRefresh}`,
-              {
-                mode: 'cors',
-                credentials: 'include',
-                cache: 'no-store', // Never use browser cache
-              }
-            ),
-            fetch(
-              `${API_BASE_URL}/api/urls/${shortId}/geo?timeRange=${timeRange}${forceRefresh}`,
-              {
-                mode: 'cors',
-                credentials: 'include',
-                cache: 'no-store',
-              }
-            ),
-            fetch(
-              `${API_BASE_URL}/api/urls/${shortId}/events?timeRange=${timeRange}${forceRefresh}`,
-              {
-                mode: 'cors',
-                credentials: 'include',
-                cache: 'no-store',
-              }
-            ),
-            fetch(
-              `${API_BASE_URL}/api/urls/${shortId}/utm?timeRange=${timeRange}${forceRefresh}`,
-              {
-                mode: 'cors',
-                credentials: 'include',
-                cache: 'no-store',
-              }
-            ),
-            fetch(
-              `${API_BASE_URL}/api/urls/${shortId}/clicks?timeRange=${timeRange}${forceRefresh}`,
-              {
-                mode: 'cors',
-                credentials: 'include',
-                cache: 'no-store',
-              }
-            ),
+            apiClient.get(`/api/urls/${shortId}/stats`, {
+              params: { timeRange },
+            }),
+            apiClient.get(`/api/urls/${shortId}/geo`, {
+              params: { timeRange },
+            }),
+            apiClient.get(`/api/urls/${shortId}/events`, {
+              params: { timeRange },
+            }),
+            apiClient.get(`/api/urls/${shortId}/utm`, {
+              params: { timeRange },
+            }),
+            apiClient.get(`/api/urls/${shortId}/clicks`, {
+              params: { timeRange },
+            }),
           ]);
-
-          // Check if any request failed
-          if (!statsResponse.ok) throw new Error('Failed to fetch URL stats');
-          if (!geoResponse.ok) throw new Error('Failed to fetch geo stats');
-          if (!eventsResponse.ok) throw new Error('Failed to fetch events');
-          if (!utmResponse.ok) throw new Error('Failed to fetch UTM stats');
-          if (!clicksResponse.ok)
-            throw new Error('Failed to fetch click history');
-
-          // Parse all responses in parallel
-          const [urlStats, geoStats, events, utmStats, clickHistory] =
-            await Promise.all([
-              statsResponse.json(),
-              geoResponse.json(),
-              eventsResponse.json(),
-              utmResponse.json(),
-              clicksResponse.json(),
-            ]);
 
           console.log('[Analytics] Data fetched successfully:', {
             urlStats,
