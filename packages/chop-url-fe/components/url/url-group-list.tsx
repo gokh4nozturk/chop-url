@@ -19,7 +19,7 @@ import useUrlStore from '@/lib/store/url';
 import { IUrlGroup } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { MoreHorizontal, Pencil, Trash } from 'lucide-react';
+import { MoreHorizontal, Trash } from 'lucide-react';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { UrlGroupForm } from './url-group-form';

@@ -1,6 +1,5 @@
 'use client';
 
-import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import useUrlStore from '@/lib/store/url';
 import { IUrlGroup } from '@/lib/types';
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -56,7 +56,7 @@ export function UrlGroupForm({ group, onSuccess }: UrlGroupFormProps) {
             'Edit'
           ) : (
             <>
-              <Icons.plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 h-4 w-4" />
               New URL Group
             </>
           )}

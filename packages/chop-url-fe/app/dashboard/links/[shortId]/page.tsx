@@ -1,6 +1,5 @@
 'use client';
 
-import LoadingSpinner from '@/components/custom/loading-spinner';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +31,7 @@ import {
   Globe,
   Hash,
   Link as LinkIcon,
+  Loader2,
   MousePointerClick,
   Pencil,
   Share2,
@@ -80,7 +80,7 @@ export default function LinkDetailsPage() {
 const LoadingState = () => {
   return (
     <div className="space-y-4">
-      <LoadingSpinner />
+      <Loader2 className="h-6 w-6 animate-spin" />
       <div className="grid gap-4">
         {[1, 2, 3, 4, 5].map((i) => (
           <Skeleton key={i} className="h-24 w-full" />

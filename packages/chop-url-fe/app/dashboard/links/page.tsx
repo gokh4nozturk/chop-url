@@ -1,6 +1,5 @@
 'use client';
 
-import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -29,10 +28,16 @@ import {
 import useUrlStore from '@/lib/store/url';
 import { IUrl } from '@/lib/types';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
+  Link as LinkIcon,
+  Loader2,
+  MoreVertical,
+  Copy,
+  Plus,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-
 export default function LinksPage() {
   const {
     urls,
@@ -118,7 +123,7 @@ export default function LinksPage() {
             className="hover:shadow-md transition-all duration-300"
           >
             <Link href="/dashboard/new">
-              <Icons.plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 h-4 w-4" />
               New Link
             </Link>
           </Button>
@@ -160,7 +165,7 @@ export default function LinksPage() {
                 size="icon"
                 className="hover:shadow-md transition-all duration-300"
               >
-                <Icons.moreVertical className="h-4 w-4" />
+                <MoreVertical className="h-4 w-4" />
               </Button>
             </motion.div>
           </DropdownMenuTrigger>
@@ -212,7 +217,7 @@ export default function LinksPage() {
             exit={{ opacity: 0 }}
             className="flex h-[400px] items-center justify-center"
           >
-            <Icons.spinner className="h-6 w-6 animate-spin" />
+            <Loader2 className="h-6 w-6 animate-spin" />
           </motion.div>
         ) : (searchTerm ? filteredUrls : urls).length > 0 ? (
           <motion.div
@@ -265,7 +270,7 @@ export default function LinksPage() {
                                 className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-all duration-300"
                                 onClick={() => copyToClipboard(link.shortUrl)}
                               >
-                                <Icons.copy className="h-4 w-4" />
+                                <Copy className="h-4 w-4" />
                               </Button>
                             </motion.div>
                           </div>
@@ -291,7 +296,7 @@ export default function LinksPage() {
                                   size="icon"
                                   className="h-8 w-8 transition-all duration-300"
                                 >
-                                  <Icons.moreVertical className="h-4 w-4" />
+                                  <MoreVertical className="h-4 w-4" />
                                 </Button>
                               </motion.div>
                             </DropdownMenuTrigger>
@@ -345,7 +350,7 @@ export default function LinksPage() {
               whileHover={{ rotate: 15 }}
               transition={{ type: 'spring', stiffness: 300 }}
             >
-              <Icons.link className="h-8 w-8 text-muted-foreground" />
+              <LinkIcon className="h-8 w-8 text-muted-foreground" />
             </motion.div>
             <motion.h3
               initial={{ opacity: 0, y: 20 }}

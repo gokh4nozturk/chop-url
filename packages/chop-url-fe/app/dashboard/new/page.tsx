@@ -1,6 +1,5 @@
 'use client';
 
-import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -40,12 +39,12 @@ import { IUrlGroup } from '@/lib/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { addDays, addHours, addMonths, addWeeks } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
+import { ChevronsUpDown, Loader2, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
-
 interface UTMParams {
   source: string;
   medium: string;
@@ -410,7 +409,7 @@ export default function NewLinkPage() {
                                     animate={{ rotate: isUtmOpen ? 180 : 0 }}
                                     transition={{ duration: 0.3 }}
                                   >
-                                    <Icons.chevronUpDown className="h-4 w-4" />
+                                    <ChevronsUpDown className="h-4 w-4" />
                                   </motion.div>
                                   <span className="sr-only">
                                     Toggle UTM parameters
@@ -535,12 +534,12 @@ export default function NewLinkPage() {
                           >
                             {isLoading ? (
                               <>
-                                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 Creating...
                               </>
                             ) : (
                               <>
-                                <Icons.plus className="mr-2 h-4 w-4" />
+                                <Plus className="mr-2 h-4 w-4" />
                                 Create Link
                               </>
                             )}

@@ -2,7 +2,6 @@
 
 import { ProfileForm } from '@/components/dashboard/settings/profile-form';
 import { SecurityForm } from '@/components/dashboard/settings/security-form';
-import { Icons } from '@/components/icons';
 import {
   Card,
   CardContent,
@@ -13,6 +12,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuthStore } from '@/lib/store/auth';
 import { motion } from 'framer-motion';
+import { Shield, ShieldCheck, User2 } from 'lucide-react';
 export default function SettingsPage() {
   const { user } = useAuthStore();
 
@@ -48,7 +48,7 @@ export default function SettingsPage() {
             value="profile"
             className="transition-all duration-300 data-[state=active]:shadow-sm"
           >
-            <Icons.user2 className="mr-2 h-4 w-4" />
+            <User2 className="mr-2 h-4 w-4" />
             Profile
           </TabsTrigger>
           <TabsTrigger
@@ -56,9 +56,9 @@ export default function SettingsPage() {
             className="transition-all duration-300 data-[state=active]:shadow-sm"
           >
             {user?.isTwoFactorEnabled ? (
-              <Icons.shieldCheck className="mr-2 h-4 w-4" />
+              <ShieldCheck className="mr-2 h-4 w-4" />
             ) : (
-              <Icons.shield className="mr-2 h-4 w-4" />
+              <Shield className="mr-2 h-4 w-4" />
             )}
             Security
           </TabsTrigger>
@@ -77,7 +77,7 @@ export default function SettingsPage() {
                     whileHover={{ rotate: 15 }}
                     transition={{ type: 'spring', stiffness: 300 }}
                   >
-                    <Icons.user2 className="h-5 w-5 text-primary" />
+                    <User2 className="h-5 w-5 text-primary" />
                   </motion.div>
                   <div>
                     <CardTitle>Profile</CardTitle>
@@ -108,9 +108,9 @@ export default function SettingsPage() {
                     transition={{ type: 'spring', stiffness: 300 }}
                   >
                     {user?.isTwoFactorEnabled ? (
-                      <Icons.shieldCheck className="h-5 w-5 text-primary" />
+                      <ShieldCheck className="h-5 w-5 text-primary" />
                     ) : (
-                      <Icons.shield className="h-5 w-5 text-primary" />
+                      <Shield className="h-5 w-5 text-primary" />
                     )}
                   </motion.div>
                   <div>

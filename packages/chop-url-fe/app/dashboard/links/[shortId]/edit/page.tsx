@@ -1,6 +1,3 @@
-'use client';
-
-import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -39,6 +36,7 @@ import { IUrl, IUrlGroup } from '@/lib/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { addDays, addHours, addMonths, addWeeks } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
+import { ChevronsUpDown, Loader2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -297,7 +295,7 @@ export default function EditLinkPage() {
   if (!url) {
     return (
       <div className="flex h-[400px] items-center justify-center">
-        <Icons.spinner className="h-6 w-6 animate-spin" />
+        <Loader2 className="h-6 w-6 animate-spin" />
       </div>
     );
   }
@@ -544,7 +542,7 @@ export default function EditLinkPage() {
                               animate={{ scale: isUtmOpen ? 1.1 : 1 }}
                               transition={{ duration: 0.3 }}
                             >
-                              <Icons.chevronUpDown className="h-4 w-4" />
+                              <ChevronsUpDown className="h-4 w-4" />
                             </motion.div>
                             <span className="sr-only">
                               Toggle UTM parameters
@@ -683,7 +681,7 @@ export default function EditLinkPage() {
                   >
                     {isLoading ? (
                       <>
-                        <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Updating...
                       </>
                     ) : (

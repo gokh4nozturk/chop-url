@@ -1,6 +1,5 @@
 'use client';
 
-import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -21,6 +20,7 @@ import {
 import { useAuthStore } from '@/lib/store/auth';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Mail } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
@@ -95,7 +95,7 @@ export function ProfileForm() {
                           )}
                           onClick={handleSendVerificationEmail}
                         >
-                          <Icons.mail
+                          <Mail
                             className={cn(
                               'size-4',
                               user?.isEmailVerified

@@ -1,6 +1,5 @@
 'use client';
 
-import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -14,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import useUrlStore from '@/lib/store/url';
+import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -132,7 +132,7 @@ export default function BulkCreatePage() {
 
                 <Button disabled={isLoading} className="w-full">
                   {isLoading && (
-                    <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
                   Create Links
                 </Button>
@@ -168,7 +168,7 @@ export default function BulkCreatePage() {
 
                 <Button disabled={isLoading} className="w-full">
                   {isLoading && (
-                    <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
                   Upload and Create Links
                 </Button>

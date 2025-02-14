@@ -1,9 +1,9 @@
 'use client';
 
-import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { navigate } from '@/lib/navigation';
 import { useAuthStore } from '@/lib/store/auth';
+import { AlertTriangle, Check, Loader2, X } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Suspense } from 'react';
@@ -41,7 +41,7 @@ function VerifyEmailContent() {
       <div className="flex h-screen w-screen flex-col items-center justify-center">
         <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
           <div className="flex flex-col space-y-2 text-center">
-            <Icons.alertTriangle className="mx-auto h-8 w-8 text-yellow-500" />
+            <AlertTriangle className="mx-auto h-8 w-8 text-yellow-500" />
             <h1 className="text-2xl font-semibold tracking-tight">
               Invalid Verification Link
             </h1>
@@ -64,7 +64,7 @@ function VerifyEmailContent() {
         <div className="flex flex-col space-y-2 text-center">
           {isLoading ? (
             <>
-              <Icons.spinner className="mx-auto h-8 w-8 animate-spin" />
+              <Loader2 className="mx-auto h-8 w-8 animate-spin" />
               <h1 className="text-2xl font-semibold tracking-tight">
                 Verifying Email
               </h1>
@@ -74,7 +74,7 @@ function VerifyEmailContent() {
             </>
           ) : isVerified ? (
             <>
-              <Icons.check className="mx-auto h-8 w-8 text-green-500" />
+              <Check className="mx-auto h-8 w-8 text-green-500" />
               <h1 className="text-2xl font-semibold tracking-tight">
                 Email Verified
               </h1>
@@ -90,7 +90,7 @@ function VerifyEmailContent() {
             </>
           ) : (
             <>
-              <Icons.close className="mx-auto h-8 w-8 text-red-500" />
+              <X className="mx-auto h-8 w-8 text-red-500" />
               <h1 className="text-2xl font-semibold tracking-tight">
                 Verification Failed
               </h1>

@@ -1,6 +1,5 @@
 'use client';
 
-import { Icons } from '@/components/icons';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { BarChart } from '@/components/ui/bar-chart';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import useUrlStore from '@/lib/store/url';
-import { Activity, Calendar, Clock } from 'lucide-react';
+import { Activity, BarChart2, Calendar, Clock, Loader2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -72,7 +71,7 @@ export default function LinkDetailsPage() {
               fetchStats();
             }}
           >
-            <Icons.loading className="h-4 w-4" />
+            <Loader2 className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -81,7 +80,7 @@ export default function LinkDetailsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Clicks</CardTitle>
-            <Icons.barChart className="h-4 w-4 text-muted-foreground" />
+            <BarChart2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {isLoading ? (

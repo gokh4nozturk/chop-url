@@ -1,9 +1,9 @@
 'use client';
 
-import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuthStore } from '@/lib/store/auth';
+import { Loader2, Shield } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 
@@ -132,7 +132,7 @@ export default function TwoFactorSetupPage() {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Verifying...
                 </>
               ) : (
@@ -190,7 +190,7 @@ export default function TwoFactorSetupPage() {
           >
             {isLoading ? (
               <>
-                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Disabling...
               </>
             ) : (
@@ -202,7 +202,7 @@ export default function TwoFactorSetupPage() {
         <div className="space-y-4">
           <div className="rounded-lg border bg-card p-6 space-y-4">
             <div className="flex items-start space-x-4">
-              <Icons.shield className="h-6 w-6 text-primary mt-1" />
+              <Shield className="h-6 w-6 text-primary mt-1" />
               <div className="space-y-1">
                 <h3 className="font-semibold">Protect your account</h3>
                 <p className="text-sm text-muted-foreground">
@@ -217,7 +217,7 @@ export default function TwoFactorSetupPage() {
           <Button onClick={handleSetup} className="w-full" disabled={isLoading}>
             {isLoading ? (
               <>
-                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Setting up...
               </>
             ) : (

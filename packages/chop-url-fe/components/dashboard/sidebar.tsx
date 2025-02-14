@@ -1,7 +1,6 @@
 'use client';
 
 import { UserSwitch } from '@/components/dashboard/user-switch';
-import { FrameIcon } from '@/components/icons/frame';
 import { Input } from '@/components/ui/input';
 import {
   Sidebar,
@@ -18,7 +17,6 @@ import useUrlStore from '@/lib/store/url';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  ArrowRight,
   BarChart2,
   Earth,
   Folder,
@@ -95,7 +93,6 @@ export function DashboardSidebar() {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <FrameIcon className="absolute left-2 top-2 h-4 w-4 text-muted-foreground transition-all duration-200" />
                   <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground transition-all duration-200" />
                   <Input
                     placeholder="Search URLs..."
@@ -113,7 +110,7 @@ export function DashboardSidebar() {
                   transition={{ duration: 0.2 }}
                   className="flex items-center justify-center h-8"
                 >
-                  <FrameIcon className="h-4 w-4 transition-all duration-200" />
+                  <Search className="h-4 w-4 transition-all duration-200" />
                 </motion.div>
               )}
             </AnimatePresence>

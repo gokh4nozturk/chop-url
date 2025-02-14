@@ -1,6 +1,5 @@
 'use client';
 
-import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -14,6 +13,7 @@ import { UrlGroupForm } from '@/components/url/url-group-form';
 import useUrlStore from '@/lib/store/url';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { Loader2, Trash2, Folder } from 'lucide-react';
 
 export default function GroupsPage() {
   const { urlGroups, getUserUrlGroups, isLoading } = useUrlStore();
@@ -79,7 +79,7 @@ export default function GroupsPage() {
             exit={{ opacity: 0 }}
             className="flex h-[400px] items-center justify-center"
           >
-            <Icons.spinner className="h-6 w-6 animate-spin" />
+            <Loader2 className="h-6 w-6 animate-spin" />
           </motion.div>
         ) : filteredGroups.length > 0 ? (
           <motion.div
@@ -112,7 +112,7 @@ export default function GroupsPage() {
                         }
                       }}
                     >
-                      <Icons.trash className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </CardContent>
@@ -132,7 +132,7 @@ export default function GroupsPage() {
               whileHover={{ rotate: 15 }}
               transition={{ type: 'spring', stiffness: 300 }}
             >
-              <Icons.folder className="h-8 w-8 text-muted-foreground" />
+              <Folder className="h-8 w-8 text-muted-foreground" />
             </motion.div>
             <motion.h3
               initial={{ opacity: 0, y: 20 }}

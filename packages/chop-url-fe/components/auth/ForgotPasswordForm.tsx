@@ -1,10 +1,10 @@
 'use client';
 
-import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { navigate } from '@/lib/navigation';
 import { useAuthStore } from '@/lib/store/auth';
+import { Check, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
 export function ForgotPasswordForm({ email }: { email: string | null }) {
@@ -28,7 +28,7 @@ export function ForgotPasswordForm({ email }: { email: string | null }) {
     return (
       <div className="flex flex-col space-y-4">
         <div className="flex flex-col space-y-2 text-center">
-          <Icons.check className="mx-auto h-8 w-8 text-green-500" />
+          <Check className="mx-auto h-8 w-8 text-green-500" />
           <h1 className="text-2xl font-semibold tracking-tight">
             Check your email
           </h1>
@@ -63,7 +63,7 @@ export function ForgotPasswordForm({ email }: { email: string | null }) {
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? (
           <>
-            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Sending reset link...
           </>
         ) : (
