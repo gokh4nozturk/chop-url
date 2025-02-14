@@ -42,7 +42,13 @@ app.use('*', async (c, next) => {
 app.use(
   '*',
   cors({
-    origin: ['http://localhost:3000', 'https://chop-url.com'],
+    origin: [
+      'http://localhost:3000',
+      'https://chop-url.com',
+      'https://api.chop-url.com',
+      'https://chop-url.vercel.app/',
+      'https://app.chop-url.com',
+    ],
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
     allowHeaders: [
       'Origin',
