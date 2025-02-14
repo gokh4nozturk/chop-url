@@ -2,28 +2,49 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import apiClient from '../api/client';
 
-export interface Properties {
-  browser: string;
-  browserVersion: string;
-  source: string;
-  deviceType: string;
-}
+export type TimeRange = '24h' | '7d' | '30d' | '90d';
 
 export interface DeviceInfo {
+  userAgent: string;
+  ip: string;
+  browser: string;
+  browserVersion: string;
   os: string;
-  device: string;
+  osVersion: string;
+  deviceType: 'desktop' | 'mobile' | 'tablet' | 'unknown';
+}
+
+export interface GeoInfo {
+  country: string;
+  city: string;
+  region: string;
+  regionCode: string;
+  timezone: string;
+  longitude: string;
+  latitude: string;
+  postalCode: string;
+}
+
+export interface EventProperties {
+  source: string | null;
+  medium: string | null;
+  campaign: string | null;
+  term: string | null;
+  content: string | null;
+  shortId: string;
+  originalUrl: string;
 }
 
 export interface Event {
   id: number;
   urlId: number;
-  userId: number;
-  eventType: string;
+  userId?: number;
+  eventType: 'REDIRECT' | 'PAGE_VIEW' | 'CLICK' | 'CONVERSION' | 'CUSTOM';
   eventName: string;
-  properties: string;
-  deviceInfo: string;
-  geoInfo: string;
-  referrer: string;
+  properties: string; // JSON string of EventProperties
+  deviceInfo: string; // JSON string of DeviceInfo
+  geoInfo: string; // JSON string of GeoInfo
+  referrer?: string;
   createdAt: string;
 }
 
@@ -31,6 +52,7 @@ export interface GeoStats {
   countries: Record<string, number>;
   cities: Record<string, number>;
   regions: Record<string, number>;
+  timezones: Record<string, number>;
 }
 
 export interface UrlStats {
@@ -45,9 +67,10 @@ export interface UrlStats {
   };
 }
 
-interface ClickHistory {
-  date: string;
-  clicks: number;
+export interface DeviceStats {
+  browsers: Record<string, number>;
+  devices: Record<string, number>;
+  operatingSystems: Record<string, number>;
 }
 
 export interface UtmStats {
@@ -56,7 +79,10 @@ export interface UtmStats {
   campaigns: Record<string, number>;
 }
 
-export type TimeRange = '24h' | '7d' | '30d' | '90d';
+export interface ClickStats {
+  name: string; // Date in YYYY-MM-DD format
+  value: number; // Number of clicks
+}
 
 interface AnalyticsState {
   isLoading: boolean;
@@ -65,12 +91,14 @@ interface AnalyticsState {
   geoStats: GeoStats | null;
   events: Event[] | null;
   utmStats: UtmStats | null;
-  clickHistory: ClickHistory[] | null;
+  clickHistory: ClickStats[] | null;
   timeRange: TimeRange;
   currentUrlId: string | null;
   fetchAnalytics: (shortId: string) => Promise<void>;
   setTimeRange: (range: TimeRange) => void;
   reset: () => void;
+  addEvent: (event: Event) => void;
+  clearEvents: () => void;
 }
 
 export const useAnalyticsStore = create<AnalyticsState>()(
@@ -168,6 +196,13 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           currentUrlId: null,
         });
       },
+
+      addEvent: (event) =>
+        set((state) => ({
+          events: state.events ? [event, ...(state.events || [])] : [event],
+        })),
+
+      clearEvents: () => set({ events: null }),
     }),
     { name: 'analytics-store' }
   )

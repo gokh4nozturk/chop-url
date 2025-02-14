@@ -1,26 +1,44 @@
 export type TimeRange = '24h' | '7d' | '30d' | '90d';
 
+export interface DeviceInfo {
+  userAgent: string;
+  ip: string;
+  browser: string;
+  browserVersion: string;
+  os: string;
+  osVersion: string;
+  deviceType: 'desktop' | 'mobile' | 'tablet' | 'unknown';
+}
+
+export interface GeoInfo {
+  country: string;
+  city: string;
+  region: string;
+  regionCode: string;
+  timezone: string;
+  longitude: string;
+  latitude: string;
+  postalCode: string;
+}
+
+export interface EventProperties {
+  source: string | null;
+  medium: string | null;
+  campaign: string | null;
+  term: string | null;
+  content: string | null;
+  shortId: string;
+  originalUrl: string;
+}
+
 export interface EventData {
   urlId: number;
   userId?: number;
-  eventType: string;
+  eventType: 'REDIRECT' | 'PAGE_VIEW' | 'CLICK' | 'CONVERSION' | 'CUSTOM';
   eventName: string;
-  properties?: Record<string, unknown>;
-  deviceInfo?: {
-    userAgent: string;
-    ip: string;
-    device: string;
-    browser: string;
-    os: string;
-  };
-  geoInfo?: {
-    country: string;
-    city: string;
-    region: string;
-    timezone: string;
-    latitude?: number;
-    longitude?: number;
-  };
+  properties?: EventProperties;
+  deviceInfo?: DeviceInfo;
+  geoInfo?: GeoInfo;
   referrer?: string;
 }
 
@@ -39,7 +57,7 @@ export interface UrlStats {
     id: number;
     shortId: string;
     originalUrl: string;
-    createdAt: string | null;
+    createdAt: string;
   };
 }
 
@@ -60,4 +78,9 @@ export interface UtmStats {
   sources: Record<string, number>;
   mediums: Record<string, number>;
   campaigns: Record<string, number>;
+}
+
+export interface ClickStats {
+  name: string; // Date in YYYY-MM-DD format
+  value: number; // Number of clicks
 }

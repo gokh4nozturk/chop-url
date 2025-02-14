@@ -13,7 +13,12 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAnalyticsStore } from '@/lib/store/analytics';
-import type { DeviceInfo, Event, Properties } from '@/lib/store/analytics';
+import type {
+  DeviceInfo,
+  Event,
+  EventProperties,
+  GeoInfo,
+} from '@/lib/store/analytics';
 import {
   Activity,
   BarChart2,
@@ -27,7 +32,7 @@ import {
   Monitor,
   Share2,
 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
 type TimeRange = '24h' | '7d' | '30d' | '90d';
 
@@ -61,7 +66,11 @@ const processDeviceStats = (events: Event[]) => {
   return { browsers, operatingSystems, devices };
 };
 
-export function ClientAnalytics({ shortId }: { shortId: string }) {
+interface ClientAnalyticsProps {
+  shortId: string;
+}
+
+export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
   const {
     isLoading,
     error,
@@ -89,13 +98,76 @@ export function ClientAnalytics({ shortId }: { shortId: string }) {
     }
   };
 
-  if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>{error.message}</AlertDescription>
-      </Alert>
-    );
-  }
+  const processEvents = (events: Event[]) => {
+    const devices: Record<string, number> = {};
+    const browsers: Record<string, number> = {};
+    const operatingSystems: Record<string, number> = {};
+    const countries: Record<string, number> = {};
+    const cities: Record<string, number> = {};
+    const regions: Record<string, number> = {};
+    const timezones: Record<string, number> = {};
+    const sources: Record<string, number> = {};
+    const mediums: Record<string, number> = {};
+    const campaigns: Record<string, number> = {};
+
+    for (const event of events) {
+      try {
+        const deviceInfo = JSON.parse(event.deviceInfo) as DeviceInfo;
+        const geoInfo = JSON.parse(event.geoInfo) as GeoInfo;
+        const properties = JSON.parse(event.properties) as EventProperties;
+
+        // Process device info
+        devices[deviceInfo.deviceType] =
+          (devices[deviceInfo.deviceType] || 0) + 1;
+        browsers[`${deviceInfo.browser} ${deviceInfo.browserVersion}`] =
+          (browsers[`${deviceInfo.browser} ${deviceInfo.browserVersion}`] ||
+            0) + 1;
+        operatingSystems[`${deviceInfo.os} ${deviceInfo.osVersion}`] =
+          (operatingSystems[`${deviceInfo.os} ${deviceInfo.osVersion}`] || 0) +
+          1;
+
+        // Process geo info
+        countries[geoInfo.country] = (countries[geoInfo.country] || 0) + 1;
+        cities[geoInfo.city] = (cities[geoInfo.city] || 0) + 1;
+        regions[geoInfo.region] = (regions[geoInfo.region] || 0) + 1;
+        timezones[geoInfo.timezone] = (timezones[geoInfo.timezone] || 0) + 1;
+
+        // Process UTM info
+        if (properties.source) {
+          sources[properties.source] = (sources[properties.source] || 0) + 1;
+        }
+        if (properties.medium) {
+          mediums[properties.medium] = (mediums[properties.medium] || 0) + 1;
+        }
+        if (properties.campaign) {
+          campaigns[properties.campaign] =
+            (campaigns[properties.campaign] || 0) + 1;
+        }
+      } catch (error) {
+        console.error('Error parsing event data:', error);
+      }
+    }
+
+    return {
+      devices,
+      browsers,
+      operatingSystems,
+      countries,
+      cities,
+      regions,
+      timezones,
+      sources,
+      mediums,
+      campaigns,
+    };
+  };
+
+  const stats = useMemo(() => {
+    if (!events?.length) return null;
+    return processEvents(events);
+  }, [events, processEvents]);
+
+  if (!stats) return null;
 
   return (
     <>
@@ -208,8 +280,8 @@ export function ClientAnalytics({ shortId }: { shortId: string }) {
               <BarChart
                 data={
                   clickHistory?.map((item) => ({
-                    name: new Date(item.date).toLocaleDateString(),
-                    value: item.clicks,
+                    name: new Date(item.name).toLocaleDateString(),
+                    value: item.value,
                   })) || []
                 }
                 index="name"
@@ -526,6 +598,195 @@ export function ClientAnalytics({ shortId }: { shortId: string }) {
           </CardContent>
         </Card>
       </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Devices</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <h4 className="mb-2 text-sm font-medium">Device Types</h4>
+                <div className="grid gap-2">
+                  {Object.entries(stats.devices).map(([device, count]) => (
+                    <div
+                      key={device}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="text-sm">{device}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h4 className="mb-2 text-sm font-medium">Browsers</h4>
+                <div className="grid gap-2">
+                  {Object.entries(stats.browsers).map(([browser, count]) => (
+                    <div
+                      key={browser}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="text-sm">{browser}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h4 className="mb-2 text-sm font-medium">Operating Systems</h4>
+                <div className="grid gap-2">
+                  {Object.entries(stats.operatingSystems).map(([os, count]) => (
+                    <div key={os} className="flex items-center justify-between">
+                      <span className="text-sm">{os}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Locations</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <h4 className="mb-2 text-sm font-medium">Countries</h4>
+                <div className="grid gap-2">
+                  {Object.entries(stats.countries).map(([country, count]) => (
+                    <div
+                      key={country}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="text-sm">{country}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h4 className="mb-2 text-sm font-medium">Cities</h4>
+                <div className="grid gap-2">
+                  {Object.entries(stats.cities).map(([city, count]) => (
+                    <div
+                      key={city}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="text-sm">{city}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h4 className="mb-2 text-sm font-medium">Regions</h4>
+                <div className="grid gap-2">
+                  {Object.entries(stats.regions).map(([region, count]) => (
+                    <div
+                      key={region}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="text-sm">{region}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h4 className="mb-2 text-sm font-medium">Timezones</h4>
+                <div className="grid gap-2">
+                  {Object.entries(stats.timezones).map(([timezone, count]) => (
+                    <div
+                      key={timezone}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="text-sm">{timezone}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>UTM Parameters</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <h4 className="mb-2 text-sm font-medium">Sources</h4>
+              <div className="grid gap-2">
+                {Object.entries(stats.sources).map(([source, count]) => (
+                  <div
+                    key={source}
+                    className="flex items-center justify-between"
+                  >
+                    <span className="text-sm">{source}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {count}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h4 className="mb-2 text-sm font-medium">Mediums</h4>
+              <div className="grid gap-2">
+                {Object.entries(stats.mediums).map(([medium, count]) => (
+                  <div
+                    key={medium}
+                    className="flex items-center justify-between"
+                  >
+                    <span className="text-sm">{medium}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {count}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h4 className="mb-2 text-sm font-medium">Campaigns</h4>
+              <div className="grid gap-2">
+                {Object.entries(stats.campaigns).map(([campaign, count]) => (
+                  <div
+                    key={campaign}
+                    className="flex items-center justify-between"
+                  >
+                    <span className="text-sm">{campaign}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {count}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </>
   );
 }
