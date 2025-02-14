@@ -1,12 +1,12 @@
-import { ClientAnalytics } from '@/components/analytics/client-analytics';
-import { RealTimeStats } from '@/components/analytics/real-time-stats';
+'use client';
 
-export default async function LinkDetailsPage({
-  params,
-}: {
-  params: Promise<{ shortId: string }>;
-}) {
-  const { shortId } = await params;
+import ClientAnalytics from '@/components/analytics/client-analytics';
+import { RealTimeStats } from '@/components/analytics/real-time-stats';
+import { useParams } from 'next/navigation';
+
+export default function LinkDetailsPage() {
+  const params = useParams();
+  const shortId = params.shortId as string;
 
   return (
     <div className="space-y-6">
