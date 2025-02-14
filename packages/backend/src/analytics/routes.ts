@@ -6,6 +6,7 @@ import { IUser } from '../auth/types';
 import { createDb } from '../db/client';
 import { WebSocketService } from '../websocket/service';
 import { AnalyticsService } from './service';
+import { DatabaseTableError, UrlNotFoundError } from './service';
 import { TimeRange } from './types';
 const timeRangeSchema = z.enum(['24h', '7d', '30d', '90d']);
 
@@ -79,7 +80,12 @@ export const createAnalyticsRoutes = () => {
   });
 
   router.post('/custom-events', async (c: HandlerContext) => {
-    const analyticsService = new AnalyticsService({ database: c.env.DB });
+    const db = createDb(c.env.DB);
+    const analyticsService = new AnalyticsService({
+      database: db,
+      wsService,
+    });
+
     const result = await createCustomEventSchema.safeParseAsync(
       await c.req.json()
     );
@@ -93,7 +99,11 @@ export const createAnalyticsRoutes = () => {
   });
 
   router.get('/events/:urlId', async (c) => {
-    const analyticsService = new AnalyticsService({ database: c.env.DB });
+    const db = createDb(c.env.DB);
+    const analyticsService = new AnalyticsService({
+      database: db,
+      wsService,
+    });
     const urlId = Number(c.req.param('urlId'));
 
     const events = await analyticsService.getEvents(urlId);
@@ -101,7 +111,11 @@ export const createAnalyticsRoutes = () => {
   });
 
   router.get('/custom-events/:userId', async (c) => {
-    const analyticsService = new AnalyticsService({ database: c.env.DB });
+    const db = createDb(c.env.DB);
+    const analyticsService = new AnalyticsService({
+      database: db,
+      wsService,
+    });
     const userId = Number(c.req.param('userId'));
 
     const events = await analyticsService.getCustomEvents(userId);
@@ -110,8 +124,9 @@ export const createAnalyticsRoutes = () => {
 
   // URL Stats endpoint
   router.get('/urls/:shortId/stats', async (c) => {
+    const db = createDb(c.env.DB);
     const analyticsService = new AnalyticsService({
-      database: createDb(c.env.DB),
+      database: db,
       wsService,
     });
 
@@ -129,6 +144,12 @@ export const createAnalyticsRoutes = () => {
       );
       return c.json(stats);
     } catch (error) {
+      if (error instanceof UrlNotFoundError) {
+        return c.json({ error: error.message }, 404);
+      }
+      if (error instanceof DatabaseTableError) {
+        return c.json({ error: error.message }, 503);
+      }
       console.error('Error getting URL stats:', error);
       return c.json({ error: 'Failed to get URL stats' }, 500);
     }
@@ -136,8 +157,9 @@ export const createAnalyticsRoutes = () => {
 
   // Event Analytics endpoints
   router.get('/urls/:shortId/events', async (c) => {
+    const db = createDb(c.env.DB);
     const analyticsService = new AnalyticsService({
-      database: createDb(c.env.DB),
+      database: db,
       wsService,
     });
     const shortId = c.req.param('shortId');
@@ -156,6 +178,12 @@ export const createAnalyticsRoutes = () => {
       );
       return c.json(events);
     } catch (error) {
+      if (error instanceof UrlNotFoundError) {
+        return c.json({ error: error.message }, 404);
+      }
+      if (error instanceof DatabaseTableError) {
+        return c.json({ error: error.message }, 503);
+      }
       console.error('Error getting URL events:', error);
       return c.json({ error: 'Failed to get URL events' }, 500);
     }
@@ -163,8 +191,9 @@ export const createAnalyticsRoutes = () => {
 
   // Geographic Analytics
   router.get('/urls/:shortId/geo', async (c) => {
+    const db = createDb(c.env.DB);
     const analyticsService = new AnalyticsService({
-      database: createDb(c.env.DB),
+      database: db,
       wsService,
     });
 
@@ -182,6 +211,12 @@ export const createAnalyticsRoutes = () => {
       );
       return c.json(geoStats);
     } catch (error) {
+      if (error instanceof UrlNotFoundError) {
+        return c.json({ error: error.message }, 404);
+      }
+      if (error instanceof DatabaseTableError) {
+        return c.json({ error: error.message }, 503);
+      }
       console.error('Error getting geo stats:', error);
       return c.json({ error: 'Failed to get geo stats' }, 500);
     }
@@ -189,8 +224,9 @@ export const createAnalyticsRoutes = () => {
 
   // Device Analytics
   router.get('/urls/:shortId/devices', async (c) => {
+    const db = createDb(c.env.DB);
     const analyticsService = new AnalyticsService({
-      database: createDb(c.env.DB),
+      database: db,
       wsService,
     });
     const shortId = c.req.param('shortId');
@@ -207,6 +243,12 @@ export const createAnalyticsRoutes = () => {
       );
       return c.json(deviceStats);
     } catch (error) {
+      if (error instanceof UrlNotFoundError) {
+        return c.json({ error: error.message }, 404);
+      }
+      if (error instanceof DatabaseTableError) {
+        return c.json({ error: error.message }, 503);
+      }
       console.error('Error getting device stats:', error);
       return c.json({ error: 'Failed to get device stats' }, 500);
     }
@@ -214,8 +256,9 @@ export const createAnalyticsRoutes = () => {
 
   // UTM Analytics
   router.get('/urls/:shortId/utm', async (c) => {
+    const db = createDb(c.env.DB);
     const analyticsService = new AnalyticsService({
-      database: createDb(c.env.DB),
+      database: db,
       wsService,
     });
     const shortId = c.req.param('shortId');
@@ -232,6 +275,12 @@ export const createAnalyticsRoutes = () => {
       );
       return c.json(utmStats);
     } catch (error) {
+      if (error instanceof UrlNotFoundError) {
+        return c.json({ error: error.message }, 404);
+      }
+      if (error instanceof DatabaseTableError) {
+        return c.json({ error: error.message }, 503);
+      }
       console.error('Error getting UTM stats:', error);
       return c.json({ error: 'Failed to get UTM stats' }, 500);
     }
@@ -239,8 +288,9 @@ export const createAnalyticsRoutes = () => {
 
   // Click History
   router.get('/urls/:shortId/clicks', async (c) => {
+    const db = createDb(c.env.DB);
     const analyticsService = new AnalyticsService({
-      database: createDb(c.env.DB),
+      database: db,
       wsService,
     });
     const shortId = c.req.param('shortId');
@@ -257,6 +307,12 @@ export const createAnalyticsRoutes = () => {
       );
       return c.json(clickHistory);
     } catch (error) {
+      if (error instanceof UrlNotFoundError) {
+        return c.json({ error: error.message }, 404);
+      }
+      if (error instanceof DatabaseTableError) {
+        return c.json({ error: error.message }, 503);
+      }
       console.error('Error getting click history:', error);
       return c.json({ error: 'Failed to get click history' }, 500);
     }
@@ -264,8 +320,10 @@ export const createAnalyticsRoutes = () => {
 
   // User Analytics -> Dashboard
   router.get('/user/analytics', auth(), async (c) => {
+    const db = createDb(c.env.DB);
     const analyticsService = new AnalyticsService({
-      database: c.env.DB,
+      database: db,
+      wsService,
     });
     const timeRange = c.req.query('timeRange') || '7d';
     const user = c.get('user') as IUser;

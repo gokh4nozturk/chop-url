@@ -18,6 +18,21 @@ interface AnalyticsServiceConfig {
   wsService: WebSocketService;
 }
 
+// Custom error classes for better error handling
+export class UrlNotFoundError extends Error {
+  constructor(shortId: string) {
+    super(`URL with shortId "${shortId}" not found`);
+    this.name = 'UrlNotFoundError';
+  }
+}
+
+export class DatabaseTableError extends Error {
+  constructor(tableName: string, operation: string) {
+    super(`Error ${operation} table "${tableName}". Table might be missing.`);
+    this.name = 'DatabaseTableError';
+  }
+}
+
 export class AnalyticsService {
   private readonly database: ReturnType<typeof createDb>;
   private readonly wsService: WebSocketService;
@@ -78,7 +93,7 @@ export class AnalyticsService {
     }));
   }
 
-  async getUrlStats(shortId: string, timeRange: TimeRange): Promise<UrlStats> {
+  private async ensureUrlExists(shortId: string) {
     const url = await this.database
       .select()
       .from(urls)
@@ -86,39 +101,85 @@ export class AnalyticsService {
       .get();
 
     if (!url) {
-      throw new Error('URL not found');
+      throw new UrlNotFoundError(shortId);
     }
 
-    const timeCondition = getTimeRangeCondition(timeRange);
-    const eventResults = await this.database
-      .select()
-      .from(events)
-      .where(and(eq(events.urlId, url.id), timeCondition));
+    return url;
+  }
 
-    const stats: UrlStats = {
-      totalEvents: eventResults.length,
-      uniqueVisitors: new Set(
-        eventResults
-          .filter((e) => e.deviceInfo)
-          .map((e) => {
-            try {
-              const deviceInfo = JSON.parse(e.deviceInfo || '{}');
-              return deviceInfo.ip || 'unknown';
-            } catch {
-              return 'unknown';
-            }
-          })
-      ).size,
-      lastEventAt: eventResults[eventResults.length - 1]?.createdAt || null,
-      url: {
-        id: url.id,
-        shortId: url.shortId,
-        originalUrl: url.originalUrl,
-        createdAt: url.createdAt,
-      },
-    };
+  private async ensureTableExists(tableName: string) {
+    try {
+      const result = await this.database
+        .select({ name: sql<string>`name` })
+        .from(sql`sqlite_master`)
+        .where(sql`type = 'table' AND name = ${tableName}`)
+        .get();
 
-    return stats;
+      if (!result) {
+        // If table doesn't exist, create it
+        if (tableName === 'custom_events') {
+          await this.database.run(sql`
+            CREATE TABLE IF NOT EXISTS custom_events (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+              name TEXT NOT NULL,
+              description TEXT,
+              properties TEXT,
+              created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
+        }
+        // Add more table creations as needed
+      }
+    } catch (error) {
+      throw new DatabaseTableError(tableName, 'accessing/creating');
+    }
+  }
+
+  async getUrlStats(shortId: string, timeRange: TimeRange): Promise<UrlStats> {
+    try {
+      const url = await this.ensureUrlExists(shortId);
+      await this.ensureTableExists('events');
+
+      const timeCondition = getTimeRangeCondition(timeRange);
+      const eventResults = await this.database
+        .select()
+        .from(events)
+        .where(and(eq(events.urlId, url.id), timeCondition));
+
+      const stats: UrlStats = {
+        totalEvents: eventResults.length,
+        uniqueVisitors: new Set(
+          eventResults
+            .filter((e) => e.deviceInfo)
+            .map((e) => {
+              try {
+                const deviceInfo = JSON.parse(e.deviceInfo || '{}');
+                return deviceInfo.ip || 'unknown';
+              } catch {
+                return 'unknown';
+              }
+            })
+        ).size,
+        lastEventAt: eventResults[eventResults.length - 1]?.createdAt || null,
+        url: {
+          id: url.id,
+          shortId: url.shortId,
+          originalUrl: url.originalUrl,
+          createdAt: url.createdAt,
+        },
+      };
+
+      return stats;
+    } catch (error) {
+      if (
+        error instanceof UrlNotFoundError ||
+        error instanceof DatabaseTableError
+      ) {
+        throw error;
+      }
+      throw new Error(`Failed to get URL stats: ${(error as Error).message}`);
+    }
   }
 
   async getUrlEvents(
@@ -150,47 +211,50 @@ export class AnalyticsService {
   }
 
   async getGeoStats(shortId: string, timeRange: TimeRange): Promise<GeoStats> {
-    const url = await this.database
-      .select()
-      .from(urls)
-      .where(eq(urls.shortId, shortId))
-      .get();
+    try {
+      const url = await this.ensureUrlExists(shortId);
+      await this.ensureTableExists('events');
 
-    if (!url) {
-      throw new Error('URL not found');
+      const timeCondition = getTimeRangeCondition(timeRange);
+      const eventResults = await this.database
+        .select()
+        .from(events)
+        .where(and(eq(events.urlId, url.id), timeCondition));
+
+      const geoStats = eventResults.reduce(
+        (acc: GeoStats, event) => {
+          if (!event.geoInfo) return acc;
+
+          try {
+            const geoInfo = JSON.parse(event.geoInfo);
+            const country = geoInfo.country || 'Unknown';
+            const city = geoInfo.city || 'Unknown';
+            const region = geoInfo.region || 'Unknown';
+            const timezone = geoInfo.timezone || 'Unknown';
+
+            acc.countries[country] = (acc.countries[country] || 0) + 1;
+            acc.cities[city] = (acc.cities[city] || 0) + 1;
+            acc.regions[region] = (acc.regions[region] || 0) + 1;
+            acc.timezones[timezone] = (acc.timezones[timezone] || 0) + 1;
+          } catch (error) {
+            console.error('Error parsing geo info:', error);
+          }
+
+          return acc;
+        },
+        { countries: {}, cities: {}, regions: {}, timezones: {} }
+      );
+
+      return geoStats;
+    } catch (error) {
+      if (
+        error instanceof UrlNotFoundError ||
+        error instanceof DatabaseTableError
+      ) {
+        throw error;
+      }
+      throw new Error(`Failed to get geo stats: ${(error as Error).message}`);
     }
-
-    const timeCondition = getTimeRangeCondition(timeRange);
-    const eventResults = await this.database
-      .select()
-      .from(events)
-      .where(and(eq(events.urlId, url.id), timeCondition));
-
-    const geoStats = eventResults.reduce(
-      (acc: GeoStats, event) => {
-        if (!event.geoInfo) return acc;
-
-        try {
-          const geoInfo = JSON.parse(event.geoInfo);
-          const country = geoInfo.country || 'Unknown';
-          const city = geoInfo.city || 'Unknown';
-          const region = geoInfo.region || 'Unknown';
-          const timezone = geoInfo.timezone || 'Unknown';
-
-          acc.countries[country] = (acc.countries[country] || 0) + 1;
-          acc.cities[city] = (acc.cities[city] || 0) + 1;
-          acc.regions[region] = (acc.regions[region] || 0) + 1;
-          acc.timezones[timezone] = (acc.timezones[timezone] || 0) + 1;
-        } catch (error) {
-          console.error('Error parsing geo info:', error);
-        }
-
-        return acc;
-      },
-      { countries: {}, cities: {}, regions: {}, timezones: {} }
-    );
-
-    return geoStats;
   }
 
   async getDeviceStats(shortId: string, timeRange: TimeRange) {
