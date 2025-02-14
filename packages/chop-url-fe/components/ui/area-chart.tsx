@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from 'next-themes';
 import {
   Area,
   AreaChart as RechartsAreaChart,
@@ -16,7 +17,6 @@ interface AreaChartProps {
   }>;
   index: string;
   categories: string[];
-  colors?: string[];
   valueFormatter?: (value: number) => string;
   showLegend?: boolean;
   showXAxis?: boolean;
@@ -28,20 +28,22 @@ export function AreaChart({
   data,
   index,
   categories,
-  colors = ['primary'],
   valueFormatter = (value: number) => value.toString(),
   showLegend = true,
   showXAxis = true,
   showYAxis = true,
   showTooltip = true,
 }: AreaChartProps) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <RechartsAreaChart data={data}>
         {showXAxis && (
           <XAxis
             dataKey={index}
-            stroke="hsl(var(--muted-foreground))"
+            stroke={isDark ? '#a1a1aa' : '#71717a'}
             fontSize={12}
             tickLine={false}
             axisLine={false}
@@ -49,7 +51,7 @@ export function AreaChart({
         )}
         {showYAxis && (
           <YAxis
-            stroke="hsl(var(--muted-foreground))"
+            stroke={isDark ? '#a1a1aa' : '#71717a'}
             fontSize={12}
             tickLine={false}
             axisLine={false}
@@ -59,9 +61,10 @@ export function AreaChart({
           <Tooltip
             formatter={valueFormatter}
             contentStyle={{
-              backgroundColor: 'hsl(var(--background))',
+              backgroundColor: isDark ? 'hsl(var(--background))' : 'white',
               border: '1px solid hsl(var(--border))',
               borderRadius: '6px',
+              color: isDark ? 'white' : 'black',
             }}
           />
         )}
@@ -70,8 +73,8 @@ export function AreaChart({
             key={category}
             type="monotone"
             dataKey="value"
-            stroke={`hsl(var(--${colors[i % colors.length]}))`}
-            fill={`hsl(var(--${colors[i % colors.length]}))`}
+            stroke={isDark ? '#60a5fa' : '#2563eb'}
+            fill={isDark ? '#60a5fa' : '#2563eb'}
             fillOpacity={0.2}
           />
         ))}

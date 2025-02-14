@@ -29,31 +29,32 @@ export function WorldMap({ data, onRegionClick }: WorldMapProps) {
             {
               attribute: 'fill',
               values: data,
-              scale: isDark
-                ? ['hsl(var(--primary) / 0.2)', 'hsl(var(--primary))']
-                : ['hsl(var(--primary) / 0.1)', 'hsl(var(--primary))'],
+              scale: isDark ? ['#3b82f6', '#60a5fa'] : ['#93c5fd', '#2563eb'],
               normalizeFunction: 'polynomial',
             },
           ],
         }}
         regionStyle={{
           initial: {
-            fill: isDark
-              ? 'hsl(var(--muted))'
-              : 'hsl(var(--muted-foreground) / 0.1)',
+            fill: isDark ? '#27272a' : '#f4f4f5',
             fillOpacity: 1,
-            stroke: 'none',
-            strokeWidth: 0,
-            strokeOpacity: 0,
+            stroke: isDark ? '#18181b' : '#e4e4e7',
+            strokeWidth: 1,
+            strokeOpacity: 0.5,
           },
           hover: {
             fillOpacity: 0.8,
             cursor: 'pointer',
+            stroke: isDark ? '#3b82f6' : '#2563eb',
+            strokeWidth: 2,
           },
           selected: {
-            fill: 'hsl(var(--primary))',
+            fill: isDark ? '#60a5fa' : '#2563eb',
           },
-          selectedHover: {},
+          selectedHover: {
+            stroke: isDark ? '#3b82f6' : '#2563eb',
+            strokeWidth: 2,
+          },
         }}
       />
     </div>

@@ -100,9 +100,12 @@ export default function AnalyticsPage() {
   const fetchAnalytics = useCallback(async () => {
     try {
       setError(null);
+      console.log('Fetching analytics with period:', timeRange);
       const { data } = await apiClient.get<AnalyticsResponse>(
-        `/api/analytics?period=${timeRange}`
+        `/api/user/analytics?timeRange=${timeRange}`
       );
+
+      console.log('API Response:', data);
 
       if (!data) {
         throw new Error('No data received from API');
@@ -111,16 +114,16 @@ export default function AnalyticsPage() {
       setAnalyticsData({
         totalClicks: data.totalEvents,
         uniqueVisitors: data.uniqueVisitors,
-        countries: data.geoStats.countries,
-        cities: data.geoStats.cities,
-        regions: data.geoStats.regions,
-        timezones: data.geoStats.timezones,
-        referrers: data.utmStats.sources,
-        devices: data.deviceStats.devices,
-        browsers: data.deviceStats.browsers,
-        operatingSystems: data.deviceStats.operatingSystems,
-        campaigns: data.utmStats.campaigns,
-        clicksByDate: data.clicksByDate.map((item) => ({
+        countries: data.geoStats?.countries || {},
+        cities: data.geoStats?.cities || {},
+        regions: data.geoStats?.regions || {},
+        timezones: data.geoStats?.timezones || {},
+        referrers: data.utmStats?.sources || {},
+        devices: data.deviceStats?.devices || {},
+        browsers: data.deviceStats?.browsers || {},
+        operatingSystems: data.deviceStats?.operatingSystems || {},
+        campaigns: data.utmStats?.campaigns || {},
+        clicksByDate: (data.clicksByDate || []).map((item) => ({
           name: new Date(item.name).toLocaleDateString('en-US', {
             day: 'numeric',
             month: 'short',

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from 'next-themes';
 import {
   Cell,
   Pie,
@@ -18,12 +19,20 @@ interface PieChartProps {
   showTooltip?: boolean;
 }
 
+const COLORS = {
+  light: ['#2563eb', '#7c3aed', '#db2777', '#ea580c', '#65a30d'],
+  dark: ['#60a5fa', '#a78bfa', '#f472b6', '#fb923c', '#a3e635'],
+};
+
 export function PieChart({
   data,
-  colors = ['primary', 'secondary', 'accent', 'muted'],
   valueFormatter = (value: number) => value.toString(),
   showTooltip = true,
 }: PieChartProps) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const colors = isDark ? COLORS.dark : COLORS.light;
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <RechartsPieChart>
@@ -31,9 +40,10 @@ export function PieChart({
           <Tooltip
             formatter={valueFormatter}
             contentStyle={{
-              backgroundColor: 'hsl(var(--background))',
+              backgroundColor: isDark ? 'hsl(var(--background))' : 'white',
               border: '1px solid hsl(var(--border))',
               borderRadius: '6px',
+              color: isDark ? 'white' : 'black',
             }}
           />
         )}
@@ -47,14 +57,18 @@ export function PieChart({
           innerRadius={60}
           paddingAngle={2}
           strokeWidth={2}
-          stroke="hsl(var(--background))"
+          stroke={isDark ? 'hsl(var(--background))' : 'white'}
+          label={(entry) => entry.name}
+          labelLine={false}
         >
-          {data.map((entry) => (
+          {data.map((entry, index) => (
             <Cell
               key={entry.name}
-              fill={`hsl(var(--${
-                colors[data.indexOf(entry) % colors.length]
-              }))`}
+              fill={colors[index % colors.length]}
+              style={{
+                filter: isDark ? 'brightness(1.2)' : 'brightness(1)',
+                opacity: 0.9,
+              }}
             />
           ))}
         </Pie>
