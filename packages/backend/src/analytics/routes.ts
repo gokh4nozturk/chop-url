@@ -27,16 +27,34 @@ export const createAnalyticsRoutes = () => {
   const trackEventSchema = z.object({
     urlId: z.number(),
     userId: z.number().optional(),
-    eventType: z.string(),
+    eventType: z.enum([
+      'REDIRECT',
+      'PAGE_VIEW',
+      'CLICK',
+      'CONVERSION',
+      'CUSTOM',
+    ]),
     eventName: z.string(),
-    properties: z.record(z.unknown()).optional(),
+    properties: z
+      .object({
+        source: z.string().nullable(),
+        medium: z.string().nullable(),
+        campaign: z.string().nullable(),
+        term: z.string().nullable(),
+        content: z.string().nullable(),
+        shortId: z.string(),
+        originalUrl: z.string(),
+      })
+      .optional(),
     deviceInfo: z
       .object({
         userAgent: z.string(),
         ip: z.string(),
-        device: z.string(),
         browser: z.string(),
+        browserVersion: z.string(),
         os: z.string(),
+        osVersion: z.string(),
+        deviceType: z.enum(['desktop', 'mobile', 'tablet', 'unknown']),
       })
       .optional(),
     geoInfo: z
@@ -44,9 +62,11 @@ export const createAnalyticsRoutes = () => {
         country: z.string(),
         city: z.string(),
         region: z.string(),
+        regionCode: z.string(),
         timezone: z.string(),
-        latitude: z.number().optional(),
-        longitude: z.number().optional(),
+        longitude: z.string(),
+        latitude: z.string(),
+        postalCode: z.string(),
       })
       .optional(),
     referrer: z.string().optional(),
@@ -337,6 +357,90 @@ export const createAnalyticsRoutes = () => {
       timeRange as TimeRange
     );
     return c.json(analytics);
+  });
+
+  // Export endpoint
+  router.get('/urls/:shortId/export', async (c) => {
+    const db = createDb(c.env.DB);
+    const analyticsService = new AnalyticsService({
+      database: db,
+      wsService,
+    });
+
+    const shortId = c.req.param('shortId');
+    const timeRange = c.req.query('timeRange') || '7d';
+    const format = c.req.query('format') as 'csv' | 'json';
+
+    if (!timeRangeSchema.safeParse(timeRange).success) {
+      return c.json({ error: 'Invalid time range' }, 400);
+    }
+
+    try {
+      const events = await analyticsService.getUrlEvents(
+        shortId,
+        timeRange as TimeRange
+      );
+
+      if (format === 'csv') {
+        const csvContent = events
+          .map((event) => {
+            const deviceInfo = JSON.parse(event.deviceInfo || '{}');
+            const geoInfo = JSON.parse(event.geoInfo || '{}');
+            const properties = JSON.parse(event.properties || '{}');
+
+            return [
+              event.id,
+              event.eventType,
+              shortId,
+              event.createdAt,
+              deviceInfo.browser,
+              deviceInfo.os,
+              deviceInfo.deviceType,
+              geoInfo.country,
+              geoInfo.city,
+              geoInfo.region,
+              properties.source,
+              properties.medium,
+              properties.campaign,
+            ].join(',');
+          })
+          .join('\n');
+
+        const headers = [
+          'id',
+          'type',
+          'shortId',
+          'createdAt',
+          'browser',
+          'os',
+          'deviceType',
+          'country',
+          'city',
+          'region',
+          'source',
+          'medium',
+          'campaign',
+        ].join(',');
+
+        return c.text(`${headers}\n${csvContent}`, {
+          headers: {
+            'Content-Type': 'text/csv',
+            'Content-Disposition': `attachment; filename="analytics-${shortId}-${timeRange}.csv"`,
+          },
+        });
+      }
+
+      return c.json(events);
+    } catch (error) {
+      if (error instanceof UrlNotFoundError) {
+        return c.json({ error: error.message }, 404);
+      }
+      if (error instanceof DatabaseTableError) {
+        return c.json({ error: error.message }, 503);
+      }
+      console.error('Error exporting analytics:', error);
+      return c.json({ error: 'Failed to export analytics' }, 500);
+    }
   });
 
   return router;

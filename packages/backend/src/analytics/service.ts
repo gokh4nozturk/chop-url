@@ -166,7 +166,7 @@ export class AnalyticsService {
           id: url.id,
           shortId: url.shortId,
           originalUrl: url.originalUrl,
-          createdAt: url.createdAt,
+          createdAt: url.createdAt || '',
         },
       };
 

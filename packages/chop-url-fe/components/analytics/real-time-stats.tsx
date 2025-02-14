@@ -4,7 +4,7 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { useAnalyticsStore } from '@/lib/store/analytics';
 import { useWebSocketStore } from '@/lib/store/websocket';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Activity, Clock, Users, Wifi, WifiOff } from 'lucide-react';
+import { Activity, Clock, Loader2, Users, Wifi, WifiOff } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 interface RealTimeStatsProps {
@@ -82,13 +82,21 @@ function RealTimeStatsContent({ urlId }: RealTimeStatsProps) {
             >
               <Wifi className="w-4 h-4" />
             </motion.div>
-          ) : (
+          ) : retryCount >= MAX_RETRIES ? (
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1, opacity: 0.5 }}
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             >
               <WifiOff className="w-4 h-4" />
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1, opacity: 0.5 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            >
+              <Loader2 className="w-4 h-4 animate-spin" />
             </motion.div>
           )}
           <motion.span

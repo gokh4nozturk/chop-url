@@ -25,6 +25,7 @@ import {
   Calendar,
   Chrome,
   Clock,
+  Download,
   Globe,
   Laptop,
   Link2,
@@ -122,6 +123,14 @@ export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
     if (typeof shortId === 'string') {
       fetchAnalytics(shortId);
     }
+  };
+
+  const handleExport = (format: 'csv' | 'json') => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+    window.open(
+      `${baseUrl}/analytics/urls/${shortId}/export?timeRange=${timeRange}&format=${format}`,
+      '_blank'
+    );
   };
 
   const processEvents = (events: Event[]) => {
@@ -252,6 +261,24 @@ export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
           disabled={isLoading}
         >
           <Loader2 className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => handleExport('csv')}
+          disabled={isLoading}
+          title="Export as CSV"
+        >
+          <Download className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => handleExport('json')}
+          disabled={isLoading}
+          title="Export as JSON"
+        >
+          <Download className="h-4 w-4" />
         </Button>
       </div>
 
