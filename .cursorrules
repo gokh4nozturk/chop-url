@@ -40,6 +40,9 @@ You are an expert senior software engineer specializing in modern web developmen
 - Use only [Motion](https://motion.dev/docs) for animations
 - We have to use [Zustand](https://zustand.docs.pmnd.rs/) for state management, cache data and fetch data from API
 
+- We use factory pattern for creating services
+- We use [Drizzle](https://orm.drizzle.team/docs/overview) for database operations
+
 ## Project Structure
 
 - `packages/chop-url-fe`: Frontend code

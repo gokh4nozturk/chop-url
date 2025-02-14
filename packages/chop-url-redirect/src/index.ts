@@ -22,12 +22,108 @@ app.use('*', cors());
 
 app.get('/health', (c) => c.json({ status: 'ok' }));
 
+async function trackEvent(
+  c: CFContext,
+  urlId: number,
+  eventType: string,
+  eventName: string,
+  additionalProperties: Record<string, unknown> = {}
+) {
+  try {
+    const cf = c.req.raw.cf;
+    const ipAddress =
+      c.req.header('cf-connecting-ip') ||
+      c.req.header('x-forwarded-for') ||
+      c.req.header('x-real-ip') ||
+      'unknown';
+    const userAgent = c.req.header('user-agent') || 'unknown';
+    const referrer = c.req.header('referer') || null;
+
+    // Parse user agent
+    const parser = new UAParser(userAgent);
+    const browser = parser.getBrowser();
+    const os = parser.getOS();
+    const device = parser.getDevice();
+
+    // Device info
+    const deviceInfo = {
+      userAgent,
+      ip: ipAddress,
+      browser: browser.name,
+      browserVersion: browser.version,
+      os: os.name,
+      osVersion: os.version,
+      deviceType: device.type || 'unknown',
+    };
+
+    // Geo info
+    const geoInfo = {
+      country: cf?.country || 'Unknown',
+      city: cf?.city || 'Unknown',
+      region: cf?.region || 'Unknown',
+      regionCode: cf?.regionCode || 'Unknown',
+      timezone: cf?.timezone || 'Unknown',
+      longitude: cf?.longitude || null,
+      latitude: cf?.latitude || null,
+      postalCode: cf?.postalCode || null,
+    };
+
+    // Parse URL for UTM parameters
+    const url = new URL(c.req.url);
+    const utmParams = {
+      source: url.searchParams.get('utm_source'),
+      medium: url.searchParams.get('utm_medium'),
+      campaign: url.searchParams.get('utm_campaign'),
+      term: url.searchParams.get('utm_term'),
+      content: url.searchParams.get('utm_content'),
+    };
+
+    // Combine all properties
+    const properties = {
+      ...utmParams,
+      ...additionalProperties,
+    };
+
+    // Track event
+    await c.env.DB.prepare(`
+      INSERT INTO events (
+        url_id,
+        event_type,
+        event_name,
+        properties,
+        device_info,
+        geo_info,
+        referrer
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `)
+      .bind(
+        urlId,
+        eventType,
+        eventName,
+        JSON.stringify(properties),
+        JSON.stringify(deviceInfo),
+        JSON.stringify(geoInfo),
+        referrer
+      )
+      .run();
+
+    console.log('Event tracked:', {
+      urlId,
+      eventType,
+      eventName,
+      properties,
+      deviceInfo,
+      geoInfo,
+      referrer,
+    });
+  } catch (error) {
+    console.error('Error tracking event:', error);
+  }
+}
+
 // this endpoint is used to redirect the user to the original URL
 app.get('/:shortId', async (c: CFContext) => {
   try {
-    // CF objesi doğrudan request üzerinde geliyor
-    const cf = c.req.raw.cf;
-    console.log('CF Object:', cf);
     const shortId = c.req.param('shortId');
 
     if (!shortId) {
@@ -44,101 +140,20 @@ app.get('/:shortId', async (c: CFContext) => {
       return c.json({ message: 'Short URL not found' }, 404);
     }
 
-    // Ziyaret bilgilerini kaydet
-    try {
-      const ipAddress =
-        c.req.header('cf-connecting-ip') ||
-        c.req.header('x-forwarded-for') ||
-        c.req.header('x-real-ip') ||
-        'unknown';
-      const userAgent = c.req.header('user-agent') || 'unknown';
-      const referrer = c.req.header('referer') || null;
-      const country = cf?.country || 'Unknown';
-      const city = cf?.city || 'Unknown';
+    // Track redirect event
+    await trackEvent(c, result.id, 'REDIRECT', 'url_redirect', {
+      shortId,
+      originalUrl: result.original_url,
+    });
 
-      // Parse URL for UTM parameters
-      const url = new URL(c.req.url);
-      const utmSource = url.searchParams.get('utm_source');
-      const utmMedium = url.searchParams.get('utm_medium');
-      const utmCampaign = url.searchParams.get('utm_campaign');
-      const utmTerm = url.searchParams.get('utm_term');
-      const utmContent = url.searchParams.get('utm_content');
+    // Update visit count
+    await c.env.DB.prepare(
+      'UPDATE urls SET visit_count = visit_count + 1, last_accessed_at = CURRENT_TIMESTAMP WHERE id = ?'
+    )
+      .bind(result.id)
+      .run();
 
-      // Parse user agent
-      const parser = new UAParser(userAgent);
-      const browser = parser.getBrowser();
-      const os = parser.getOS();
-      const device = parser.getDevice();
-
-      console.log('Visit Info:', {
-        ip: ipAddress,
-        userAgent,
-        referrer,
-        country,
-        city,
-        browser: browser.name,
-        browserVersion: browser.version,
-        os: os.name,
-        osVersion: os.version,
-        deviceType: device.type,
-        utm: {
-          source: utmSource,
-          medium: utmMedium,
-          campaign: utmCampaign,
-          term: utmTerm,
-          content: utmContent,
-        },
-      });
-
-      // Ziyaret sayısını artır
-      await c.env.DB.prepare(
-        'UPDATE urls SET visit_count = visit_count + 1, last_accessed_at = CURRENT_TIMESTAMP WHERE id = ?'
-      )
-        .bind(result.id)
-        .run();
-
-      // Ziyaret kaydı ekle
-      await c.env.DB.prepare(`
-        INSERT INTO visits (
-          url_id, ip_address, user_agent, referrer, 
-          browser, browser_version, os, os_version, 
-          device_type, country, city, region, region_code,
-          timezone, longitude, latitude, postal_code,
-          utm_source, utm_medium, utm_campaign, utm_term, utm_content,
-          visited_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-      `)
-        .bind(
-          result.id,
-          ipAddress,
-          userAgent,
-          referrer,
-          browser.name || null,
-          browser.version || null,
-          os.name || null,
-          os.version || null,
-          device.type || null,
-          country,
-          city,
-          cf?.region || 'Unknown',
-          cf?.regionCode || 'Unknown',
-          cf?.timezone || 'Unknown',
-          cf?.longitude || null,
-          cf?.latitude || null,
-          cf?.postalCode || null,
-          utmSource,
-          utmMedium,
-          utmCampaign,
-          utmTerm,
-          utmContent
-        )
-        .run();
-    } catch (error) {
-      console.error('Error tracking visit:', error);
-      // Ziyaret kaydı başarısız olsa bile yönlendirmeye devam et
-    }
-
-    // Orijinal URL'ye yönlendir
+    // Redirect to original URL
     return new Response(null, {
       status: 302,
       headers: {

@@ -1,7 +1,6 @@
 import { D1Database } from '@cloudflare/workers-types';
 import { and, eq } from 'drizzle-orm';
 import { DrizzleD1Database } from 'drizzle-orm/d1';
-import { db } from '../db';
 import {
   Domain,
   DomainDnsRecord,

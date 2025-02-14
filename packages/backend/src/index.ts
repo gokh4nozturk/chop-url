@@ -1,8 +1,9 @@
 import { swaggerUI } from '@hono/swagger-ui';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { createAnalyticsRoutes } from './analytics/routes';
 import { createAuthRoutes } from './auth/routes';
-import { db } from './db';
+import { createDb } from './db/client';
 import { createDomainRoutes } from './domain/routes';
 import { openApiSchema } from './openapi.js';
 import { createUrlRoutes } from './url/routes';
@@ -22,14 +23,15 @@ export interface Env {
 }
 
 type Variables = {
-  db: ReturnType<typeof db>;
+  db: ReturnType<typeof createDb>;
 };
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // Initialize DB middleware
 app.use('*', async (c, next) => {
-  c.set('db', db(c.env.DB));
+  const db = createDb(c.env.DB);
+  c.set('db', db);
   await next();
 });
 
@@ -81,6 +83,7 @@ app.get('/api/health', (c) => {
 app.route('/api/auth', createAuthRoutes());
 app.route('/api', createUrlRoutes());
 app.route('/api', createDomainRoutes());
+app.route('/api', createAnalyticsRoutes());
 
 // Root route - redirect to docs
 app.get('/', (c) => {
