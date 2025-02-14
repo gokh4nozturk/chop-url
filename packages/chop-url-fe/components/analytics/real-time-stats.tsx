@@ -1,5 +1,6 @@
 'use client';
 
+import { ErrorBoundary } from '@/components/error-boundary';
 import { useAnalyticsStore } from '@/lib/store/analytics';
 import { useWebSocketStore } from '@/lib/store/websocket';
 import { Activity, Clock, Users } from 'lucide-react';
@@ -9,7 +10,7 @@ interface RealTimeStatsProps {
   urlId: string;
 }
 
-export function RealTimeStats({ urlId }: RealTimeStatsProps) {
+function RealTimeStatsContent({ urlId }: RealTimeStatsProps) {
   const { connect, subscribe, unsubscribe, isConnected } = useWebSocketStore();
   const { urlStats, fetchAnalytics, isLoading } = useAnalyticsStore();
   const hasSubscribed = useRef(false);
@@ -162,5 +163,13 @@ export function RealTimeStats({ urlId }: RealTimeStatsProps) {
         </div>
       </div>
     </div>
+  );
+}
+
+export function RealTimeStats(props: RealTimeStatsProps) {
+  return (
+    <ErrorBoundary>
+      <RealTimeStatsContent {...props} />
+    </ErrorBoundary>
   );
 }

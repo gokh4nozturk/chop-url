@@ -94,12 +94,19 @@ interface AnalyticsState {
   clickHistory: ClickStats[] | null;
   timeRange: TimeRange;
   currentUrlId: string | null;
+  isOffline: boolean;
   fetchAnalytics: (shortId: string) => Promise<void>;
   setTimeRange: (range: TimeRange) => void;
   reset: () => void;
   addEvent: (event: Event) => void;
   clearEvents: () => void;
 }
+
+// Cache keys
+const CACHE_PREFIX = 'analytics_cache_';
+const CACHE_EXPIRY = 1000 * 60 * 5; // 5 minutes
+
+const getCacheKey = (shortId: string) => `${CACHE_PREFIX}${shortId}`;
 
 export const useAnalyticsStore = create<AnalyticsState>()(
   devtools(
@@ -113,6 +120,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
       clickHistory: null,
       timeRange: '7d',
       currentUrlId: null,
+      isOffline: !navigator.onLine,
 
       fetchAnalytics: async (shortId: string) => {
         try {
@@ -121,6 +129,23 @@ export const useAnalyticsStore = create<AnalyticsState>()(
 
           const { timeRange } = get();
           console.log('[Analytics] Using time range:', timeRange);
+
+          // Check if we're offline
+          if (!navigator.onLine) {
+            console.log('[Analytics] Offline, using cached data');
+            const cachedData = localStorage.getItem(getCacheKey(shortId));
+            if (cachedData) {
+              const { data, timestamp } = JSON.parse(cachedData);
+              if (Date.now() - timestamp < CACHE_EXPIRY) {
+                set({
+                  ...data,
+                  isLoading: false,
+                  isOffline: true,
+                });
+                return;
+              }
+            }
+          }
 
           // Fetch all data in parallel
           const [
@@ -147,15 +172,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
             }),
           ]);
 
-          console.log('[Analytics] Data fetched successfully:', {
-            urlStats,
-            geoStats,
-            events,
-            utmStats,
-            clickHistory,
-          });
-
-          set({
+          const newState = {
             urlStats,
             geoStats,
             events,
@@ -163,12 +180,39 @@ export const useAnalyticsStore = create<AnalyticsState>()(
             clickHistory,
             isLoading: false,
             error: null,
-          });
+            isOffline: false,
+          };
+
+          // Cache the data
+          localStorage.setItem(
+            getCacheKey(shortId),
+            JSON.stringify({
+              data: newState,
+              timestamp: Date.now(),
+            })
+          );
+
+          set(newState);
         } catch (error) {
           console.error('[Analytics] Error fetching analytics:', error);
+
+          // Try to use cached data if available
+          const cachedData = localStorage.getItem(getCacheKey(shortId));
+          if (cachedData) {
+            const { data, timestamp } = JSON.parse(cachedData);
+            set({
+              ...data,
+              isLoading: false,
+              error: new Error('Using cached data due to error'),
+              isOffline: true,
+            });
+            return;
+          }
+
           set({
             error: error instanceof Error ? error : new Error('Unknown error'),
             isLoading: false,
+            isOffline: !navigator.onLine,
           });
         }
       },

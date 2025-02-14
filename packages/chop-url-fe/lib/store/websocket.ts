@@ -28,6 +28,16 @@ const RECONNECT_DELAY = 3000;
 const PING_INTERVAL = 30000;
 const PONG_TIMEOUT = 10000;
 
+// Add exponential backoff calculation
+const getBackoffDelay = (attempt: number) => {
+  const baseDelay = 1000; // 1 second base delay
+  const maxDelay = 30000; // Maximum 30 seconds delay
+  // biome-ignore lint/style/useExponentiationOperator: <explanation>
+  const delay = Math.min(maxDelay, baseDelay * Math.pow(2, attempt));
+  // Add some randomness to prevent all clients from reconnecting simultaneously
+  return delay + Math.random() * 1000;
+};
+
 export const useWebSocketStore = create<WebSocketState>()(
   devtools(
     (set, get) => ({
@@ -120,16 +130,19 @@ export const useWebSocketStore = create<WebSocketState>()(
                         reconnectAttempts: state.reconnectAttempts + 1,
                       }));
 
-                      // Immediate reconnection attempt
-                      const currentAttempts = get().reconnectAttempts;
-                      if (currentAttempts < MAX_RECONNECT_ATTEMPTS) {
-                        setTimeout(() => {
-                          console.log(
-                            '[WebSocket] Initiating reconnection after pong timeout...'
-                          );
-                          get().connect();
-                        }, 1000); // Daha kısa bir bekleme süresi
-                      }
+                      // Use exponential backoff for reconnection
+                      const backoffDelay = getBackoffDelay(reconnectAttempts);
+                      console.log(
+                        `[WebSocket] Waiting ${Math.round(
+                          backoffDelay / 1000
+                        )}s before reconnecting...`
+                      );
+                      setTimeout(() => {
+                        console.log(
+                          '[WebSocket] Initiating reconnection after pong timeout...'
+                        );
+                        get().connect();
+                      }, backoffDelay);
                     }
                   }, PONG_TIMEOUT);
                 }
