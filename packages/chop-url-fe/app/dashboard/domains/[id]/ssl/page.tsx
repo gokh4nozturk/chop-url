@@ -9,70 +9,74 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import apiClient from '@/lib/api/client';
-import { ApiError } from '@/lib/api/error';
+import { Switch } from '@/components/ui/switch';
+import { useDomainStore } from '@/lib/store/domain';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle, Clock, Loader2, XCircle } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
-
-interface Domain {
-  id: number;
-  domain: string;
-  isVerified: boolean;
-  verificationToken: string;
-  verificationMethod: 'DNS_TXT' | 'DNS_CNAME' | 'FILE';
-  sslStatus: 'PENDING' | 'ACTIVE' | 'FAILED';
-  isActive: boolean;
-  createdAt: string;
-  settings?: {
-    redirectMode: 'PROXY' | 'REDIRECT';
-    customNameservers: string | null;
-    forceSSL: boolean;
-  };
-}
 
 export default function SslStatusPage() {
   const params = useParams();
-  const domainId = params.id as string;
-  const [domain, setDomain] = useState<Domain | null>(null);
+  const domainId = Number(params.id);
+  const {
+    domains,
+    fetchDomains,
+    requestSsl,
+    checkSslStatus,
+    updateSslSettings,
+  } = useDomainStore();
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isRequesting, setIsRequesting] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const fetchDomain = useCallback(async () => {
+  const domain = domains.find((d) => d.id === domainId);
+
+  const fetchData = useCallback(async () => {
     try {
-      setError(null);
-      const response = await apiClient.get(`/api/domains/${domainId}`);
-      setDomain(response.data);
-    } catch (error: unknown) {
-      const apiError = error as ApiError;
-      setError(apiError.message || 'Failed to fetch domain details.');
+      setIsLoading(true);
+      await fetchDomains();
+      if (domain?.sslStatus === 'PENDING') {
+        await checkSslStatus(domainId);
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [domainId]);
+  }, [domainId, domain?.sslStatus, fetchDomains, checkSslStatus]);
 
   useEffect(() => {
-    fetchDomain();
-  }, [fetchDomain]);
+    fetchData();
+    // Poll SSL status every 10 seconds if pending
+    let interval: NodeJS.Timeout;
+    if (domain?.sslStatus === 'PENDING') {
+      interval = setInterval(() => {
+        checkSslStatus(domainId);
+      }, 10000);
+    }
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [domainId, domain?.sslStatus, checkSslStatus, fetchData]);
 
   const handleRequestSsl = async () => {
     try {
       setIsRequesting(true);
-      await apiClient.post(`/api/domains/${domainId}/ssl`);
-      toast.success('SSL certificate requested', {
-        description: 'Your SSL certificate request has been submitted.',
-      });
-      fetchDomain();
-    } catch (error: unknown) {
-      const apiError = error as ApiError;
-      toast.error('Failed to request SSL certificate', {
-        description: apiError.message || 'An error occurred',
-      });
+      await requestSsl(domainId);
     } finally {
       setIsRequesting(false);
+    }
+  };
+
+  const handleForceSSLToggle = async () => {
+    try {
+      setIsUpdating(true);
+      await updateSslSettings(domainId, {
+        forceSSL: !(domain?.settings?.forceSSL ?? false),
+      });
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -101,20 +105,6 @@ export default function SslStatusPage() {
           Manage SSL certificates for your domain
         </motion.p>
       </div>
-
-      <AnimatePresence>
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-          >
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <motion.div
         initial={{ opacity: 0 }}
@@ -197,10 +187,24 @@ export default function SslStatusPage() {
                       transition={{ duration: 0.2 }}
                       className="space-y-4"
                     >
+                      <div className="flex items-center justify-between space-x-2">
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium">Force SSL</p>
+                          <p className="text-sm text-muted-foreground">
+                            Always redirect HTTP to HTTPS
+                          </p>
+                        </div>
+                        <Switch
+                          checked={domain.settings?.forceSSL ?? false}
+                          onCheckedChange={handleForceSSLToggle}
+                          disabled={isUpdating}
+                        />
+                      </div>
+
                       <div className="space-y-1">
                         <p className="text-sm font-medium">Provider</p>
                         <p className="text-sm text-muted-foreground">
-                          {domain.settings?.customNameservers || 'Default'}
+                          Cloudflare
                         </p>
                       </div>
 
@@ -210,20 +214,15 @@ export default function SslStatusPage() {
                           {domain.settings?.redirectMode || 'PROXY'}
                         </p>
                       </div>
-
-                      {domain.settings?.forceSSL && (
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium">SSL</p>
-                          <p className="text-sm text-muted-foreground">
-                            Enabled
-                          </p>
-                        </div>
-                      )}
                     </motion.div>
                   )}
                 </div>
               </>
-            ) : null}
+            ) : (
+              <Alert>
+                <AlertDescription>Domain not found</AlertDescription>
+              </Alert>
+            )}
           </CardContent>
         </Card>
       </motion.div>

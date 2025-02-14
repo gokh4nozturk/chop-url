@@ -45,6 +45,12 @@ interface DomainState {
   verifyDomain: (domainId: number) => Promise<void>;
   addDnsRecord: (domainId: number, record: Partial<DnsRecord>) => Promise<void>;
   deleteDnsRecord: (domainId: number, recordId: number) => Promise<void>;
+  requestSsl: (domainId: number) => Promise<void>;
+  checkSslStatus: (domainId: number) => Promise<void>;
+  updateSslSettings: (
+    domainId: number,
+    settings: { forceSSL: boolean }
+  ) => Promise<void>;
 }
 
 const CACHE_DURATION = 30 * 1000; // 30 seconds
@@ -231,6 +237,72 @@ export const useDomainStore = create<DomainState>()(
       } catch (error) {
         const apiError = error as ApiError;
         toast.error('Failed to delete DNS record', {
+          description: apiError.message || 'An unexpected error occurred',
+        });
+        throw error;
+      }
+    },
+
+    requestSsl: async (domainId: number) => {
+      try {
+        await apiClient.post(`/api/domains/${domainId}/ssl`);
+        set((state) => ({
+          domains: state.domains.map((d) =>
+            d.id === domainId ? { ...d, sslStatus: 'PENDING' } : d
+          ),
+          lastFetch: Date.now(),
+        }));
+        toast.success('SSL certificate requested successfully', {
+          description: 'The certificate will be issued shortly.',
+        });
+      } catch (error) {
+        const apiError = error as ApiError;
+        toast.error('Failed to request SSL certificate', {
+          description: apiError.message || 'An unexpected error occurred',
+        });
+        throw error;
+      }
+    },
+
+    checkSslStatus: async (domainId: number) => {
+      try {
+        const response = await apiClient.get(`/api/domains/${domainId}/ssl`);
+        set((state) => ({
+          domains: state.domains.map((d) =>
+            d.id === domainId ? { ...d, sslStatus: response.data.status } : d
+          ),
+          lastFetch: Date.now(),
+        }));
+      } catch (error) {
+        const apiError = error as ApiError;
+        toast.error('Failed to check SSL status', {
+          description: apiError.message || 'An unexpected error occurred',
+        });
+        throw error;
+      }
+    },
+
+    updateSslSettings: async (
+      domainId: number,
+      settings: { forceSSL: boolean }
+    ) => {
+      try {
+        await apiClient.patch(`/api/domains/${domainId}/ssl`, settings);
+        set((state) => ({
+          domains: state.domains.map((d) =>
+            d.id === domainId
+              ? {
+                  ...d,
+                  settings: { ...d.settings, forceSSL: settings.forceSSL },
+                }
+              : d
+          ),
+          lastFetch: Date.now(),
+        }));
+        toast.success('SSL settings updated successfully');
+      } catch (error) {
+        const apiError = error as ApiError;
+        toast.error('Failed to update SSL settings', {
           description: apiError.message || 'An unexpected error occurred',
         });
         throw error;
