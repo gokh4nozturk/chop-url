@@ -144,4 +144,4 @@ const FrameIcon = forwardRef<FrameIconHandle, HTMLAttributes<HTMLDivElement>>(
 
 FrameIcon.displayName = 'FrameIcon';
 
-export { FrameIcon };
+export default FrameIcon;

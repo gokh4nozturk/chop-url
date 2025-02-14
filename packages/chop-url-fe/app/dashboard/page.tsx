@@ -1,6 +1,6 @@
 'use client';
 
-import { FrameIcon } from '@/components/icons/frame';
+import FrameIcon from '@/components/icons/frame';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/lib/store/auth';
