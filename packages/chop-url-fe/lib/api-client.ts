@@ -1,25 +1,61 @@
-import axios from 'axios';
-import Cookies from 'js-cookie';
+import { toast } from 'sonner';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+class ApiClient {
+  private baseUrl: string;
 
-const apiClient = axios.create({
-  baseURL: API_URL,
-  withCredentials: true,
-});
-
-apiClient.interceptors.request.use((config) => {
-  const token = Cookies.get('auth_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  constructor() {
+    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
   }
-  return config;
-});
 
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    return Promise.reject(error.response?.data);
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const url = `${this.baseUrl}${endpoint}`;
+    const response = await fetch(url, {
+      ...options,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...options.headers,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({
+        message: 'An unexpected error occurred',
+      }));
+      toast.error(error.message);
+      throw new Error(error.message);
+    }
+
+    return response.json();
   }
-);
-export default apiClient;
+
+  async get<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint);
+  }
+
+  async post<T>(endpoint: string, data: unknown): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async put<T>(endpoint: string, data: unknown): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async delete<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'DELETE',
+    });
+  }
+}
+
+export const apiClient = new ApiClient();

@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAnalytics } from '@/lib/hooks/use-analytics';
+import { useAnalyticsStore } from '@/lib/store/analytics';
 import {
   Activity,
   BarChart2,
@@ -27,99 +27,36 @@ import {
   Share2,
 } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 type TimeRange = '24h' | '7d' | '30d' | '90d';
 
-interface ClickHistory {
-  date: string;
-  clicks: number;
-}
-
 export default function LinkDetailsPage() {
   const { shortId } = useParams();
-  const [timeRange, setTimeRange] = useState<TimeRange>('7d');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
   const {
-    getUrlStats,
-    getGeoStats,
-    getDeviceStats,
-    getUtmStats,
-    getClickHistory,
-  } = useAnalytics();
-
-  const [stats, setStats] = useState<{
-    url?: {
-      totalEvents: number;
-      uniqueVisitors: number;
-      lastEventAt: string | null;
-      url: {
-        id: number;
-        shortId: string;
-        originalUrl: string;
-        createdAt: string;
-      };
-    };
-    geo?: {
-      countries: Record<string, number>;
-      cities: Record<string, number>;
-      regions: Record<string, number>;
-    };
-    device?: {
-      browsers: Record<string, number>;
-      operatingSystems: Record<string, number>;
-      deviceTypes: Record<string, number>;
-    };
-    utm?: {
-      sources: Record<string, number>;
-      mediums: Record<string, number>;
-      campaigns: Record<string, number>;
-    };
-    clickHistory?: ClickHistory[];
-  }>({});
-
-  const fetchStats = useCallback(async () => {
-    if (typeof shortId !== 'string') return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const [urlStats, geoStats, deviceStats, utmStats, clickHistory] =
-        await Promise.all([
-          getUrlStats(shortId, timeRange),
-          getGeoStats(shortId, timeRange),
-          getDeviceStats(shortId, timeRange),
-          getUtmStats(shortId, timeRange),
-          getClickHistory(shortId, timeRange),
-        ]);
-
-      setStats({
-        url: urlStats,
-        geo: geoStats,
-        device: deviceStats,
-        utm: utmStats,
-        clickHistory,
-      });
-    } catch (err) {
-      setError(err as Error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [
-    shortId,
+    isLoading,
+    error,
+    urlStats,
+    geoStats,
+    deviceStats,
+    utmStats,
+    clickHistory,
     timeRange,
-    getUrlStats,
-    getGeoStats,
-    getDeviceStats,
-    getUtmStats,
-    getClickHistory,
-  ]);
+    fetchAnalytics,
+    setTimeRange,
+  } = useAnalyticsStore();
 
   useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+    if (typeof shortId === 'string') {
+      fetchAnalytics(shortId);
+    }
+  }, [fetchAnalytics, shortId]);
+
+  const handleRefresh = () => {
+    if (typeof shortId === 'string') {
+      fetchAnalytics(shortId);
+    }
+  };
 
   if (error) {
     return (
@@ -156,7 +93,7 @@ export default function LinkDetailsPage() {
           <Button
             variant="outline"
             size="icon"
-            onClick={fetchStats}
+            onClick={handleRefresh}
             disabled={isLoading}
           >
             <Loader2 className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -175,7 +112,7 @@ export default function LinkDetailsPage() {
               <Skeleton className="h-8 w-24" />
             ) : (
               <div className="text-2xl font-bold">
-                {stats.url?.totalEvents || 0}
+                {urlStats?.totalEvents || 0}
               </div>
             )}
           </CardContent>
@@ -193,7 +130,7 @@ export default function LinkDetailsPage() {
               <Skeleton className="h-8 w-24" />
             ) : (
               <div className="text-2xl font-bold">
-                {stats.url?.uniqueVisitors || 0}
+                {urlStats?.uniqueVisitors || 0}
               </div>
             )}
           </CardContent>
@@ -209,8 +146,8 @@ export default function LinkDetailsPage() {
               <Skeleton className="h-8 w-24" />
             ) : (
               <div className="text-2xl font-bold">
-                {stats.url?.url.createdAt
-                  ? new Date(stats.url.url.createdAt).toLocaleDateString()
+                {urlStats?.url.createdAt
+                  ? new Date(urlStats.url.createdAt).toLocaleDateString()
                   : '-'}
               </div>
             )}
@@ -227,8 +164,8 @@ export default function LinkDetailsPage() {
               <Skeleton className="h-8 w-24" />
             ) : (
               <div className="text-2xl font-bold">
-                {stats.url?.lastEventAt
-                  ? new Date(stats.url.lastEventAt).toLocaleDateString()
+                {urlStats?.lastEventAt
+                  ? new Date(urlStats.lastEventAt).toLocaleDateString()
                   : 'Never'}
               </div>
             )}
@@ -247,7 +184,7 @@ export default function LinkDetailsPage() {
             <div className="h-[350px]">
               <BarChart
                 data={
-                  stats.clickHistory?.map((item) => ({
+                  clickHistory?.map((item) => ({
                     name: new Date(item.date).toLocaleDateString(),
                     value: item.clicks,
                   })) || []
@@ -278,8 +215,8 @@ export default function LinkDetailsPage() {
               <div className="space-y-8">
                 <div className="space-y-2">
                   <div className="text-sm font-medium">Top Countries</div>
-                  {stats.geo &&
-                    Object.entries(stats.geo.countries)
+                  {geoStats &&
+                    Object.entries(geoStats.countries)
                       .sort(([, a], [, b]) => b - a)
                       .slice(0, 5)
                       .map(([country, count]) => (
@@ -292,8 +229,8 @@ export default function LinkDetailsPage() {
                                 className="h-2 rounded-full bg-primary"
                                 style={{
                                   width: `${
-                                    stats.url?.totalEvents
-                                      ? (count / stats.url.totalEvents) * 100
+                                    urlStats?.totalEvents
+                                      ? (count / urlStats.totalEvents) * 100
                                       : 0
                                   }%`,
                                 }}
@@ -301,8 +238,8 @@ export default function LinkDetailsPage() {
                             </div>
                           </div>
                           <div className="w-1/6 text-right text-sm">
-                            {stats.url?.totalEvents
-                              ? ((count / stats.url.totalEvents) * 100).toFixed(
+                            {urlStats?.totalEvents
+                              ? ((count / urlStats.totalEvents) * 100).toFixed(
                                   1
                                 )
                               : '0'}
@@ -327,8 +264,8 @@ export default function LinkDetailsPage() {
               <div className="space-y-8">
                 <div className="space-y-2">
                   <div className="text-sm font-medium">Device Types</div>
-                  {stats.device &&
-                    Object.entries(stats.device.deviceTypes)
+                  {deviceStats &&
+                    Object.entries(deviceStats.deviceTypes)
                       .sort(([, a], [, b]) => b - a)
                       .map(([device, count]) => (
                         <div key={device} className="flex items-center">
@@ -340,8 +277,8 @@ export default function LinkDetailsPage() {
                                 className="h-2 rounded-full bg-primary"
                                 style={{
                                   width: `${
-                                    stats.url?.totalEvents
-                                      ? (count / stats.url.totalEvents) * 100
+                                    urlStats?.totalEvents
+                                      ? (count / urlStats.totalEvents) * 100
                                       : 0
                                   }%`,
                                 }}
@@ -349,8 +286,8 @@ export default function LinkDetailsPage() {
                             </div>
                           </div>
                           <div className="w-1/6 text-right text-sm">
-                            {stats.url?.totalEvents
-                              ? ((count / stats.url.totalEvents) * 100).toFixed(
+                            {urlStats?.totalEvents
+                              ? ((count / urlStats.totalEvents) * 100).toFixed(
                                   1
                                 )
                               : '0'}
@@ -377,8 +314,8 @@ export default function LinkDetailsPage() {
               <div className="space-y-8">
                 <div className="space-y-2">
                   <div className="text-sm font-medium">Top Browsers</div>
-                  {stats.device &&
-                    Object.entries(stats.device.browsers)
+                  {deviceStats &&
+                    Object.entries(deviceStats.browsers)
                       .sort(([, a], [, b]) => b - a)
                       .slice(0, 5)
                       .map(([browser, count]) => (
@@ -391,8 +328,8 @@ export default function LinkDetailsPage() {
                                 className="h-2 rounded-full bg-primary"
                                 style={{
                                   width: `${
-                                    stats.url?.totalEvents
-                                      ? (count / stats.url.totalEvents) * 100
+                                    urlStats?.totalEvents
+                                      ? (count / urlStats.totalEvents) * 100
                                       : 0
                                   }%`,
                                 }}
@@ -400,8 +337,8 @@ export default function LinkDetailsPage() {
                             </div>
                           </div>
                           <div className="w-1/6 text-right text-sm">
-                            {stats.url?.totalEvents
-                              ? ((count / stats.url.totalEvents) * 100).toFixed(
+                            {urlStats?.totalEvents
+                              ? ((count / urlStats.totalEvents) * 100).toFixed(
                                   1
                                 )
                               : '0'}
@@ -428,8 +365,8 @@ export default function LinkDetailsPage() {
                   <div className="text-sm font-medium">
                     Top Operating Systems
                   </div>
-                  {stats.device &&
-                    Object.entries(stats.device.operatingSystems)
+                  {deviceStats &&
+                    Object.entries(deviceStats.operatingSystems)
                       .sort(([, a], [, b]) => b - a)
                       .slice(0, 5)
                       .map(([os, count]) => (
@@ -442,8 +379,8 @@ export default function LinkDetailsPage() {
                                 className="h-2 rounded-full bg-primary"
                                 style={{
                                   width: `${
-                                    stats.url?.totalEvents
-                                      ? (count / stats.url.totalEvents) * 100
+                                    urlStats?.totalEvents
+                                      ? (count / urlStats.totalEvents) * 100
                                       : 0
                                   }%`,
                                 }}
@@ -451,8 +388,8 @@ export default function LinkDetailsPage() {
                             </div>
                           </div>
                           <div className="w-1/6 text-right text-sm">
-                            {stats.url?.totalEvents
-                              ? ((count / stats.url.totalEvents) * 100).toFixed(
+                            {urlStats?.totalEvents
+                              ? ((count / urlStats.totalEvents) * 100).toFixed(
                                   1
                                 )
                               : '0'}
@@ -479,8 +416,8 @@ export default function LinkDetailsPage() {
               <div className="space-y-8">
                 <div className="space-y-2">
                   <div className="text-sm font-medium">Top Sources</div>
-                  {stats.utm &&
-                    Object.entries(stats.utm.sources)
+                  {utmStats &&
+                    Object.entries(utmStats.sources)
                       .sort(([, a], [, b]) => b - a)
                       .slice(0, 5)
                       .map(([source, count]) => (
@@ -493,8 +430,8 @@ export default function LinkDetailsPage() {
                                 className="h-2 rounded-full bg-primary"
                                 style={{
                                   width: `${
-                                    stats.url?.totalEvents
-                                      ? (count / stats.url.totalEvents) * 100
+                                    urlStats?.totalEvents
+                                      ? (count / urlStats.totalEvents) * 100
                                       : 0
                                   }%`,
                                 }}
@@ -502,8 +439,8 @@ export default function LinkDetailsPage() {
                             </div>
                           </div>
                           <div className="w-1/6 text-right text-sm">
-                            {stats.url?.totalEvents
-                              ? ((count / stats.url.totalEvents) * 100).toFixed(
+                            {urlStats?.totalEvents
+                              ? ((count / urlStats.totalEvents) * 100).toFixed(
                                   1
                                 )
                               : '0'}
@@ -528,8 +465,8 @@ export default function LinkDetailsPage() {
               <div className="space-y-8">
                 <div className="space-y-2">
                   <div className="text-sm font-medium">Top Campaigns</div>
-                  {stats.utm &&
-                    Object.entries(stats.utm.campaigns)
+                  {utmStats &&
+                    Object.entries(utmStats.campaigns)
                       .sort(([, a], [, b]) => b - a)
                       .slice(0, 5)
                       .map(([campaign, count]) => (
@@ -542,8 +479,8 @@ export default function LinkDetailsPage() {
                                 className="h-2 rounded-full bg-primary"
                                 style={{
                                   width: `${
-                                    stats.url?.totalEvents
-                                      ? (count / stats.url.totalEvents) * 100
+                                    urlStats?.totalEvents
+                                      ? (count / urlStats.totalEvents) * 100
                                       : 0
                                   }%`,
                                 }}
@@ -551,8 +488,8 @@ export default function LinkDetailsPage() {
                             </div>
                           </div>
                           <div className="w-1/6 text-right text-sm">
-                            {stats.url?.totalEvents
-                              ? ((count / stats.url.totalEvents) * 100).toFixed(
+                            {urlStats?.totalEvents
+                              ? ((count / urlStats.totalEvents) * 100).toFixed(
                                   1
                                 )
                               : '0'}
