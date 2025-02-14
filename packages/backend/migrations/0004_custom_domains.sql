@@ -1,4 +1,4 @@
-CREATE TABLE `domains` (
+CREATE TABLE IF NOT EXISTS `domains` (
   `id` integer PRIMARY KEY AUTOINCREMENT,
   `userId` integer NOT NULL,
   `domain` text NOT NULL,
@@ -12,10 +12,10 @@ CREATE TABLE `domains` (
   FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE
 );
 
-CREATE UNIQUE INDEX `idx_domains_domain` ON `domains`(`domain`);
-CREATE INDEX `idx_domains_userId` ON `domains`(`userId`);
+CREATE UNIQUE INDEX IF NOT EXISTS `idx_domains_domain` ON `domains`(`domain`);
+CREATE INDEX IF NOT EXISTS `idx_domains_userId` ON `domains`(`userId`);
 
-CREATE TABLE `domain_settings` (
+CREATE TABLE IF NOT EXISTS `domain_settings` (
   `id` integer PRIMARY KEY AUTOINCREMENT,
   `domainId` integer NOT NULL,
   `redirectMode` text CHECK(`redirectMode` IN ('PROXY', 'REDIRECT')) DEFAULT 'PROXY',
@@ -26,9 +26,9 @@ CREATE TABLE `domain_settings` (
   FOREIGN KEY (`domainId`) REFERENCES `domains`(`id`) ON DELETE CASCADE
 );
 
-CREATE INDEX `idx_domain_settings_domainId` ON `domain_settings`(`domainId`);
+CREATE INDEX IF NOT EXISTS `idx_domain_settings_domainId` ON `domain_settings`(`domainId`);
 
-CREATE TABLE `domain_dns_records` (
+CREATE TABLE IF NOT EXISTS `domain_dns_records` (
   `id` integer PRIMARY KEY AUTOINCREMENT,
   `domainId` integer NOT NULL,
   `type` text NOT NULL CHECK(`type` IN ('A', 'AAAA', 'CNAME', 'TXT', 'MX', 'NS')),
@@ -42,9 +42,14 @@ CREATE TABLE `domain_dns_records` (
   FOREIGN KEY (`domainId`) REFERENCES `domains`(`id`) ON DELETE CASCADE
 );
 
-CREATE INDEX `idx_domain_dns_records_domainId` ON `domain_dns_records`(`domainId`);
-CREATE INDEX `idx_domain_dns_records_type` ON `domain_dns_records`(`type`);
+CREATE INDEX IF NOT EXISTS `idx_domain_dns_records_domainId` ON `domain_dns_records`(`domainId`);
+CREATE INDEX IF NOT EXISTS `idx_domain_dns_records_type` ON `domain_dns_records`(`type`);
 
--- Add domain relationship to urls table
-ALTER TABLE `urls` ADD COLUMN `domainId` integer REFERENCES `domains`(`id`) ON DELETE SET NULL;
-CREATE INDEX `idx_urls_domainId` ON `urls`(`domainId`); 
+-- Add domain relationship to urls table if column doesn't exist
+SELECT CASE 
+    WHEN NOT EXISTS (SELECT 1 FROM pragma_table_info('urls') WHERE name = 'domainId')
+    THEN 'ALTER TABLE urls ADD COLUMN domainId integer REFERENCES domains(id) ON DELETE SET NULL;'
+END AS sql_statement
+WHERE sql_statement IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS `idx_urls_domainId` ON `urls`(`domainId`); 
