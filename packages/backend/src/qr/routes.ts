@@ -22,7 +22,7 @@ export const createQRRoutes = () => {
   const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
   // Create QR code
-  router.post('/', zValidator('json', createQRCodeSchema), async (c) => {
+  router.post('/qr', zValidator('json', createQRCodeSchema), async (c) => {
     const data = c.req.valid('json');
     const qrService = new QRCodeService(c.get('db'));
     const qrCode = await qrService.createQRCode(data);
@@ -30,7 +30,7 @@ export const createQRRoutes = () => {
   });
 
   // Get QR code by URL ID
-  router.get('/:urlId', async (c) => {
+  router.get('/qr/:urlId', async (c) => {
     const urlId = Number(c.req.param('urlId'));
     const qrService = new QRCodeService(c.get('db'));
     const qrCode = await qrService.getQRCode(urlId);
@@ -43,7 +43,7 @@ export const createQRRoutes = () => {
   });
 
   // Update QR code
-  router.put('/:id', zValidator('json', updateQRCodeSchema), async (c) => {
+  router.put('/qr/:id', zValidator('json', updateQRCodeSchema), async (c) => {
     const id = Number(c.req.param('id'));
     const data = c.req.valid('json');
     const qrService = new QRCodeService(c.get('db'));
@@ -52,7 +52,7 @@ export const createQRRoutes = () => {
   });
 
   // Increment download count
-  router.post('/:id/download', async (c) => {
+  router.post('/qr/:id/download', async (c) => {
     const id = Number(c.req.param('id'));
     const qrService = new QRCodeService(c.get('db'));
     await qrService.incrementDownloadCount(id);

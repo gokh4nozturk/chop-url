@@ -46,15 +46,21 @@ const useQRCodeStore = create<QRCodeStore>((set) => ({
     try {
       set({ isLoading: true, error: null });
 
-      // First try to get existing QR code
-      const { data } = await axios.get(`/api/qr/${urlId}`);
-      console.log('data', data);
-      if (data) {
-        set({ qrCode: data, isLoading: false });
-        return;
+      try {
+        // First try to get existing QR code
+        const { data } = await axios.get(`/api/qr/${urlId}`);
+        if (data) {
+          set({ qrCode: data, isLoading: false });
+          return;
+        }
+      } catch (error) {
+        // If 404, continue with QR code generation
+        if (axios.isAxiosError(error) && error.response?.status !== 404) {
+          throw error;
+        }
       }
 
-      // If not found, generate new QR code
+      // Generate new QR code
       const qrCodeElement = createElement(QRCodeSVG, {
         value: shortUrl,
         size: 1024,
@@ -107,22 +113,34 @@ const useQRCodeStore = create<QRCodeStore>((set) => ({
 
   uploadToR2: async (file: File | Blob, path: string) => {
     try {
-      // Get presigned URL
+      // Get upload URL and headers
       const {
         data: { url, headers },
       } = await axios.post('/api/storage/presigned-url', { path });
 
-      // Upload directly to R2
-      await axios.put(url, file, {
-        headers: {
-          ...headers,
-          'Content-Type': file.type || 'application/octet-stream',
-        },
-      });
+      // Upload file to backend
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('path', path);
 
-      return url;
+      const { data: uploadedUrl } = await axios.post(
+        '/api/storage/upload',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      return uploadedUrl;
     } catch (error) {
       console.error('Error uploading to R2:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Error details:', error.response?.data);
+      } else {
+        console.error('Error details:', (error as Error).message);
+      }
       throw new Error('Failed to upload file');
     }
   },
