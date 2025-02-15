@@ -10,7 +10,7 @@ import {
 import { CHART_COLORS, CHART_GRID_CLASSNAMES } from './constants';
 import { ChartTooltip } from './tooltip';
 
-export interface HorizontalBarChartProps {
+export interface BarChartProps {
   data: Array<{ name: string; value: number }>;
   valueFormatter?: (value: number) => string;
   title: string;
@@ -18,20 +18,21 @@ export interface HorizontalBarChartProps {
   loading?: boolean;
 }
 
-export function HorizontalBarChart({
+export function VerticalBarChart({
   data,
   valueFormatter = (value) => `${value}`,
   title,
   description,
   loading = false,
-}: HorizontalBarChartProps) {
+}: BarChartProps) {
   if (loading) {
     return <div className="h-full w-full animate-pulse bg-muted" />;
   }
 
-  // Sort data by value in descending order
+  // Sort data by value in descending order and take top 10
   const sortedData = [...data]
     .sort((a, b) => b.value - a.value)
+    .slice(0, 10)
     .map((item, index) => ({
       ...item,
       fill: CHART_COLORS.light[index % CHART_COLORS.light.length],
@@ -45,14 +46,10 @@ export function HorizontalBarChart({
           <p className="text-sm text-muted-foreground">{description}</p>
         )}
       </div>
-      <ResponsiveContainer
-        width="100%"
-        height={Math.max(200, sortedData.length * 50)}
-      >
+      <ResponsiveContainer width="100%" height={400}>
         <BarChart
           data={sortedData}
-          layout="vertical"
-          margin={{ top: 0, right: 16, bottom: 0, left: 120 }}
+          margin={{ top: 30, right: 16, bottom: 40, left: 16 }}
         >
           <CartesianGrid
             strokeDasharray="3 3"
@@ -61,19 +58,21 @@ export function HorizontalBarChart({
             className={CHART_GRID_CLASSNAMES.stroke}
           />
           <XAxis
+            type="category"
+            dataKey="name"
+            axisLine={false}
+            tickLine={false}
+            className={CHART_GRID_CLASSNAMES.fill}
+            angle={-45}
+            textAnchor="end"
+            height={60}
+          />
+          <YAxis
             type="number"
             axisLine={false}
             tickLine={false}
             className={CHART_GRID_CLASSNAMES.fill}
             tickFormatter={valueFormatter}
-          />
-          <YAxis
-            type="category"
-            dataKey="name"
-            axisLine={false}
-            tickLine={false}
-            width={100}
-            className={CHART_GRID_CLASSNAMES.fill}
           />
           <Tooltip
             content={(props) => (
@@ -82,9 +81,9 @@ export function HorizontalBarChart({
           />
           <Bar
             dataKey="value"
-            radius={[4, 4, 4, 4]}
+            radius={[4, 4, 0, 0]}
             label={{
-              position: 'right',
+              position: 'top',
               formatter: valueFormatter,
               className: 'fill-muted-foreground text-xs',
             }}

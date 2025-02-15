@@ -89,19 +89,21 @@ export function TreemapChart({
         />
       </div>
       {/* Legend */}
-      <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
-        {treeData.children.map((item) => (
-          <div key={item.id} className="flex items-center gap-2">
-            <div
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: item.color }}
-            />
-            <span className="text-muted-foreground">
-              {item.id} ({item.formattedValue})
-            </span>
-          </div>
-        ))}
-      </div>
+      {treeData.children.length < 10 && (
+        <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
+          {treeData.children.map((item) => (
+            <div key={item.id} className="flex items-center gap-2">
+              <div
+                className="h-3 w-3 rounded-full"
+                style={{ backgroundColor: item.color }}
+              />
+              <span className="text-muted-foreground">
+                {item.id} ({item.formattedValue})
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

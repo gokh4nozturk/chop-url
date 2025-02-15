@@ -4,10 +4,10 @@ import { AreaChart } from './area-chart';
 import { BarChart } from './bar-chart';
 import { ChoroplethMap } from './choropleth-map';
 import { Heatmap } from './heatmap';
-import { HorizontalBarChart } from './horizontal-bar-chart';
 import { PieChart } from './pie-chart';
 import { SunburstChart } from './sunburst-chart';
 import { TreemapChart } from './treemap-chart';
+import { VerticalBarChart } from './vertical-bar-chart';
 
 interface ChartGroupProps {
   timeSeriesData: Array<{ name: string; value: number }>;
@@ -135,7 +135,7 @@ export function ChartGroup({
     <div className="grid gap-4 md:grid-cols-2">
       <Card>
         <CardContent className="pt-6">
-          <Heatmap
+          <VerticalBarChart
             data={countryData}
             valueFormatter={percentageFormatter}
             loading={loading}
