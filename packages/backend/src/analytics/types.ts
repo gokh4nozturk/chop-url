@@ -1,3 +1,5 @@
+import { EventType } from '../db/schema/analytics';
+
 export type TimeRange = '24h' | '7d' | '30d' | '90d';
 
 export interface DeviceInfo {
@@ -34,11 +36,11 @@ export interface EventProperties {
 export interface EventData {
   urlId: number;
   userId?: number;
-  eventType: 'REDIRECT' | 'PAGE_VIEW' | 'CLICK' | 'CONVERSION' | 'CUSTOM';
+  eventType: EventType;
   eventName: string;
-  properties?: EventProperties;
-  deviceInfo?: DeviceInfo;
-  geoInfo?: GeoInfo;
+  properties?: Record<string, unknown>;
+  deviceInfo?: Record<string, unknown>;
+  geoInfo?: Record<string, unknown>;
   referrer?: string;
 }
 
@@ -46,7 +48,7 @@ export interface CustomEventData {
   userId: number;
   name: string;
   description?: string;
-  properties: string[];
+  properties?: Record<string, unknown>;
 }
 
 export interface UrlStats {

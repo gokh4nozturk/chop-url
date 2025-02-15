@@ -1,7 +1,7 @@
 'use client';
 
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { AlertCircle } from 'lucide-react';
 import { Component, ErrorInfo, ReactNode } from 'react';
 
 interface Props {
@@ -25,10 +25,10 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo);
+    console.error('Error caught by ErrorBoundary:', error, errorInfo);
   }
 
-  private handleRetry = () => {
+  private handleReset = () => {
     this.setState({ hasError: false, error: null });
   };
 
@@ -39,21 +39,25 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="p-4 rounded-lg border bg-background space-y-4">
-          <div className="flex items-center space-x-2 text-destructive">
-            <AlertCircle className="w-4 h-4" />
-            <h3 className="font-medium">Something went wrong</h3>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {this.state.error?.message || 'An unexpected error occurred'}
-          </p>
-          <Button onClick={this.handleRetry} variant="outline" size="sm">
-            Try again
-          </Button>
-        </div>
+        <Alert variant="destructive" className="my-4">
+          <AlertTitle>Bir şeyler ters gitti</AlertTitle>
+          <AlertDescription className="mt-2">
+            <p className="mb-2">{this.state.error?.message}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={this.handleReset}
+              className="mt-2"
+            >
+              Tekrar Dene
+            </Button>
+          </AlertDescription>
+        </Alert>
       );
     }
 
     return this.props.children;
   }
 }
+
+export default ErrorBoundary;

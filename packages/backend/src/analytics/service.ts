@@ -1,6 +1,12 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { createDb } from '../db/client';
-import { events, customEvents } from '../db/schema/analytics';
+import {
+  events,
+  EVENT_TYPES,
+  EventType,
+  customEvents,
+  schemas,
+} from '../db/schema/analytics';
 import { urls } from '../db/schema/urls';
 import { WebSocketService } from '../websocket/service';
 import {
@@ -33,6 +39,16 @@ export class DatabaseTableError extends Error {
   }
 }
 
+export class ValidationError extends Error {
+  constructor(
+    message: string,
+    public details: unknown
+  ) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
 export class AnalyticsService {
   private readonly database: ReturnType<typeof createDb>;
   private readonly wsService: WebSocketService;
@@ -43,54 +59,71 @@ export class AnalyticsService {
   }
 
   async trackEvent(data: EventData) {
-    const eventData = {
-      ...data,
-      properties: data.properties ? JSON.stringify(data.properties) : null,
-      deviceInfo: data.deviceInfo ? JSON.stringify(data.deviceInfo) : null,
-      geoInfo: data.geoInfo ? JSON.stringify(data.geoInfo) : null,
-    };
+    // Validate data using Zod schemas
+    try {
+      if (data.deviceInfo) {
+        data.deviceInfo = schemas.deviceInfo.parse(data.deviceInfo);
+      }
+      if (data.geoInfo) {
+        data.geoInfo = schemas.geoInfo.parse(data.geoInfo);
+      }
+      if (data.properties) {
+        data.properties = schemas.eventProperties.parse(data.properties);
+      }
 
-    await this.database.insert(events).values(eventData);
+      // Validate event type
+      if (!EVENT_TYPES.includes(data.eventType as EventType)) {
+        throw new ValidationError('Invalid event type', data.eventType);
+      }
 
-    // Broadcast event to WebSocket subscribers
-    this.wsService.broadcast(`url:${data.urlId}`, data);
+      // Prepare data for insertion
+      const insertData = {
+        ...data,
+        properties: data.properties ? JSON.stringify(data.properties) : null,
+        deviceInfo: data.deviceInfo ? JSON.stringify(data.deviceInfo) : null,
+        geoInfo: data.geoInfo ? JSON.stringify(data.geoInfo) : null,
+      };
 
-    return true;
+      // Insert validated data
+      await this.database.insert(events).values(insertData);
+
+      // Broadcast event to WebSocket subscribers
+      this.wsService.broadcast(`url:${data.urlId}`, data);
+
+      return true;
+    } catch (error) {
+      throw new ValidationError('Invalid event data', error);
+    }
   }
 
   async createCustomEvent(data: CustomEventData) {
-    const customEventData = {
-      ...data,
-      properties: JSON.stringify(data.properties),
-    };
-
-    return this.database.insert(customEvents).values(customEventData);
+    // Validate properties array
+    try {
+      if (data.properties) {
+        const validatedProperties = schemas.eventProperties
+          .array()
+          .parse(data.properties);
+        const insertData = {
+          ...data,
+          properties: JSON.stringify(validatedProperties),
+        };
+        return this.database.insert(customEvents).values(insertData);
+      }
+      return this.database.insert(customEvents).values(data);
+    } catch (error) {
+      throw new ValidationError('Invalid custom event data', error);
+    }
   }
 
   async getEvents(urlId: number) {
-    const results = await this.database
-      .select()
-      .from(events)
-      .where(eq(events.urlId, urlId));
-
-    return results.map((event) => ({
-      ...event,
-      properties: event.properties ? JSON.parse(event.properties) : null,
-      deviceInfo: event.deviceInfo ? JSON.parse(event.deviceInfo) : null,
-      geoInfo: event.geoInfo ? JSON.parse(event.geoInfo) : null,
-    }));
+    return this.database.select().from(events).where(eq(events.urlId, urlId));
   }
 
   async getCustomEvents(userId: number) {
-    const results = await this.database
+    return this.database
       .select()
       .from(customEvents)
       .where(eq(customEvents.userId, userId));
-
-    return results.map((event) => ({
-      ...event,
-      properties: event.properties ? JSON.parse(event.properties) : [],
-    }));
   }
 
   private async ensureUrlExists(shortId: string) {
