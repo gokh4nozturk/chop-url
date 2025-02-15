@@ -2,6 +2,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { WorldMap } from '@/components/ui/world-map';
 import { AreaChart } from './area-chart';
 import { BarChart } from './bar-chart';
+import { ChoroplethMap } from './choropleth-map';
+import { Heatmap } from './heatmap';
 import { HorizontalBarChart } from './horizontal-bar-chart';
 import { PieChart } from './pie-chart';
 import { TreemapChart } from './treemap-chart';
@@ -50,10 +52,12 @@ export function ChartGroup({
 
       <Card>
         <CardContent className="pt-6">
-          <WorldMap
-            data={Object.fromEntries(
-              countryData.map(({ name, value }) => [name, value])
-            )}
+          <ChoroplethMap
+            data={countryData}
+            valueFormatter={percentageFormatter}
+            loading={loading}
+            title="Geographic Distribution"
+            description="Distribution of clicks by country"
           />
         </CardContent>
       </Card>
@@ -132,7 +136,7 @@ export function ChartGroup({
     <div className="grid gap-4 md:grid-cols-2">
       <Card>
         <CardContent className="pt-6">
-          <BarChart
+          <Heatmap
             data={countryData}
             valueFormatter={percentageFormatter}
             loading={loading}
@@ -144,7 +148,7 @@ export function ChartGroup({
 
       <Card>
         <CardContent className="pt-6">
-          <BarChart
+          <Heatmap
             data={cityData}
             valueFormatter={percentageFormatter}
             loading={loading}

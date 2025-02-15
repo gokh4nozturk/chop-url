@@ -73,7 +73,10 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
     "zod": "^3.24.1",
-    "zustand": "^5.0.3"
+    "zustand": "^5.0.3",
+    "@nivo/geo": "^0.88.0",
+    "@nivo/heatmap": "^0.88.0",
+    "d3-time-format": "^4.1.0"
   },
   "devDependencies": {
     "@testing-library/dom": "^9.3.3",
@@ -85,6 +88,7 @@
     "@types/react-dom": "^19.0.3",
     "@types/testing-library__jest-dom": "^5.14.9",
     "@types/webpack": "^5.28.5",
+    "@types/geojson": "^7946.0.16",
     "@vitejs/plugin-react": "^4.2.1",
     "@vitest/coverage-v8": "^1.2.2",
     "jsdom": "^24.0.0",
