@@ -131,7 +131,7 @@ const useQRCodeStore = create<QRCodeStore>((set) => ({
     formData.append('file', file);
     formData.append('path', path);
 
-    const response = await fetch('/api/upload', {
+    const response = await fetch('/api/storage/upload', {
       method: 'POST',
       body: formData,
     });
