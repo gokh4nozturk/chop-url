@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useEffect } from 'react';
 import { ChartGroup } from '../charts/chart-group';
+import { StatGroup } from './stat-group';
 
 interface ClientAnalyticsProps {
   shortId: string;
@@ -70,6 +71,33 @@ export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
   const stats = events ? processEvents(events) : null;
 
   if (!stats) return null;
+
+  const analyticsStats = [
+    {
+      title: 'Total Clicks',
+      value: urlStats?.totalEvents || 0,
+      icon: BarChart2,
+    },
+    {
+      title: 'Unique Visitors',
+      value: urlStats?.uniqueVisitors || 0,
+      icon: Activity,
+    },
+    {
+      title: 'Created At',
+      value: urlStats?.url.createdAt
+        ? new Date(urlStats.url.createdAt).toLocaleDateString()
+        : '-',
+      icon: Calendar,
+    },
+    {
+      title: 'Last Click',
+      value: urlStats?.lastEventAt
+        ? new Date(urlStats.lastEventAt).toLocaleDateString()
+        : 'Never',
+      icon: Clock,
+    },
+  ];
 
   return (
     <>
@@ -116,40 +144,7 @@ export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Total Clicks"
-          value={urlStats?.totalEvents || 0}
-          icon={BarChart2}
-          loading={isLoading}
-        />
-        <StatCard
-          title="Unique Visitors"
-          value={urlStats?.uniqueVisitors || 0}
-          icon={Activity}
-          loading={isLoading}
-        />
-        <StatCard
-          title="Created At"
-          value={
-            urlStats?.url.createdAt
-              ? new Date(urlStats.url.createdAt).toLocaleDateString()
-              : '-'
-          }
-          icon={Calendar}
-          loading={isLoading}
-        />
-        <StatCard
-          title="Last Click"
-          value={
-            urlStats?.lastEventAt
-              ? new Date(urlStats.lastEventAt).toLocaleDateString()
-              : 'Never'
-          }
-          icon={Clock}
-          loading={isLoading}
-        />
-      </div>
+      <StatGroup stats={analyticsStats} loading={isLoading} />
 
       <ChartGroup
         timeSeriesData={

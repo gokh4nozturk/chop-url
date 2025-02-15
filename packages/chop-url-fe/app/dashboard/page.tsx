@@ -1,5 +1,6 @@
 'use client';
 
+import { StatGroup } from '@/components/analytics/stat-group';
 import FrameIcon from '@/components/icons/frame';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +19,7 @@ import {
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
+
 interface Url {
   id: number;
   shortUrl: string;
@@ -196,6 +198,33 @@ export default function DashboardPage() {
 
   const stats = getUrlStats(urls);
 
+  const dashboardStats = [
+    {
+      title: 'Total Links',
+      value: stats.totalLinks || 0,
+      icon: LinkIcon,
+      subtitle: '+0% from last month',
+    },
+    {
+      title: 'Total Clicks',
+      value: stats.totalClicks || 0,
+      icon: BarChart,
+      subtitle: '+0% from last month',
+    },
+    {
+      title: 'Active Links',
+      value: stats.activeLinks || 0,
+      icon: Globe,
+      subtitle: '+0% from last month',
+    },
+    {
+      title: 'Recent Clicks',
+      value: stats.totalClicks || 0,
+      icon: BarChart,
+      subtitle: '+0% from last 24h',
+    },
+  ];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -223,32 +252,7 @@ export default function DashboardPage() {
         </motion.div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Total Links"
-          value={stats.totalLinks || 0}
-          icon={LinkIcon}
-          helperText="+0% from last month"
-        />
-        <StatCard
-          title="Total Clicks"
-          value={stats.totalClicks || 0}
-          icon={BarChart}
-          helperText="+0% from last month"
-        />
-        <StatCard
-          title="Active Links"
-          value={stats.activeLinks || 0}
-          icon={Globe}
-          helperText="+0% from last month"
-        />
-        <StatCard
-          title="Recent Clicks"
-          value={stats.totalClicks || 0}
-          icon={BarChart}
-          helperText="+0% from last 24h"
-        />
-      </div>
+      <StatGroup stats={dashboardStats} loading={isLoading || isLoadingUrls} />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <motion.div

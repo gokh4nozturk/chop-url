@@ -6,6 +6,7 @@ import { useWebSocketStore } from '@/lib/store/websocket';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Activity, Clock, Loader2, Users, Wifi, WifiOff } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { StatGroup } from './stat-group';
 
 interface RealTimeStatsProps {
   urlId: string;
@@ -118,6 +119,28 @@ function RealTimeStatsContent({ urlId }: RealTimeStatsProps) {
     );
   }, [isConnected, retryCount]);
 
+  const realTimeStats = [
+    {
+      title: 'Total Clicks',
+      value: isLoading ? '...' : urlStats?.totalEvents || 0,
+      icon: Activity,
+    },
+    {
+      title: 'Unique Visitors',
+      value: isLoading ? '...' : urlStats?.uniqueVisitors || 0,
+      icon: Users,
+    },
+    {
+      title: 'Last Click',
+      value: isLoading
+        ? '...'
+        : urlStats?.lastEventAt
+          ? new Date(urlStats.lastEventAt).toLocaleTimeString()
+          : 'Never',
+      icon: Clock,
+    },
+  ];
+
   return (
     <div className="p-4 bg-background border rounded-lg space-y-4">
       <div className="flex items-center justify-between">
@@ -125,41 +148,11 @@ function RealTimeStatsContent({ urlId }: RealTimeStatsProps) {
         {connectionStatus}
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <div className="flex items-center space-x-2">
-          <Activity className="w-4 h-4 text-muted-foreground" />
-          <div>
-            <div className="text-sm text-muted-foreground">Total Clicks</div>
-            <div className="text-2xl font-bold">
-              {isLoading ? '...' : urlStats?.totalEvents || 0}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Users className="w-4 h-4 text-muted-foreground" />
-          <div>
-            <div className="text-sm text-muted-foreground">Unique Visitors</div>
-            <div className="text-2xl font-bold">
-              {isLoading ? '...' : urlStats?.uniqueVisitors || 0}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Clock className="w-4 h-4 text-muted-foreground" />
-          <div>
-            <div className="text-sm text-muted-foreground">Last Click</div>
-            <div className="text-2xl font-bold">
-              {isLoading
-                ? '...'
-                : urlStats?.lastEventAt
-                  ? new Date(urlStats.lastEventAt).toLocaleTimeString()
-                  : 'Never'}
-            </div>
-          </div>
-        </div>
-      </div>
+      <StatGroup
+        stats={realTimeStats}
+        loading={isLoading}
+        className="!grid-cols-3"
+      />
     </div>
   );
 }
