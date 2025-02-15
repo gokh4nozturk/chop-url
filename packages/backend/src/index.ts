@@ -6,8 +6,8 @@ import { createAuthRoutes } from './auth/routes';
 import { createDb } from './db/client';
 import { createDomainRoutes } from './domain/routes';
 import { openApiSchema } from './openapi.js';
-import { createQRCodeRouter } from './qr/controller';
-import { createStorageRouter } from './storage/controller';
+import { createQRRoutes } from './qr/routes';
+import { createStorageRoutes } from './storage/routes';
 import { Env, Variables } from './types';
 import { createUrlRoutes } from './url/routes';
 import { WebSocketService } from './websocket/service';
@@ -95,17 +95,8 @@ app.route('/api/auth', createAuthRoutes());
 app.route('/api', createUrlRoutes());
 app.route('/api', createDomainRoutes());
 app.route('/api', createAnalyticsRoutes());
-
-// Add QR code routes
-const qrRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
-qrRouter.all('*', async (c) => {
-  const router = createQRCodeRouter(c.get('db'));
-  return router.fetch(c.req.raw, c.env);
-});
-app.route('/api/qr', qrRouter);
-
-// Add storage routes
-app.route('/api/storage', createStorageRouter());
+app.route('/api', createStorageRoutes());
+app.route('/api', createQRRoutes());
 
 // Root route - redirect to docs
 app.get('/', (c) => {

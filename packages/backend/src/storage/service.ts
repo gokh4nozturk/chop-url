@@ -3,6 +3,24 @@ import { Env } from '../types';
 export class R2StorageService {
   constructor(private readonly env: Env) {}
 
+  async getPresignedUrl(
+    path: string
+  ): Promise<{ url: string; headers: Record<string, string> }> {
+    try {
+      const url = `${this.env.R2_PUBLIC_URL}/${path}`;
+      // R2 requires specific headers for direct upload
+      const headers = {
+        'Content-Type': 'application/octet-stream',
+        'x-amz-acl': 'public-read',
+      };
+
+      return { url, headers };
+    } catch (error) {
+      console.error('Error generating presigned URL:', error);
+      throw new Error('Failed to generate presigned URL');
+    }
+  }
+
   async uploadFile(file: File | Blob, path: string): Promise<string> {
     try {
       await this.env.BUCKET.put(path, file);

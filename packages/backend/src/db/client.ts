@@ -3,25 +3,22 @@ import { drizzle } from 'drizzle-orm/d1';
 import { type DrizzleD1Database } from 'drizzle-orm/d1';
 import * as schema from './schema';
 
-let db: ReturnType<typeof drizzle>;
+export type Database = DrizzleD1Database<typeof schema>;
 
-export type Database = DrizzleD1Database;
-
-export const createDb = (d1: D1Database) => {
-  db = drizzle(d1, { schema });
-  return db;
+export const createDb = (d1: D1Database): Database => {
+  return drizzle(d1, { schema });
 };
 
 type D1Result<T> = { results?: T[] };
 
 export async function executeRawQuery<T>(
-  db: ReturnType<typeof drizzle>,
+  d1: D1Database,
   query: string,
   params: (string | number)[] = []
 ): Promise<T[]> {
   try {
     console.log('Executing raw query:', { query, params });
-    const result = await db.$client
+    const result = await d1
       .prepare(query)
       .bind(...params)
       .all();
@@ -33,5 +30,3 @@ export async function executeRawQuery<T>(
     throw error;
   }
 }
-
-export { db };

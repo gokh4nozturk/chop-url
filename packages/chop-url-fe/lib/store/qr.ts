@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { QRCodeSVG } from 'qrcode.react';
 import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
@@ -46,9 +47,9 @@ const useQRCodeStore = create<QRCodeStore>((set) => ({
       set({ isLoading: true, error: null });
 
       // First try to get existing QR code
-      const response = await fetch(`/api/qr/${urlId}`);
-      if (response.ok) {
-        const data = await response.json();
+      const { data } = await axios.get(`/api/qr/${urlId}`);
+      console.log('data', data);
+      if (data) {
         set({ qrCode: data, isLoading: false });
         return;
       }
@@ -70,22 +71,11 @@ const useQRCodeStore = create<QRCodeStore>((set) => ({
       const imageUrl = await store.uploadToR2(blob, `qr-codes/${urlId}.svg`);
 
       // Save to backend
-      const createResponse = await fetch('/api/qr', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          urlId,
-          imageUrl,
-        }),
+      const { data: newQrCode } = await axios.post('/api/qr', {
+        urlId,
+        imageUrl,
       });
 
-      if (!createResponse.ok) {
-        throw new Error('Failed to save QR code');
-      }
-
-      const newQrCode = await createResponse.json();
       set({ qrCode: newQrCode, isLoading: false });
     } catch (error) {
       set({ error: error as Error, isLoading: false });
@@ -104,22 +94,11 @@ const useQRCodeStore = create<QRCodeStore>((set) => ({
         logoUrl = await store.uploadToR2(logoBlob, `qr-codes/logos/${id}.png`);
       }
 
-      const response = await fetch(`/api/qr/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...options,
-          logoUrl,
-        }),
+      const { data } = await axios.put(`/api/qr/${id}`, {
+        ...options,
+        logoUrl,
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to update QR code');
-      }
-
-      const data = await response.json();
       set({ qrCode: data, isLoading: false });
     } catch (error) {
       set({ error: error as Error, isLoading: false });
@@ -127,31 +106,30 @@ const useQRCodeStore = create<QRCodeStore>((set) => ({
   },
 
   uploadToR2: async (file: File | Blob, path: string) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('path', path);
+    try {
+      // Get presigned URL
+      const {
+        data: { url, headers },
+      } = await axios.post('/api/storage/presigned-url', { path });
 
-    const response = await fetch('/api/storage/upload', {
-      method: 'POST',
-      body: formData,
-    });
+      // Upload directly to R2
+      await axios.put(url, file, {
+        headers: {
+          ...headers,
+          'Content-Type': file.type || 'application/octet-stream',
+        },
+      });
 
-    if (!response.ok) {
+      return url;
+    } catch (error) {
+      console.error('Error uploading to R2:', error);
       throw new Error('Failed to upload file');
     }
-
-    const { url } = await response.json();
-    return url;
   },
 
   incrementDownloadCount: async (id: number) => {
     try {
-      const response = await fetch(`/api/qr/${id}/download`, {
-        method: 'POST',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to increment download count');
-      }
+      await axios.post(`/api/qr/${id}/download`);
     } catch (error) {
       console.error('Error incrementing download count:', error);
     }

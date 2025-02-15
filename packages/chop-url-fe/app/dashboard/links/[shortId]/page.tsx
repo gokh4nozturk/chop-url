@@ -547,7 +547,7 @@ const LinkDetails = ({ urlDetails }: { urlDetails: IUrl }) => {
             </CardContent>
           </Card>
 
-          <QRCodeCard url={urlDetails.shortUrl} />
+          <QRCodeCard urlId={urlDetails.id} shortUrl={urlDetails.shortUrl} />
         </div>
       </div>
     </motion.div>

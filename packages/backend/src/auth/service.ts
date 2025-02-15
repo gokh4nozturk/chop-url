@@ -1,6 +1,6 @@
 import { generateTOTP, verifyTOTP } from '@chop-url/lib';
 import { and, eq, gt, not, sql } from 'drizzle-orm';
-import { createDb, db } from '../db/client';
+import { createDb } from '../db/client';
 import {
   authAttempts,
   emailVerifications,
@@ -86,7 +86,7 @@ export class AuthService {
     }
 
     // Check if user exists
-    const existingUser = await db
+    const existingUser = await this.db
       .select({ id: users.id })
       .from(users)
       .where(eq(users.email, email))
@@ -103,7 +103,7 @@ export class AuthService {
     const passwordHash = await this.hashPassword(password);
 
     // Create user
-    const user = await db
+    const user = await this.db
       .insert(users)
       .values({
         email,
@@ -141,7 +141,7 @@ export class AuthService {
     const { email, password } = credentials;
 
     // Get user
-    const user = await db
+    const user = await this.db
       .select()
       .from(users)
       .where(eq(users.email, email))
@@ -186,7 +186,7 @@ export class AuthService {
       console.log('verifyToken - starting token verification');
 
       // Get session
-      const session = await db
+      const session = await this.db
         .select({ userId: sessions.userId, expiresAt: sessions.expiresAt })
         .from(sessions)
         .where(
@@ -207,7 +207,7 @@ export class AuthService {
       }
 
       // Get user
-      const user = await db
+      const user = await this.db
         .select()
         .from(users)
         .where(eq(users.id, session?.userId ?? 0))
@@ -234,7 +234,7 @@ export class AuthService {
     userId: number
   ): Promise<{ secret: string; qrCodeUrl: string }> {
     // Get user
-    const user = await db
+    const user = await this.db
       .select({ email: users.email })
       .from(users)
       .where(eq(users.id, userId))
@@ -248,7 +248,7 @@ export class AuthService {
     const secret = crypto.randomUUID().replace(/-/g, '');
 
     // Save secret to database
-    await db
+    await this.db
       .update(users)
       .set({ twoFactorSecret: secret })
       .where(eq(users.id, userId))
@@ -267,7 +267,7 @@ export class AuthService {
   ): Promise<void> {
     // Get recent attempts within the time window
     const windowStart = new Date(Date.now() - ATTEMPT_WINDOW);
-    const attempts = await db
+    const attempts = await this.db
       .select({ count: sql`count(*)` })
       .from(authAttempts)
       .where(
@@ -297,7 +297,7 @@ export class AuthService {
     isSuccessful: boolean,
     code = 'none'
   ): Promise<void> {
-    await db
+    await this.db
       .insert(authAttempts)
       .values({
         userId,
@@ -318,7 +318,7 @@ export class AuthService {
     await this.checkRateLimit(userId, ipAddress, AuthAttemptType.TOTP);
 
     // Get user
-    const user = await db
+    const user = await this.db
       .select({ twoFactorSecret: users.twoFactorSecret })
       .from(users)
       .where(eq(users.id, userId))
@@ -345,7 +345,7 @@ export class AuthService {
     }
 
     // Enable 2FA
-    await db
+    await this.db
       .update(users)
       .set({ isTwoFactorEnabled: true })
       .where(eq(users.id, userId))
@@ -362,7 +362,7 @@ export class AuthService {
     ipAddress: string
   ): Promise<IAuthResponse> {
     // Get user
-    const user = await db
+    const user = await this.db
       .select()
       .from(users)
       .where(eq(users.email, email))
@@ -440,7 +440,7 @@ export class AuthService {
     await this.checkRateLimit(userId, ipAddress, AuthAttemptType.TOTP);
 
     // Get user
-    const user = await db
+    const user = await this.db
       .select({ twoFactorSecret: users.twoFactorSecret })
       .from(users)
       .where(eq(users.id, userId))
@@ -458,7 +458,7 @@ export class AuthService {
     }
 
     // Enable 2FA
-    await db
+    await this.db
       .update(users)
       .set({ isTwoFactorEnabled: true })
       .where(eq(users.id, userId))
@@ -474,7 +474,7 @@ export class AuthService {
     await this.checkRateLimit(userId, ipAddress, AuthAttemptType.TOTP);
 
     // Get user
-    const user = await db
+    const user = await this.db
       .select({ twoFactorSecret: users.twoFactorSecret })
       .from(users)
       .where(eq(users.id, userId))
@@ -501,7 +501,7 @@ export class AuthService {
     }
 
     // Disable 2FA
-    await db
+    await this.db
       .update(users)
       .set({ isTwoFactorEnabled: false, twoFactorSecret: null })
       .where(eq(users.id, userId))
@@ -509,7 +509,7 @@ export class AuthService {
   }
 
   async getUser(userId: number): Promise<IUser> {
-    const user = await db
+    const user = await this.db
       .select()
       .from(users)
       .where(eq(users.id, userId))
@@ -541,7 +541,7 @@ export class AuthService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
 
-    await db
+    await this.db
       .insert(sessions)
       .values({
         userId,
@@ -586,7 +586,7 @@ export class AuthService {
     });
 
     // Save codes to recovery_codes table
-    const stmt = db.insert(recoveryCodes).values(
+    const stmt = this.db.insert(recoveryCodes).values(
       codes.map((code) => ({
         userId,
         code,
@@ -604,7 +604,7 @@ export class AuthService {
     code: string
   ): Promise<boolean> {
     // Get and verify recovery code
-    const recoveryCode = await db
+    const recoveryCode = await this.db
       .select()
       .from(recoveryCodes)
       .where(
@@ -621,7 +621,7 @@ export class AuthService {
     }
 
     // Mark code as used with timestamp
-    await db
+    await this.db
       .update(recoveryCodes)
       .set({
         isUsed: true,
@@ -634,7 +634,7 @@ export class AuthService {
   }
 
   async getRecoveryCodes(userId: number): Promise<string[]> {
-    const codes = await db
+    const codes = await this.db
       .select()
       .from(recoveryCodes)
       .where(
@@ -647,7 +647,7 @@ export class AuthService {
 
   async refreshToken(currentToken: string): Promise<IAuthResponse> {
     // Get current session and verify it
-    const session = await db
+    const session = await this.db
       .select({ userId: sessions.userId, expiresAt: sessions.expiresAt })
       .from(sessions)
       .where(
@@ -666,7 +666,7 @@ export class AuthService {
     }
 
     // Get user
-    const user = await db
+    const user = await this.db
       .select()
       .from(users)
       .where(eq(users.id, session?.userId ?? 0))
@@ -677,7 +677,10 @@ export class AuthService {
     }
 
     // Invalidate old session
-    await db.delete(sessions).where(eq(sessions.token, currentToken)).run();
+    await this.db
+      .delete(sessions)
+      .where(eq(sessions.token, currentToken))
+      .run();
 
     // Create new session
     const { token, expiresAt } = await this.createSession(user.id);
@@ -695,7 +698,7 @@ export class AuthService {
     data: { email: string; name: string }
   ): Promise<IUser> {
     // Check if email is already taken by another user
-    const existingUser = await db
+    const existingUser = await this.db
       .select({ id: users.id })
       .from(users)
       .where(and(eq(users.email, data.email), not(eq(users.id, userId))))
@@ -706,7 +709,7 @@ export class AuthService {
     }
 
     // Update user profile
-    const result = await db
+    const result = await this.db
       .update(users)
       .set({
         email: data.email,
@@ -736,7 +739,7 @@ export class AuthService {
     await this.checkRateLimit(userId, ipAddress, AuthAttemptType.PASSWORD);
 
     // Get user's current password hash
-    const user = await db
+    const user = await this.db
       .select({ passwordHash: users.passwordHash })
       .from(users)
       .where(eq(users.id, userId))
@@ -772,7 +775,7 @@ export class AuthService {
     const newPasswordHash = await this.hashPassword(data.newPassword);
 
     // Update password
-    await db
+    await this.db
       .update(users)
       .set({
         passwordHash: newPasswordHash,
@@ -782,7 +785,7 @@ export class AuthService {
       .run();
 
     // Invalidate all existing sessions
-    await db.delete(sessions).where(eq(sessions.userId, userId)).run();
+    await this.db.delete(sessions).where(eq(sessions.userId, userId)).run();
   }
 
   async verifyEmail(token: string, userId: number): Promise<void> {
@@ -794,7 +797,7 @@ export class AuthService {
     );
 
     // Get and verify token
-    const verificationRecord = await db
+    const verificationRecord = await this.db
       .select()
       .from(emailVerifications)
       .where(
@@ -821,13 +824,13 @@ export class AuthService {
     }
 
     // Mark token as used and verify email
-    await db
+    await this.db
       .update(emailVerifications)
       .set({ isUsed: true })
       .where(eq(emailVerifications.id, verificationRecord.id))
       .run();
 
-    await db
+    await this.db
       .update(users)
       .set({ isEmailVerified: true })
       .where(eq(users.id, userId))
@@ -872,7 +875,7 @@ export class AuthService {
       console.log('Starting sendVerificationEmail for userId:', userId);
 
       // Get user
-      const user = await db
+      const user = await this.db
         .select({ email: users.email, name: users.name })
         .from(users)
         .where(eq(users.id, userId))
@@ -892,7 +895,7 @@ export class AuthService {
       console.log('Generated token and expiry:', { token, expiresAt });
 
       // Save token to database
-      await db
+      await this.db
         .insert(emailVerifications)
         .values({
           userId,
@@ -983,7 +986,7 @@ export class AuthService {
     }
 
     // Check if user exists
-    let user = await db
+    let user = await this.db
       .select()
       .from(users)
       .where(eq(users.email, userInfo.email))
@@ -991,7 +994,7 @@ export class AuthService {
 
     if (!user) {
       // Create new user
-      user = await db
+      user = await this.db
         .insert(users)
         .values({
           email: userInfo.email,
@@ -1145,7 +1148,7 @@ export class AuthService {
   }
 
   async requestPasswordReset(email: string): Promise<void> {
-    const user = await db
+    const user = await this.db
       .select()
       .from(users)
       .where(eq(users.email, email))
@@ -1159,7 +1162,7 @@ export class AuthService {
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 1);
 
-    await db
+    await this.db
       .insert(passwordResets)
       .values({ userId: user.id, token, expiresAt: expiresAt.toISOString() })
       .run();
@@ -1178,7 +1181,7 @@ export class AuthService {
     newPassword: string,
     confirmPassword: string
   ): Promise<{ message: string }> {
-    const reset = await db
+    const reset = await this.db
       .select()
       .from(passwordResets)
       .where(eq(passwordResets.token, token))
@@ -1197,13 +1200,13 @@ export class AuthService {
 
     const hashedPassword = await this.hashPassword(newPassword);
 
-    await db
+    await this.db
       .update(users)
       .set({ passwordHash: hashedPassword })
       .where(eq(users.id, reset.userId ?? 0))
       .run();
 
-    await db
+    await this.db
       .delete(passwordResets)
       .where(eq(passwordResets.id, reset.id))
       .run();

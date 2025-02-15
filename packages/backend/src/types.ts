@@ -1,5 +1,6 @@
 import { D1Database, R2Bucket } from '@cloudflare/workers-types';
 import { DrizzleD1Database } from 'drizzle-orm/d1';
+import * as schema from './db/schema';
 
 export interface Env {
   BUCKET: R2Bucket;
@@ -20,5 +21,5 @@ export interface Env {
 }
 
 export interface Variables {
-  db: DrizzleD1Database;
+  db: DrizzleD1Database<typeof schema>;
 }

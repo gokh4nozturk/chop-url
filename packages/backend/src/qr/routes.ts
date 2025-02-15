@@ -1,7 +1,6 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { Database } from '../db/client';
 import { Env, Variables } from '../types';
 import { QRCodeService } from './service';
 
@@ -19,21 +18,22 @@ const updateQRCodeSchema = z.object({
   logoPosition: z.string().optional(),
 });
 
-export const createQRCodeRouter = (db: Database) => {
-  const qrCodeService = new QRCodeService(db);
+export const createQRRoutes = () => {
   const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
   // Create QR code
   router.post('/', zValidator('json', createQRCodeSchema), async (c) => {
     const data = c.req.valid('json');
-    const qrCode = await qrCodeService.createQRCode(data);
+    const qrService = new QRCodeService(c.get('db'));
+    const qrCode = await qrService.createQRCode(data);
     return c.json(qrCode, 201);
   });
 
   // Get QR code by URL ID
   router.get('/:urlId', async (c) => {
     const urlId = Number(c.req.param('urlId'));
-    const qrCode = await qrCodeService.getQRCode(urlId);
+    const qrService = new QRCodeService(c.get('db'));
+    const qrCode = await qrService.getQRCode(urlId);
 
     if (!qrCode) {
       return c.json({ error: 'QR code not found' }, 404);
@@ -46,14 +46,16 @@ export const createQRCodeRouter = (db: Database) => {
   router.put('/:id', zValidator('json', updateQRCodeSchema), async (c) => {
     const id = Number(c.req.param('id'));
     const data = c.req.valid('json');
-    const qrCode = await qrCodeService.updateQRCode(id, data);
+    const qrService = new QRCodeService(c.get('db'));
+    const qrCode = await qrService.updateQRCode(id, data);
     return c.json(qrCode);
   });
 
   // Increment download count
   router.post('/:id/download', async (c) => {
     const id = Number(c.req.param('id'));
-    await qrCodeService.incrementDownloadCount(id);
+    const qrService = new QRCodeService(c.get('db'));
+    await qrService.incrementDownloadCount(id);
     return c.json({ success: true });
   });
 
