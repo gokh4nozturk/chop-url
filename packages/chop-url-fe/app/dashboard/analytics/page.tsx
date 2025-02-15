@@ -148,15 +148,15 @@ export default function AnalyticsPage() {
   }, [fetchAnalytics]);
 
   return (
-    <>
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Analytics</h1>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-tight">Analytics</h1>
         <div className="flex items-center gap-2">
           <Select
             value={timeRange}
             onValueChange={(value) => setTimeRange(value)}
           >
-            <SelectTrigger className="w-[140px] transition-all duration-300 hover:shadow-md">
+            <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Select range" />
             </SelectTrigger>
             <SelectContent>
@@ -174,7 +174,6 @@ export default function AnalyticsPage() {
               setIsLoading(true);
               fetchAnalytics();
             }}
-            className="transition-all duration-300 hover:shadow-md"
           >
             <Loader2 className={`${isLoading ? 'animate-spin' : ''} h-4 w-4`} />
           </Button>
@@ -185,7 +184,6 @@ export default function AnalyticsPage() {
             onClick={() => {
               window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/analytics/export?period=${timeRange}`;
             }}
-            className="transition-all duration-300 hover:shadow-md"
             title="Export as CSV"
           >
             <Download className="h-4 w-4" />
@@ -207,7 +205,7 @@ export default function AnalyticsPage() {
         )}
       </AnimatePresence>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Clicks"
           value={analyticsData?.totalClicks || 0}
@@ -268,8 +266,8 @@ export default function AnalyticsPage() {
         />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="transition-all duration-300 hover:shadow-md">
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="overflow-hidden">
           <CardHeader>
             <CardTitle>Visitor Trends</CardTitle>
           </CardHeader>
@@ -287,7 +285,6 @@ export default function AnalyticsPage() {
                   data={analyticsData?.clicksByDate || []}
                   index="name"
                   categories={['value']}
-                  colors={['primary']}
                   valueFormatter={(value) => `${value} clicks`}
                   showLegend={false}
                   showXAxis
@@ -299,7 +296,7 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card className="transition-all duration-300 hover:shadow-md">
+        <Card className="overflow-hidden">
           <CardHeader>
             <CardTitle>Geographic Distribution</CardTitle>
           </CardHeader>
@@ -319,20 +316,22 @@ export default function AnalyticsPage() {
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="transition-all duration-300 hover:shadow-md">
-          <CardHeader>
-            <CardTitle>Device Distribution</CardTitle>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-medium">
+              Device Distribution
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="h-[300px] w-full animate-pulse bg-muted" />
+              <div className="h-[280px] w-full animate-pulse bg-muted" />
             ) : (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
-                className="h-[300px]"
+                className="h-[280px]"
               >
                 <PieChart
                   data={transformDataForPieChart(analyticsData?.devices)}
@@ -348,19 +347,21 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card className="transition-all duration-300 hover:shadow-md">
-          <CardHeader>
-            <CardTitle>Browser Distribution</CardTitle>
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-medium">
+              Browser Distribution
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="h-[300px] w-full animate-pulse bg-muted" />
+              <div className="h-[280px] w-full animate-pulse bg-muted" />
             ) : (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
-                className="h-[300px]"
+                className="h-[280px]"
               >
                 <PieChart
                   data={transformDataForPieChart(analyticsData?.browsers)}
@@ -376,19 +377,21 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card className="transition-all duration-300 hover:shadow-md">
-          <CardHeader>
-            <CardTitle>Operating System Distribution</CardTitle>
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-medium">
+              Operating System Distribution
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="h-[300px] w-full animate-pulse bg-muted" />
+              <div className="h-[280px] w-full animate-pulse bg-muted" />
             ) : (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
-                className="h-[300px]"
+                className="h-[280px]"
               >
                 <PieChart
                   data={transformDataForPieChart(
@@ -407,20 +410,22 @@ export default function AnalyticsPage() {
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="transition-all duration-300 hover:shadow-md">
-          <CardHeader>
-            <CardTitle>Traffic Sources</CardTitle>
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-medium">
+              Traffic Sources
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="h-[300px] w-full animate-pulse bg-muted" />
+              <div className="h-[280px] w-full animate-pulse bg-muted" />
             ) : (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
-                className="h-[300px]"
+                className="h-[280px]"
               >
                 <PieChart
                   data={transformDataForPieChart(analyticsData?.referrers)}
@@ -436,19 +441,19 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card className="transition-all duration-300 hover:shadow-md">
-          <CardHeader>
-            <CardTitle>Campaigns</CardTitle>
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-medium">Campaigns</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="h-[300px] w-full animate-pulse bg-muted" />
+              <div className="h-[280px] w-full animate-pulse bg-muted" />
             ) : (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
-                className="h-[300px]"
+                className="h-[280px]"
               >
                 <PieChart
                   data={transformDataForPieChart(analyticsData?.campaigns)}
@@ -464,6 +469,6 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
       </div>
-    </>
+    </div>
   );
 }

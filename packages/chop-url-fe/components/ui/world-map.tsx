@@ -14,11 +14,13 @@ export function WorldMap({ data, onRegionClick }: WorldMapProps) {
   const isDark = theme === 'dark';
 
   return (
-    <div className="h-[400px] w-full">
+    <div className="h-[400px] w-full rounded-lg overflow-hidden">
       <VectorMap
         map={worldMill}
         backgroundColor="transparent"
-        zoomOnScroll={false}
+        zoomOnScroll={true}
+        zoomMax={12}
+        zoomMin={1}
         style={{
           width: '100%',
           height: '400px',
@@ -29,31 +31,38 @@ export function WorldMap({ data, onRegionClick }: WorldMapProps) {
             {
               attribute: 'fill',
               values: data,
-              scale: isDark ? ['#3b82f6', '#60a5fa'] : ['#93c5fd', '#2563eb'],
+              scale: isDark
+                ? ['#1d4ed8', '#3b82f6', '#60a5fa']
+                : ['#1e40af', '#2563eb', '#93c5fd'],
               normalizeFunction: 'polynomial',
             },
           ],
         }}
         regionStyle={{
           initial: {
-            fill: isDark ? '#27272a' : '#f4f4f5',
+            fill: isDark ? '#27272a' : '#e5e7eb',
             fillOpacity: 1,
-            stroke: isDark ? '#18181b' : '#e4e4e7',
-            strokeWidth: 1,
-            strokeOpacity: 0.5,
+            stroke: isDark ? '#18181b' : '#d1d5db',
+            strokeWidth: 0.5,
+            strokeOpacity: 1,
           },
           hover: {
             fillOpacity: 0.8,
             cursor: 'pointer',
-            stroke: isDark ? '#3b82f6' : '#2563eb',
-            strokeWidth: 2,
+            stroke: isDark ? '#3b82f6' : '#1e40af',
+            strokeWidth: 1,
+            transition: 'all 250ms ease-in-out',
           },
           selected: {
-            fill: isDark ? '#60a5fa' : '#2563eb',
+            fill: isDark ? '#3b82f6' : '#1e40af',
+            stroke: isDark ? '#60a5fa' : '#2563eb',
+            strokeWidth: 1,
           },
           selectedHover: {
-            stroke: isDark ? '#3b82f6' : '#2563eb',
-            strokeWidth: 2,
+            fillOpacity: 1,
+            stroke: isDark ? '#60a5fa' : '#1e40af',
+            strokeWidth: 1.5,
+            transition: 'all 250ms ease-in-out',
           },
         }}
       />
