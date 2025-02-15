@@ -57,6 +57,13 @@
       "when": 1739528927791,
       "tag": "0007_plain_mandroid",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1739638701777,
+      "tag": "0008_wide_kat_farrell",
+      "breakpoints": true
     }
   ]
 }

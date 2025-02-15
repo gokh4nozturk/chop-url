@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
-import { Database } from '../db/client';
+import type { Database } from '../db/client';
 import { qrCodes } from '../db/schema/qr-codes';
 
 export interface IQRCode {
