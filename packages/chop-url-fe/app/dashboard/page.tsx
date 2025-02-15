@@ -1,24 +1,45 @@
 'use client';
 
 import { StatGroup } from '@/components/analytics/stat-group';
+import { ActivityFeed } from '@/components/dashboard/activity-feed';
+import { RecentLinks } from '@/components/dashboard/recent-links';
 import FrameIcon from '@/components/icons/frame';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAnalyticsStore } from '@/lib/store/analytics';
 import { useAuthStore } from '@/lib/store/auth';
 import useUrlStore from '@/lib/store/url';
 import { motion } from 'framer-motion';
-import {
-  BarChart,
-  Copy as CopyIcon,
-  Globe,
-  Link as LinkIcon,
-  Loader2,
-  type LucideIcon,
-  Plus,
-} from 'lucide-react';
+import { BarChart, Globe, Link as LinkIcon, Loader2, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect } from 'react';
-import { toast } from 'sonner';
+
+// Animation variants for consistent animations
+const containerAnimation = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 },
+};
+
+const itemAnimation = {
+  hidden: { opacity: 0, x: -20 },
+  show: { opacity: 1, x: 0 },
+};
+
+const iconAnimation = {
+  hover: { scale: 1.1 },
+  tap: { scale: 0.95 },
+};
+
+const buttonAnimation = {
+  hover: { scale: 1.02 },
+  tap: { scale: 0.98 },
+};
+
+const getUrlStats = (urls: Url[]) => ({
+  totalLinks: urls.length,
+  totalClicks: urls.reduce((acc, url) => acc + url.visitCount, 0),
+  activeLinks: urls.filter((url) => url.isActive).length,
+});
 
 interface Url {
   id: number;
@@ -34,163 +55,26 @@ interface Url {
   isActive: boolean;
 }
 
-type StatCardProps = {
-  title: string;
-  value: number;
-  icon: LucideIcon;
-  helperText: string;
-};
-
-const StatCard = ({ title, value, icon: Icon, helperText }: StatCardProps) => {
-  return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      transition={{ type: 'spring', stiffness: 300 }}
-    >
-      <Card className="transition-all duration-300 hover:shadow-md hover:border-primary/50">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">{title}</CardTitle>
-          <motion.div
-            whileHover={{ rotate: 15 }}
-            transition={{ type: 'spring', stiffness: 300 }}
-          >
-            <Icon className="h-4 w-4 text-muted-foreground" />
-          </motion.div>
-        </CardHeader>
-        <CardContent>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="text-2xl font-bold">{value}</div>
-            <p className="text-xs text-muted-foreground">{helperText}</p>
-          </motion.div>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-};
-
-const RecentLinks = ({ urls }: { urls: Url[] }) => {
-  const handleCopy = async (url: string) => {
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success('URL kopyalandı!');
-    } catch (err) {
-      toast.error('URL kopyalanırken bir hata oluştu');
-    }
-  };
-
-  if (urls.length === 0) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="text-center py-10"
-      >
-        <div className="space-y-2">
-          <motion.div
-            whileHover={{ rotate: 15 }}
-            transition={{ type: 'spring', stiffness: 300 }}
-          >
-            <LinkIcon className="h-8 w-8 mx-auto text-muted-foreground" />
-          </motion.div>
-          <h3 className="text-lg font-semibold">No links created yet</h3>
-          <p className="text-sm text-muted-foreground">
-            Create your first shortened URL to see it here.
-          </p>
-          <motion.div whileHover={{ scale: 1.02 }}>
-            <Button asChild className="mt-4">
-              <Link href="/dashboard/new">Create Link</Link>
-            </Button>
-          </motion.div>
-        </div>
-      </motion.div>
-    );
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="flex flex-col gap-2"
-    >
-      {urls.slice(0, 4).map((url, index) => (
-        <motion.div
-          key={url.id}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3, delay: index * 0.1 }}
-        >
-          <div className="group flex items-center justify-between rounded-lg border px-3 py-1 hover:bg-muted/50 transition-all duration-300 hover:shadow-sm">
-            <Link
-              href={`dashboard/links/${url.shortId}`}
-              className="font-medium hover:underline"
-            >
-              {url.shortUrl}
-            </Link>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-all duration-300"
-              onClick={() => handleCopy(url.shortUrl)}
-            >
-              <CopyIcon className="h-4 w-4" />
-            </Button>
-          </div>
-        </motion.div>
-      ))}
-    </motion.div>
-  );
-};
-
-const RecentActivity = ({ hasUrls }: { hasUrls: boolean }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5 }}
-    className="text-center py-10"
-  >
-    <div className="space-y-2">
-      <motion.div
-        whileHover={{ rotate: 15 }}
-        transition={{ type: 'spring', stiffness: 300 }}
-      >
-        <BarChart className="h-8 w-8 mx-auto text-muted-foreground" />
-      </motion.div>
-      {!hasUrls && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          <h3 className="text-lg font-semibold">No recent activity</h3>
-          <p className="text-sm text-muted-foreground">
-            Activity will appear here when your links are clicked.
-          </p>
-        </motion.div>
-      )}
-    </div>
-  </motion.div>
-);
-
-const getUrlStats = (urls: Url[]) => ({
-  totalLinks: urls.length,
-  totalClicks: urls.reduce((acc, url) => acc + url.visitCount, 0),
-  activeLinks: urls.filter((url) => url.isActive).length,
-});
-
 export default function DashboardPage() {
   const { getUser, user, isLoading } = useAuthStore();
   const { getUserUrls, urls, isLoading: isLoadingUrls } = useUrlStore();
+  const { events, fetchAnalytics } = useAnalyticsStore();
 
   useEffect(() => {
     getUser();
     getUserUrls();
   }, [getUser, getUserUrls]);
+
+  useEffect(() => {
+    const fetchAllAnalytics = async () => {
+      if (urls.length > 0) {
+        // Fetch analytics for all URLs in parallel
+        await Promise.all(urls.map((url) => fetchAnalytics(url.shortId)));
+      }
+    };
+
+    fetchAllAnalytics();
+  }, [urls, fetchAnalytics]);
 
   if (isLoading || isLoadingUrls) {
     return <Loader2 className="h-4 w-4 animate-spin" />;
@@ -227,8 +111,9 @@ export default function DashboardPage() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      variants={containerAnimation}
+      initial="hidden"
+      animate="show"
       transition={{ duration: 0.5 }}
       className="space-y-8"
     >
@@ -237,7 +122,11 @@ export default function DashboardPage() {
           <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
           <p className="text-muted-foreground">Welcome back, {user?.email}</p>
         </div>
-        <motion.div whileHover={{ scale: 1.02 }}>
+        <motion.div
+          variants={buttonAnimation}
+          whileHover="hover"
+          whileTap="tap"
+        >
           <Button
             asChild
             variant="default"
@@ -256,20 +145,26 @@ export default function DashboardPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
+          variants={itemAnimation}
+          initial="hidden"
+          animate="show"
           transition={{ duration: 0.5, delay: 0.2 }}
           className="col-span-4"
         >
           <Card className="h-full transition-all duration-300 hover:shadow-md">
             <CardHeader className="flex-row items-center justify-between">
               <CardTitle>Recent Links</CardTitle>
-
-              <Button variant="ghost" size="icon" asChild>
-                <Link href="/dashboard/links">
-                  <FrameIcon />
-                </Link>
-              </Button>
+              <motion.div
+                variants={iconAnimation}
+                whileHover="hover"
+                whileTap="tap"
+              >
+                <Button variant="ghost" size="icon" asChild>
+                  <Link href="/dashboard/links">
+                    <FrameIcon />
+                  </Link>
+                </Button>
+              </motion.div>
             </CardHeader>
             <CardContent className="min-h-[220px]">
               <RecentLinks urls={urls} />
@@ -277,8 +172,9 @@ export default function DashboardPage() {
           </Card>
         </motion.div>
         <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
+          variants={itemAnimation}
+          initial="hidden"
+          animate="show"
           transition={{ duration: 0.5, delay: 0.3 }}
           className="col-span-3"
         >
@@ -287,7 +183,7 @@ export default function DashboardPage() {
               <CardTitle>Recent Activity</CardTitle>
             </CardHeader>
             <CardContent className="min-h-[220px]">
-              <RecentActivity hasUrls={urls.length > 0} />
+              <ActivityFeed events={events || []} />
             </CardContent>
           </Card>
         </motion.div>

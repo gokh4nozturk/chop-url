@@ -87,11 +87,8 @@ export interface ClickStats {
 interface AnalyticsState {
   isLoading: boolean;
   error: Error | null;
-  urlStats: UrlStats | null;
-  geoStats: GeoStats | null;
-  events: Event[] | null;
-  utmStats: UtmStats | null;
-  clickHistory: ClickStats[] | null;
+  urlStats: Record<string, UrlStats>;
+  events: Event[];
   timeRange: TimeRange;
   currentUrlId: string | null;
   isOffline: boolean;
@@ -113,11 +110,8 @@ export const useAnalyticsStore = create<AnalyticsState>()(
     (set, get) => ({
       isLoading: false,
       error: null,
-      urlStats: null,
-      geoStats: null,
-      events: null,
-      utmStats: null,
-      clickHistory: null,
+      urlStats: {},
+      events: [],
       timeRange: '7d',
       currentUrlId: null,
       isOffline: !navigator.onLine,
@@ -137,47 +131,36 @@ export const useAnalyticsStore = create<AnalyticsState>()(
             if (cachedData) {
               const { data, timestamp } = JSON.parse(cachedData);
               if (Date.now() - timestamp < CACHE_EXPIRY) {
-                set({
-                  ...data,
+                set((state) => ({
+                  urlStats: {
+                    ...state.urlStats,
+                    [shortId]: data.urlStats,
+                  },
+                  events: [...state.events, ...data.events],
                   isLoading: false,
                   isOffline: true,
-                });
+                }));
                 return;
               }
             }
           }
 
           // Fetch all data in parallel
-          const [
-            { data: urlStats },
-            { data: geoStats },
-            { data: events },
-            { data: utmStats },
-            { data: clickHistory },
-          ] = await Promise.all([
+          const [{ data: urlStats }, { data: events }] = await Promise.all([
             apiClient.get(`/api/urls/${shortId}/stats`, {
-              params: { timeRange },
-            }),
-            apiClient.get(`/api/urls/${shortId}/geo`, {
               params: { timeRange },
             }),
             apiClient.get(`/api/urls/${shortId}/events`, {
               params: { timeRange },
             }),
-            apiClient.get(`/api/urls/${shortId}/utm`, {
-              params: { timeRange },
-            }),
-            apiClient.get(`/api/urls/${shortId}/clicks`, {
-              params: { timeRange },
-            }),
           ]);
 
           const newState = {
-            urlStats,
-            geoStats,
-            events,
-            utmStats,
-            clickHistory,
+            urlStats: {
+              ...get().urlStats,
+              [shortId]: urlStats,
+            },
+            events: [...get().events, ...events],
             isLoading: false,
             error: null,
             isOffline: false,
@@ -187,7 +170,10 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           localStorage.setItem(
             getCacheKey(shortId),
             JSON.stringify({
-              data: newState,
+              data: {
+                urlStats,
+                events,
+              },
               timestamp: Date.now(),
             })
           );
@@ -200,12 +186,16 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           const cachedData = localStorage.getItem(getCacheKey(shortId));
           if (cachedData) {
             const { data, timestamp } = JSON.parse(cachedData);
-            set({
-              ...data,
+            set((state) => ({
+              urlStats: {
+                ...state.urlStats,
+                [shortId]: data.urlStats,
+              },
+              events: [...state.events, ...data.events],
               isLoading: false,
               error: new Error('Using cached data due to error'),
               isOffline: true,
-            });
+            }));
             return;
           }
 
@@ -219,11 +209,11 @@ export const useAnalyticsStore = create<AnalyticsState>()(
 
       setTimeRange: (range: TimeRange) => {
         console.log('[Analytics] Setting time range:', range);
-        set({ timeRange: range });
-        const { currentUrlId } = get();
-        if (currentUrlId) {
-          console.log('[Analytics] Refreshing data for new time range');
-          get().fetchAnalytics(currentUrlId);
+        set({ timeRange: range, events: [] });
+        const { urlStats } = get();
+        // Refresh all URLs when time range changes
+        for (const shortId of Object.keys(urlStats)) {
+          get().fetchAnalytics(shortId);
         }
       },
 
@@ -232,21 +222,18 @@ export const useAnalyticsStore = create<AnalyticsState>()(
         set({
           isLoading: false,
           error: null,
-          urlStats: null,
-          geoStats: null,
-          events: null,
-          utmStats: null,
-          clickHistory: null,
+          urlStats: {},
+          events: [],
           currentUrlId: null,
         });
       },
 
       addEvent: (event) =>
         set((state) => ({
-          events: state.events ? [event, ...(state.events || [])] : [event],
+          events: [event, ...state.events],
         })),
 
-      clearEvents: () => set({ events: null }),
+      clearEvents: () => set({ events: [] }),
     }),
     { name: 'analytics-store' }
   )
