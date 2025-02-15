@@ -59,12 +59,50 @@ import {
 type TimeRange = '24h' | '7d' | '30d' | '90d';
 
 // Safe JSON parse utility
-const safeJsonParse = <T,>(json: string | null, fallback: T): T => {
-  if (!json) return fallback;
+const safeJsonParse = <T,>(input: string | null | object, fallback: T): T => {
+  // Null check
+  if (input === null || input === undefined) {
+    return fallback;
+  }
+
+  // If it's already an object and not an array, return it
+  if (typeof input === 'object' && !Array.isArray(input)) {
+    return input as T;
+  }
+
+  // If it's not a string at this point, return fallback
+  if (typeof input !== 'string') {
+    return fallback;
+  }
+
   try {
-    return JSON.parse(json) as T;
+    // Try to parse if it's a string
+    const trimmed = input.trim();
+    let result: unknown;
+
+    // Handle potential double-stringified JSON
+    try {
+      result = JSON.parse(trimmed);
+      // If the result is a string, try parsing again (handles double-stringified JSON)
+      if (typeof result === 'string') {
+        try {
+          const secondParse = JSON.parse(result);
+          result = secondParse;
+        } catch {
+          // If second parse fails, keep the first parse result
+        }
+      }
+    } catch (e) {
+      return fallback;
+    }
+
+    // Final type check
+    if (result === null || result === undefined) {
+      return fallback;
+    }
+
+    return result as T;
   } catch (error) {
-    console.error('Error parsing JSON:', error);
     return fallback;
   }
 };
@@ -77,31 +115,56 @@ const processDeviceStats = (events: Event[]) => {
   for (const event of events) {
     if (!event.deviceInfo) continue;
 
-    const deviceInfo = safeJsonParse<DeviceInfo>(event.deviceInfo, {
-      userAgent: '',
-      ip: '',
-      browser: 'Unknown',
-      browserVersion: '',
-      os: 'Unknown',
-      osVersion: '',
-      deviceType: 'unknown',
-    });
+    let deviceInfo: DeviceInfo;
 
-    // Browser stats
-    const browserKey = deviceInfo.browser
-      ? `${deviceInfo.browser} ${deviceInfo.browserVersion}`.trim()
-      : 'Unknown';
-    browsers[browserKey] = (browsers[browserKey] || 0) + 1;
+    try {
+      // String temizleme ve parse işlemi
+      if (typeof event.deviceInfo === 'string') {
+        // Özel karakterleri düzelt
+        const cleanJson = event.deviceInfo
+          .split('')
+          .filter((char) => char.charCodeAt(0) > 31) // Control karakterlerini temizle
+          .join('')
+          .replace(/\\/g, '\\\\') // Backslash'leri escape et
+          .replace(/"/g, '\\"'); // Çift tırnakları escape et
 
-    // Device type stats
-    const deviceType = deviceInfo.deviceType || 'unknown';
-    devices[deviceType] = (devices[deviceType] || 0) + 1;
+        try {
+          deviceInfo = JSON.parse(`"${cleanJson}"`);
+        } catch {
+          // İlk deneme başarısız olursa, direkt parse etmeyi dene
+          deviceInfo = JSON.parse(cleanJson);
+        }
+      } else {
+        deviceInfo = event.deviceInfo as DeviceInfo;
+      }
 
-    // Operating system stats
-    const osKey = deviceInfo.os
-      ? `${deviceInfo.os} ${deviceInfo.osVersion}`.trim()
-      : 'Unknown';
-    operatingSystems[osKey] = (operatingSystems[osKey] || 0) + 1;
+      // Gerekli alanların varlığını kontrol et
+      if (!deviceInfo || typeof deviceInfo !== 'object') {
+        console.warn('Invalid deviceInfo format:', deviceInfo);
+        continue;
+      }
+
+      // Browser stats
+      const browserKey = deviceInfo.browser
+        ? `${deviceInfo.browser} ${deviceInfo.browserVersion || ''}`.trim()
+        : 'Unknown';
+      browsers[browserKey] = (browsers[browserKey] || 0) + 1;
+
+      // Device type stats
+      const deviceType = deviceInfo.deviceType || 'unknown';
+      devices[deviceType] = (devices[deviceType] || 0) + 1;
+
+      // Operating system stats
+      const osKey = deviceInfo.os
+        ? `${deviceInfo.os} ${deviceInfo.osVersion || ''}`.trim()
+        : 'Unknown';
+      operatingSystems[osKey] = (operatingSystems[osKey] || 0) + 1;
+    } catch (error) {
+      console.warn('Error processing device info:', {
+        error,
+        deviceInfo: event.deviceInfo,
+      });
+    }
   }
 
   return { browsers, operatingSystems, devices };
