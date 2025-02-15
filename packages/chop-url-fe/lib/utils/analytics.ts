@@ -142,7 +142,14 @@ export const processEvents = (events: Event[]) => {
       });
 
       countries[geoInfo.country] = (countries[geoInfo.country] || 0) + 1;
-      cities[geoInfo.city] = (cities[geoInfo.city] || 0) + 1;
+
+      // Combine city and country for better grouping
+      const cityKey =
+        geoInfo.city && geoInfo.country
+          ? `${geoInfo.city}, ${geoInfo.country}`
+          : geoInfo.city || 'Unknown';
+      cities[cityKey] = (cities[cityKey] || 0) + 1;
+
       regions[geoInfo.region] = (regions[geoInfo.region] || 0) + 1;
       timezones[geoInfo.timezone] = (timezones[geoInfo.timezone] || 0) + 1;
     }
@@ -189,8 +196,16 @@ export const processEvents = (events: Event[]) => {
 export const transformDataForPieChart = (data: Record<string, number> = {}) =>
   Object.entries(data)
     .sort(([, a], [, b]) => b - a)
-    .slice(0, 5)
     .map(([name, value]) => ({
       name: name || 'Direct',
+      value,
+    }));
+
+// Transform data for city visualization without limiting
+export const transformCityData = (data: Record<string, number> = {}) =>
+  Object.entries(data)
+    .sort(([, a], [, b]) => b - a)
+    .map(([name, value]) => ({
+      name: name || 'Unknown',
       value,
     }));

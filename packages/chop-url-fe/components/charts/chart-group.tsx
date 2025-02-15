@@ -6,6 +6,7 @@ import { ChoroplethMap } from './choropleth-map';
 import { Heatmap } from './heatmap';
 import { HorizontalBarChart } from './horizontal-bar-chart';
 import { PieChart } from './pie-chart';
+import { SunburstChart } from './sunburst-chart';
 import { TreemapChart } from './treemap-chart';
 
 interface ChartGroupProps {
@@ -52,12 +53,10 @@ export function ChartGroup({
 
       <Card>
         <CardContent className="pt-6">
-          <ChoroplethMap
-            data={countryData}
-            valueFormatter={percentageFormatter}
-            loading={loading}
-            title="Geographic Distribution"
-            description="Distribution of clicks by country"
+          <WorldMap
+            data={Object.fromEntries(
+              countryData.map(({ name, value }) => [name, value])
+            )}
           />
         </CardContent>
       </Card>
@@ -148,12 +147,12 @@ export function ChartGroup({
 
       <Card>
         <CardContent className="pt-6">
-          <Heatmap
+          <SunburstChart
             data={cityData}
             valueFormatter={percentageFormatter}
             loading={loading}
-            title="Top Cities"
-            description="Distribution of traffic by city"
+            title="Cities Distribution"
+            description="Complete distribution of traffic across all cities"
           />
         </CardContent>
       </Card>

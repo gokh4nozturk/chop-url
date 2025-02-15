@@ -11,7 +11,11 @@ import {
 import { StatCard } from '@/components/ui/stat-card';
 import { useAnalyticsStore } from '@/lib/store/analytics';
 import type { TimeRange } from '@/lib/store/analytics';
-import { processEvents, transformDataForPieChart } from '@/lib/utils/analytics';
+import {
+  processEvents,
+  transformCityData,
+  transformDataForPieChart,
+} from '@/lib/utils/analytics';
 import {
   Activity,
   BarChart2,
@@ -160,7 +164,7 @@ export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
         sourceData={transformDataForPieChart(stats.sources)}
         campaignData={transformDataForPieChart(stats.campaigns)}
         countryData={transformDataForPieChart(stats.countries)}
-        cityData={transformDataForPieChart(stats.cities)}
+        cityData={transformCityData(stats.cities)}
         loading={isLoading}
         totalEvents={urlStats?.totalEvents || 0}
         sections={['timeSeries', 'devices', 'traffic', 'geography']}
