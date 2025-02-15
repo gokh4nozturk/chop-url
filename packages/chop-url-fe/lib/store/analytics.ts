@@ -89,6 +89,7 @@ interface AnalyticsState {
   error: Error | null;
   urlStats: Record<string, UrlStats>;
   events: Event[];
+  clickHistory: ClickStats[];
   timeRange: TimeRange;
   currentUrlId: string | null;
   isOffline: boolean;
@@ -112,9 +113,10 @@ export const useAnalyticsStore = create<AnalyticsState>()(
       error: null,
       urlStats: {},
       events: [],
+      clickHistory: [],
       timeRange: '7d',
       currentUrlId: null,
-      isOffline: !navigator.onLine,
+      isOffline: false,
 
       fetchAnalytics: async (shortId: string) => {
         try {
@@ -125,7 +127,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           console.log('[Analytics] Using time range:', timeRange);
 
           // Check if we're offline
-          if (!navigator.onLine) {
+          if (typeof window !== 'undefined' && !window.navigator.onLine) {
             console.log('[Analytics] Offline, using cached data');
             const cachedData = localStorage.getItem(getCacheKey(shortId));
             if (cachedData) {

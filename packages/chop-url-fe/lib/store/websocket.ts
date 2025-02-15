@@ -8,7 +8,7 @@ interface ExtendedWebSocket extends WebSocket {
   pongTimeout?: NodeJS.Timeout;
 }
 
-interface WebSocketState {
+export interface WebSocketState {
   socket: WebSocket | null;
   isConnected: boolean;
   isConnecting: boolean;
@@ -50,6 +50,9 @@ export const useWebSocketStore = create<WebSocketState>()(
       reconnectAttempts: 0,
 
       connect: async () => {
+        // Only run in browser environment
+        if (typeof window === 'undefined') return;
+
         try {
           const { socket, isConnected, isConnecting, reconnectAttempts } =
             get();

@@ -72,28 +72,30 @@ export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
 
   if (!stats) return null;
 
+  const currentUrlStats = urlStats?.[shortId];
+
   const analyticsStats = [
     {
       title: 'Total Clicks',
-      value: urlStats?.totalEvents || 0,
+      value: currentUrlStats?.totalEvents?.toString() || '0',
       icon: BarChart2,
     },
     {
       title: 'Unique Visitors',
-      value: urlStats?.uniqueVisitors || 0,
+      value: currentUrlStats?.uniqueVisitors?.toString() || '0',
       icon: Activity,
     },
     {
       title: 'Created At',
-      value: urlStats?.url.createdAt
-        ? new Date(urlStats.url.createdAt).toLocaleDateString()
+      value: currentUrlStats?.url?.createdAt
+        ? new Date(currentUrlStats.url.createdAt).toLocaleDateString()
         : '-',
       icon: Calendar,
     },
     {
       title: 'Last Click',
-      value: urlStats?.lastEventAt
-        ? new Date(urlStats.lastEventAt).toLocaleDateString()
+      value: currentUrlStats?.lastEventAt
+        ? new Date(currentUrlStats.lastEventAt).toLocaleDateString()
         : 'Never',
       icon: Clock,
     },
@@ -161,7 +163,7 @@ export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
         countryData={transformDataForPieChart(stats.countries)}
         cityData={transformCityData(stats.cities)}
         loading={isLoading}
-        totalEvents={urlStats?.totalEvents || 0}
+        totalEvents={currentUrlStats?.totalEvents || 0}
         sections={['timeSeries', 'devices', 'traffic', 'geography']}
       />
     </>
