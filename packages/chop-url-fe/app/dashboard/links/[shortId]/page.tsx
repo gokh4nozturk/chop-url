@@ -20,9 +20,37 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useUrlStore from '@/lib/store/url';
 import { IUrl } from '@/lib/types';
+import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import {
   CalendarDays,
@@ -32,6 +60,7 @@ import {
   Hash,
   Link as LinkIcon,
   Loader2,
+  Lock,
   MousePointerClick,
   Pencil,
   Share2,
@@ -249,38 +278,164 @@ const LinkDetails = ({ urlDetails }: { urlDetails: IUrl }) => {
                   value={urlDetails.originalUrl}
                 />
                 <InfoCard
-                  icon={<LinkIcon className="h-4 w-4" />}
+                  icon={<Hash className="h-4 w-4" />}
                   title="Short URL"
                   value={urlDetails.shortUrl}
                 />
-                <InfoCard
-                  icon={<Hash className="h-4 w-4" />}
-                  title="Short ID"
-                  value={urlDetails.shortId}
-                />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-4">
                 <InfoCard
                   icon={<MousePointerClick className="h-4 w-4" />}
-                  title="Visit Count"
-                  value={urlDetails?.visitCount?.toString() || '0'}
+                  title="Total Clicks"
+                  value={urlDetails.visitCount.toString()}
+                  highlight
                 />
                 <InfoCard
                   icon={<CalendarDays className="h-4 w-4" />}
-                  title="Created Date"
-                  value={formattedDate}
+                  title="Last Visit"
+                  value={
+                    urlDetails.lastAccessedAt
+                      ? new Date(urlDetails.lastAccessedAt).toLocaleDateString(
+                          'en-US',
+                          {
+                            day: 'numeric',
+                            month: 'short',
+                          }
+                        )
+                      : 'Never'
+                  }
                 />
+                <InfoCard
+                  icon={<CalendarDays className="h-4 w-4" />}
+                  title="Created On"
+                  value={new Date(urlDetails.createdAt).toLocaleDateString(
+                    'en-US',
+                    {
+                      day: 'numeric',
+                      month: 'short',
+                    }
+                  )}
+                />
+                <InfoCard
+                  icon={<LinkIcon className="h-4 w-4" />}
+                  title="Status"
+                  value={urlDetails.isActive ? 'Active' : 'Inactive'}
+                  valueClassName={
+                    urlDetails.isActive ? 'text-green-500' : 'text-destructive'
+                  }
+                />
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Link Settings</h3>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="w-full">
+                        <Lock className="mr-2 h-4 w-4" />
+                        Password Protection
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Password Protection</DialogTitle>
+                        <DialogDescription>
+                          Add a password to protect your link from unauthorized
+                          access
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="flex items-center justify-between">
+                          <Label>Enable Password</Label>
+                          <Switch />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Password</Label>
+                          <Input type="password" placeholder="Enter password" />
+                        </div>
+                      </div>
+                      <Button className="w-full">Save Password</Button>
+                    </DialogContent>
+                  </Dialog>
+
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="w-full">
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        Set Expiry Date
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Set Expiry Date</DialogTitle>
+                        <DialogDescription>
+                          Choose when this link should expire
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="flex items-center justify-between">
+                          <Label>Enable Expiry</Label>
+                          <Switch />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Expiry Date</Label>
+                          <Input type="datetime-local" />
+                        </div>
+                      </div>
+                      <Button className="w-full">Save Expiry Date</Button>
+                    </DialogContent>
+                  </Dialog>
+
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="w-full">
+                        <Globe className="mr-2 h-4 w-4" />
+                        Custom Domain
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Custom Domain</DialogTitle>
+                        <DialogDescription>
+                          Use your own domain for this link
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label>Select Domain</Label>
+                          <Select>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a domain" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="default">
+                                chop-url.com
+                              </SelectItem>
+                              <SelectItem value="custom">
+                                Add New Domain
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Custom Path</Label>
+                          <Input placeholder="Enter custom path" />
+                        </div>
+                      </div>
+                      <Button className="w-full">Save Domain Settings</Button>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
             </CardContent>
             <CardFooter className="justify-end space-x-2">
-              <Button variant="outline" asChild>
-                <Link
-                  className="flex items-center"
-                  href={`/dashboard/links/${urlDetails.shortId}/edit`}
-                >
+              <Link href={`/dashboard/links/${urlDetails.shortId}/edit`}>
+                <Button variant="outline">
                   <Pencil className="mr-2 h-4 w-4" />
                   Edit
-                </Link>
-              </Button>
-
+                </Button>
+              </Link>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive">
@@ -310,12 +465,89 @@ const LinkDetails = ({ urlDetails }: { urlDetails: IUrl }) => {
             </CardFooter>
           </Card>
         </div>
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <Card className="group transition-all duration-300 hover:shadow-lg">
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Activity History</CardTitle>
+              <CardDescription>
+                Recent visits and changes to your link
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="visits">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="visits">Recent Visits</TabsTrigger>
+                  <TabsTrigger value="changes">Changes</TabsTrigger>
+                </TabsList>
+                <TabsContent value="visits" className="mt-4">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Device</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {urlDetails.visitCount > 0 ? (
+                        <TableRow>
+                          <TableCell className="text-sm">
+                            {new Date().toLocaleDateString('en-US', {
+                              day: 'numeric',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </TableCell>
+                          <TableCell className="text-sm">Unknown</TableCell>
+                          <TableCell className="text-sm">Desktop</TableCell>
+                        </TableRow>
+                      ) : (
+                        <TableRow>
+                          <TableCell
+                            colSpan={3}
+                            className="text-center text-muted-foreground"
+                          >
+                            No visits yet
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </TabsContent>
+                <TabsContent value="changes" className="mt-4">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Change</TableHead>
+                        <TableHead>User</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell className="text-sm">
+                          {new Date(urlDetails.createdAt).toLocaleDateString(
+                            'en-US',
+                            {
+                              day: 'numeric',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            }
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm">Link created</TableCell>
+                        <TableCell className="text-sm">You</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+
+          <Card>
             <CardHeader>
               <CardTitle>QR Code</CardTitle>
               <CardDescription>Scan or download the QR code</CardDescription>
@@ -352,7 +584,7 @@ const LinkDetails = ({ urlDetails }: { urlDetails: IUrl }) => {
               </Button>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
     </motion.div>
   );
@@ -362,27 +594,36 @@ const InfoCard = ({
   icon,
   title,
   value,
+  highlight,
+  valueClassName,
 }: {
   icon: React.ReactNode;
   title: string;
   value: string;
+  highlight?: boolean;
+  valueClassName?: string;
 }) => {
   return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      transition={{ type: 'spring', stiffness: 300 }}
-    >
-      <Card className="transition-all duration-300 hover:shadow-md hover:border-primary/50">
-        <CardContent className="flex items-center space-x-4 p-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-            {icon}
-          </div>
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-center gap-2">
+          {icon}
           <div className="space-y-1">
             <p className="text-sm font-medium">{title}</p>
-            <p className="text-sm text-muted-foreground break-all">{value}</p>
+            <p
+              className={cn(
+                'break-all',
+                highlight
+                  ? 'text-xl font-bold'
+                  : 'text-sm text-muted-foreground',
+                valueClassName
+              )}
+            >
+              {value}
+            </p>
           </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
