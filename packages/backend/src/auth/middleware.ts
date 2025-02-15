@@ -12,7 +12,8 @@ export const auth = () => {
         throw new AuthError(AuthErrorCode.NO_TOKEN, 'No token provided');
       }
 
-      const authService = new AuthService(c.env.DB, {
+      const db = c.get('db');
+      const authService = new AuthService(db, {
         resendApiKey: c.env.RESEND_API_KEY,
         frontendUrl: c.env.FRONTEND_URL,
         googleClientId: c.env.GOOGLE_CLIENT_ID,

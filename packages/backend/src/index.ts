@@ -91,7 +91,7 @@ app.get('/ws', async (c) => {
 });
 
 // Mount routes
-app.route('/api/auth', createAuthRoutes());
+app.route('/api', createAuthRoutes());
 app.route('/api', createUrlRoutes());
 app.route('/api', createDomainRoutes());
 app.route('/api', createAnalyticsRoutes());

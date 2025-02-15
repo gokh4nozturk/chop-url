@@ -58,15 +58,7 @@ export class UrlService {
     userId?: string
   ): Promise<ICreateUrlResponse> {
     try {
-      // Check if URL already exists
-      const response = await this.db
-        .select()
-        .from(urls)
-        .where(eq(urls.originalUrl, url));
-
-      if (response.length > 0) {
-        throw new Error(`URL already exists: ${response[0].originalUrl}`);
-      }
+      let shortId: string;
 
       // If custom slug is provided, check if it's available
       if (options?.customSlug) {
@@ -84,100 +76,50 @@ export class UrlService {
         if (existingCustomSlug.length > 0) {
           throw new Error('Custom slug already exists');
         }
-
-        // Use the custom slug directly
-        const shortId = options.customSlug;
-        const urlData = {
-          shortId,
-          originalUrl: url,
-          customSlug: options.customSlug,
-          userId: userId ? parseInt(userId) : null,
-          createdAt: new Date().toISOString(),
-          lastAccessedAt: null,
-          visitCount: 0,
-          expiresAt:
-            options?.expiresAt ||
-            (!token
-              ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-              : null),
-          isActive: true,
-          tags: options?.tags ? JSON.stringify(options.tags) : null,
-          groupId: options?.groupId || null,
-        };
-
-        const [result] = await this.db.insert(urls).values(urlData).returning();
-
-        return {
-          shortUrl: `${this.baseUrl}/${result.shortId}`,
-          shortId: result.shortId,
-          originalUrl: result.originalUrl,
-          createdAt: result.createdAt || '',
-          userId: result.userId,
-          expiresAt: result.expiresAt || '',
-          tags: result.tags ? JSON.parse(result.tags) : undefined,
-          groupId: result.groupId || undefined,
-        };
+        shortId = options.customSlug;
+      } else {
+        // Generate a new unique shortId
+        do {
+          const generated = this.chopUrl.generateShortUrl(url);
+          shortId = generated.shortId;
+        } while (!(await this.isShortIdUnique(shortId)));
       }
 
-      // Generate a new short ID if no custom slug
-      let shortId: string;
-      let isUnique = false;
-      let attempts = 0;
-      const maxAttempts = 5;
-
-      do {
-        const generated = this.chopUrl.generateShortUrl(url);
-        shortId = generated.shortId;
-        isUnique = await this.isShortIdUnique(shortId);
-        attempts++;
-      } while (!isUnique && attempts < maxAttempts);
-
-      if (!isUnique) {
-        throw new Error('Failed to generate unique short ID');
-      }
-
+      // Create the URL record
       const urlData = {
         shortId,
         originalUrl: url,
-        customSlug: null,
+        customSlug: options?.customSlug,
         userId: userId ? parseInt(userId) : null,
         createdAt: new Date().toISOString(),
         lastAccessedAt: null,
         visitCount: 0,
         expiresAt:
-          options?.expiresAt ||
-          (!token
-            ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-            : new Date(Date.now() + 7 * 60 * 60 * 24 * 1000).toISOString()),
-        isActive: true,
+          options?.expiresAt || (!token ? this.getDefaultExpiration() : null),
         tags: options?.tags ? JSON.stringify(options.tags) : null,
         groupId: options?.groupId || null,
       };
 
-      const [result] = await this.db.insert(urls).values(urlData).returning();
+      await this.db.insert(urls).values(urlData);
 
       return {
-        shortUrl: `${this.baseUrl}/${result.shortId}`,
-        shortId: result.shortId,
-        originalUrl: result.originalUrl,
-        createdAt: result.createdAt || '',
-        userId: result.userId,
-        expiresAt: result.expiresAt || '',
-        tags: result.tags ? JSON.parse(result.tags) : undefined,
-        groupId: result.groupId || undefined,
+        shortUrl: `${this.baseUrl}/${shortId}`,
+        shortId,
+        originalUrl: url,
+        createdAt: urlData.createdAt,
+        expiresAt: urlData.expiresAt || undefined,
+        userId: urlData.userId,
       };
     } catch (error) {
       console.error('Error in createShortUrl:', error);
-      if (error instanceof Error) {
-        if (
-          error.message === 'Custom slug already exists' ||
-          error.message.includes('URL already exists')
-        ) {
-          throw error;
-        }
-      }
-      throw new Error('Failed to create short URL');
+      throw error;
     }
+  }
+
+  private getDefaultExpiration(): string {
+    const date = new Date();
+    date.setDate(date.getDate() + 7); // 7 days from now
+    return date.toISOString();
   }
 
   async getOriginalUrl(shortId: string) {

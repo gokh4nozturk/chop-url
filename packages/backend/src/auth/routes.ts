@@ -68,7 +68,7 @@ interface Variables {
 export const createAuthRoutes = () => {
   const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-  router.get('/me', auth(), async (c: Context) => {
+  router.get('/auth/me', auth(), async (c: Context) => {
     const user = c.get('user');
     return c.json({ user });
   });
@@ -78,7 +78,8 @@ export const createAuthRoutes = () => {
     zValidator('json', registerSchema),
     async (c: Context) => {
       try {
-        const authService = new AuthService(c.env.DB, {
+        const db = c.get('db');
+        const authService = new AuthService(db, {
           resendApiKey: c.env.RESEND_API_KEY,
           frontendUrl: c.env.FRONTEND_URL,
           googleClientId: c.env.GOOGLE_CLIENT_ID,
@@ -98,28 +99,33 @@ export const createAuthRoutes = () => {
     }
   );
 
-  router.post('/login', zValidator('json', loginSchema), async (c: Context) => {
-    try {
-      const authService = new AuthService(c.env.DB, {
-        resendApiKey: c.env.RESEND_API_KEY,
-        frontendUrl: c.env.FRONTEND_URL,
-        googleClientId: c.env.GOOGLE_CLIENT_ID,
-        googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
-        githubClientId: c.env.GITHUB_CLIENT_ID,
-        githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
-      });
-      const credentials = await c.req.json<z.infer<typeof loginSchema>>();
-      const response = await authService.login(credentials);
-      return c.json(response);
-    } catch (error) {
-      if (error instanceof AuthError) {
-        return c.json({ error: error.message }, 401);
+  router.post(
+    '/auth/login',
+    zValidator('json', loginSchema),
+    async (c: Context) => {
+      try {
+        const db = c.get('db');
+        const authService = new AuthService(db, {
+          resendApiKey: c.env.RESEND_API_KEY,
+          frontendUrl: c.env.FRONTEND_URL,
+          googleClientId: c.env.GOOGLE_CLIENT_ID,
+          googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
+          githubClientId: c.env.GITHUB_CLIENT_ID,
+          githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
+        });
+        const credentials = await c.req.json<z.infer<typeof loginSchema>>();
+        const response = await authService.login(credentials);
+        return c.json(response);
+      } catch (error) {
+        if (error instanceof AuthError) {
+          return c.json({ error: error.message }, 401);
+        }
+        return c.json({ error: 'Internal server error' }, 500);
       }
-      return c.json({ error: 'Internal server error' }, 500);
     }
-  });
+  );
 
-  router.post('/setup-2fa', auth(), async (c: Context) => {
+  router.post('/auth/setup-2fa', auth(), async (c: Context) => {
     try {
       const authService = new AuthService(c.env.DB, {
         resendApiKey: c.env.RESEND_API_KEY,
@@ -210,7 +216,7 @@ export const createAuthRoutes = () => {
     }
   );
 
-  router.get('/recovery-codes', auth(), async (c: Context) => {
+  router.get('/auth/recovery-codes', auth(), async (c: Context) => {
     try {
       const authService = new AuthService(c.env.DB, {
         resendApiKey: c.env.RESEND_API_KEY,
@@ -484,7 +490,7 @@ export const createAuthRoutes = () => {
     }
   );
 
-  router.post('/resend-verification-email', auth(), async (c: Context) => {
+  router.post('/auth/resend-verification-email', auth(), async (c: Context) => {
     try {
       console.log('Starting resend-verification-email handler', {
         apiKey: c.env.RESEND_API_KEY ? 'present' : 'missing',
@@ -532,7 +538,7 @@ export const createAuthRoutes = () => {
   });
 
   // OAuth routes
-  router.get('/oauth/:provider', async (c: Context) => {
+  router.get('/auth/oauth/:provider', async (c: Context) => {
     try {
       const provider = c.req.param('provider');
       const authService = new AuthService(c.env.DB, {
@@ -553,7 +559,7 @@ export const createAuthRoutes = () => {
     }
   });
 
-  router.get('/oauth/:provider/callback', async (c: Context) => {
+  router.get('/auth/oauth/:provider/callback', async (c: Context) => {
     try {
       const provider = c.req.param('provider');
       const code = c.req.query('code');
@@ -594,7 +600,7 @@ export const createAuthRoutes = () => {
     }
   });
 
-  router.post('/request-password-reset', async (c: Context) => {
+  router.post('/auth/request-password-reset', async (c: Context) => {
     try {
       const { email } = await c.req.json();
       const authService = new AuthService(c.env.DB, {
@@ -615,7 +621,7 @@ export const createAuthRoutes = () => {
     }
   });
 
-  router.put('/reset-password', async (c: Context) => {
+  router.put('/auth/reset-password', async (c: Context) => {
     try {
       const { token, newPassword, confirmPassword } = await c.req.json();
       const authService = new AuthService(c.env.DB, {
