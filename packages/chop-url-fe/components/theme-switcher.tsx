@@ -11,10 +11,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
 
 export function ThemeSwitcher() {
   const [mounted, setMounted] = React.useState(false);
-  const { resolvedTheme, setTheme } = useTheme();
+  const { setTheme, theme } = useTheme();
 
   React.useEffect(() => {
     setMounted(true);
@@ -34,13 +35,31 @@ export function ThemeSwitcher() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme('light')}>
+        <DropdownMenuItem
+          className={cn(
+            theme === 'light' && 'bg-blue-500 text-white',
+            'cursor-pointer'
+          )}
+          onClick={() => setTheme('light')}
+        >
           Light
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme('dark')}>
+        <DropdownMenuItem
+          className={cn(
+            theme === 'dark' && 'bg-blue-500 text-white',
+            'cursor-pointer'
+          )}
+          onClick={() => setTheme('dark')}
+        >
           Dark
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme('system')}>
+        <DropdownMenuItem
+          className={cn(
+            theme === 'system' && 'bg-blue-500 text-white',
+            'cursor-pointer'
+          )}
+          onClick={() => setTheme('system')}
+        >
           System
         </DropdownMenuItem>
       </DropdownMenuContent>

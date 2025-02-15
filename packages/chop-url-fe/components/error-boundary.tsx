@@ -40,7 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
       return (
         <Alert variant="destructive" className="my-4">
-          <AlertTitle>Bir şeyler ters gitti</AlertTitle>
+          <AlertTitle>Something went wrong</AlertTitle>
           <AlertDescription className="mt-2">
             <p className="mb-2">{this.state.error?.message}</p>
             <Button
@@ -49,7 +49,7 @@ export class ErrorBoundary extends Component<Props, State> {
               onClick={this.handleReset}
               className="mt-2"
             >
-              Tekrar Dene
+              Try Again
             </Button>
           </AlertDescription>
         </Alert>
