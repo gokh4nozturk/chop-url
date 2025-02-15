@@ -9,19 +9,25 @@ import {
 import { CHART_COLORS } from './constants';
 import { ChartTooltip } from './tooltip';
 
-interface PieChartProps {
+export interface PieChartProps {
   data: Array<{ name: string; value: number }>;
-  valueFormatter: (value: number) => string;
+  valueFormatter?: (value: number) => string;
+  loading?: boolean;
   title: string;
   subtitle: string;
 }
 
 export function PieChart({
   data,
-  valueFormatter,
+  valueFormatter = (value) => `${value}`,
+  loading = false,
   title,
   subtitle,
 }: PieChartProps) {
+  if (loading) {
+    return <div className="h-full w-full animate-pulse bg-muted" />;
+  }
+
   const total = data.reduce((sum, entry) => sum + entry.value, 0);
 
   return (

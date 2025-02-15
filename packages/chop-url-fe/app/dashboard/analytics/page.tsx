@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/select';
 import { StatCard } from '@/components/ui/stat-card';
 import apiClient from '@/lib/api/client';
+import { transformDataForPieChart } from '@/lib/utils/analytics';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Activity,
@@ -218,15 +219,28 @@ export default function AnalyticsPage() {
               }),
               value: item.value,
             }))}
-            deviceData={analyticsData.deviceStats.devices}
-            browserData={analyticsData.deviceStats.browsers}
-            osData={analyticsData.deviceStats.operatingSystems}
-            sourceData={analyticsData.utmStats.sources}
-            campaignData={analyticsData.utmStats.campaigns}
-            countryData={analyticsData.geoStats.countries}
-            cityData={analyticsData.geoStats.cities}
+            deviceData={transformDataForPieChart(
+              analyticsData.deviceStats.devices
+            )}
+            browserData={transformDataForPieChart(
+              analyticsData.deviceStats.browsers
+            )}
+            osData={transformDataForPieChart(
+              analyticsData.deviceStats.operatingSystems
+            )}
+            sourceData={transformDataForPieChart(
+              analyticsData.utmStats.sources
+            )}
+            campaignData={transformDataForPieChart(
+              analyticsData.utmStats.campaigns
+            )}
+            countryData={transformDataForPieChart(
+              analyticsData.geoStats.countries
+            )}
+            cityData={transformDataForPieChart(analyticsData.geoStats.cities)}
             loading={isLoading}
             totalEvents={analyticsData.totalEvents}
+            sections={['timeSeries', 'devices', 'traffic', 'geography']}
           />
         </motion.div>
       )}

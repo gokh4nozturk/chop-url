@@ -11,9 +11,9 @@ import {
 import { CHART_COLORS, CHART_GRID_CLASSNAMES } from './constants';
 import { ChartTooltip } from './tooltip';
 
-interface BarChartProps {
+export interface BarChartProps {
   data: Array<{ name: string; value: number }>;
-  valueFormatter: (value: number) => string;
+  valueFormatter?: (value: number) => string;
   title: string;
   description?: string;
   loading?: boolean;
@@ -21,13 +21,13 @@ interface BarChartProps {
 
 export function BarChart({
   data,
-  valueFormatter,
+  valueFormatter = (value) => `${value}`,
   title,
   description,
-  loading,
+  loading = false,
 }: BarChartProps) {
   if (loading) {
-    return <div className="h-[350px] animate-pulse bg-muted" />;
+    return <div className="h-full w-full animate-pulse bg-muted" />;
   }
 
   return (

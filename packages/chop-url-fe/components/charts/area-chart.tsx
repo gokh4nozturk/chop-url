@@ -10,12 +10,21 @@ import {
 import { CHART_COLORS, CHART_GRID_CLASSNAMES } from './constants';
 import { ChartTooltip } from './tooltip';
 
-interface AreaChartProps {
+export interface AreaChartProps {
   data: Array<{ name: string; value: number }>;
-  valueFormatter: (value: number) => string;
+  valueFormatter?: (value: number) => string;
+  loading?: boolean;
 }
 
-export function AreaChart({ data, valueFormatter }: AreaChartProps) {
+export function AreaChart({
+  data,
+  valueFormatter = (value) => `${value}`,
+  loading = false,
+}: AreaChartProps) {
+  if (loading) {
+    return <div className="h-full w-full animate-pulse bg-muted" />;
+  }
+
   return (
     <ResponsiveContainer width="100%" height={350}>
       <RechartsAreaChart data={data}>
