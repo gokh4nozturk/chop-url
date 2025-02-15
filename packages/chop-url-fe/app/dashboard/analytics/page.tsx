@@ -1,10 +1,8 @@
 'use client';
 
+import { ChartGroup } from '@/components/charts/chart-group';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AreaChart } from '@/components/ui/area-chart';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PieChart } from '@/components/ui/pie-chart';
 import {
   Select,
   SelectContent,
@@ -12,30 +10,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
 import { StatCard } from '@/components/ui/stat-card';
-import { WorldMap } from '@/components/ui/world-map';
 import apiClient from '@/lib/api/client';
-import type {
-  Event,
-  GeoStats,
-  UrlStats,
-  UtmStats,
-} from '@/lib/store/analytics';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Activity,
   BarChart2,
-  Calendar,
-  Chrome,
   Clock,
   Download,
   Globe,
-  Laptop,
   Link2,
   Loader2,
-  Monitor,
-  Share2,
   User,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
@@ -62,75 +47,28 @@ interface AnalyticsResponse {
   clicksByDate: Array<{ name: string; value: number }>;
 }
 
-interface AnalyticsData {
-  totalClicks: number;
-  uniqueVisitors: number;
-  countries: Record<string, number>;
-  cities: Record<string, number>;
-  regions: Record<string, number>;
-  timezones: Record<string, number>;
-  referrers: Record<string, number>;
-  devices: Record<string, number>;
-  browsers: Record<string, number>;
-  operatingSystems: Record<string, number>;
-  campaigns: Record<string, number>;
-  clicksByDate: Array<{ name: string; value: number }>;
-}
-
 const REFRESH_INTERVAL = 30000; // 30 seconds
-
-// Fix data transformations for pie charts
-const transformDataForPieChart = (data: Record<string, number> = {}) =>
-  Object.entries(data)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 5)
-    .map(([name, value]) => ({
-      name: name || 'Direct',
-      value,
-    }));
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('7d');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsResponse | null>(
     null
   );
 
   const fetchAnalytics = useCallback(async () => {
     try {
       setError(null);
-      console.log('Fetching analytics with period:', timeRange);
       const { data } = await apiClient.get<AnalyticsResponse>(
         `/api/user/analytics?timeRange=${timeRange}`
       );
-
-      console.log('API Response:', data);
 
       if (!data) {
         throw new Error('No data received from API');
       }
 
-      setAnalyticsData({
-        totalClicks: data.totalEvents,
-        uniqueVisitors: data.uniqueVisitors,
-        countries: data.geoStats?.countries || {},
-        cities: data.geoStats?.cities || {},
-        regions: data.geoStats?.regions || {},
-        timezones: data.geoStats?.timezones || {},
-        referrers: data.utmStats?.sources || {},
-        devices: data.deviceStats?.devices || {},
-        browsers: data.deviceStats?.browsers || {},
-        operatingSystems: data.deviceStats?.operatingSystems || {},
-        campaigns: data.utmStats?.campaigns || {},
-        clicksByDate: (data.clicksByDate || []).map((item) => ({
-          name: new Date(item.name).toLocaleDateString('en-US', {
-            day: 'numeric',
-            month: 'short',
-          }),
-          value: item.value,
-        })),
-      });
+      setAnalyticsData(data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
       setError('Failed to fetch analytics data. Please try again later.');
@@ -208,7 +146,7 @@ export default function AnalyticsPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Clicks"
-          value={analyticsData?.totalClicks || 0}
+          value={analyticsData?.totalEvents || 0}
           icon={BarChart2}
           loading={isLoading}
         />
@@ -221,8 +159,8 @@ export default function AnalyticsPage() {
         <StatCard
           title="Top Country"
           value={
-            analyticsData?.countries
-              ? Object.entries(analyticsData.countries).sort(
+            analyticsData?.geoStats.countries
+              ? Object.entries(analyticsData.geoStats.countries).sort(
                   ([, a], [, b]) => b - a
                 )[0]?.[0] || '-'
               : '-'
@@ -230,12 +168,12 @@ export default function AnalyticsPage() {
           icon={Globe}
           loading={isLoading}
           subtitle={
-            analyticsData?.countries
+            analyticsData?.geoStats.countries
               ? `${(
-                  (Object.entries(analyticsData.countries).sort(
+                  (Object.entries(analyticsData.geoStats.countries).sort(
                     ([, a], [, b]) => b - a
                   )[0]?.[1] /
-                    analyticsData.totalClicks) *
+                    analyticsData.totalEvents) *
                   100
                 ).toFixed(1)}% of total traffic`
               : '0% of total traffic'
@@ -244,8 +182,8 @@ export default function AnalyticsPage() {
         <StatCard
           title="Top Referrer"
           value={
-            analyticsData?.referrers
-              ? Object.entries(analyticsData.referrers).sort(
+            analyticsData?.utmStats.sources
+              ? Object.entries(analyticsData.utmStats.sources).sort(
                   ([, a], [, b]) => b - a
                 )[0]?.[0] || '-'
               : '-'
@@ -253,12 +191,12 @@ export default function AnalyticsPage() {
           icon={Link2}
           loading={isLoading}
           subtitle={
-            analyticsData?.referrers
+            analyticsData?.utmStats.sources
               ? `${(
-                  (Object.entries(analyticsData.referrers).sort(
+                  (Object.entries(analyticsData.utmStats.sources).sort(
                     ([, a], [, b]) => b - a
                   )[0]?.[1] /
-                    analyticsData.totalClicks) *
+                    analyticsData.totalEvents) *
                   100
                 ).toFixed(1)}% of total traffic`
               : '0% of total traffic'
@@ -266,209 +204,32 @@ export default function AnalyticsPage() {
         />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="overflow-hidden">
-          <CardHeader>
-            <CardTitle>Visitor Trends</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="h-[350px] w-full animate-pulse bg-muted" />
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="h-[350px]"
-              >
-                <AreaChart
-                  data={analyticsData?.clicksByDate || []}
-                  index="name"
-                  categories={['value']}
-                  valueFormatter={(value) => `${value} clicks`}
-                  showLegend={false}
-                  showXAxis
-                  showYAxis
-                  showTooltip
-                />
-              </motion.div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="overflow-hidden">
-          <CardHeader>
-            <CardTitle>Geographic Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="h-[350px] w-full animate-pulse bg-muted" />
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-              >
-                <WorldMap data={analyticsData?.countries || {}} />
-              </motion.div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">
-              Device Distribution
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="h-[280px] w-full animate-pulse bg-muted" />
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="h-[280px]"
-              >
-                <PieChart
-                  data={transformDataForPieChart(analyticsData?.devices)}
-                  valueFormatter={(value) =>
-                    `${(
-                      (value / (analyticsData?.totalClicks || 1)) *
-                      100
-                    ).toFixed(1)}%`
-                  }
-                />
-              </motion.div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">
-              Browser Distribution
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="h-[280px] w-full animate-pulse bg-muted" />
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="h-[280px]"
-              >
-                <PieChart
-                  data={transformDataForPieChart(analyticsData?.browsers)}
-                  valueFormatter={(value) =>
-                    `${(
-                      (value / (analyticsData?.totalClicks || 1)) *
-                      100
-                    ).toFixed(1)}%`
-                  }
-                />
-              </motion.div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">
-              Operating System Distribution
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="h-[280px] w-full animate-pulse bg-muted" />
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="h-[280px]"
-              >
-                <PieChart
-                  data={transformDataForPieChart(
-                    analyticsData?.operatingSystems
-                  )}
-                  valueFormatter={(value) =>
-                    `${(
-                      (value / (analyticsData?.totalClicks || 1)) *
-                      100
-                    ).toFixed(1)}%`
-                  }
-                />
-              </motion.div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">
-              Traffic Sources
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="h-[280px] w-full animate-pulse bg-muted" />
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="h-[280px]"
-              >
-                <PieChart
-                  data={transformDataForPieChart(analyticsData?.referrers)}
-                  valueFormatter={(value) =>
-                    `${(
-                      (value / (analyticsData?.totalClicks || 1)) *
-                      100
-                    ).toFixed(1)}%`
-                  }
-                />
-              </motion.div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">Campaigns</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="h-[280px] w-full animate-pulse bg-muted" />
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="h-[280px]"
-              >
-                <PieChart
-                  data={transformDataForPieChart(analyticsData?.campaigns)}
-                  valueFormatter={(value) =>
-                    `${(
-                      (value / (analyticsData?.totalClicks || 1)) *
-                      100
-                    ).toFixed(1)}%`
-                  }
-                />
-              </motion.div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      {analyticsData && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <ChartGroup
+            timeSeriesData={analyticsData.clicksByDate.map((item) => ({
+              name: new Date(item.name).toLocaleDateString('en-US', {
+                day: 'numeric',
+                month: 'short',
+              }),
+              value: item.value,
+            }))}
+            deviceData={analyticsData.deviceStats.devices}
+            browserData={analyticsData.deviceStats.browsers}
+            osData={analyticsData.deviceStats.operatingSystems}
+            sourceData={analyticsData.utmStats.sources}
+            campaignData={analyticsData.utmStats.campaigns}
+            countryData={analyticsData.geoStats.countries}
+            cityData={analyticsData.geoStats.cities}
+            loading={isLoading}
+            totalEvents={analyticsData.totalEvents}
+          />
+        </motion.div>
+      )}
     </div>
   );
 }
