@@ -19,6 +19,16 @@ export const CHART_COLORS = {
     'hsl(43, 96%, 56%)', // Yellow
     'hsl(0, 84%, 60%)', // Red
   ],
+  treemap: [
+    'hsl(215, 100%, 65%)', // Vivid Blue
+    'hsl(262, 100%, 75%)', // Soft Purple
+    'hsl(340, 95%, 75%)', // Soft Pink
+    'hsl(187, 100%, 65%)', // Turquoise
+    'hsl(150, 100%, 65%)', // Mint Green
+    'hsl(32, 95%, 65%)', // Soft Orange
+    'hsl(54, 95%, 65%)', // Soft Yellow
+    'hsl(290, 95%, 75%)', // Soft Violet
+  ],
 };
 
 export const CHART_GRID_CLASSNAMES = {

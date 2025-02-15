@@ -2,7 +2,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { WorldMap } from '@/components/ui/world-map';
 import { AreaChart } from './area-chart';
 import { BarChart } from './bar-chart';
+import { HorizontalBarChart } from './horizontal-bar-chart';
 import { PieChart } from './pie-chart';
+import { TreemapChart } from './treemap-chart';
 
 interface ChartGroupProps {
   timeSeriesData: Array<{ name: string; value: number }>;
@@ -102,7 +104,7 @@ export function ChartGroup({
     <div className="grid gap-4 md:grid-cols-2">
       <Card>
         <CardContent className="pt-6">
-          <BarChart
+          <TreemapChart
             data={sourceData}
             valueFormatter={percentageFormatter}
             loading={loading}
@@ -114,7 +116,7 @@ export function ChartGroup({
 
       <Card>
         <CardContent className="pt-6">
-          <BarChart
+          <TreemapChart
             data={campaignData}
             valueFormatter={percentageFormatter}
             loading={loading}

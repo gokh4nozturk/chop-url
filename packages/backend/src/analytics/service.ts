@@ -109,7 +109,10 @@ export class AnalyticsService {
         };
         return this.database.insert(customEvents).values(insertData);
       }
-      return this.database.insert(customEvents).values(data);
+      return this.database.insert(customEvents).values({
+        ...data,
+        properties: data.properties ? JSON.stringify(data.properties) : null,
+      });
     } catch (error) {
       throw new ValidationError('Invalid custom event data', error);
     }
@@ -234,7 +237,7 @@ export class AnalyticsService {
     const conditions = [eq(events.urlId, url.id), timeCondition];
 
     if (eventType) {
-      conditions.push(eq(events.eventType, eventType));
+      conditions.push(eq(events.eventType, eventType as EventType));
     }
 
     return this.database

@@ -163,7 +163,7 @@ export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
         cityData={transformDataForPieChart(stats.cities)}
         loading={isLoading}
         totalEvents={urlStats?.totalEvents || 0}
-        sections={['timeSeries', 'devices']}
+        sections={['timeSeries', 'devices', 'traffic', 'geography']}
       />
     </>
   );
