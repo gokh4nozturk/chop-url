@@ -1,5 +1,6 @@
 'use client';
 
+import { QRCodeCard } from '@/components/qr-code-card';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -68,7 +69,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -547,43 +547,7 @@ const LinkDetails = ({ urlDetails }: { urlDetails: IUrl }) => {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>QR Code</CardTitle>
-              <CardDescription>Scan or download the QR code</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center space-y-4">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                transition={{ type: 'spring', stiffness: 300 }}
-                ref={qrRef}
-                className="bg-foreground p-2 rounded-lg"
-              >
-                <QRCodeSVG
-                  value={urlDetails.shortUrl}
-                  size={190}
-                  level="H"
-                  includeMargin
-                  imageSettings={{
-                    src: '/logo.svg',
-                    x: undefined,
-                    y: undefined,
-                    height: 40,
-                    width: 40,
-                    excavate: true,
-                  }}
-                />
-              </motion.div>
-              <Button
-                onClick={handleDownloadQR}
-                className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
-                variant="outline"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Download QR
-              </Button>
-            </CardContent>
-          </Card>
+          <QRCodeCard url={urlDetails.shortUrl} />
         </div>
       </div>
     </motion.div>
