@@ -1,9 +1,11 @@
 'use client';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AreaChart } from '@/components/ui/area-chart';
 import { BarChart } from '@/components/ui/bar-chart';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PieChart } from '@/components/ui/pie-chart';
 import {
   Select,
   SelectContent,
@@ -12,6 +14,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { StatCard } from '@/components/ui/stat-card';
+import { WorldMap } from '@/components/ui/world-map';
 import { useAnalyticsStore } from '@/lib/store/analytics';
 import type {
   DeviceInfo,
@@ -19,6 +23,7 @@ import type {
   EventProperties,
   GeoInfo,
 } from '@/lib/store/analytics';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Activity,
   BarChart2,
@@ -34,6 +39,22 @@ import {
   Share2,
 } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
+import {
+  Area,
+  AreaChart as RechartsAreaChart,
+  Bar,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart as RechartsPieChart,
+  RadialBar,
+  RadialBarChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 type TimeRange = '24h' | '7d' | '30d' | '90d';
 
@@ -86,9 +107,269 @@ const processDeviceStats = (events: Event[]) => {
   return { browsers, operatingSystems, devices };
 };
 
+// Transform data for pie charts
+const transformDataForPieChart = (data: Record<string, number> = {}) =>
+  Object.entries(data)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5)
+    .map(([name, value]) => ({
+      name: name || 'Direct',
+      value,
+    }));
+
 interface ClientAnalyticsProps {
   shortId: string;
 }
+
+const COLORS = {
+  light: [
+    'hsl(221, 83%, 53%)', // Blue
+    'hsl(262, 83%, 58%)', // Purple
+    'hsl(330, 81%, 60%)', // Pink
+    'hsl(24, 95%, 53%)', // Orange
+    'hsl(142, 71%, 45%)', // Green
+    'hsl(199, 89%, 48%)', // Light Blue
+    'hsl(43, 96%, 56%)', // Yellow
+    'hsl(0, 84%, 60%)', // Red
+  ],
+  dark: [
+    'hsl(217, 91%, 60%)', // Blue
+    'hsl(271, 91%, 65%)', // Purple
+    'hsl(339, 90%, 67%)', // Pink
+    'hsl(27, 96%, 61%)', // Orange
+    'hsl(142, 76%, 56%)', // Green
+    'hsl(199, 89%, 48%)', // Light Blue
+    'hsl(43, 96%, 56%)', // Yellow
+    'hsl(0, 84%, 60%)', // Red
+  ],
+};
+
+const CustomPieChartWithText = ({
+  data,
+  valueFormatter,
+  title,
+  subtitle,
+}: {
+  data: Array<{ name: string; value: number }>;
+  valueFormatter: (value: number) => string;
+  title: string;
+  subtitle: string;
+}) => {
+  const total = data.reduce((sum, entry) => sum + entry.value, 0);
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-1">
+        <h3 className="font-semibold tracking-tight">{title}</h3>
+        <p className="text-sm text-muted-foreground">{subtitle}</p>
+      </div>
+      <div className="relative">
+        <ResponsiveContainer width="100%" height={300}>
+          <RechartsPieChart>
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              innerRadius={60}
+              outerRadius={80}
+              paddingAngle={4}
+              cornerRadius={6}
+            >
+              {data.map((entry, index) => (
+                <Cell
+                  key={entry.name}
+                  fill={COLORS.light[index % COLORS.light.length]}
+                  className="stroke-background hover:opacity-80"
+                  strokeWidth={2}
+                />
+              ))}
+            </Pie>
+            <text
+              x="50%"
+              y="50%"
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="fill-foreground font-bold"
+            >
+              {total}
+            </text>
+            <Tooltip
+              content={({ active, payload }) => {
+                if (!active || !payload?.[0]) return null;
+                const data = payload[0].payload;
+                return (
+                  <div className="rounded-lg border bg-background p-3 shadow-xl">
+                    <p className="mb-1 font-medium">{data.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {valueFormatter(data.value)}
+                    </p>
+                  </div>
+                );
+              }}
+            />
+            <Legend
+              verticalAlign="bottom"
+              height={50}
+              content={({ payload }) => {
+                if (!payload) return null;
+                return (
+                  <div className="mt-2 flex max-h-[60px] flex-wrap items-start justify-center gap-2 overflow-y-auto px-4 text-xs scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20">
+                    {payload.map((entry) => (
+                      <div
+                        key={entry.value}
+                        className="flex items-center gap-1.5 rounded-md px-2 py-1 hover:bg-muted/50"
+                      >
+                        <div
+                          className="h-2 w-2 rounded-full"
+                          style={{ backgroundColor: entry.color }}
+                        />
+                        <span className="text-muted-foreground">
+                          {entry.value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              }}
+            />
+          </RechartsPieChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+};
+
+const CustomAreaChart = ({
+  data,
+  valueFormatter,
+}: {
+  data: Array<{ name: string; value: number }>;
+  valueFormatter: (value: number) => string;
+}) => {
+  return (
+    <ResponsiveContainer width="100%" height={350}>
+      <RechartsAreaChart data={data}>
+        <defs>
+          <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={COLORS.light[0]} stopOpacity={0.4} />
+            <stop offset="95%" stopColor={COLORS.light[0]} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid
+          strokeDasharray="3 3"
+          className="stroke-muted"
+          vertical={false}
+        />
+        <XAxis
+          dataKey="name"
+          fontSize={12}
+          tickLine={false}
+          axisLine={false}
+          dy={10}
+          className="fill-muted-foreground"
+        />
+        <YAxis
+          fontSize={12}
+          tickLine={false}
+          axisLine={false}
+          dx={-10}
+          className="fill-muted-foreground"
+        />
+        <Tooltip
+          content={({ active, payload }) => {
+            if (!active || !payload?.[0]) return null;
+            const data = payload[0].payload;
+            return (
+              <div className="rounded-lg border bg-background p-3 shadow-xl">
+                <p className="mb-1 font-medium">{data.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {valueFormatter(data.value)}
+                </p>
+              </div>
+            );
+          }}
+        />
+        <Area
+          type="monotone"
+          dataKey="value"
+          stroke={COLORS.light[0]}
+          strokeWidth={2}
+          fillOpacity={1}
+          fill="url(#colorValue)"
+        />
+      </RechartsAreaChart>
+    </ResponsiveContainer>
+  );
+};
+
+const CustomBarChart = ({
+  data,
+  valueFormatter,
+  title,
+}: {
+  data: Array<{ name: string; value: number }>;
+  valueFormatter: (value: number) => string;
+  title: string;
+}) => {
+  return (
+    <ResponsiveContainer width="100%" height={350}>
+      <RechartsAreaChart
+        data={data}
+        layout="vertical"
+        margin={{ top: 0, right: 30, left: 120, bottom: 0 }}
+      >
+        <CartesianGrid
+          strokeDasharray="3 3"
+          horizontal={true}
+          vertical={false}
+          className="stroke-muted"
+        />
+        <XAxis
+          type="number"
+          fontSize={12}
+          tickLine={false}
+          axisLine={false}
+          domain={[0, 'dataMax']}
+          className="fill-muted-foreground"
+        />
+        <YAxis
+          type="category"
+          dataKey="name"
+          fontSize={12}
+          tickLine={false}
+          axisLine={false}
+          width={100}
+          className="fill-muted-foreground"
+        />
+        <Tooltip
+          content={({ active, payload }) => {
+            if (!active || !payload?.[0]) return null;
+            const data = payload[0].payload;
+            return (
+              <div className="rounded-lg border bg-background p-3 shadow-xl">
+                <p className="mb-1 font-medium">{data.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {valueFormatter(data.value)}
+                </p>
+              </div>
+            );
+          }}
+        />
+        <Bar dataKey="value" radius={[4, 4, 4, 4]}>
+          {data.map((entry, index) => (
+            <Cell
+              key={entry.name}
+              fill={COLORS.light[index % COLORS.light.length]}
+              className="hover:opacity-80"
+            />
+          ))}
+        </Bar>
+      </RechartsAreaChart>
+    </ResponsiveContainer>
+  );
+};
 
 export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
   const {
@@ -283,304 +564,101 @@ export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Clicks</CardTitle>
-            <BarChart2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-24" />
-            ) : (
-              <div className="text-2xl font-bold">
-                {urlStats?.totalEvents || 0}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Unique Visitors
-            </CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-24" />
-            ) : (
-              <div className="text-2xl font-bold">
-                {urlStats?.uniqueVisitors || 0}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Created At</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-24" />
-            ) : (
-              <div className="text-2xl font-bold">
-                {urlStats?.url.createdAt
-                  ? new Date(urlStats.url.createdAt).toLocaleDateString()
-                  : '-'}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Last Click</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-24" />
-            ) : (
-              <div className="text-2xl font-bold">
-                {urlStats?.lastEventAt
-                  ? new Date(urlStats.lastEventAt).toLocaleDateString()
-                  : 'Never'}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Click History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="h-[350px] animate-pulse bg-muted" />
-          ) : (
-            <div className="h-[350px]">
-              <BarChart
-                data={
-                  clickHistory?.map((item) => ({
-                    name: new Date(item.name).toLocaleDateString(),
-                    value: item.value,
-                  })) || []
-                }
-                index="name"
-                categories={['value']}
-                colors={['primary']}
-                valueFormatter={(value) => value.toString()}
-                showLegend={false}
-                showXAxis
-                showYAxis
-                showTooltip
-              />
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle>Geographic Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="h-[350px] animate-pulse bg-muted" />
-            ) : (
-              <div className="space-y-8">
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">Top Countries</div>
-                  {geoStats &&
-                    Object.entries(geoStats.countries)
-                      .sort(([, a], [, b]) => b - a)
-                      .slice(0, 5)
-                      .map(([country, count]) => (
-                        <div key={country} className="flex items-center">
-                          <Globe className="mr-2 h-4 w-4 text-muted-foreground" />
-                          <div className="w-1/3 text-sm">{country}</div>
-                          <div className="flex-1">
-                            <div className="h-2 w-full rounded-full bg-muted">
-                              <div
-                                className="h-2 rounded-full bg-primary"
-                                style={{
-                                  width: `${
-                                    urlStats?.totalEvents
-                                      ? (count / urlStats.totalEvents) * 100
-                                      : 0
-                                  }%`,
-                                }}
-                              />
-                            </div>
-                          </div>
-                          <div className="w-1/6 text-right text-sm">
-                            {urlStats?.totalEvents
-                              ? ((count / urlStats.totalEvents) * 100).toFixed(
-                                  1
-                                )
-                              : '0'}
-                            %
-                          </div>
-                        </div>
-                      ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Device Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="h-[350px] animate-pulse bg-muted" />
-            ) : (
-              <div className="space-y-8">
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">Devices</div>
-                  {processedDeviceStats &&
-                    Object.entries(processedDeviceStats.devices)
-                      .sort(([, a], [, b]) => b - a)
-                      .map(([device, count]) => (
-                        <div key={device} className="flex items-center">
-                          <Laptop className="mr-2 h-4 w-4 text-muted-foreground" />
-                          <div className="w-1/3 text-sm">{device}</div>
-                          <div className="flex-1">
-                            <div className="h-2 w-full rounded-full bg-muted">
-                              <div
-                                className="h-2 rounded-full bg-primary"
-                                style={{
-                                  width: `${
-                                    urlStats?.totalEvents
-                                      ? (count / urlStats.totalEvents) * 100
-                                      : 0
-                                  }%`,
-                                }}
-                              />
-                            </div>
-                          </div>
-                          <div className="w-1/6 text-right text-sm">
-                            {urlStats?.totalEvents
-                              ? ((count / urlStats.totalEvents) * 100).toFixed(
-                                  1
-                                )
-                              : '0'}
-                            %
-                          </div>
-                        </div>
-                      ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Total Clicks"
+          value={urlStats?.totalEvents || 0}
+          icon={BarChart2}
+          loading={isLoading}
+        />
+        <StatCard
+          title="Unique Visitors"
+          value={urlStats?.uniqueVisitors || 0}
+          icon={Activity}
+          loading={isLoading}
+        />
+        <StatCard
+          title="Created At"
+          value={
+            urlStats?.url.createdAt
+              ? new Date(urlStats.url.createdAt).toLocaleDateString()
+              : '-'
+          }
+          icon={Calendar}
+          loading={isLoading}
+        />
+        <StatCard
+          title="Last Click"
+          value={
+            urlStats?.lastEventAt
+              ? new Date(urlStats.lastEventAt).toLocaleDateString()
+              : 'Never'
+          }
+          icon={Clock}
+          loading={isLoading}
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
-          <CardHeader>
-            <CardTitle>Browser Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="h-[350px] animate-pulse bg-muted" />
-            ) : (
-              <div className="space-y-8">
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">Top Browsers</div>
-                  {processedDeviceStats &&
-                    Object.entries(processedDeviceStats.browsers)
-                      .sort(([, a], [, b]) => b - a)
-                      .slice(0, 5)
-                      .map(([browser, count]) => (
-                        <div key={browser} className="flex items-center">
-                          <Chrome className="mr-2 h-4 w-4 text-muted-foreground" />
-                          <div className="w-1/3 text-sm">{browser}</div>
-                          <div className="flex-1">
-                            <div className="h-2 w-full rounded-full bg-muted">
-                              <div
-                                className="h-2 rounded-full bg-primary"
-                                style={{
-                                  width: `${
-                                    urlStats?.totalEvents
-                                      ? (count / urlStats.totalEvents) * 100
-                                      : 0
-                                  }%`,
-                                }}
-                              />
-                            </div>
-                          </div>
-                          <div className="w-1/6 text-right text-sm">
-                            {urlStats?.totalEvents
-                              ? ((count / urlStats.totalEvents) * 100).toFixed(
-                                  1
-                                )
-                              : '0'}
-                            %
-                          </div>
-                        </div>
-                      ))}
-                </div>
-              </div>
-            )}
+          <CardContent className="pt-6">
+            <CustomAreaChart
+              data={
+                clickHistory?.map((item) => ({
+                  name: new Date(item.name).toLocaleDateString(),
+                  value: item.value,
+                })) || []
+              }
+              valueFormatter={(value) => `${value} clicks`}
+            />
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Operating System Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="h-[350px] animate-pulse bg-muted" />
-            ) : (
-              <div className="space-y-8">
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">
-                    Top Operating Systems
-                  </div>
-                  {processedDeviceStats &&
-                    Object.entries(processedDeviceStats.operatingSystems)
-                      .sort(([, a], [, b]) => b - a)
-                      .slice(0, 5)
-                      .map(([os, count]) => (
-                        <div key={os} className="flex items-center">
-                          <Monitor className="mr-2 h-4 w-4 text-muted-foreground" />
-                          <div className="w-1/3 text-sm">{os}</div>
-                          <div className="flex-1">
-                            <div className="h-2 w-full rounded-full bg-muted">
-                              <div
-                                className="h-2 rounded-full bg-primary"
-                                style={{
-                                  width: `${
-                                    urlStats?.totalEvents
-                                      ? (count / urlStats.totalEvents) * 100
-                                      : 0
-                                  }%`,
-                                }}
-                              />
-                            </div>
-                          </div>
-                          <div className="w-1/6 text-right text-sm">
-                            {urlStats?.totalEvents
-                              ? ((count / urlStats.totalEvents) * 100).toFixed(
-                                  1
-                                )
-                              : '0'}
-                            %
-                          </div>
-                        </div>
-                      ))}
-                </div>
-              </div>
-            )}
+          <CardContent className="pt-6">
+            <WorldMap data={stats.countries} />
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardContent className="pt-6">
+            <CustomPieChartWithText
+              data={transformDataForPieChart(processedDeviceStats?.devices)}
+              valueFormatter={(value) =>
+                `${((value / (urlStats?.totalEvents || 1)) * 100).toFixed(1)}%`
+              }
+              title="Device Distribution"
+              subtitle="Distribution of clicks by device type"
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <CustomPieChartWithText
+              data={transformDataForPieChart(processedDeviceStats?.browsers)}
+              valueFormatter={(value) =>
+                `${((value / (urlStats?.totalEvents || 1)) * 100).toFixed(1)}%`
+              }
+              title="Browser Distribution"
+              subtitle="Distribution of clicks by browser"
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <CustomPieChartWithText
+              data={transformDataForPieChart(
+                processedDeviceStats?.operatingSystems
+              )}
+              valueFormatter={(value) =>
+                `${((value / (urlStats?.totalEvents || 1)) * 100).toFixed(1)}%`
+              }
+              title="Operating System"
+              subtitle="Distribution of clicks by OS"
+            />
           </CardContent>
         </Card>
       </div>
@@ -594,42 +672,22 @@ export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
             {isLoading ? (
               <div className="h-[350px] animate-pulse bg-muted" />
             ) : (
-              <div className="space-y-8">
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">Top Sources</div>
-                  {utmStats &&
-                    Object.entries(utmStats.sources)
-                      .sort(([, a], [, b]) => b - a)
-                      .slice(0, 5)
-                      .map(([source, count]) => (
-                        <div key={source} className="flex items-center">
-                          <Link2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                          <div className="w-1/3 text-sm">{source}</div>
-                          <div className="flex-1">
-                            <div className="h-2 w-full rounded-full bg-muted">
-                              <div
-                                className="h-2 rounded-full bg-primary"
-                                style={{
-                                  width: `${
-                                    urlStats?.totalEvents
-                                      ? (count / urlStats.totalEvents) * 100
-                                      : 0
-                                  }%`,
-                                }}
-                              />
-                            </div>
-                          </div>
-                          <div className="w-1/6 text-right text-sm">
-                            {urlStats?.totalEvents
-                              ? ((count / urlStats.totalEvents) * 100).toFixed(
-                                  1
-                                )
-                              : '0'}
-                            %
-                          </div>
-                        </div>
-                      ))}
-                </div>
+              <div className="h-[350px]">
+                <BarChart
+                  data={transformDataForPieChart(stats.sources)}
+                  index="name"
+                  categories={['value']}
+                  colors={['primary']}
+                  valueFormatter={(value) =>
+                    `${((value / (urlStats?.totalEvents || 1)) * 100).toFixed(
+                      1
+                    )}%`
+                  }
+                  showLegend={false}
+                  showXAxis
+                  showYAxis
+                  showTooltip
+                />
               </div>
             )}
           </CardContent>
@@ -643,42 +701,22 @@ export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
             {isLoading ? (
               <div className="h-[350px] animate-pulse bg-muted" />
             ) : (
-              <div className="space-y-8">
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">Top Campaigns</div>
-                  {utmStats &&
-                    Object.entries(utmStats.campaigns)
-                      .sort(([, a], [, b]) => b - a)
-                      .slice(0, 5)
-                      .map(([campaign, count]) => (
-                        <div key={campaign} className="flex items-center">
-                          <Share2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                          <div className="w-1/3 text-sm">{campaign}</div>
-                          <div className="flex-1">
-                            <div className="h-2 w-full rounded-full bg-muted">
-                              <div
-                                className="h-2 rounded-full bg-primary"
-                                style={{
-                                  width: `${
-                                    urlStats?.totalEvents
-                                      ? (count / urlStats.totalEvents) * 100
-                                      : 0
-                                  }%`,
-                                }}
-                              />
-                            </div>
-                          </div>
-                          <div className="w-1/6 text-right text-sm">
-                            {urlStats?.totalEvents
-                              ? ((count / urlStats.totalEvents) * 100).toFixed(
-                                  1
-                                )
-                              : '0'}
-                            %
-                          </div>
-                        </div>
-                      ))}
-                </div>
+              <div className="h-[350px]">
+                <BarChart
+                  data={transformDataForPieChart(stats.campaigns)}
+                  index="name"
+                  categories={['value']}
+                  colors={['primary']}
+                  valueFormatter={(value) =>
+                    `${((value / (urlStats?.totalEvents || 1)) * 100).toFixed(
+                      1
+                    )}%`
+                  }
+                  showLegend={false}
+                  showXAxis
+                  showYAxis
+                  showTooltip
+                />
               </div>
             )}
           </CardContent>
@@ -688,191 +726,62 @@ export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Devices</CardTitle>
+            <CardTitle>Top Countries</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h4 className="mb-2 text-sm font-medium">Device Types</h4>
-                <div className="grid gap-2">
-                  {Object.entries(stats.devices).map(([device, count]) => (
-                    <div
-                      key={device}
-                      className="flex items-center justify-between"
-                    >
-                      <span className="text-sm">{device}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+            {isLoading ? (
+              <div className="h-[350px] animate-pulse bg-muted" />
+            ) : (
+              <div className="h-[350px]">
+                <BarChart
+                  data={transformDataForPieChart(stats.countries)}
+                  index="name"
+                  categories={['value']}
+                  colors={['primary']}
+                  valueFormatter={(value) =>
+                    `${((value / (urlStats?.totalEvents || 1)) * 100).toFixed(
+                      1
+                    )}%`
+                  }
+                  showLegend={false}
+                  showXAxis
+                  showYAxis
+                  showTooltip
+                />
               </div>
-              <div>
-                <h4 className="mb-2 text-sm font-medium">Browsers</h4>
-                <div className="grid gap-2">
-                  {Object.entries(stats.browsers).map(([browser, count]) => (
-                    <div
-                      key={browser}
-                      className="flex items-center justify-between"
-                    >
-                      <span className="text-sm">{browser}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <h4 className="mb-2 text-sm font-medium">Operating Systems</h4>
-                <div className="grid gap-2">
-                  {Object.entries(stats.operatingSystems).map(([os, count]) => (
-                    <div key={os} className="flex items-center justify-between">
-                      <span className="text-sm">{os}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Locations</CardTitle>
+            <CardTitle>Top Cities</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h4 className="mb-2 text-sm font-medium">Countries</h4>
-                <div className="grid gap-2">
-                  {Object.entries(stats.countries).map(([country, count]) => (
-                    <div
-                      key={country}
-                      className="flex items-center justify-between"
-                    >
-                      <span className="text-sm">{country}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+            {isLoading ? (
+              <div className="h-[350px] animate-pulse bg-muted" />
+            ) : (
+              <div className="h-[350px]">
+                <BarChart
+                  data={transformDataForPieChart(stats.cities)}
+                  index="name"
+                  categories={['value']}
+                  colors={['primary']}
+                  valueFormatter={(value) =>
+                    `${((value / (urlStats?.totalEvents || 1)) * 100).toFixed(
+                      1
+                    )}%`
+                  }
+                  showLegend={false}
+                  showXAxis
+                  showYAxis
+                  showTooltip
+                />
               </div>
-              <div>
-                <h4 className="mb-2 text-sm font-medium">Cities</h4>
-                <div className="grid gap-2">
-                  {Object.entries(stats.cities).map(([city, count]) => (
-                    <div
-                      key={city}
-                      className="flex items-center justify-between"
-                    >
-                      <span className="text-sm">{city}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <h4 className="mb-2 text-sm font-medium">Regions</h4>
-                <div className="grid gap-2">
-                  {Object.entries(stats.regions).map(([region, count]) => (
-                    <div
-                      key={region}
-                      className="flex items-center justify-between"
-                    >
-                      <span className="text-sm">{region}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <h4 className="mb-2 text-sm font-medium">Timezones</h4>
-                <div className="grid gap-2">
-                  {Object.entries(stats.timezones).map(([timezone, count]) => (
-                    <div
-                      key={timezone}
-                      className="flex items-center justify-between"
-                    >
-                      <span className="text-sm">{timezone}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>UTM Parameters</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <h4 className="mb-2 text-sm font-medium">Sources</h4>
-              <div className="grid gap-2">
-                {Object.entries(stats.sources).map(([source, count]) => (
-                  <div
-                    key={source}
-                    className="flex items-center justify-between"
-                  >
-                    <span className="text-sm">{source}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {count}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div>
-              <h4 className="mb-2 text-sm font-medium">Mediums</h4>
-              <div className="grid gap-2">
-                {Object.entries(stats.mediums).map(([medium, count]) => (
-                  <div
-                    key={medium}
-                    className="flex items-center justify-between"
-                  >
-                    <span className="text-sm">{medium}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {count}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div>
-              <h4 className="mb-2 text-sm font-medium">Campaigns</h4>
-              <div className="grid gap-2">
-                {Object.entries(stats.campaigns).map(([campaign, count]) => (
-                  <div
-                    key={campaign}
-                    className="flex items-center justify-between"
-                  >
-                    <span className="text-sm">{campaign}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {count}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </>
   );
 }
