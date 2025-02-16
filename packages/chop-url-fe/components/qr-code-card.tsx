@@ -26,28 +26,26 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import useQRCodeStore from '@/lib/store/qr';
-import { QRCodeOptions } from '@/lib/store/qr';
+import useQRStore, { QRCodeOptions } from '@/lib/store/qr';
 import { motion } from 'framer-motion';
-import { Download, ImageIcon, Loader2, Settings } from 'lucide-react';
+import {
+  Download,
+  ImageIcon,
+  Loader2,
+  RefreshCw,
+  Settings,
+} from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface QRCodeCardProps {
-  urlId: number;
+  urlId: string;
   shortUrl: string;
 }
 
 export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
-  const {
-    qrCode,
-    isLoading,
-    error,
-    getQRCode,
-    updateQRCode,
-    incrementDownloadCount,
-  } = useQRCodeStore();
+  const { qrCode, isLoading, error, getQRCode, downloadQRCode } = useQRStore();
 
   const [logoUrl, setLogoUrl] = useState<string>('');
   const [logoSize, setLogoSize] = useState<number>(40);
@@ -57,14 +55,6 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
   useEffect(() => {
     getQRCode(urlId, shortUrl);
   }, [urlId, shortUrl, getQRCode]);
-
-  useEffect(() => {
-    if (qrCode) {
-      setLogoUrl(qrCode.logoUrl || '');
-      setLogoSize(qrCode.logoSize);
-      setLogoPosition(qrCode.logoPosition);
-    }
-  }, [qrCode]);
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -86,11 +76,7 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
     if (!qrCode) return;
 
     try {
-      await updateQRCode(qrCode.id, {
-        logoUrl,
-        logoSize,
-        logoPosition: logoPosition as QRCodeOptions['logoPosition'],
-      });
+      // TODO: Implement QR code customization
       setIsCustomizing(false);
       toast.success('QR code updated successfully');
     } catch (error) {
@@ -98,26 +84,23 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
     }
   };
 
-  const handleDownload = async () => {
+  const handleDownload = () => {
     try {
       if (!qrCode) return;
-
-      const response = await fetch(qrCode.imageUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `qr-code-${urlId}.png`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      await incrementDownloadCount(qrCode.id);
+      downloadQRCode();
       toast.success('QR code downloaded successfully');
     } catch (error) {
       console.error('Error downloading QR code:', error);
       toast.error('Failed to download QR code');
+    }
+  };
+
+  const handleRegenerate = async () => {
+    try {
+      await getQRCode(urlId, shortUrl);
+      toast.success('QR code regenerated successfully');
+    } catch (error) {
+      toast.error('Failed to regenerate QR code');
     }
   };
 
@@ -140,10 +123,7 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>QR Code</CardTitle>
-          <CardDescription>
-            Scan or download the QR code
-            {qrCode && ` (Downloaded ${qrCode.downloadCount} times)`}
-          </CardDescription>
+          <CardDescription>Scan or download the QR code</CardDescription>
         </div>
         <Dialog open={isCustomizing} onOpenChange={setIsCustomizing}>
           <DialogTrigger asChild>
@@ -162,9 +142,9 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
               <div className="space-y-2">
                 <Label>Logo</Label>
                 <div className="flex items-center gap-2">
-                  {qrCode?.logoUrl ? (
+                  {logoUrl ? (
                     <Image
-                      src={qrCode.logoUrl}
+                      src={logoUrl}
                       alt="Logo"
                       width={40}
                       height={40}
@@ -197,7 +177,10 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
               </div>
               <div className="space-y-2">
                 <Label>Logo Position</Label>
-                <Select value={logoPosition} onValueChange={setLogoPosition}>
+                <Select
+                  value={logoPosition}
+                  onValueChange={(value: string) => setLogoPosition(value)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -219,7 +202,7 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
       </CardHeader>
       <CardContent className="flex flex-col items-center space-y-4">
         {isLoading ? (
-          <div className="flex h-[190px] w-[190px] items-center justify-center">
+          <div className="flex h-[300px] w-[300px] items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin" />
           </div>
         ) : qrCode ? (
@@ -228,26 +211,32 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
             transition={{ type: 'spring', stiffness: 300 }}
             className="bg-foreground p-2 rounded-lg"
           >
-            <Image
-              src={qrCode.imageUrl}
-              alt="QR Code"
-              width={190}
-              height={190}
-              className="rounded bg-white"
-              priority
-              unoptimized
-            />
+            <div className="w-[300px] h-[300px] bg-white rounded overflow-hidden flex items-center justify-center">
+              <img src={qrCode} alt="QR Code" className="w-[280px] h-[280px]" />
+            </div>
           </motion.div>
         ) : null}
-        <Button
-          onClick={handleDownload}
-          className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
-          variant="outline"
-          disabled={isLoading || !qrCode}
-        >
-          <Download className="mr-2 h-4 w-4" />
-          Download QR
-        </Button>
+        <div className="flex w-full gap-2">
+          <Button
+            onClick={handleDownload}
+            className="flex-1 group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+            variant="outline"
+            disabled={isLoading || !qrCode}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Download QR
+          </Button>
+          <Button
+            onClick={handleRegenerate}
+            variant="outline"
+            disabled={isLoading}
+            className="px-3"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
+            />
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
