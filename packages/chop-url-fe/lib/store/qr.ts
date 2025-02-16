@@ -35,7 +35,21 @@ export const useQRStore = create<QRState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      // Generate QR code SVG
+      // First, try to get existing QR code from database
+      try {
+        const { data: existingQR } = await apiClient.get<QRResponse>(
+          `/api/qr/url/${urlId}`
+        );
+        set({ qrCode: existingQR.imageUrl });
+        return;
+      } catch (error) {
+        // If QR code doesn't exist (404) or other error, continue to create new one
+        if (!(error instanceof AxiosError && error.response?.status === 404)) {
+          throw error;
+        }
+      }
+
+      // Generate new QR code SVG if one doesn't exist
       const qrCodeSvg = await QRCode.toString(shortUrl, {
         type: 'svg',
         errorCorrectionLevel: 'H',
@@ -51,33 +65,17 @@ export const useQRStore = create<QRState>((set, get) => ({
       const base64 = btoa(unescape(encodeURIComponent(qrCodeSvg)));
       const imageUrl = `data:image/svg+xml;base64,${base64}`;
 
-      // Create or update QR code in database
-      try {
-        const { data: existingQR } = await apiClient.get<QRResponse>(
-          `/api/qr/url/${urlId}`
-        );
-        const { data: updatedQR } = await apiClient.put<QRResponse>(
-          `/api/qr/${existingQR.id}`,
-          { imageUrl }
-        );
-        set({ qrCode: updatedQR.imageUrl });
-      } catch (error) {
-        if (error instanceof AxiosError && error.response?.status === 404) {
-          const { data: newQrCode } = await apiClient.post<QRResponse>(
-            '/api/qr',
-            { urlId, imageUrl }
-          );
-          set({ qrCode: newQrCode.imageUrl });
-        } else {
-          throw error;
-        }
-      }
+      // Create new QR code in database
+      const { data: newQrCode } = await apiClient.post<QRResponse>('/api/qr', {
+        urlId,
+        imageUrl,
+      });
+      set({ qrCode: newQrCode.imageUrl });
     } catch (error) {
-      console.error('Error generating QR code:', error);
+      console.error('Error handling QR code:', error);
       set({
         error:
           error instanceof Error ? error : new Error('Unknown error occurred'),
-        isLoading: false,
       });
     } finally {
       set({ isLoading: false });
