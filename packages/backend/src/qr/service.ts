@@ -51,6 +51,30 @@ export class QRCodeService {
     };
   }
 
+  async getQRCodeById(id: number): Promise<IQRCode | null> {
+    const [qrCode] = await this.db
+      .select()
+      .from(qrCodes)
+      .where(eq(qrCodes.id, id))
+      .limit(1);
+
+    if (!qrCode) {
+      return null;
+    }
+
+    return {
+      id: qrCode.id,
+      urlId: qrCode.urlId,
+      imageUrl: qrCode.imageUrl,
+      logoUrl: qrCode.logoUrl,
+      logoSize: qrCode.logoSize || 40,
+      logoPosition: qrCode.logoPosition || 'center',
+      downloadCount: qrCode.downloadCount || 0,
+      createdAt: qrCode.createdAt || '',
+      updatedAt: qrCode.updatedAt || '',
+    };
+  }
+
   async getQRCode(urlId: number): Promise<IQRCode | null> {
     const [qrCode] = await this.db
       .select()

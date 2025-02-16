@@ -1,4 +1,5 @@
-import axios from 'axios';
+import apiClient from '@/lib/api/client';
+import { AxiosError } from 'axios';
 import { QRCodeSVG } from 'qrcode.react';
 import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
@@ -48,14 +49,14 @@ const useQRCodeStore = create<QRCodeStore>((set) => ({
 
       try {
         // First try to get existing QR code
-        const { data } = await axios.get(`/api/qr/${urlId}`);
+        const { data } = await apiClient.get(`/api/qr/url/${urlId}`);
         if (data) {
           set({ qrCode: data, isLoading: false });
           return;
         }
-      } catch (error) {
+      } catch (error: unknown) {
         // If 404, continue with QR code generation
-        if (axios.isAxiosError(error) && error.response?.status !== 404) {
+        if (error instanceof AxiosError && error.response?.status !== 404) {
           throw error;
         }
       }
@@ -77,7 +78,7 @@ const useQRCodeStore = create<QRCodeStore>((set) => ({
       const imageUrl = await store.uploadToR2(blob, `qr-codes/${urlId}.svg`);
 
       // Save to backend
-      const { data: newQrCode } = await axios.post('/api/qr', {
+      const { data: newQrCode } = await apiClient.post('/api/qr', {
         urlId,
         imageUrl,
       });
@@ -100,7 +101,7 @@ const useQRCodeStore = create<QRCodeStore>((set) => ({
         logoUrl = await store.uploadToR2(logoBlob, `qr-codes/logos/${id}.png`);
       }
 
-      const { data } = await axios.put(`/api/qr/${id}`, {
+      const { data } = await apiClient.put(`/api/qr/${id}`, {
         ...options,
         logoUrl,
       });
@@ -116,14 +117,14 @@ const useQRCodeStore = create<QRCodeStore>((set) => ({
       // Get upload URL and headers
       const {
         data: { url, headers },
-      } = await axios.post('/api/storage/presigned-url', { path });
+      } = await apiClient.post('/api/storage/presigned-url', { path });
 
       // Upload file to backend
       const formData = new FormData();
       formData.append('file', file);
       formData.append('path', path);
 
-      const { data: uploadedUrl } = await axios.post(
+      const { data: uploadedUrl } = await apiClient.post(
         '/api/storage/upload',
         formData,
         {
@@ -136,18 +137,13 @@ const useQRCodeStore = create<QRCodeStore>((set) => ({
       return uploadedUrl;
     } catch (error) {
       console.error('Error uploading to R2:', error);
-      if (axios.isAxiosError(error)) {
-        console.error('Error details:', error.response?.data);
-      } else {
-        console.error('Error details:', (error as Error).message);
-      }
       throw new Error('Failed to upload file');
     }
   },
 
   incrementDownloadCount: async (id: number) => {
     try {
-      await axios.post(`/api/qr/${id}/download`);
+      await apiClient.post(`/api/qr/${id}/download`);
     } catch (error) {
       console.error('Error incrementing download count:', error);
     }

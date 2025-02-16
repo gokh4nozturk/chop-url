@@ -30,10 +30,31 @@ export const createQRRoutes = () => {
   });
 
   // Get QR code by URL ID
-  router.get('/qr/:urlId', async (c) => {
-    const urlId = Number(c.req.param('urlId'));
+  router.get('/qr/url/:urlId', async (c) => {
+    try {
+      const urlId = Number(c.req.param('urlId'));
+      console.log('Getting QR code for URL ID:', urlId);
+
+      const qrService = new QRCodeService(c.get('db'));
+      const qrCode = await qrService.getQRCode(urlId);
+
+      if (!qrCode) {
+        console.log('QR code not found for URL ID:', urlId);
+        return c.json({ error: 'QR code not found' }, 404);
+      }
+
+      return c.json(qrCode);
+    } catch (error) {
+      console.error('Error getting QR code:', error);
+      return c.json({ error: 'Internal server error' }, 500);
+    }
+  });
+
+  // Get QR code by ID
+  router.get('/qr/:id', async (c) => {
+    const id = Number(c.req.param('id'));
     const qrService = new QRCodeService(c.get('db'));
-    const qrCode = await qrService.getQRCode(urlId);
+    const qrCode = await qrService.getQRCodeById(id);
 
     if (!qrCode) {
       return c.json({ error: 'QR code not found' }, 404);

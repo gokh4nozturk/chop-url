@@ -162,9 +162,9 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
               <div className="space-y-2">
                 <Label>Logo</Label>
                 <div className="flex items-center gap-2">
-                  {logoUrl ? (
+                  {qrCode?.logoUrl ? (
                     <Image
-                      src={logoUrl}
+                      src={qrCode.logoUrl}
                       alt="Logo"
                       width={40}
                       height={40}
@@ -233,7 +233,9 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
               alt="QR Code"
               width={190}
               height={190}
-              className="rounded"
+              className="rounded bg-white"
+              priority
+              unoptimized
             />
           </motion.div>
         ) : null}
