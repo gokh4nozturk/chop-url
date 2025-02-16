@@ -13,6 +13,7 @@ const createQRCodeSchema = z.object({
 });
 
 const updateQRCodeSchema = z.object({
+  imageUrl: z.string(),
   logoUrl: z.string().optional(),
   logoSize: z.number().optional(),
   logoPosition: z.string().optional(),

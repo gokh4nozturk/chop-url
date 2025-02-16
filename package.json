@@ -30,7 +30,10 @@
     "lint-staged": "^15.2.2"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": ["biome format --write", "biome lint --apply"]
+    "*.{js,jsx,ts,tsx}": [
+      "biome format --write",
+      "biome lint --apply"
+    ]
   },
   "dependencies": {
     "ua-parser-js": "^2.0.2"

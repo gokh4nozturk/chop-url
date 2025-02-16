@@ -66,6 +66,8 @@
     "nanoid": "4.0.2",
     "next": "15.1.6",
     "next-themes": "^0.4.4",
+    "qrcode": "^1.5.4",
+    "qrcode.react": "^4.2.0",
     "react": "18.2.0",
     "react-day-picker": "8.10.1",
     "react-dom": "18.2.0",
@@ -78,17 +80,16 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
     "zod": "^3.24.1",
-    "zustand": "^5.0.3",
-    "qrcode": "^1.5.4"
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
-    "@types/qrcode": "^1.5.5",
     "@testing-library/dom": "^9.3.3",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^14.2.1",
     "@testing-library/user-event": "^14.5.2",
     "@types/geojson": "^7946.0.16",
     "@types/node": "^20",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^19",
     "@types/react-dom": "^19.0.3",
     "@types/testing-library__jest-dom": "^5.14.9",

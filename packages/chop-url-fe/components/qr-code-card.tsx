@@ -36,6 +36,7 @@ import {
   Settings,
 } from 'lucide-react';
 import Image from 'next/image';
+import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -45,16 +46,27 @@ interface QRCodeCardProps {
 }
 
 export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
-  const { qrCode, isLoading, error, getQRCode, downloadQRCode } = useQRStore();
+  const { qrCode, isLoading, error, options, getQRCode, downloadQRCode } =
+    useQRStore();
 
-  const [logoUrl, setLogoUrl] = useState<string>('');
-  const [logoSize, setLogoSize] = useState<number>(40);
-  const [logoPosition, setLogoPosition] = useState<string>('center');
+  const [logoUrl, setLogoUrl] = useState<string>(options?.logoUrl || '');
+  const [logoSize, setLogoSize] = useState<number>(options?.logoSize || 56);
+  const [logoPosition, setLogoPosition] = useState<string>(
+    options?.logoPosition || 'center'
+  );
   const [isCustomizing, setIsCustomizing] = useState(false);
 
   useEffect(() => {
     getQRCode(urlId, shortUrl);
   }, [urlId, shortUrl, getQRCode]);
+
+  useEffect(() => {
+    if (options) {
+      setLogoUrl(options.logoUrl || '');
+      setLogoSize(options.logoSize || 56);
+      setLogoPosition(options.logoPosition || 'center');
+    }
+  }, [options]);
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -76,7 +88,13 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
     if (!qrCode) return;
 
     try {
-      // TODO: Implement QR code customization
+      const options: QRCodeOptions = {
+        logoUrl: logoUrl || undefined,
+        logoSize,
+        logoPosition: logoPosition as QRCodeOptions['logoPosition'],
+      };
+
+      await getQRCode(urlId, shortUrl, options);
       setIsCustomizing(false);
       toast.success('QR code updated successfully');
     } catch (error) {
@@ -119,125 +137,145 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>QR Code</CardTitle>
-          <CardDescription>Scan or download the QR code</CardDescription>
-        </div>
-        <Dialog open={isCustomizing} onOpenChange={setIsCustomizing}>
-          <DialogTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Settings className="h-4 w-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Customize QR Code</DialogTitle>
-              <DialogDescription>
-                Add a logo and customize its appearance
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Logo</Label>
-                <div className="flex items-center gap-2">
-                  {logoUrl ? (
-                    <Image
-                      src={logoUrl}
-                      alt="Logo"
-                      width={40}
-                      height={40}
-                      className="rounded"
-                    />
-                  ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded bg-muted">
-                      <ImageIcon className="h-4 w-4" />
-                    </div>
-                  )}
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleLogoUpload}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Logo Size</Label>
-                <Slider
-                  value={[logoSize]}
-                  onValueChange={([value]) => setLogoSize(value)}
-                  min={20}
-                  max={100}
-                  step={1}
-                />
-                <div className="text-xs text-muted-foreground">
-                  {logoSize}px
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Logo Position</Label>
-                <Select
-                  value={logoPosition}
-                  onValueChange={(value: string) => setLogoPosition(value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="center">Center</SelectItem>
-                    <SelectItem value="top-left">Top Left</SelectItem>
-                    <SelectItem value="top-right">Top Right</SelectItem>
-                    <SelectItem value="bottom-left">Bottom Left</SelectItem>
-                    <SelectItem value="bottom-right">Bottom Right</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={handleCustomize} className="w-full">
-                Apply Changes
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </CardHeader>
-      <CardContent className="flex flex-col items-center space-y-4">
-        {isLoading ? (
-          <div className="flex h-[300px] w-[300px] items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin" />
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.5, delay: 0.2 }}
+    >
+      <Card className="group transition-all duration-300 hover:shadow-lg">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>QR Code</CardTitle>
+            <CardDescription>Scan or download the QR code</CardDescription>
           </div>
-        ) : qrCode ? (
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: 'spring', stiffness: 300 }}
-            className="bg-foreground p-2 rounded-lg"
-          >
-            <div className="w-[300px] h-[300px] bg-white rounded overflow-hidden flex items-center justify-center">
-              <img src={qrCode} alt="QR Code" className="w-[280px] h-[280px]" />
+          <Dialog open={isCustomizing} onOpenChange={setIsCustomizing}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Settings className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Customize QR Code</DialogTitle>
+                <DialogDescription>
+                  Add a logo and customize its appearance
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Logo</Label>
+                  <div className="flex items-center gap-2">
+                    {logoUrl ? (
+                      <Image
+                        src={logoUrl}
+                        alt="Logo"
+                        width={40}
+                        height={40}
+                        className="rounded"
+                      />
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded bg-muted">
+                        <ImageIcon className="h-4 w-4" />
+                      </div>
+                    )}
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Logo Size</Label>
+                  <Slider
+                    value={[logoSize]}
+                    onValueChange={([value]) => setLogoSize(value)}
+                    min={20}
+                    max={100}
+                    step={1}
+                  />
+                  <div className="text-xs text-muted-foreground">
+                    {logoSize}px
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Logo Position</Label>
+                  <Select
+                    value={logoPosition}
+                    onValueChange={(value: string) => setLogoPosition(value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="center">Center</SelectItem>
+                      <SelectItem value="top-left">Top Left</SelectItem>
+                      <SelectItem value="top-right">Top Right</SelectItem>
+                      <SelectItem value="bottom-left">Bottom Left</SelectItem>
+                      <SelectItem value="bottom-right">Bottom Right</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={handleCustomize} className="w-full">
+                  Apply Changes
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center space-y-4">
+          {isLoading ? (
+            <div className="flex items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin" />
             </div>
-          </motion.div>
-        ) : null}
-        <div className="flex w-full gap-2">
-          <Button
-            onClick={handleDownload}
-            className="flex-1 group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
-            variant="outline"
-            disabled={isLoading || !qrCode}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Download QR
-          </Button>
-          <Button
-            onClick={handleRegenerate}
-            variant="outline"
-            disabled={isLoading}
-            className="px-3"
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
-            />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          ) : (
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: 'spring', stiffness: 300 }}
+              className="bg-white p-4 rounded-lg"
+            >
+              <QRCodeSVG
+                id="qr-code-svg"
+                value={shortUrl}
+                size={280}
+                level="H"
+                includeMargin
+                imageSettings={
+                  options?.logoUrl
+                    ? {
+                        src: options.logoUrl,
+                        height: options.logoSize || 56,
+                        width: options.logoSize || 56,
+                        excavate: true,
+                      }
+                    : undefined
+                }
+              />
+            </motion.div>
+          )}
+          <div className="flex w-full gap-2">
+            <Button
+              onClick={handleDownload}
+              className="flex-1 group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+              variant="outline"
+              disabled={isLoading || !qrCode}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Download QR
+            </Button>
+            <Button
+              onClick={handleRegenerate}
+              variant="outline"
+              disabled={isLoading}
+              className="px-3 group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
+              />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
