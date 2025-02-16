@@ -245,21 +245,25 @@ export const useQRStore = create<QRState>((set, get) => ({
               logoY = (canvas.height - logoSize) / 2;
               break;
             case 'top-left':
-              logoX = logoSize / 2;
-              logoY = logoSize / 2;
+              logoX = canvas.width * 0.1;
+              logoY = canvas.height * 0.1;
+              console.log('top-left', logoX, logoY);
               break;
             case 'top-right':
-              logoX = canvas.width - logoSize * 1.5;
-              logoY = logoSize / 2;
+              logoX = canvas.width * 0.9 - logoSize;
+              logoY = canvas.height * 0.1;
               break;
             case 'bottom-left':
-              logoX = logoSize / 2;
-              logoY = canvas.height - logoSize * 1.5;
+              logoX = canvas.width * 0.1;
+              logoY = canvas.height * 0.9 - logoSize;
               break;
             case 'bottom-right':
-              logoX = canvas.width - logoSize * 1.5;
-              logoY = canvas.height - logoSize * 1.5;
+              logoX = canvas.width * 0.9 - logoSize;
+              logoY = canvas.height * 0.9 - logoSize;
               break;
+            default:
+              logoX = (canvas.width - logoSize) / 2;
+              logoY = (canvas.height - logoSize) / 2;
           }
 
           // Draw logo
@@ -346,21 +350,25 @@ export const useQRStore = create<QRState>((set, get) => ({
               logoY = (canvas.height - logoSize) / 2;
               break;
             case 'top-left':
-              logoX = logoSize / 2;
-              logoY = logoSize / 2;
+              logoX = canvas.width * 0.1;
+              logoY = canvas.height * 0.1;
+              console.log('top-left', logoX, logoY);
               break;
             case 'top-right':
-              logoX = canvas.width - logoSize * 1.5;
-              logoY = logoSize / 2;
+              logoX = canvas.width * 0.9 - logoSize;
+              logoY = canvas.height * 0.1;
               break;
             case 'bottom-left':
-              logoX = logoSize / 2;
-              logoY = canvas.height - logoSize * 1.5;
+              logoX = canvas.width * 0.1;
+              logoY = canvas.height * 0.9 - logoSize;
               break;
             case 'bottom-right':
-              logoX = canvas.width - logoSize * 1.5;
-              logoY = canvas.height - logoSize * 1.5;
+              logoX = canvas.width * 0.9 - logoSize;
+              logoY = canvas.height * 0.9 - logoSize;
               break;
+            default:
+              logoX = (canvas.width - logoSize) / 2;
+              logoY = (canvas.height - logoSize) / 2;
           }
 
           // Draw logo

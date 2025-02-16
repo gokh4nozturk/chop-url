@@ -232,25 +232,94 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
             <motion.div
               whileHover={{ scale: 1.05 }}
               transition={{ type: 'spring', stiffness: 300 }}
-              className="bg-white p-4 rounded-lg"
+              className="relative bg-white p-4 rounded-lg"
             >
-              <QRCodeSVG
-                id="qr-code-svg"
-                value={shortUrl}
-                size={280}
-                level="H"
-                includeMargin
-                imageSettings={
-                  options?.logoUrl
-                    ? {
-                        src: options.logoUrl,
-                        height: options.logoSize || 56,
-                        width: options.logoSize || 56,
-                        excavate: true,
-                      }
-                    : undefined
-                }
-              />
+              <div className="relative" style={{ width: 280, height: 280 }}>
+                <QRCodeSVG
+                  id="qr-code-svg"
+                  value={shortUrl}
+                  size={280}
+                  level="H"
+                  includeMargin
+                  imageSettings={{
+                    src: options?.logoUrl || '',
+                    width: options?.logoSize || 0,
+                    height: options?.logoSize || 0,
+                    excavate: true,
+                    x:
+                      options?.logoPosition === 'center'
+                        ? 112.65 - (options?.logoSize || 0) / 2
+                        : options?.logoPosition === 'top-left'
+                          ? 0
+                          : options?.logoPosition === 'top-right'
+                            ? 225 - (options?.logoSize || 0)
+                            : options?.logoPosition === 'bottom-left'
+                              ? 0
+                              : options?.logoPosition === 'bottom-right'
+                                ? 225 - (options?.logoSize || 0)
+                                : 112.65 - (options?.logoSize || 0) / 2,
+                    y:
+                      options?.logoPosition === 'center'
+                        ? 112.65 - (options?.logoSize || 0) / 2
+                        : options?.logoPosition === 'top-left'
+                          ? 0
+                          : options?.logoPosition === 'top-right'
+                            ? 0
+                            : options?.logoPosition === 'bottom-left'
+                              ? 225 - (options?.logoSize || 0)
+                              : options?.logoPosition === 'bottom-right'
+                                ? 225 - (options?.logoSize || 0)
+                                : 112.65 - (options?.logoSize || 0) / 2,
+                  }}
+                />
+                {/* {options?.logoUrl && (
+                  <div
+                    className="absolute"
+                    style={{
+                      width: `${options.logoSize}px`,
+                      height: `${options.logoSize}px`,
+                      zIndex: 10,
+                      backgroundColor: 'transparent',
+                      borderRadius: '4px',
+                      padding: '0px',
+                      boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+                      ...(options.logoPosition === 'center' && {
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                      }),
+                      ...(options.logoPosition === 'top-left' && {
+                        top: '32px',
+                        left: '32px',
+                      }),
+                      ...(options.logoPosition === 'top-right' && {
+                        top: '30px',
+                        right: '30px',
+                      }),
+                      ...(options.logoPosition === 'bottom-left' && {
+                        bottom: '32px',
+                        left: '32px',
+                      }),
+                      ...(options.logoPosition === 'bottom-right' && {
+                        bottom: '32px',
+                        right: '32px',
+                      }),
+                    }}
+                  >
+                    <Image
+                      src={options.logoUrl}
+                      alt="Logo"
+                      width={options.logoSize}
+                      height={options.logoSize}
+                      className="rounded-sm object-contain"
+                      style={{
+                        maxWidth: '100%',
+                        height: 'auto',
+                      }}
+                    />
+                  </div>
+                )} */}
+              </div>
             </motion.div>
           )}
           <div className="flex w-full gap-2">
