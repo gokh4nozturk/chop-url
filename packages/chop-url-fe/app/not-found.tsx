@@ -8,7 +8,7 @@ import Link from 'next/link';
 
 export default function NotFound() {
   return (
-    <main className="flex min-h-[calc(100vh-theme(spacing.header))] flex-col items-center justify-center relative overflow-hidden bg-gradient-to-b from-background via-background to-background/80">
+    <main className="flex min-h-dvh flex-col items-center justify-center relative overflow-hidden bg-gradient-to-b from-background via-background to-background/80">
       <DecorativeBackground />
       <div className="container relative flex flex-col items-center justify-center gap-8 px-4 py-16 backdrop-blur-sm text-center">
         <div className="flex flex-col items-center gap-4">
