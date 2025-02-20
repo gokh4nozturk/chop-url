@@ -8,7 +8,7 @@ export const createStorageRoutes = () => {
   router.post('/storage/generate-presigned-url', async (c) => {
     try {
       console.log('Received presigned URL request');
-      const { path } = await c.req.json();
+      const { path, operation = 'write' } = await c.req.json();
 
       if (!path || typeof path !== 'string') {
         console.error('Invalid path:', path);
@@ -17,10 +17,10 @@ export const createStorageRoutes = () => {
 
       console.log('Generating presigned URL for path:', path);
       const storageService = new R2StorageService(c.env);
-      const { url, headers } = await storageService.getPresignedUrl(path);
+      const { url } = await storageService.getPresignedUrl(path, operation);
 
       console.log('Generated presigned URL:', url);
-      return c.json({ url, headers });
+      return c.json({ url });
     } catch (error) {
       console.error('Error generating URL:', error);
       return c.json(

@@ -37,13 +37,8 @@ interface QRState {
   downloadQRCode: () => void;
   fetchPresignedUrl: (urlId: string) => Promise<{
     presignedUrl: string;
-    headers: Record<string, string>;
   }>;
-  uploadQRCode: (
-    presignedUrl: string,
-    headers: Record<string, string>,
-    file: Blob
-  ) => Promise<void>;
+  uploadQRCode: (presignedUrl: string, file: Blob) => Promise<void>;
 }
 
 export const useQRStore = create<QRState>((set, get) => ({
@@ -227,31 +222,31 @@ export const useQRStore = create<QRState>((set, get) => ({
       const { data } = await apiClient.post(
         '/api/storage/generate-presigned-url',
         {
-          path: `qr/${urlId}`,
+          path: `qr/${urlId}.svg`,
           operation: 'write',
         }
       );
 
       return {
         presignedUrl: data.url,
-        headers: data.headers,
       };
     } catch (error) {
       console.error('Error fetching presigned URL:', error);
       throw error;
     }
   },
-  uploadQRCode: async (
-    presignedUrl: string,
-    headers: Record<string, string>,
-    file: Blob
-  ) => {
+  uploadQRCode: async (presignedUrl: string, file: Blob) => {
     try {
-      await axios.put(presignedUrl, file, {
+      const response = await axios.put(presignedUrl, file, {
         headers: {
-          ...headers,
+          'Content-Type': 'image/svg+xml',
         },
       });
+
+      if (response.status !== 200) {
+        console.error('Upload failed:', response.status);
+        throw new Error(`Upload failed: ${response.status}`);
+      }
     } catch (error) {
       console.error('Error uploading QR code:', error);
       throw error;

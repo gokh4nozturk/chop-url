@@ -130,13 +130,13 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
   const handleQRCodeUpload = useCallback(async () => {
     try {
       if (status === 204) {
-        const { presignedUrl, headers } = await fetchPresignedUrl(urlId);
+        const { presignedUrl } = await fetchPresignedUrl(urlId);
 
-        if (!presignedUrl || !headers) return;
+        if (!presignedUrl) return;
         const qrCodeBlob = new Blob([qrCodeRef.current?.outerHTML || ''], {
           type: 'image/svg+xml',
         });
-        await uploadQRCode(presignedUrl, headers, qrCodeBlob);
+        await uploadQRCode(presignedUrl, qrCodeBlob);
       }
     } catch (error) {
       toast.error('Failed to upload QR code');
