@@ -2,6 +2,8 @@ import { eq } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
 import type { Database } from '../db/client';
 import { qrCodes } from '../db/schema/qr-codes';
+import { R2StorageService } from '../storage/service';
+import { Env } from '../types';
 
 export interface IQRCode {
   id: number;
@@ -24,15 +26,45 @@ interface CreateQRCodeData {
 }
 
 export class QRCodeService {
-  constructor(private readonly db: Database) {}
+  private readonly storageService: R2StorageService;
+
+  constructor(
+    private readonly db: Database,
+    private readonly env: Env
+  ) {
+    this.storageService = new R2StorageService(env);
+  }
+
+  private async uploadQRImage(imageBlob: Blob, urlId: number): Promise<string> {
+    const path = `qr-codes/${urlId}/${Date.now()}.png`;
+    return this.storageService.uploadFile(imageBlob, path);
+  }
+
+  private async uploadLogoImage(
+    imageBlob: Blob,
+    urlId: number
+  ): Promise<string> {
+    const path = `qr-codes/${urlId}/logo-${Date.now()}.png`;
+    return this.storageService.uploadFile(imageBlob, path);
+  }
 
   async createQRCode(data: CreateQRCodeData): Promise<IQRCode> {
+    // Convert base64 image to blob and upload to R2
+    const imageBlob = await fetch(data.imageUrl).then((res) => res.blob());
+    const r2ImageUrl = await this.uploadQRImage(imageBlob, data.urlId);
+
+    let r2LogoUrl = null;
+    if (data.logoUrl) {
+      const logoBlob = await fetch(data.logoUrl).then((res) => res.blob());
+      r2LogoUrl = await this.uploadLogoImage(logoBlob, data.urlId);
+    }
+
     const [result] = await this.db
       .insert(qrCodes)
       .values({
         urlId: data.urlId,
-        imageUrl: data.imageUrl,
-        logoUrl: data.logoUrl || null,
+        imageUrl: r2ImageUrl,
+        logoUrl: r2LogoUrl,
         logoSize: data.logoSize || 40,
         logoPosition: data.logoPosition || 'center',
       })
@@ -103,10 +135,49 @@ export class QRCodeService {
     id: number,
     data: Partial<CreateQRCodeData>
   ): Promise<IQRCode> {
+    // Get existing QR code
+    const existingQR = await this.getQRCodeById(id);
+    if (!existingQR) {
+      throw new Error('QR code not found');
+    }
+
+    // Upload new images to R2 if provided
+    const updateData: Partial<CreateQRCodeData> = {};
+
+    if (data.imageUrl) {
+      const imageBlob = await fetch(data.imageUrl).then((res) => res.blob());
+      updateData.imageUrl = await this.uploadQRImage(
+        imageBlob,
+        existingQR.urlId
+      );
+
+      // Delete old image from R2
+      if (existingQR.imageUrl) {
+        const oldPath = new URL(existingQR.imageUrl).pathname.slice(1);
+        await this.storageService.deleteFile(oldPath);
+      }
+    }
+
+    if (data.logoUrl) {
+      const logoBlob = await fetch(data.logoUrl).then((res) => res.blob());
+      updateData.logoUrl = await this.uploadLogoImage(
+        logoBlob,
+        existingQR.urlId
+      );
+
+      // Delete old logo from R2
+      if (existingQR.logoUrl) {
+        const oldPath = new URL(existingQR.logoUrl).pathname.slice(1);
+        await this.storageService.deleteFile(oldPath);
+      }
+    }
+
     const [result] = await this.db
       .update(qrCodes)
       .set({
-        ...data,
+        ...updateData,
+        logoSize: data.logoSize,
+        logoPosition: data.logoPosition,
         updatedAt: new Date().toISOString(),
       })
       .where(eq(qrCodes.id, id))

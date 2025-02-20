@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { QRCodeSVG } from 'qrcode.react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 interface QRCodeCardProps {
@@ -46,8 +46,17 @@ interface QRCodeCardProps {
 }
 
 export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
-  const { qrCode, isLoading, error, options, getQRCode, downloadQRCode } =
-    useQRStore();
+  const {
+    qrCode,
+    isLoading,
+    error,
+    options,
+    status,
+    getQRCode,
+    downloadQRCode,
+    fetchPresignedUrl,
+    uploadQRCode,
+  } = useQRStore();
 
   const [logoUrl, setLogoUrl] = useState<string>(options?.logoUrl || '');
   const [logoSize, setLogoSize] = useState<number>(options?.logoSize || 56);
@@ -55,36 +64,13 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
     options?.logoPosition || 'center'
   );
   const [isCustomizing, setIsCustomizing] = useState(false);
+  const qrCodeRef = useRef<SVGSVGElement>(null);
 
-  useEffect(() => {
-    getQRCode(urlId, shortUrl);
+  const fetchQRCode = useCallback(async () => {
+    await getQRCode(urlId, shortUrl);
   }, [urlId, shortUrl, getQRCode]);
 
-  useEffect(() => {
-    if (options) {
-      setLogoUrl(options.logoUrl || '');
-      setLogoSize(options.logoSize || 56);
-      setLogoPosition(options.logoPosition || 'center');
-    }
-  }, [options]);
-
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      // Convert file to data URL
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    } catch (error) {
-      toast.error('Failed to read logo file');
-    }
-  };
-
-  const handleCustomize = async () => {
+  const handleCustomize = useCallback(async () => {
     if (!qrCode) return;
 
     try {
@@ -100,9 +86,9 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
     } catch (error) {
       toast.error('Failed to update QR code');
     }
-  };
+  }, [qrCode, logoUrl, logoSize, logoPosition, urlId, shortUrl, getQRCode]);
 
-  const handleDownload = () => {
+  const handleDownload = useCallback(() => {
     try {
       if (!qrCode) return;
       downloadQRCode();
@@ -111,16 +97,69 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
       console.error('Error downloading QR code:', error);
       toast.error('Failed to download QR code');
     }
-  };
+  }, [qrCode, downloadQRCode]);
 
-  const handleRegenerate = async () => {
+  const handleRegenerate = useCallback(async () => {
     try {
       await getQRCode(urlId, shortUrl);
       toast.success('QR code regenerated successfully');
     } catch (error) {
       toast.error('Failed to regenerate QR code');
     }
-  };
+  }, [urlId, shortUrl, getQRCode]);
+
+  const handleLogoUpload = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      try {
+        // Convert file to data URL
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setLogoUrl(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      } catch (error) {
+        toast.error('Failed to read logo file');
+      }
+    },
+    []
+  );
+
+  const handleQRCodeUpload = useCallback(async () => {
+    try {
+      if (status === 204) {
+        const { presignedUrl, headers } = await fetchPresignedUrl(urlId);
+
+        if (!presignedUrl || !headers) return;
+        const qrCodeBlob = new Blob([qrCodeRef.current?.outerHTML || ''], {
+          type: 'image/svg+xml',
+        });
+        await uploadQRCode(presignedUrl, headers, qrCodeBlob);
+      }
+    } catch (error) {
+      toast.error('Failed to upload QR code');
+    }
+  }, [urlId, status, fetchPresignedUrl, uploadQRCode]);
+
+  useEffect(() => {
+    fetchQRCode();
+  }, [fetchQRCode]);
+
+  useEffect(() => {
+    if (options) {
+      setLogoUrl(options.logoUrl || '');
+      setLogoSize(options.logoSize || 56);
+      setLogoPosition(options.logoPosition || 'center');
+    }
+  }, [options]);
+
+  useEffect(() => {
+    if (status === 204) {
+      handleQRCodeUpload();
+    }
+  }, [status, handleQRCodeUpload]);
 
   if (error) {
     return (
@@ -236,6 +275,7 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
             >
               <div className="relative" style={{ width: 280, height: 280 }}>
                 <QRCodeSVG
+                  ref={qrCodeRef}
                   id="qr-code-svg"
                   value={shortUrl}
                   size={280}

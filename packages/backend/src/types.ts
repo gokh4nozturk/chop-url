@@ -4,6 +4,10 @@ import * as schema from './db/schema';
 
 export interface Env {
   BUCKET: R2Bucket;
+  BUCKET_NAME: string;
+  ACCOUNT_ID: string;
+  ACCESS_KEY_ID: string;
+  SECRET_ACCESS_KEY: string;
   R2_PUBLIC_URL: string;
   DB: D1Database;
   BASE_URL: string;

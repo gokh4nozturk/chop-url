@@ -12,6 +12,11 @@ GOOGLE_CLIENT_ID = "your_google_client_id"
 GOOGLE_CLIENT_SECRET = "your_google_client_secret"
 GITHUB_CLIENT_ID = "your_github_client_id"
 GITHUB_CLIENT_SECRET = "your_github_client_secret"
+BUCKET_NAME = "your_bucket_name"
+ACCOUNT_ID = "your_account_id"
+ACCESS_KEY_ID = "your_access_key_id"
+SECRET_ACCESS_KEY = "your_secret_access_key"
+R2_PUBLIC_URL = "your_r2_public_url"
 
 [[d1_databases]]
 binding = "DB"
@@ -19,13 +24,28 @@ database_name = "chop-url-db-local"
 database_id = "your_local_database_id"
 migrations_dir = "migrations"
 
-[env.production]
-vars = { BASE_URL = "https://chop-url.com", FRONTEND_URL = "https://app.chop-url.com" }
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "your_bucket_name"
+preview_bucket_name = "your_preview_bucket_name"
+
+[env.production.vars]
+BASE_URL = "https://chop-url.com"
+FRONTEND_URL = "https://app.chop-url.com"
+BUCKET_NAME = "your_production_bucket_name"
+ACCOUNT_ID = "your_production_account_id"
+ACCESS_KEY_ID = "your_production_access_key_id"
+SECRET_ACCESS_KEY = "your_production_secret_access_key"
+R2_PUBLIC_URL = "your_production_r2_public_url"
 
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "chop-url-db"
 database_id = "your_production_database_id"
+
+[[env.production.r2_buckets]]
+binding = "BUCKET"
+bucket_name = "your_production_bucket_name"
 
 [[routes]]
 pattern = "api.chop-url.com"

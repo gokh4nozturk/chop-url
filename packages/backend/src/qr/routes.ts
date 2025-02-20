@@ -25,7 +25,7 @@ export const createQRRoutes = () => {
   // Create QR code
   router.post('/qr', zValidator('json', createQRCodeSchema), async (c) => {
     const data = c.req.valid('json');
-    const qrService = new QRCodeService(c.get('db'));
+    const qrService = new QRCodeService(c.get('db'), c.env);
     const qrCode = await qrService.createQRCode(data);
     return c.json(qrCode, 201);
   });
@@ -36,12 +36,11 @@ export const createQRRoutes = () => {
       const urlId = Number(c.req.param('urlId'));
       console.log('Getting QR code for URL ID:', urlId);
 
-      const qrService = new QRCodeService(c.get('db'));
+      const qrService = new QRCodeService(c.get('db'), c.env);
       const qrCode = await qrService.getQRCode(urlId);
 
       if (!qrCode) {
-        console.log('QR code not found for URL ID:', urlId);
-        return c.json({ error: 'QR code not found' }, 404);
+        return c.body(null, 204);
       }
 
       return c.json(qrCode);
@@ -54,7 +53,7 @@ export const createQRRoutes = () => {
   // Get QR code by ID
   router.get('/qr/:id', async (c) => {
     const id = Number(c.req.param('id'));
-    const qrService = new QRCodeService(c.get('db'));
+    const qrService = new QRCodeService(c.get('db'), c.env);
     const qrCode = await qrService.getQRCodeById(id);
 
     if (!qrCode) {
@@ -68,7 +67,7 @@ export const createQRRoutes = () => {
   router.put('/qr/:id', zValidator('json', updateQRCodeSchema), async (c) => {
     const id = Number(c.req.param('id'));
     const data = c.req.valid('json');
-    const qrService = new QRCodeService(c.get('db'));
+    const qrService = new QRCodeService(c.get('db'), c.env);
     const qrCode = await qrService.updateQRCode(id, data);
     return c.json(qrCode);
   });
@@ -76,7 +75,7 @@ export const createQRRoutes = () => {
   // Increment download count
   router.post('/qr/:id/download', async (c) => {
     const id = Number(c.req.param('id'));
-    const qrService = new QRCodeService(c.get('db'));
+    const qrService = new QRCodeService(c.get('db'), c.env);
     await qrService.incrementDownloadCount(id);
     return c.json({ success: true });
   });
