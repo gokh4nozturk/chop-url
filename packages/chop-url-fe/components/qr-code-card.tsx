@@ -52,10 +52,12 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
     error,
     options,
     status,
+    qrCodePublicUrl,
     getQRCode,
     downloadQRCode,
     fetchPresignedUrl,
-    uploadQRCode,
+    uploadQRCode2R2,
+    createQRCode,
   } = useQRStore();
 
   const [logoUrl, setLogoUrl] = useState<string>(options?.logoUrl || '');
@@ -136,12 +138,23 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
         const qrCodeBlob = new Blob([qrCodeRef.current?.outerHTML || ''], {
           type: 'image/svg+xml',
         });
-        await uploadQRCode(presignedUrl, qrCodeBlob);
+        await uploadQRCode2R2(presignedUrl, qrCodeBlob, urlId);
+
+        if (qrCodePublicUrl) {
+          await createQRCode(urlId);
+        }
       }
     } catch (error) {
       toast.error('Failed to upload QR code');
     }
-  }, [urlId, status, fetchPresignedUrl, uploadQRCode]);
+  }, [
+    urlId,
+    status,
+    fetchPresignedUrl,
+    uploadQRCode2R2,
+    qrCodePublicUrl,
+    createQRCode,
+  ]);
 
   useEffect(() => {
     fetchQRCode();
@@ -274,91 +287,53 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
               className="relative bg-white p-4 rounded-lg"
             >
               <div className="relative" style={{ width: 280, height: 280 }}>
-                <QRCodeSVG
-                  ref={qrCodeRef}
-                  id="qr-code-svg"
-                  value={shortUrl}
-                  size={280}
-                  level="H"
-                  includeMargin
-                  imageSettings={{
-                    src: options?.logoUrl || '',
-                    width: options?.logoSize || 0,
-                    height: options?.logoSize || 0,
-                    excavate: true,
-                    x:
-                      options?.logoPosition === 'center'
-                        ? 112.65 - (options?.logoSize || 0) / 2
-                        : options?.logoPosition === 'top-left'
-                          ? 0
-                          : options?.logoPosition === 'top-right'
-                            ? 225 - (options?.logoSize || 0)
-                            : options?.logoPosition === 'bottom-left'
-                              ? 0
-                              : options?.logoPosition === 'bottom-right'
-                                ? 225 - (options?.logoSize || 0)
-                                : 112.65 - (options?.logoSize || 0) / 2,
-                    y:
-                      options?.logoPosition === 'center'
-                        ? 112.65 - (options?.logoSize || 0) / 2
-                        : options?.logoPosition === 'top-left'
-                          ? 0
-                          : options?.logoPosition === 'top-right'
+                {qrCodePublicUrl ? (
+                  <Image
+                    src={qrCodePublicUrl}
+                    alt="QR Code"
+                    width={280}
+                    height={280}
+                    className="rounded-lg"
+                  />
+                ) : (
+                  <QRCodeSVG
+                    ref={qrCodeRef}
+                    id="qr-code-svg"
+                    value={shortUrl}
+                    size={280}
+                    includeMargin
+                    imageSettings={{
+                      src: options?.logoUrl || '',
+                      width: options?.logoSize || 0,
+                      height: options?.logoSize || 0,
+                      excavate: true,
+                      x:
+                        options?.logoPosition === 'center'
+                          ? 112.65 - (options?.logoSize || 0) / 2
+                          : options?.logoPosition === 'top-left'
                             ? 0
-                            : options?.logoPosition === 'bottom-left'
+                            : options?.logoPosition === 'top-right'
                               ? 225 - (options?.logoSize || 0)
-                              : options?.logoPosition === 'bottom-right'
+                              : options?.logoPosition === 'bottom-left'
+                                ? 0
+                                : options?.logoPosition === 'bottom-right'
+                                  ? 225 - (options?.logoSize || 0)
+                                  : 112.65 - (options?.logoSize || 0) / 2,
+                      y:
+                        options?.logoPosition === 'center'
+                          ? 112.65 - (options?.logoSize || 0) / 2
+                          : options?.logoPosition === 'top-left'
+                            ? 0
+                            : options?.logoPosition === 'top-right'
+                              ? 0
+                              : options?.logoPosition === 'bottom-left'
                                 ? 225 - (options?.logoSize || 0)
-                                : 112.65 - (options?.logoSize || 0) / 2,
-                  }}
-                />
-                {/* {options?.logoUrl && (
-                  <div
-                    className="absolute"
-                    style={{
-                      width: `${options.logoSize}px`,
-                      height: `${options.logoSize}px`,
-                      zIndex: 10,
-                      backgroundColor: 'transparent',
-                      borderRadius: '4px',
-                      padding: '0px',
-                      boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-                      ...(options.logoPosition === 'center' && {
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                      }),
-                      ...(options.logoPosition === 'top-left' && {
-                        top: '32px',
-                        left: '32px',
-                      }),
-                      ...(options.logoPosition === 'top-right' && {
-                        top: '30px',
-                        right: '30px',
-                      }),
-                      ...(options.logoPosition === 'bottom-left' && {
-                        bottom: '32px',
-                        left: '32px',
-                      }),
-                      ...(options.logoPosition === 'bottom-right' && {
-                        bottom: '32px',
-                        right: '32px',
-                      }),
+                                : options?.logoPosition === 'bottom-right'
+                                  ? 225 - (options?.logoSize || 0)
+                                  : 112.65 - (options?.logoSize || 0) / 2,
                     }}
-                  >
-                    <Image
-                      src={options.logoUrl}
-                      alt="Logo"
-                      width={options.logoSize}
-                      height={options.logoSize}
-                      className="rounded-sm object-contain"
-                      style={{
-                        maxWidth: '100%',
-                        height: 'auto',
-                      }}
-                    />
-                  </div>
-                )} */}
+                  />
+                )}
               </div>
             </motion.div>
           )}

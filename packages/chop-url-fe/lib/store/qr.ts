@@ -25,6 +25,7 @@ interface QRResponse {
 interface QRState {
   isLoading: boolean;
   qrCode: string | null;
+  qrCodePublicUrl: string | null;
   error: Error | null;
   options: QRCodeOptions | null;
   status: number | null;
@@ -38,12 +39,18 @@ interface QRState {
   fetchPresignedUrl: (urlId: string) => Promise<{
     presignedUrl: string;
   }>;
-  uploadQRCode: (presignedUrl: string, file: Blob) => Promise<void>;
+  uploadQRCode2R2: (
+    presignedUrl: string,
+    file: Blob,
+    urlId: string
+  ) => Promise<void>;
+  createQRCode: (urlId: string) => Promise<void>;
 }
 
 export const useQRStore = create<QRState>((set, get) => ({
   isLoading: false,
   qrCode: null,
+  qrCodePublicUrl: null,
   error: null,
   options: null,
   status: null,
@@ -235,7 +242,7 @@ export const useQRStore = create<QRState>((set, get) => ({
       throw error;
     }
   },
-  uploadQRCode: async (presignedUrl: string, file: Blob) => {
+  uploadQRCode2R2: async (presignedUrl: string, file: Blob, urlId: string) => {
     try {
       const response = await axios.put(presignedUrl, file, {
         headers: {
@@ -247,8 +254,29 @@ export const useQRStore = create<QRState>((set, get) => ({
         console.error('Upload failed:', response.status);
         throw new Error(`Upload failed: ${response.status}`);
       }
+
+      const { data } = await apiClient.get('/api/storage/public-url', {
+        params: { path: `qr/${urlId}.svg` },
+      });
+
+      set({
+        qrCodePublicUrl: data.url,
+      });
     } catch (error) {
       console.error('Error uploading QR code:', error);
+      throw error;
+    }
+  },
+  createQRCode: async (urlId: string) => {
+    try {
+      const payload = {
+        urlId: parseInt(urlId),
+        imageUrl: get().qrCodePublicUrl,
+      };
+
+      await apiClient.post('/api/qr', payload);
+    } catch (error) {
+      console.error('Error creating QR code:', error);
       throw error;
     }
   },

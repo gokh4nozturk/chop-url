@@ -33,5 +33,29 @@ export const createStorageRoutes = () => {
     }
   });
 
+  router.get('/storage/public-url', async (c) => {
+    try {
+      const { path } = c.req.query();
+
+      if (!path) {
+        return c.json({ error: 'Path is required' }, 400);
+      }
+
+      const storageService = new R2StorageService(c.env);
+      const publicUrl = storageService.getPublicUrl(path);
+
+      return c.json({ url: publicUrl });
+    } catch (error) {
+      console.error('Error getting public URL:', error);
+      return c.json(
+        {
+          error: 'Failed to get public URL',
+          details: error instanceof Error ? error.message : 'Unknown error',
+        },
+        500
+      );
+    }
+  });
+
   return router;
 };

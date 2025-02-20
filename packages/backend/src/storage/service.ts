@@ -52,4 +52,11 @@ export class R2StorageService {
       throw new Error('Failed to generate presigned URL');
     }
   }
+
+  getPublicUrl(path: string): string {
+    if (!this.env.R2_PUBLIC_URL) {
+      throw new Error('R2 public URL is not configured');
+    }
+    return `${this.env.R2_PUBLIC_URL}/${path}`;
+  }
 }
