@@ -4,9 +4,9 @@ import { AxiosError } from 'axios';
 import { create } from 'zustand';
 
 export interface QRCodeOptions {
-  logoUrl?: string;
-  logoSize?: number;
-  logoPosition?:
+  logoUrl: string;
+  logoSize: number;
+  logoPosition:
     | 'center'
     | 'top-left'
     | 'top-right'
@@ -44,7 +44,13 @@ interface QRState {
     file: Blob,
     urlId: string
   ) => Promise<void>;
+  uploadLogo2R2: (
+    presignedUrl: string,
+    file: Blob,
+    urlId: string
+  ) => Promise<void>;
   createQRCode: (urlId: string) => Promise<void>;
+  setOptions: (options: QRCodeOptions) => void;
 }
 
 export const useQRStore = create<QRState>((set, get) => ({
@@ -95,7 +101,7 @@ export const useQRStore = create<QRState>((set, get) => ({
           options: response.data.logoUrl
             ? {
                 logoUrl: response.data.logoUrl,
-                logoSize: response.data.logoSize,
+                logoSize: response.data.logoSize || 56,
                 logoPosition: response.data
                   .logoPosition as QRCodeOptions['logoPosition'],
               }
@@ -226,6 +232,7 @@ export const useQRStore = create<QRState>((set, get) => ({
   },
   fetchPresignedUrl: async (urlId: string) => {
     try {
+      set({ isLoading: true });
       const { data } = await apiClient.post(
         '/api/storage/generate-presigned-url',
         {
@@ -240,10 +247,13 @@ export const useQRStore = create<QRState>((set, get) => ({
     } catch (error) {
       console.error('Error fetching presigned URL:', error);
       throw error;
+    } finally {
+      set({ isLoading: false });
     }
   },
   uploadQRCode2R2: async (presignedUrl: string, file: Blob, urlId: string) => {
     try {
+      set({ isLoading: true });
       const response = await axios.put(presignedUrl, file, {
         headers: {
           'Content-Type': 'image/svg+xml',
@@ -265,10 +275,28 @@ export const useQRStore = create<QRState>((set, get) => ({
     } catch (error) {
       console.error('Error uploading QR code:', error);
       throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+  uploadLogo2R2: async (presignedUrl: string, file: Blob, urlId: string) => {
+    try {
+      set({ isLoading: true });
+      const response = await axios.put(presignedUrl, file, {
+        headers: {
+          'Content-Type': 'image/svg+xml',
+        },
+      });
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      throw error;
+    } finally {
+      set({ isLoading: false });
     }
   },
   createQRCode: async (urlId: string) => {
     try {
+      set({ isLoading: true });
       const payload = {
         urlId: parseInt(urlId),
         imageUrl: get().qrCodePublicUrl,
@@ -278,7 +306,12 @@ export const useQRStore = create<QRState>((set, get) => ({
     } catch (error) {
       console.error('Error creating QR code:', error);
       throw error;
+    } finally {
+      set({ isLoading: false });
     }
+  },
+  setOptions: (options: QRCodeOptions) => {
+    set({ options: { ...get().options, ...options } });
   },
 }));
 

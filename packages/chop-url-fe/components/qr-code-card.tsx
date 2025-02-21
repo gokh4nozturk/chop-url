@@ -71,33 +71,11 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
     createQRCode,
   } = useQRStore();
 
-  const [logoUrl, setLogoUrl] = useState<string>(options?.logoUrl || '');
-  const [logoSize, setLogoSize] = useState<number>(options?.logoSize || 56);
-  const [logoPosition, setLogoPosition] = useState<LogoPosition>('center');
-  const [isCustomizing, setIsCustomizing] = useState(false);
   const qrCodeRef = useRef<SVGSVGElement>(null);
 
   const fetchQRCode = useCallback(async () => {
     await getQRCode(urlId, shortUrl);
   }, [urlId, shortUrl, getQRCode]);
-
-  const handleCustomize = useCallback(async () => {
-    if (!qrCode) return;
-
-    try {
-      const options: QRCodeOptions = {
-        logoUrl: logoUrl || undefined,
-        logoSize,
-        logoPosition: logoPosition as QRCodeOptions['logoPosition'],
-      };
-
-      await getQRCode(urlId, shortUrl, options);
-      setIsCustomizing(false);
-      toast.success('QR code updated successfully');
-    } catch (error) {
-      toast.error('Failed to update QR code');
-    }
-  }, [qrCode, logoUrl, logoSize, logoPosition, urlId, shortUrl, getQRCode]);
 
   const handleDownload = useCallback(() => {
     try {
@@ -118,25 +96,6 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
       toast.error('Failed to regenerate QR code');
     }
   }, [urlId, shortUrl, getQRCode]);
-
-  const handleLogoUpload = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-
-      try {
-        // Convert file to data URL
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setLogoUrl(reader.result as string);
-        };
-        reader.readAsDataURL(file);
-      } catch (error) {
-        toast.error('Failed to read logo file');
-      }
-    },
-    []
-  );
 
   const handleQRCodeUpload = useCallback(async () => {
     try {
@@ -170,14 +129,6 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
   }, [fetchQRCode]);
 
   useEffect(() => {
-    if (options) {
-      setLogoUrl(options.logoUrl || '');
-      setLogoSize(options.logoSize || 56);
-      setLogoPosition((options.logoPosition as LogoPosition) || 'center');
-    }
-  }, [options]);
-
-  useEffect(() => {
     if (status === 204) {
       handleQRCodeUpload();
     }
@@ -209,13 +160,7 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
             <CardTitle>QR Code</CardTitle>
             <CardDescription>Scan or download the QR code</CardDescription>
           </div>
-          <LogoSettings
-            isCustomizing={isCustomizing}
-            setIsCustomizing={setIsCustomizing}
-            handleCustomize={handleCustomize}
-            handleLogoUpload={handleLogoUpload}
-            logoUrl={logoUrl}
-          />
+          <LogoSettings urlId={urlId} />
         </CardHeader>
         <CardContent className="flex flex-col items-center space-y-4">
           {isLoading ? (
@@ -242,15 +187,15 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
                     excavate: false,
                   }}
                 />
-                {logoUrl && (
+                {options?.logoUrl && (
                   <Image
-                    src={logoUrl}
+                    src={options.logoUrl}
                     alt="Logo"
                     width={40}
                     height={40}
                     className={cn(
                       'absolute',
-                      LOGO_POSITION_CLASSES[logoPosition]
+                      LOGO_POSITION_CLASSES[options.logoPosition]
                     )}
                   />
                 )}
@@ -284,21 +229,56 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
   );
 }
 
-const LogoSettings = ({
-  isCustomizing,
-  setIsCustomizing,
-  handleCustomize,
-  handleLogoUpload,
-  logoUrl,
-}: {
-  isCustomizing: boolean;
-  setIsCustomizing: (isCustomizing: boolean) => void;
-  handleCustomize: () => void;
-  handleLogoUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  logoUrl: string;
-}) => {
-  const [logoSize, setLogoSize] = useState<number>(56);
-  const [logoPosition, setLogoPosition] = useState<LogoPosition>('center');
+const LogoSettings = ({ urlId }: { urlId: string }) => {
+  const path = `${urlId}-logo`;
+  const { options, setOptions, fetchPresignedUrl, uploadLogo2R2, isLoading } =
+    useQRStore();
+
+  const [isCustomizing, setIsCustomizing] = useState(false);
+  const [logo, setLogo] = useState<string | null>(options?.logoUrl || null);
+  const [size, setSize] = useState(options?.logoSize || 56);
+  const [position, setPosition] = useState(options?.logoPosition || 'center');
+
+  const handleLogoUpload = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      try {
+        // Convert file to data URL
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setLogo(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+        const { presignedUrl } = await fetchPresignedUrl(path);
+        if (!presignedUrl) return;
+        const logoBlob = new Blob([logo || ''], { type: 'image/svg+xml' });
+        await uploadLogo2R2(presignedUrl, logoBlob, path);
+      } catch (error) {
+        console.error('Error reading logo file:', error);
+        toast.error('Failed to read logo file');
+      }
+    },
+    [path, fetchPresignedUrl, uploadLogo2R2, logo]
+  );
+
+  function handleCustomization() {
+    setIsCustomizing(false);
+    setOptions({
+      logoUrl: logo || '',
+      logoSize: size,
+      logoPosition: position,
+    });
+  }
+
+  useEffect(() => {
+    if (isLoading) {
+      toast.loading('Uploading logo...');
+    } else {
+      toast.dismiss();
+    }
+  }, [isLoading]);
 
   return (
     <Dialog open={isCustomizing} onOpenChange={setIsCustomizing}>
@@ -318,9 +298,9 @@ const LogoSettings = ({
           <div className="space-y-2">
             <Label>Logo</Label>
             <div className="flex items-center gap-2">
-              {logoUrl ? (
+              {logo ? (
                 <Image
-                  src={logoUrl}
+                  src={logo}
                   alt="Logo"
                   width={40}
                   height={40}
@@ -337,19 +317,19 @@ const LogoSettings = ({
           <div className="space-y-2">
             <Label>Logo Size</Label>
             <Slider
-              value={[logoSize]}
-              onValueChange={([value]) => setLogoSize(value)}
+              value={[size]}
+              onValueChange={([value]) => setSize(value)}
               min={20}
               max={100}
               step={1}
             />
-            <div className="text-xs text-muted-foreground">{logoSize}px</div>
+            <div className="text-xs text-muted-foreground">{size}px</div>
           </div>
           <div className="space-y-2">
             <Label>Logo Position</Label>
             <Select
-              value={logoPosition}
-              onValueChange={(value: LogoPosition) => setLogoPosition(value)}
+              value={position}
+              onValueChange={(value: LogoPosition) => setPosition(value)}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -363,7 +343,7 @@ const LogoSettings = ({
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={handleCustomize} className="w-full">
+          <Button onClick={handleCustomization} className="w-full">
             Apply Changes
           </Button>
         </div>
