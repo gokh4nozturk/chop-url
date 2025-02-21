@@ -14,7 +14,7 @@ export interface QRCodeOptions {
     | 'bottom-right';
 }
 
-interface QRResponse {
+export interface QRResponse {
   id: number;
   imageUrl: string;
   logoUrl?: string;
@@ -24,8 +24,9 @@ interface QRResponse {
 
 interface QRState {
   isLoading: boolean;
-  qrCode: string | null;
+  qrCode: QRResponse | null;
   qrCodePublicUrl: string | null;
+  logoPublicUrl: string | null;
   error: Error | null;
   options: QRCodeOptions | null;
   status: number | null;
@@ -34,7 +35,7 @@ interface QRState {
     shortUrl: string,
     options?: QRCodeOptions
   ) => Promise<void>;
-  updateQRCode: (id: number, options: QRCodeOptions) => Promise<void>;
+  updateQRCode: (qrCodeId: number, options: QRCodeOptions) => Promise<void>;
   downloadQRCode: () => void;
   fetchPresignedUrl: (urlId: string) => Promise<{
     presignedUrl: string;
@@ -57,6 +58,7 @@ export const useQRStore = create<QRState>((set, get) => ({
   isLoading: false,
   qrCode: null,
   qrCodePublicUrl: null,
+  logoPublicUrl: null,
   error: null,
   options: null,
   status: null,
@@ -80,24 +82,9 @@ export const useQRStore = create<QRState>((set, get) => ({
       }
 
       if (response.status === 200) {
-        const currentOptions = {
-          logoUrl: response.data.logoUrl,
-          logoSize: response.data.logoSize,
-          logoPosition: response.data.logoPosition,
-        };
-
-        // Only update if options are different
-        if (
-          options &&
-          JSON.stringify(currentOptions) !== JSON.stringify(options)
-        ) {
-          await get().updateQRCode(response.data.id, options);
-          return;
-        }
-
         set({
           status: response.status,
-          qrCode: response.data.imageUrl,
+          qrCode: response.data,
           options: response.data.logoUrl
             ? {
                 logoUrl: response.data.logoUrl,
@@ -108,30 +95,8 @@ export const useQRStore = create<QRState>((set, get) => ({
             : null,
         });
       }
-
-      return;
     } catch (error) {
       console.error('Error handling QR code:', error);
-      set({
-        error:
-          error instanceof Error ? error : new Error('Unknown error occurred'),
-      });
-    } finally {
-      set({ isLoading: false });
-    }
-  },
-  updateQRCode: async (id: number, options: QRCodeOptions) => {
-    try {
-      set({ isLoading: true, error: null });
-
-      // Get the current QR code first
-      const { data: currentQR } = await apiClient.get<QRResponse>(
-        `/api/qr/${id}`
-      );
-
-      console.log('currentQR', currentQR);
-    } catch (error) {
-      console.error('Error updating QR code:', error);
       set({
         error:
           error instanceof Error ? error : new Error('Unknown error occurred'),
@@ -282,10 +247,18 @@ export const useQRStore = create<QRState>((set, get) => ({
   uploadLogo2R2: async (presignedUrl: string, file: Blob, urlId: string) => {
     try {
       set({ isLoading: true });
-      const response = await axios.put(presignedUrl, file, {
+      await axios.put(presignedUrl, file, {
         headers: {
           'Content-Type': 'image/svg+xml',
         },
+      });
+
+      const { data } = await apiClient.get('/api/storage/public-url', {
+        params: { path: `qr/${urlId}-logo.svg` },
+      });
+
+      set({
+        logoPublicUrl: data.url,
       });
     } catch (error) {
       console.error('Error uploading logo:', error);
@@ -305,6 +278,23 @@ export const useQRStore = create<QRState>((set, get) => ({
       await apiClient.post('/api/qr', payload);
     } catch (error) {
       console.error('Error creating QR code:', error);
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+  updateQRCode: async (qrCodeId: number, options: QRCodeOptions) => {
+    try {
+      set({ isLoading: true });
+      const payload = {
+        logoUrl: options.logoUrl,
+        logoSize: options.logoSize,
+        logoPosition: options.logoPosition,
+      };
+
+      await apiClient.put(`/api/qr/${qrCodeId}`, payload);
+    } catch (error) {
+      console.error('Error updating QR code:', error);
       throw error;
     } finally {
       set({ isLoading: false });

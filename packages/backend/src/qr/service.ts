@@ -19,6 +19,12 @@ interface CreateQRCodeData {
   imageUrl: string;
 }
 
+interface UpdateQRCodeData {
+  imageUrl?: string;
+  logoUrl?: string;
+  logoSize?: number;
+  logoPosition?: string;
+}
 export class QRCodeService {
   constructor(private readonly db: Database) {}
 
@@ -80,6 +86,23 @@ export class QRCodeService {
       downloadCount: qrCode.downloadCount || 0,
       createdAt: qrCode.createdAt || '',
       updatedAt: qrCode.updatedAt || '',
+    };
+  }
+
+  async updateQRCode(id: number, data: UpdateQRCodeData): Promise<IQRCode> {
+    const [result] = await this.db
+      .update(qrCodes)
+      .set(data)
+      .where(eq(qrCodes.id, id))
+      .returning();
+
+    return {
+      id: result.id,
+      urlId: result.urlId,
+      imageUrl: result.imageUrl,
+      downloadCount: result.downloadCount || 0,
+      createdAt: result.createdAt || '',
+      updatedAt: result.updatedAt || '',
     };
   }
 

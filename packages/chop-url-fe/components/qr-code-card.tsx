@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import useQRStore, { QRCodeOptions } from '@/lib/store/qr';
+import useQRStore, { type QRResponse } from '@/lib/store/qr';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import {
@@ -79,7 +79,7 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
 
   const handleDownload = useCallback(() => {
     try {
-      if (!qrCode) return;
+      if (!qrCode?.imageUrl) return;
       downloadQRCode();
       toast.success('QR code downloaded successfully');
     } catch (error) {
@@ -160,7 +160,7 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
             <CardTitle>QR Code</CardTitle>
             <CardDescription>Scan or download the QR code</CardDescription>
           </div>
-          <LogoSettings urlId={urlId} />
+          <LogoSettings urlId={urlId} qrCode={qrCode} />
         </CardHeader>
         <CardContent className="flex flex-col items-center space-y-4">
           {isLoading ? (
@@ -229,10 +229,23 @@ export function QRCodeCard({ urlId, shortUrl }: QRCodeCardProps) {
   );
 }
 
-const LogoSettings = ({ urlId }: { urlId: string }) => {
+const LogoSettings = ({
+  urlId,
+  qrCode,
+}: {
+  urlId: string;
+  qrCode: QRResponse | null;
+}) => {
   const path = `${urlId}-logo`;
-  const { options, setOptions, fetchPresignedUrl, uploadLogo2R2, isLoading } =
-    useQRStore();
+  const {
+    options,
+    setOptions,
+    fetchPresignedUrl,
+    uploadLogo2R2,
+    isLoading,
+    updateQRCode,
+    logoPublicUrl,
+  } = useQRStore();
 
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [logo, setLogo] = useState<string | null>(options?.logoUrl || null);
@@ -255,15 +268,33 @@ const LogoSettings = ({ urlId }: { urlId: string }) => {
         if (!presignedUrl) return;
         const logoBlob = new Blob([logo || ''], { type: 'image/svg+xml' });
         await uploadLogo2R2(presignedUrl, logoBlob, path);
+
+        if (logoPublicUrl && qrCode?.id) {
+          await updateQRCode(Number(qrCode?.id), {
+            logoUrl: logoPublicUrl,
+            logoSize: size,
+            logoPosition: position,
+          });
+        }
       } catch (error) {
         console.error('Error reading logo file:', error);
         toast.error('Failed to read logo file');
       }
     },
-    [path, fetchPresignedUrl, uploadLogo2R2, logo]
+    [
+      path,
+      fetchPresignedUrl,
+      uploadLogo2R2,
+      logo,
+      logoPublicUrl,
+      updateQRCode,
+      qrCode,
+      size,
+      position,
+    ]
   );
 
-  function handleCustomization() {
+  async function handleCustomization() {
     setIsCustomizing(false);
     setOptions({
       logoUrl: logo || '',

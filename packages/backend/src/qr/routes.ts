@@ -9,6 +9,13 @@ const createQRCodeSchema = z.object({
   imageUrl: z.string(),
 });
 
+const updateQRCodeSchema = z.object({
+  imageUrl: z.string().optional(),
+  logoUrl: z.string().optional(),
+  logoSize: z.number().optional(),
+  logoPosition: z.string().optional(),
+});
+
 export const createQRRoutes = () => {
   const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -42,15 +49,34 @@ export const createQRRoutes = () => {
 
   // Get QR code by ID
   router.get('/qr/:id', async (c) => {
-    const id = Number(c.req.param('id'));
-    const qrService = new QRCodeService(c.get('db'));
-    const qrCode = await qrService.getQRCodeById(id);
+    try {
+      const id = Number(c.req.param('id'));
+      const qrService = new QRCodeService(c.get('db'));
+      const qrCode = await qrService.getQRCodeById(id);
 
-    if (!qrCode) {
-      return c.json({ error: 'QR code not found' }, 404);
+      if (!qrCode) {
+        return c.json({ error: 'QR code not found' }, 404);
+      }
+
+      return c.json(qrCode);
+    } catch (error) {
+      console.error('Error getting QR code:', error);
+      return c.json({ error: 'Internal server error' }, 500);
     }
+  });
 
-    return c.json(qrCode);
+  // Update QR code
+  router.put('/qr/:id', zValidator('json', updateQRCodeSchema), async (c) => {
+    try {
+      const id = Number(c.req.param('id'));
+      const data = c.req.valid('json');
+      const qrService = new QRCodeService(c.get('db'));
+      const qrCode = await qrService.updateQRCode(id, data);
+      return c.json(qrCode, 200);
+    } catch (error) {
+      console.error('Error updating QR code:', error);
+      return c.json({ error: 'Internal server error' }, 500);
+    }
   });
 
   // Increment download count
