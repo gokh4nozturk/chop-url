@@ -258,6 +258,7 @@ const LogoSettings = ({
       if (!file) return;
 
       try {
+        toast.loading('Uploading logo...');
         // Convert file to data URL
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -279,6 +280,8 @@ const LogoSettings = ({
       } catch (error) {
         console.error('Error reading logo file:', error);
         toast.error('Failed to read logo file');
+      } finally {
+        toast.dismiss();
       }
     },
     [
@@ -302,14 +305,6 @@ const LogoSettings = ({
       logoPosition: position,
     });
   }
-
-  useEffect(() => {
-    if (isLoading) {
-      toast.loading('Uploading logo...');
-    } else {
-      toast.dismiss();
-    }
-  }, [isLoading]);
 
   return (
     <Dialog open={isCustomizing} onOpenChange={setIsCustomizing}>
