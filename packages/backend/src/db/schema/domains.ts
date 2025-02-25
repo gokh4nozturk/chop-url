@@ -8,12 +8,12 @@ export const domains = sqliteTable('domains', {
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
   domain: text('domain').notNull(),
-  isVerified: integer('isVerified', { mode: 'boolean' }).default(false),
-  verificationToken: text('verificationToken'),
-  verificationMethod: text('verificationMethod', {
+  isVerified: integer('is_verified', { mode: 'boolean' }).default(false),
+  verificationToken: text('verification_token'),
+  verificationMethod: text('verification_method', {
     enum: ['DNS_TXT', 'DNS_CNAME', 'FILE'],
   }).default('DNS_TXT'),
-  sslStatus: text('sslStatus', {
+  sslStatus: text('ssl_status', {
     enum: [
       'PENDING',
       'ACTIVE',
@@ -23,29 +23,29 @@ export const domains = sqliteTable('domains', {
       'INACTIVE',
     ],
   }).default('PENDING'),
-  isActive: integer('isActive', { mode: 'boolean' }).default(false),
-  createdAt: text('createdAt').notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text('updatedAt').notNull().default(sql`CURRENT_TIMESTAMP`),
-  lastHealthCheck: text('lastHealthCheck'),
+  isActive: integer('is_active', { mode: 'boolean' }).default(false),
+  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  lastHealthCheck: text('last_health_check'),
 });
 
 export const domainSettings = sqliteTable('domain_settings', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  domainId: integer('domainId')
+  domainId: integer('domain_id')
     .notNull()
     .references(() => domains.id, { onDelete: 'cascade' }),
-  redirectMode: text('redirectMode', {
+  redirectMode: text('redirect_mode', {
     enum: ['PROXY', 'REDIRECT'],
   }).default('PROXY'),
-  customNameservers: text('customNameservers'),
-  forceSSL: integer('forceSSL', { mode: 'boolean' }).default(true),
-  createdAt: text('createdAt').notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text('updatedAt').notNull().default(sql`CURRENT_TIMESTAMP`),
+  customNameservers: text('custom_nameservers'),
+  forceSSL: integer('force_ssl', { mode: 'boolean' }).default(true),
+  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const domainDnsRecords = sqliteTable('domain_dns_records', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  domainId: integer('domainId')
+  domainId: integer('domain_id')
     .notNull()
     .references(() => domains.id, { onDelete: 'cascade' }),
   type: text('type', {
@@ -56,8 +56,8 @@ export const domainDnsRecords = sqliteTable('domain_dns_records', {
   ttl: integer('ttl').default(3600),
   priority: integer('priority'),
   proxied: integer('proxied', { mode: 'boolean' }).default(false),
-  createdAt: text('createdAt').notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text('updatedAt').notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // Types

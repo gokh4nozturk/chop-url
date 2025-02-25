@@ -138,7 +138,9 @@ export const useDomainStore = create<DomainState>()(
 
     addDomain: async (domain: Partial<Domain>) => {
       try {
+        console.log('Adding domain:', domain);
         const response = await apiClient.post('/api/domains', domain);
+        console.log('Domain add response:', response.data);
         set((state) => ({
           domains: [...state.domains, response.data],
           lastFetch: Date.now(), // Update cache timestamp
@@ -148,6 +150,7 @@ export const useDomainStore = create<DomainState>()(
             'Your domain has been added and is pending verification.',
         });
       } catch (error) {
+        console.error('Error adding domain:', error);
         const apiError = error as ApiError;
         toast.error('Failed to add domain', {
           description: apiError.message || 'An unexpected error occurred',

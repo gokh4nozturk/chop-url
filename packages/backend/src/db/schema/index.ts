@@ -7,3 +7,5 @@ export * from './email-verifications';
 export * from './sessions';
 export * from './recovery-codes';
 export * from './password-resets';
+export * from './qr-codes';
+export * from './domains';

@@ -9,7 +9,7 @@ const addDomainSchema = z.object({
   settings: z
     .object({
       redirectMode: z.enum(['PROXY', 'REDIRECT']).optional(),
-      customNameservers: z.string().optional(),
+      customNameservers: z.string().nullable().optional(),
       forceSSL: z.boolean().optional(),
     })
     .optional(),
@@ -42,6 +42,11 @@ export const createDomainRoutes = () => {
   // Add a new domain
   router.post('/domains', auth(), async (c: Context) => {
     try {
+      console.log('Handling POST /domains request');
+
+      const user = c.get('user');
+      console.log('User from context:', user);
+
       const domainService = new DomainService(c.get('db'), {
         cloudflareApiToken: c.env.CLOUDFLARE_API_TOKEN,
         cloudflareAccountId: c.env.CLOUDFLARE_ACCOUNT_ID,
@@ -49,14 +54,25 @@ export const createDomainRoutes = () => {
       });
 
       const body = await c.req.json();
+      console.log('Request body:', body);
+
       const { domain, settings } = addDomainSchema.parse(body);
-      const user = c.get('user');
+      console.log('Parsed domain and settings:', { domain, settings });
 
       const result = await domainService.addDomain(user.id, domain, settings);
       return c.json(result, 201);
     } catch (error) {
+      console.error('Error in POST /domains:', {
+        error,
+        stack: error instanceof Error ? error.stack : undefined,
+        user: c.get('user'),
+      });
+
       if (error instanceof z.ZodError) {
-        return c.json({ error: 'Invalid request body' }, 400);
+        return c.json(
+          { error: 'Invalid request body', details: error.errors },
+          400
+        );
       }
       if (error instanceof Error) {
         if (error.message === 'Domain already exists') {

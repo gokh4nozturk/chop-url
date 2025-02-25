@@ -5,64 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1739130596213,
-      "tag": "0000_loud_abomination",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1739134339158,
-      "tag": "0001_watery_zemo",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1739134339159,
-      "tag": "0002_add_location_columns",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1739134339160,
-      "tag": "0003_link_groups_and_tags",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1739134339161,
-      "tag": "0004_custom_domains",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1739134339162,
-      "tag": "0005_domain_health",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "6",
-      "when": 1739134339163,
-      "tag": "0006_events",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "6",
-      "when": 1739528927791,
-      "tag": "0007_plain_mandroid",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "6",
-      "when": 1739638701777,
-      "tag": "0008_wide_kat_farrell",
+      "when": 1740511277980,
+      "tag": "0000_nostalgic_vector",
       "breakpoints": true
     }
   ]
