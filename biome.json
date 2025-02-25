@@ -15,7 +15,8 @@
       "**/node_modules/**",
       "**/.next/**",
       "**/coverage/**",
-      "**/public/**"
+      "**/public/**",
+      "**/migrations/**"
     ]
   },
   "formatter": {
@@ -31,7 +32,8 @@
       "**/node_modules/**",
       "**/.next/**",
       "**/coverage/**",
-      "**/public/**"
+      "**/public/**",
+      "**/migrations/**"
     ]
   },
   "javascript": {
