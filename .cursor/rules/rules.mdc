@@ -1,6 +1,7 @@
 ---
 description: project rules
 globs: *
+alwaysApply: true
 ---
 # Project Rules
 

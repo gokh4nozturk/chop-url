@@ -20,6 +20,30 @@ interface DomainServiceConfig {
   cloudflareZoneId: string;
 }
 
+interface PerformanceMetrics {
+  responseTime: number;
+  uptime: number;
+  lastDowntime?: string;
+  metrics: {
+    lastMinute: {
+      requests: number;
+      errors: number;
+      avgResponseTime: number;
+    };
+    lastHour: {
+      uptime: number;
+      downtime: number;
+      incidents: number;
+    };
+  };
+}
+
+interface WebSocketMessage {
+  type: 'performance' | 'health' | 'ssl';
+  domainId: number;
+  data: unknown;
+}
+
 export class DomainService {
   private cloudflare: CloudflareService;
 
@@ -505,26 +529,48 @@ export class DomainService {
     }
   }
 
-  private async checkPerformance(domain: string): Promise<{
-    responseTime: number;
-    uptime: number;
-    lastDowntime?: string;
-  }> {
+  private async checkPerformance(domain: string): Promise<PerformanceMetrics> {
     try {
       const startTime = Date.now();
-      await fetch(`https://${domain}`);
+      const response = await fetch(`https://${domain}`);
       const responseTime = Date.now() - startTime;
 
-      // TODO: Implement actual uptime tracking
+      // Simüle edilmiş metrikler (gerçek implementasyonda bu veriler bir monitoring servisinden gelecek)
+      const metrics = {
+        lastMinute: {
+          requests: Math.floor(Math.random() * 100),
+          errors: Math.floor(Math.random() * 5),
+          avgResponseTime: responseTime,
+        },
+        lastHour: {
+          uptime: 99.9,
+          downtime: 0.1,
+          incidents: Math.floor(Math.random() * 2),
+        },
+      };
+
       return {
         responseTime,
-        uptime: 99.9, // Placeholder
+        uptime: 99.9,
+        metrics,
       };
     } catch (error) {
       return {
         responseTime: -1,
         uptime: 0,
         lastDowntime: new Date().toISOString(),
+        metrics: {
+          lastMinute: {
+            requests: 0,
+            errors: 1,
+            avgResponseTime: -1,
+          },
+          lastHour: {
+            uptime: 0,
+            downtime: 60,
+            incidents: 1,
+          },
+        },
       };
     }
   }
@@ -580,5 +626,57 @@ export class DomainService {
       console.error('Error initializing SSL:', error);
       throw new Error('Failed to initialize SSL');
     }
+  }
+
+  async startPerformanceMonitoring(
+    domainId: number,
+    userId: number
+  ): Promise<void> {
+    const domain = await this.getDomain(domainId, userId);
+    if (!domain) {
+      throw new Error('Domain not found');
+    }
+
+    // Her 1 dakikada bir performans kontrolü yap
+    setInterval(async () => {
+      try {
+        const metrics = await this.checkPerformance(domain.domain);
+
+        // WebSocket üzerinden metrikleri gönder
+        this.broadcastWebSocketMessage({
+          type: 'performance',
+          domainId,
+          data: metrics,
+        });
+
+        // Eğer performans sorunları varsa health check yap
+        if (
+          metrics.responseTime > 1000 ||
+          metrics.metrics.lastMinute.errors > 0
+        ) {
+          const healthData = await this.checkDomainHealth(domainId, userId);
+
+          this.broadcastWebSocketMessage({
+            type: 'health',
+            domainId,
+            data: healthData,
+          });
+        }
+
+        // Domain durumunu güncelle
+        await this.updateDomain(domainId, userId, {
+          isActive: metrics.responseTime !== -1,
+          lastHealthCheck: new Date().toISOString(),
+        });
+      } catch (error) {
+        console.error('Error in performance monitoring:', error);
+      }
+    }, 60000); // 1 dakika
+  }
+
+  private broadcastWebSocketMessage(message: WebSocketMessage): void {
+    // WebSocket bağlantısı üzerinden mesajı gönder
+    // Bu metod, WebSocket sunucusu tarafından implement edilecek
+    console.log('Broadcasting WebSocket message:', message);
   }
 }
