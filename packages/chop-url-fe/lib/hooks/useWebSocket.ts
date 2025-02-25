@@ -61,7 +61,7 @@ export function useWebSocket(
       };
 
       ws.onerror = (event) => {
-        setError('WebSocket bağlantı hatası');
+        setError('WebSocket connection error');
         onError?.(event);
       };
 
@@ -78,14 +78,14 @@ export function useWebSocket(
             reconnectInterval * 2 ** reconnectAttemptsRef.current
           );
         } else {
-          setError('Maksimum yeniden bağlanma denemesi aşıldı');
+          setError('Maximum reconnection attempts exceeded');
         }
       };
 
       wsRef.current = ws;
     } catch (error) {
       setIsConnecting(false);
-      setError('WebSocket bağlantısı oluşturulamadı');
+      setError('Failed to establish WebSocket connection');
       console.error('WebSocket connection error:', error);
     }
   }, [

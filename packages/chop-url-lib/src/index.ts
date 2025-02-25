@@ -42,7 +42,7 @@ export class ChopUrl {
       throw new Error('Invalid short ID');
     }
 
-    // Bu metod daha sonra veritabanı entegrasyonu ile tamamlanacak
+    // This method will be completed later with database integration
     throw new Error('Not implemented');
   }
 }

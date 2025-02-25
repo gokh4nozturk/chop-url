@@ -55,20 +55,20 @@ import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
-// DNS kayıt tipleri için açıklamalar
+// DNS record type descriptions
 const DNS_RECORD_DESCRIPTIONS = {
-  A: 'IPv4 adresine yönlendirir. Örn: 192.168.1.1',
-  AAAA: 'IPv6 adresine yönlendirir. Örn: 2001:0db8:85a3:0000:0000:8a2e:0370:7334',
-  CNAME: 'Başka bir domain adına yönlendirir. Örn: example.com',
-  TXT: 'Metin bilgisi saklar. Domain doğrulama için kullanılır.',
-  MX: 'E-posta sunucularını belirtir. Öncelik değeri gerektirir.',
-  NS: 'Domain için yetkili isim sunucularını belirtir.',
+  A: 'Points to an IPv4 address. Example: 192.168.1.1',
+  AAAA: 'Points to an IPv6 address. Example: 2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+  CNAME: 'Points to another domain name. Example: example.com',
+  TXT: 'Stores text information. Used for domain verification.',
+  MX: 'Specifies mail servers. Requires priority value.',
+  NS: 'Specifies authoritative name servers for the domain.',
 };
 
-// Yaygın DNS yapılandırmaları için şablonlar
+// Templates for common DNS configurations
 const DNS_TEMPLATES = [
   {
-    name: 'Standart Web Sitesi',
+    name: 'Standard Website',
     records: [
       {
         type: 'A' as const,
@@ -87,7 +87,7 @@ const DNS_TEMPLATES = [
     ],
   },
   {
-    name: 'E-posta Yapılandırması',
+    name: 'Email Configuration',
     records: [
       {
         type: 'MX' as const,
@@ -229,7 +229,7 @@ export default function DnsRecordsPage() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-2xl font-bold tracking-tight"
           >
-            DNS Kayıtları
+            DNS Records
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, x: -20 }}
@@ -237,7 +237,7 @@ export default function DnsRecordsPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-muted-foreground"
           >
-            {domain?.domain} için DNS kayıtlarını yönetin
+            Manage DNS records for {domain?.domain}
           </motion.p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
@@ -252,7 +252,7 @@ export default function DnsRecordsPage() {
             ) : (
               <RefreshCw className="mr-2 h-4 w-4" />
             )}
-            Yenile
+            Refresh
           </Button>
           <Button
             variant="outline"
@@ -260,7 +260,7 @@ export default function DnsRecordsPage() {
             onClick={() => setShowTemplateDialog(true)}
           >
             <Plus className="mr-2 h-4 w-4" />
-            Şablon Uygula
+            Apply Template
           </Button>
         </div>
       </div>
@@ -268,17 +268,15 @@ export default function DnsRecordsPage() {
       {/* DNS Kayıt Ekleme Kartı */}
       <Card>
         <CardHeader>
-          <CardTitle>DNS Kaydı Ekle</CardTitle>
-          <CardDescription>
-            Domain için yeni bir DNS kaydı ekleyin
-          </CardDescription>
+          <CardTitle>Add DNS Record</CardTitle>
+          <CardDescription>Add a new DNS record for the domain</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="type">
-                  Kayıt Tipi
+                  Record Type
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -286,7 +284,7 @@ export default function DnsRecordsPage() {
                       </TooltipTrigger>
                       <TooltipContent className="max-w-sm">
                         <p>
-                          Farklı DNS kayıt tipleri farklı amaçlara hizmet eder.
+                          Different DNS record types serve different purposes.
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -299,11 +297,11 @@ export default function DnsRecordsPage() {
                   defaultValue="A"
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Kayıt tipi seçin" />
+                    <SelectValue placeholder="Select record type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="A">A (IPv4 Adresi)</SelectItem>
-                    <SelectItem value="AAAA">AAAA (IPv6 Adresi)</SelectItem>
+                    <SelectItem value="A">A (IPv4 Address)</SelectItem>
+                    <SelectItem value="AAAA">AAAA (IPv6 Address)</SelectItem>
                     <SelectItem value="CNAME">
                       CNAME (Canonical Name)
                     </SelectItem>
@@ -321,7 +319,7 @@ export default function DnsRecordsPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="name">
-                  İsim
+                  Name
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -329,8 +327,8 @@ export default function DnsRecordsPage() {
                       </TooltipTrigger>
                       <TooltipContent className="max-w-sm">
                         <p>
-                          Ana domain için @ kullanın. Alt domain için sadece alt
-                          domain adını yazın (örn: www).
+                          Use @ for the root domain. For subdomains, just write
+                          the subdomain name (e.g., www).
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -338,17 +336,17 @@ export default function DnsRecordsPage() {
                 </Label>
                 <Input
                   id="name"
-                  placeholder="@ veya subdomain"
+                  placeholder="@ or subdomain"
                   {...register('name', { required: true })}
                 />
                 {errors.name && (
-                  <p className="text-xs text-red-500">İsim gerekli</p>
+                  <p className="text-xs text-red-500">Name is required</p>
                 )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="content">
-                  İçerik
+                  Content
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -356,7 +354,7 @@ export default function DnsRecordsPage() {
                       </TooltipTrigger>
                       <TooltipContent className="max-w-sm">
                         <p>
-                          A kaydı için IP adresi, CNAME için domain adı, vb.
+                          IP address for A record, domain name for CNAME, etc.
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -380,13 +378,13 @@ export default function DnsRecordsPage() {
                   {...register('content', { required: true })}
                 />
                 {errors.content && (
-                  <p className="text-xs text-red-500">İçerik gerekli</p>
+                  <p className="text-xs text-red-500">Content is required</p>
                 )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="ttl">
-                  TTL (Saniye)
+                  TTL (Seconds)
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -394,9 +392,8 @@ export default function DnsRecordsPage() {
                       </TooltipTrigger>
                       <TooltipContent className="max-w-sm">
                         <p>
-                          Time To Live - DNS kaydının önbellekte ne kadar süre
-                          tutulacağı. Düşük değerler daha hızlı güncellenme
-                          sağlar.
+                          Time To Live - How long the DNS record should be
+                          cached. Lower values allow for faster updates.
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -409,7 +406,7 @@ export default function DnsRecordsPage() {
                 />
                 {errors.ttl && (
                   <p className="text-xs text-red-500">
-                    TTL en az 60 saniye olmalıdır
+                    TTL must be at least 60 seconds
                   </p>
                 )}
               </div>
@@ -417,7 +414,7 @@ export default function DnsRecordsPage() {
               {recordType === 'MX' && (
                 <div className="space-y-2">
                   <Label htmlFor="priority">
-                    Öncelik
+                    Priority
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -425,8 +422,8 @@ export default function DnsRecordsPage() {
                         </TooltipTrigger>
                         <TooltipContent className="max-w-sm">
                           <p>
-                            Düşük değerler daha yüksek önceliği belirtir.
-                            Birincil mail sunucusu için 10, yedek için 20 gibi.
+                            Lower values indicate higher priority. Use 10 for
+                            primary mail server, 20 for backup, etc.
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -442,7 +439,7 @@ export default function DnsRecordsPage() {
                   />
                   {errors.priority && (
                     <p className="text-xs text-red-500">
-                      MX kayıtları için öncelik gereklidir
+                      Priority is required for MX records
                     </p>
                   )}
                 </div>
@@ -459,9 +456,9 @@ export default function DnsRecordsPage() {
                         </TooltipTrigger>
                         <TooltipContent className="max-w-sm">
                           <p>
-                            Etkinleştirildiğinde, trafik Cloudflare üzerinden
-                            geçer ve DDoS koruması, SSL ve diğer Cloudflare
-                            özellikleri etkinleşir.
+                            When enabled, traffic passes through Cloudflare and
+                            enables DDoS protection, SSL, and other Cloudflare
+                            features.
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -475,7 +472,7 @@ export default function DnsRecordsPage() {
                 </div>
                 {['MX', 'NS', 'TXT'].includes(recordType || '') && (
                   <p className="text-xs text-muted-foreground">
-                    Bu kayıt tipi için proxy kullanılamaz
+                    Proxy cannot be used for this record type
                   </p>
                 )}
               </div>
@@ -487,7 +484,7 @@ export default function DnsRecordsPage() {
               ) : (
                 <Plus className="mr-2 h-4 w-4" />
               )}
-              Kayıt Ekle
+              Add Record
             </Button>
           </form>
         </CardContent>
@@ -496,7 +493,7 @@ export default function DnsRecordsPage() {
       {/* DNS Kayıtları Listesi */}
       <Tabs defaultValue="all" className="w-full">
         <TabsList className="mb-4">
-          <TabsTrigger value="all">Tüm Kayıtlar</TabsTrigger>
+          <TabsTrigger value="all">All Records</TabsTrigger>
           {Object.keys(groupedRecords).map((type) => (
             <TabsTrigger key={type} value={type}>
               {type} ({groupedRecords[type].length})
@@ -510,8 +507,7 @@ export default function DnsRecordsPage() {
               <CardContent className="pt-6 text-center">
                 <AlertCircle className="mx-auto h-8 w-8 text-muted-foreground" />
                 <p className="mt-2 text-muted-foreground">
-                  Henüz DNS kaydı bulunmuyor. Yukarıdaki formu kullanarak kayıt
-                  ekleyin.
+                  No DNS records yet. Use the form above to add records.
                 </p>
               </CardContent>
             </Card>
@@ -553,7 +549,7 @@ export default function DnsRecordsPage() {
                             </Button>
                           </div>
                           <div className="flex items-center text-sm text-muted-foreground">
-                            <span>İçerik: {record.content}</span>
+                            <span>Content: {record.content}</span>
                             <Button
                               variant="ghost"
                               size="icon"
@@ -566,10 +562,10 @@ export default function DnsRecordsPage() {
                           <div className="flex flex-wrap gap-x-4 text-xs text-muted-foreground">
                             <span>TTL: {record.ttl}</span>
                             {record.priority !== undefined && (
-                              <span>Öncelik: {record.priority}</span>
+                              <span>Priority: {record.priority}</span>
                             )}
                             <span>
-                              Proxy: {record.proxied ? 'Aktif' : 'Pasif'}
+                              Proxy: {record.proxied ? 'Active' : 'Inactive'}
                             </span>
                           </div>
                         </div>
@@ -626,7 +622,7 @@ export default function DnsRecordsPage() {
                             </Button>
                           </div>
                           <div className="flex items-center text-sm text-muted-foreground">
-                            <span>İçerik: {record.content}</span>
+                            <span>Content: {record.content}</span>
                             <Button
                               variant="ghost"
                               size="icon"
@@ -639,10 +635,10 @@ export default function DnsRecordsPage() {
                           <div className="flex flex-wrap gap-x-4 text-xs text-muted-foreground">
                             <span>TTL: {record.ttl}</span>
                             {record.priority !== undefined && (
-                              <span>Öncelik: {record.priority}</span>
+                              <span>Priority: {record.priority}</span>
                             )}
                             <span>
-                              Proxy: {record.proxied ? 'Aktif' : 'Pasif'}
+                              Proxy: {record.proxied ? 'Active' : 'Inactive'}
                             </span>
                           </div>
                         </div>
@@ -668,9 +664,9 @@ export default function DnsRecordsPage() {
       <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>DNS Şablonu Uygula</DialogTitle>
+            <DialogTitle>Apply DNS Template</DialogTitle>
             <DialogDescription>
-              Yaygın DNS yapılandırmaları için hazır şablonlar
+              Ready-made templates for common DNS configurations
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -708,7 +704,7 @@ export default function DnsRecordsPage() {
               variant="outline"
               onClick={() => setShowTemplateDialog(false)}
             >
-              İptal
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>

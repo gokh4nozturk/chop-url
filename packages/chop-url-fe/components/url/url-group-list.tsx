@@ -32,15 +32,15 @@ export function UrlGroupList() {
   }, [getUserUrlGroups]);
 
   const handleDelete = async (group: IUrlGroup) => {
-    if (!confirm('Bu grubu silmek istediğinizden emin misiniz?')) {
+    if (!confirm('Are you sure you want to delete this group?')) {
       return;
     }
 
     try {
       await deleteUrlGroup(group.id);
-      toast.success('URL grubu başarıyla silindi');
+      toast.success('URL group successfully deleted');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Bir hata oluştu');
+      toast.error(error instanceof Error ? error.message : 'An error occurred');
     }
   };
 
@@ -53,7 +53,7 @@ export function UrlGroupList() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Menüyü aç</span>
+                  <span className="sr-only">Open menu</span>
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -66,22 +66,22 @@ export function UrlGroupList() {
                   onClick={() => handleDelete(group)}
                 >
                   <Trash className="mr-2 h-4 w-4" />
-                  Sil
+                  Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </CardHeader>
           <CardContent>
             <div className="text-sm text-muted-foreground">
-              {group.description || 'Açıklama yok'}
+              {group.description || 'No description'}
             </div>
           </CardContent>
           <CardFooter className="text-xs text-muted-foreground">
             {formatDistanceToNow(new Date(group.createdAt), {
               addSuffix: true,
-              locale: tr,
+              locale: 'en',
             })}
-            {' oluşturuldu'}
+            {' created'}
           </CardFooter>
         </Card>
       ))}

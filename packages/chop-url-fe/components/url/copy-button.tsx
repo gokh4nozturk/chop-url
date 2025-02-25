@@ -12,9 +12,9 @@ export function CopyButton({ url }: CopyButtonProps) {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(url);
-      toast.success('URL kopyalandı!');
+      toast.success('URL copied!');
     } catch (error) {
-      toast.error('URL kopyalanırken bir hata oluştu.');
+      toast.error('An error occurred while copying the URL.');
     }
   };
 

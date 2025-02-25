@@ -157,7 +157,7 @@ export default function DomainDetailsPage() {
           {
             type: 'response',
             severity: 'error',
-            message: 'Sağlık kontrolü yapılamadı',
+            message: 'Health check failed',
           },
         ],
       });
@@ -253,7 +253,7 @@ export default function DomainDetailsPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-muted-foreground"
           >
-            Eklenme: {new Date(domain.createdAt).toLocaleDateString()}
+            Added: {new Date(domain.createdAt).toLocaleDateString()}
           </motion.p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
@@ -267,12 +267,12 @@ export default function DomainDetailsPage() {
             {isChecking ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Kontrol Ediliyor...
+                Checking...
               </>
             ) : (
               <>
                 <RefreshCw className="mr-2 h-4 w-4" />
-                Sağlık Kontrolü
+                Health Check
               </>
             )}
           </Button>
@@ -284,7 +284,7 @@ export default function DomainDetailsPage() {
           >
             <Link href={`https://${domain.domain}`} target="_blank">
               <Globe className="mr-2 h-4 w-4" />
-              Ziyaret Et
+              Visit
               <ExternalLink className="ml-1 h-3 w-3" />
             </Link>
           </Button>
@@ -296,13 +296,13 @@ export default function DomainDetailsPage() {
         {/* Domain Durum Kartı */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Domain Durumu</CardTitle>
+            <CardTitle className="text-sm font-medium">Domain Status</CardTitle>
           </CardHeader>
           <CardContent className="pb-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <Shield className="mr-2 h-5 w-5 text-muted-foreground" />
-                <span>Doğrulama</span>
+                <span>Verification</span>
               </div>
               <div className="flex items-center">
                 {domain.isVerified ? (
@@ -310,14 +310,14 @@ export default function DomainDetailsPage() {
                     variant="outline"
                     className="bg-green-500/10 text-green-500"
                   >
-                    Doğrulanmış
+                    Verified
                   </Badge>
                 ) : (
                   <Badge
                     variant="outline"
                     className="bg-yellow-500/10 text-yellow-500"
                   >
-                    Bekliyor
+                    Pending
                   </Badge>
                 )}
               </div>
@@ -333,7 +333,7 @@ export default function DomainDetailsPage() {
                     variant="outline"
                     className="bg-green-500/10 text-green-500"
                   >
-                    Aktif
+                    Active
                   </Badge>
                 ) : domain.sslStatus === 'PENDING' ||
                   domain.sslStatus === 'INITIALIZING' ? (
@@ -341,14 +341,14 @@ export default function DomainDetailsPage() {
                     variant="outline"
                     className="bg-yellow-500/10 text-yellow-500"
                   >
-                    Bekliyor
+                    Pending
                   </Badge>
                 ) : (
                   <Badge
                     variant="outline"
                     className="bg-red-500/10 text-red-500"
                   >
-                    Başarısız
+                    Failed
                   </Badge>
                 )}
               </div>
@@ -356,7 +356,7 @@ export default function DomainDetailsPage() {
             <div className="mt-3 flex items-center justify-between">
               <div className="flex items-center">
                 <Network className="mr-2 h-5 w-5 text-muted-foreground" />
-                <span>Aktif</span>
+                <span>Active</span>
               </div>
               <div className="flex items-center">
                 {domain.isActive ? (
@@ -364,14 +364,14 @@ export default function DomainDetailsPage() {
                     variant="outline"
                     className="bg-green-500/10 text-green-500"
                   >
-                    Aktif
+                    Active
                   </Badge>
                 ) : (
                   <Badge
                     variant="outline"
                     className="bg-red-500/10 text-red-500"
                   >
-                    Pasif
+                    Inactive
                   </Badge>
                 )}
               </div>
@@ -388,7 +388,7 @@ export default function DomainDetailsPage() {
                 }
               >
                 <Shield className="mr-2 h-4 w-4" />
-                Doğrula
+                Verify
               </Button>
             ) : domain.sslStatus !== 'ACTIVE' ? (
               <Button
@@ -400,7 +400,7 @@ export default function DomainDetailsPage() {
                 }
               >
                 <Lock className="mr-2 h-4 w-4" />
-                SSL Yönet
+                SSL Manage
               </Button>
             ) : (
               <Button
@@ -412,7 +412,7 @@ export default function DomainDetailsPage() {
                 }
               >
                 <Network className="mr-2 h-4 w-4" />
-                DNS Yönet
+                DNS Manage
               </Button>
             )}
           </CardFooter>
@@ -421,11 +421,11 @@ export default function DomainDetailsPage() {
         {/* Sağlık Durumu Kartı */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Sağlık Durumu</CardTitle>
+            <CardTitle className="text-sm font-medium">Health Status</CardTitle>
             <CardDescription>
               {lastHealthCheck
-                ? `Son kontrol: ${new Date(lastHealthCheck).toLocaleString()}`
-                : 'Henüz kontrol edilmedi'}
+                ? `Last check: ${new Date(lastHealthCheck).toLocaleString()}`
+                : 'Not checked yet'}
             </CardDescription>
           </CardHeader>
           <CardContent className="pb-2">
@@ -434,7 +434,7 @@ export default function DomainDetailsPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <Activity className="mr-2 h-5 w-5 text-muted-foreground" />
-                    <span>Genel Durum</span>
+                    <span>General Status</span>
                   </div>
                   <div className="flex items-center">
                     {getStatusIcon(healthData.status)}
@@ -442,10 +442,10 @@ export default function DomainDetailsPage() {
                       className={`ml-1 ${getStatusColor(healthData.status)}`}
                     >
                       {healthData.status === 'healthy'
-                        ? 'Sağlıklı'
+                        ? 'Healthy'
                         : healthData.status === 'issues'
-                          ? 'Sorunlar Var'
-                          : 'Kritik'}
+                          ? 'Has Issues'
+                          : 'Critical'}
                     </span>
                   </div>
                 </div>
@@ -461,10 +461,10 @@ export default function DomainDetailsPage() {
                       className={`ml-1 ${getStatusColor(healthData.dnsStatus)}`}
                     >
                       {healthData.dnsStatus === 'ok'
-                        ? 'Sağlıklı'
+                        ? 'Healthy'
                         : healthData.dnsStatus === 'issues'
-                          ? 'Sorunlar Var'
-                          : 'Erişilemiyor'}
+                          ? 'Has Issues'
+                          : 'Unreachable'}
                     </span>
                   </div>
                 </div>
@@ -480,20 +480,18 @@ export default function DomainDetailsPage() {
                       className={`ml-1 ${getStatusColor(healthData.sslStatus)}`}
                     >
                       {healthData.sslStatus === 'ACTIVE'
-                        ? 'Aktif'
+                        ? 'Active'
                         : healthData.sslStatus === 'PENDING' ||
                             healthData.sslStatus === 'INITIALIZING'
-                          ? 'Bekliyor'
-                          : 'Başarısız'}
+                          ? 'Pending'
+                          : 'Failed'}
                     </span>
                   </div>
                 </div>
 
                 {healthData.issues.length > 0 && (
                   <div className="mt-4 space-y-2">
-                    <h4 className="text-sm font-medium">
-                      Tespit Edilen Sorunlar
-                    </h4>
+                    <h4 className="text-sm font-medium">Detected Issues</h4>
                     {healthData.issues.map((issue, index) => (
                       <div
                         key={`${issue.type}-${index}`}
@@ -513,8 +511,8 @@ export default function DomainDetailsPage() {
               <div className="flex flex-col items-center justify-center py-6 text-center">
                 <HelpCircle className="h-8 w-8 text-muted-foreground" />
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Sağlık durumu bilgisi yok. Sağlık kontrolü yapmak için
-                  yukarıdaki butonu kullanın.
+                  No health status information. Use the button above to perform
+                  a health check.
                 </p>
               </div>
             )}
@@ -532,7 +530,7 @@ export default function DomainDetailsPage() {
               ) : (
                 <RefreshCw className="mr-2 h-4 w-4" />
               )}
-              {isChecking ? 'Kontrol Ediliyor...' : 'Yeniden Kontrol Et'}
+              {isChecking ? 'Checking...' : 'Check Again'}
             </Button>
           </CardFooter>
         </Card>
@@ -540,7 +538,7 @@ export default function DomainDetailsPage() {
         {/* Ayarlar Kartı */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Hızlı Erişim</CardTitle>
+            <CardTitle className="text-sm font-medium">Quick Access</CardTitle>
           </CardHeader>
           <CardContent className="pb-2">
             <div className="space-y-2">
@@ -553,7 +551,7 @@ export default function DomainDetailsPage() {
                 }
               >
                 <Network className="mr-2 h-4 w-4" />
-                DNS Kayıtları
+                DNS Records
                 <ArrowRight className="ml-auto h-4 w-4" />
               </Button>
               <Button
@@ -565,7 +563,7 @@ export default function DomainDetailsPage() {
                 }
               >
                 <Lock className="mr-2 h-4 w-4" />
-                SSL Yönetimi
+                SSL Management
                 <ArrowRight className="ml-auto h-4 w-4" />
               </Button>
               <Button
@@ -577,7 +575,7 @@ export default function DomainDetailsPage() {
                 }
               >
                 <Shield className="mr-2 h-4 w-4" />
-                Domain Doğrulama
+                Domain Verification
                 <ArrowRight className="ml-auto h-4 w-4" />
               </Button>
             </div>
@@ -589,7 +587,7 @@ export default function DomainDetailsPage() {
                   <TooltipTrigger asChild>
                     <div className="mb-2">
                       <div className="mb-1 flex items-center justify-between text-xs">
-                        <span>Domain Sağlığı</span>
+                        <span>Domain Health</span>
                         <span
                           className={getStatusColor(
                             healthData?.status || 'issues'
@@ -622,8 +620,8 @@ export default function DomainDetailsPage() {
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>
-                      Domain sağlık puanı, DNS, SSL ve erişilebilirlik
-                      durumlarına göre hesaplanır.
+                      Domain health score is calculated based on DNS, SSL, and
+                      accessibility status.
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -636,9 +634,9 @@ export default function DomainDetailsPage() {
       {/* Detaylı Bilgiler */}
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>Detaylı Sağlık Durumu</CardTitle>
+          <CardTitle>Detailed Health Status</CardTitle>
           <CardDescription>
-            Domain sağlık durumu ve performans metrikleri
+            Domain health status and performance metrics
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -646,7 +644,7 @@ export default function DomainDetailsPage() {
             <TabsList>
               <TabsTrigger value="health">
                 <Activity className="mr-2 h-4 w-4" />
-                Sağlık
+                Health
               </TabsTrigger>
               <TabsTrigger value="ssl">
                 <Lock className="mr-2 h-4 w-4" />
@@ -654,7 +652,7 @@ export default function DomainDetailsPage() {
               </TabsTrigger>
               <TabsTrigger value="performance">
                 <Network className="mr-2 h-4 w-4" />
-                Performans
+                Performance
               </TabsTrigger>
             </TabsList>
 
@@ -663,7 +661,7 @@ export default function DomainDetailsPage() {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">
-                      Genel Sağlık Durumu
+                      General Health Status
                     </CardTitle>
                     {getStatusIcon(healthData?.status || 'issues')}
                   </CardHeader>
@@ -676,7 +674,7 @@ export default function DomainDetailsPage() {
                           : '30%'}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Son kontrol:{' '}
+                      Last check:{' '}
                       {new Date(healthData?.lastChecked || '').toLocaleString()}
                     </p>
                   </CardContent>
@@ -685,7 +683,7 @@ export default function DomainDetailsPage() {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">
-                      Aktif Sorunlar
+                      Active Issues
                     </CardTitle>
                     <AlertTriangle className="h-4 w-4 text-yellow-500" />
                   </CardHeader>
@@ -696,11 +694,11 @@ export default function DomainDetailsPage() {
                     <p className="text-xs text-muted-foreground">
                       {healthData?.issues?.filter((i) => i.severity === 'error')
                         .length || 0}{' '}
-                      kritik,{' '}
+                      critical,
                       {healthData?.issues?.filter(
                         (i) => i.severity === 'warning'
                       ).length || 0}{' '}
-                      uyarı
+                      warnings
                     </p>
                   </CardContent>
                 </Card>
@@ -717,12 +715,12 @@ export default function DomainDetailsPage() {
                       {healthData?.metrics?.performance?.uptime.toFixed(2)}%
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Son kesinti:{' '}
+                      Last downtime:{' '}
                       {healthData?.metrics?.performance?.lastDowntime
                         ? new Date(
                             healthData.metrics.performance.lastDowntime
                           ).toLocaleString()
-                        : 'Yok'}
+                        : 'None'}
                     </p>
                   </CardContent>
                 </Card>
@@ -731,7 +729,7 @@ export default function DomainDetailsPage() {
               {healthData?.issues && healthData.issues.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Aktif Sorunlar</CardTitle>
+                    <CardTitle>Active Issues</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
@@ -754,7 +752,7 @@ export default function DomainDetailsPage() {
                           </div>
                           {issue.recommendation && (
                             <p className="mt-2 text-sm text-muted-foreground">
-                              Öneri: {issue.recommendation}
+                              Recommendation: {issue.recommendation}
                             </p>
                           )}
                         </div>
@@ -768,13 +766,13 @@ export default function DomainDetailsPage() {
             <TabsContent value="ssl" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>SSL Sertifika Bilgileri</CardTitle>
+                  <CardTitle>SSL Certificate Information</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
-                        <p className="text-sm font-medium">Durum</p>
+                        <p className="text-sm font-medium">Status</p>
                         <div className="mt-1 flex items-center space-x-2">
                           {getStatusIcon(healthData?.sslStatus || 'FAILED')}
                           <span
@@ -788,7 +786,7 @@ export default function DomainDetailsPage() {
                       </div>
 
                       <div>
-                        <p className="text-sm font-medium">Sağlayıcı</p>
+                        <p className="text-sm font-medium">Provider</p>
                         <p className="mt-1 text-sm text-muted-foreground">
                           {healthData?.metrics?.sslDetails?.issuer ||
                             'Cloudflare'}
@@ -796,9 +794,7 @@ export default function DomainDetailsPage() {
                       </div>
 
                       <div>
-                        <p className="text-sm font-medium">
-                          Geçerlilik Başlangıcı
-                        </p>
+                        <p className="text-sm font-medium">Valid From</p>
                         <p className="mt-1 text-sm text-muted-foreground">
                           {healthData?.metrics?.sslDetails?.validFrom
                             ? new Date(
@@ -809,7 +805,7 @@ export default function DomainDetailsPage() {
                       </div>
 
                       <div>
-                        <p className="text-sm font-medium">Geçerlilik Sonu</p>
+                        <p className="text-sm font-medium">Valid Until</p>
                         <p className="mt-1 text-sm text-muted-foreground">
                           {healthData?.metrics?.sslDetails?.validTo
                             ? new Date(
@@ -820,31 +816,31 @@ export default function DomainDetailsPage() {
                       </div>
 
                       <div>
-                        <p className="text-sm font-medium">Otomatik Yenileme</p>
+                        <p className="text-sm font-medium">Auto Renewal</p>
                         <div className="mt-1">
                           {healthData?.metrics?.sslDetails?.autoRenewal ? (
                             <Badge
                               variant="outline"
                               className="bg-green-500/10 text-green-500"
                             >
-                              Aktif
+                              Active
                             </Badge>
                           ) : (
                             <Badge
                               variant="outline"
                               className="bg-yellow-500/10 text-yellow-500"
                             >
-                              Pasif
+                              Inactive
                             </Badge>
                           )}
                         </div>
                       </div>
 
                       <div>
-                        <p className="text-sm font-medium">Kalan Süre</p>
+                        <p className="text-sm font-medium">Time Remaining</p>
                         <p className="mt-1 text-sm text-muted-foreground">
                           {healthData?.metrics?.sslDetails?.daysUntilExpiry
-                            ? `${healthData.metrics.sslDetails.daysUntilExpiry} gün`
+                            ? `${healthData.metrics.sslDetails.daysUntilExpiry} days`
                             : '-'}
                         </p>
                       </div>
@@ -855,13 +851,13 @@ export default function DomainDetailsPage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Güvenlik Değerlendirmesi</CardTitle>
+                  <CardTitle>Security Assessment</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-3">
                       <div>
-                        <p className="text-sm font-medium">SSL Notu</p>
+                        <p className="text-sm font-medium">SSL Grade</p>
                         <div className="mt-1">
                           <Badge
                             variant="outline"
@@ -884,37 +880,35 @@ export default function DomainDetailsPage() {
                               variant="outline"
                               className="bg-green-500/10 text-green-500"
                             >
-                              Aktif
+                              Active
                             </Badge>
                           ) : (
                             <Badge
                               variant="outline"
                               className="bg-red-500/10 text-red-500"
                             >
-                              Pasif
+                              Inactive
                             </Badge>
                           )}
                         </div>
                       </div>
 
                       <div>
-                        <p className="text-sm font-medium">
-                          Güvenlik Başlıkları
-                        </p>
+                        <p className="text-sm font-medium">Security Headers</p>
                         <div className="mt-1">
                           {healthData?.metrics?.security?.securityHeaders ? (
                             <Badge
                               variant="outline"
                               className="bg-green-500/10 text-green-500"
                             >
-                              Yapılandırılmış
+                              Configured
                             </Badge>
                           ) : (
                             <Badge
                               variant="outline"
                               className="bg-yellow-500/10 text-yellow-500"
                             >
-                              Eksik
+                              Missing
                             </Badge>
                           )}
                         </div>
@@ -928,13 +922,13 @@ export default function DomainDetailsPage() {
             <TabsContent value="performance" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Performans Metrikleri</CardTitle>
+                  <CardTitle>Performance Metrics</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
-                        <p className="text-sm font-medium">Yanıt Süresi</p>
+                        <p className="text-sm font-medium">Response Time</p>
                         <div className="mt-1">
                           <span className="text-2xl font-bold">
                             {healthData?.metrics?.performance?.responseTime}ms
@@ -957,7 +951,7 @@ export default function DomainDetailsPage() {
 
                     {healthData?.metrics?.performance?.lastDowntime && (
                       <div>
-                        <p className="text-sm font-medium">Son Kesinti</p>
+                        <p className="text-sm font-medium">Last Downtime</p>
                         <p className="mt-1 text-sm text-muted-foreground">
                           {new Date(
                             healthData.metrics.performance.lastDowntime
