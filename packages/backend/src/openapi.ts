@@ -173,6 +173,43 @@ export const openApiSchema = {
           },
         },
       },
+      QRCode: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          urlId: {
+            type: 'integer',
+          },
+          imageUrl: {
+            type: 'string',
+          },
+          logoUrl: {
+            type: 'string',
+            nullable: true,
+          },
+          logoSize: {
+            type: 'integer',
+            nullable: true,
+          },
+          logoPosition: {
+            type: 'string',
+            nullable: true,
+          },
+          downloadCount: {
+            type: 'integer',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'date-time',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'date-time',
+          },
+        },
+      },
     },
   },
   paths: {
@@ -1477,6 +1514,404 @@ export const openApiSchema = {
               'application/json': {
                 schema: {
                   $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/qr': {
+      post: {
+        tags: ['QR Code'],
+        summary: 'Create a QR code for a URL',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  urlId: {
+                    type: 'integer',
+                  },
+                  imageUrl: {
+                    type: 'string',
+                  },
+                },
+                required: ['urlId', 'imageUrl'],
+              },
+            },
+          },
+        },
+        responses: {
+          '201': {
+            description: 'QR code created successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/QRCode',
+                },
+              },
+            },
+          },
+          '400': {
+            description: 'Invalid input',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/qr/url/{urlId}': {
+      get: {
+        tags: ['QR Code'],
+        summary: 'Get QR code by URL ID',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'urlId',
+            in: 'path',
+            required: true,
+            schema: {
+              type: 'integer',
+            },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'QR code retrieved successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/QRCode',
+                },
+              },
+            },
+          },
+          '204': {
+            description: 'No QR code found for this URL',
+          },
+          '500': {
+            description: 'Internal server error',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/qr/{id}': {
+      get: {
+        tags: ['QR Code'],
+        summary: 'Get QR code by ID',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: {
+              type: 'integer',
+            },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'QR code retrieved successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/QRCode',
+                },
+              },
+            },
+          },
+          '404': {
+            description: 'QR code not found',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+          '500': {
+            description: 'Internal server error',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+        },
+      },
+      put: {
+        tags: ['QR Code'],
+        summary: 'Update QR code',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: {
+              type: 'integer',
+            },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  imageUrl: {
+                    type: 'string',
+                  },
+                  logoUrl: {
+                    type: 'string',
+                  },
+                  logoSize: {
+                    type: 'integer',
+                  },
+                  logoPosition: {
+                    type: 'string',
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'QR code updated successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/QRCode',
+                },
+              },
+            },
+          },
+          '500': {
+            description: 'Internal server error',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/qr/{id}/download': {
+      post: {
+        tags: ['QR Code'],
+        summary: 'Increment download count for QR code',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: {
+              type: 'integer',
+            },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'Download count incremented successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: {
+                      type: 'boolean',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/storage/generate-presigned-url': {
+      post: {
+        tags: ['Storage'],
+        summary: 'Generate a presigned URL for file upload/download',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  path: {
+                    type: 'string',
+                    description: 'Path where the file will be stored',
+                  },
+                  operation: {
+                    type: 'string',
+                    enum: ['read', 'write'],
+                    default: 'write',
+                    description: 'Operation type (read or write)',
+                  },
+                },
+                required: ['path'],
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Presigned URL generated successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    url: {
+                      type: 'string',
+                      description: 'Presigned URL',
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '400': {
+            description: 'Invalid input',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+          '500': {
+            description: 'Internal server error',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/storage/public-url': {
+      get: {
+        tags: ['Storage'],
+        summary: 'Get public URL for a file',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'path',
+            in: 'query',
+            required: true,
+            schema: {
+              type: 'string',
+            },
+            description: 'Path of the file',
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'Public URL retrieved successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    url: {
+                      type: 'string',
+                      description: 'Public URL',
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '400': {
+            description: 'Invalid input',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+          '500': {
+            description: 'Internal server error',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/ws': {
+      get: {
+        tags: ['WebSocket'],
+        summary: 'WebSocket connection endpoint',
+        description: 'Establish a WebSocket connection for real-time updates',
+        parameters: [
+          {
+            name: 'Upgrade',
+            in: 'header',
+            required: true,
+            schema: {
+              type: 'string',
+              enum: ['websocket'],
+            },
+            description: 'WebSocket upgrade header',
+          },
+        ],
+        responses: {
+          '101': {
+            description: 'WebSocket connection established',
+          },
+          '426': {
+            description: 'Upgrade Required',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    error: {
+                      type: 'string',
+                      example: 'Expected Upgrade: websocket',
+                    },
+                  },
                 },
               },
             },
