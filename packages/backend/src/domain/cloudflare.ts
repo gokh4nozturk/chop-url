@@ -117,6 +117,49 @@ export class CloudflareService {
     return response.status;
   }
 
+  async getDetailedSslStatus(domain: string): Promise<{
+    status: string;
+    validFrom?: string;
+    validTo?: string;
+    issuer?: string;
+    autoRenewal: boolean;
+    daysUntilExpiry?: number;
+  }> {
+    const response = await this.request<{
+      result: {
+        status: string;
+        certificates: Array<{
+          uploaded_on: string;
+          expires_on: string;
+          issuer: string;
+        }>;
+        settings: {
+          auto_renew: boolean;
+        };
+      };
+    }>(`/zones/${this.zoneId}/ssl/certificate_packs?hosts=${domain}`);
+
+    const certificate = response.result.certificates?.[0];
+    const now = new Date();
+    const expiryDate = certificate?.expires_on
+      ? new Date(certificate.expires_on)
+      : null;
+    const daysUntilExpiry = expiryDate
+      ? Math.ceil(
+          (expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+        )
+      : undefined;
+
+    return {
+      status: response.result.status,
+      validFrom: certificate?.uploaded_on,
+      validTo: certificate?.expires_on,
+      issuer: certificate?.issuer,
+      autoRenewal: response.result.settings?.auto_renew ?? true,
+      daysUntilExpiry,
+    };
+  }
+
   async createZone(domain: string): Promise<{ id: string }> {
     return this.request<{ id: string }>('/zones', {
       method: 'POST',

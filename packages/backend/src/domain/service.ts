@@ -361,6 +361,31 @@ export class DomainService {
     sslStatus: string;
     isHealthy: boolean;
     lastChecked: string;
+    metrics: {
+      sslDetails: {
+        validFrom?: string;
+        validTo?: string;
+        issuer?: string;
+        autoRenewal: boolean;
+        daysUntilExpiry?: number;
+      };
+      performance: {
+        responseTime: number;
+        uptime: number;
+        lastDowntime?: string;
+      };
+      security: {
+        sslGrade?: string;
+        hsts: boolean;
+        securityHeaders: boolean;
+      };
+    };
+    issues: Array<{
+      type: 'dns' | 'ssl' | 'response' | 'security';
+      severity: 'warning' | 'error';
+      message: string;
+      recommendation?: string;
+    }>;
   }> {
     const domain = await this.getDomain(domainId, userId);
     if (!domain) {
@@ -375,13 +400,79 @@ export class DomainService {
       );
       const dnsStatus = txtRecords.length > 0 || cnameRecords.length > 0;
 
-      // Check SSL status
-      const cloudflareStatus = await this.cloudflare.getSslStatus(
+      // Check SSL status and details
+      const sslDetails = await this.cloudflare.getDetailedSslStatus(
         domain.domain
       );
-      const sslStatus = this.mapCloudflareStatusToInternal(cloudflareStatus);
+      const sslStatus = this.mapCloudflareStatusToInternal(sslDetails.status);
+
+      // Performance check
+      const performanceMetrics = await this.checkPerformance(domain.domain);
+
+      // Security check
+      const securityMetrics = await this.checkSecurity(domain.domain);
 
       const now = new Date().toISOString();
+
+      // Collect issues
+      const issues: Array<{
+        type: 'dns' | 'ssl' | 'response' | 'security';
+        severity: 'warning' | 'error';
+        message: string;
+        recommendation?: string;
+      }> = [];
+
+      // DNS issues
+      if (!dnsStatus) {
+        issues.push({
+          type: 'dns',
+          severity: 'error',
+          message: 'DNS records are not properly configured',
+          recommendation:
+            'Please verify your DNS configuration and add required records',
+        });
+      }
+
+      // SSL issues
+      if (sslStatus !== 'ACTIVE') {
+        issues.push({
+          type: 'ssl',
+          severity: 'error',
+          message: 'SSL certificate is not active',
+          recommendation:
+            'Request a new SSL certificate or check the configuration',
+        });
+      } else if (
+        sslDetails.daysUntilExpiry &&
+        sslDetails.daysUntilExpiry < 30
+      ) {
+        issues.push({
+          type: 'ssl',
+          severity: 'warning',
+          message: `SSL certificate will expire in ${sslDetails.daysUntilExpiry} days`,
+          recommendation: 'Consider renewing the SSL certificate',
+        });
+      }
+
+      // Performance issues
+      if (performanceMetrics.responseTime > 1000) {
+        issues.push({
+          type: 'response',
+          severity: 'warning',
+          message: 'High response time detected',
+          recommendation: 'Consider optimizing your server configuration',
+        });
+      }
+
+      // Security issues
+      if (!securityMetrics.hsts) {
+        issues.push({
+          type: 'security',
+          severity: 'warning',
+          message: 'HSTS is not enabled',
+          recommendation: 'Enable HSTS for improved security',
+        });
+      }
 
       // Update domain status
       await this.updateDomain(domainId, userId, {
@@ -393,13 +484,82 @@ export class DomainService {
       return {
         dnsStatus,
         sslStatus,
-        isHealthy: dnsStatus && sslStatus === 'ACTIVE',
+        isHealthy: dnsStatus && sslStatus === 'ACTIVE' && issues.length === 0,
         lastChecked: now,
+        metrics: {
+          sslDetails: {
+            validFrom: sslDetails.validFrom,
+            validTo: sslDetails.validTo,
+            issuer: sslDetails.issuer,
+            autoRenewal: sslDetails.autoRenewal,
+            daysUntilExpiry: sslDetails.daysUntilExpiry,
+          },
+          performance: performanceMetrics,
+          security: securityMetrics,
+        },
+        issues,
       };
     } catch (error) {
       console.error('Error checking domain health:', error);
       throw new Error('Failed to check domain health');
     }
+  }
+
+  private async checkPerformance(domain: string): Promise<{
+    responseTime: number;
+    uptime: number;
+    lastDowntime?: string;
+  }> {
+    try {
+      const startTime = Date.now();
+      await fetch(`https://${domain}`);
+      const responseTime = Date.now() - startTime;
+
+      // TODO: Implement actual uptime tracking
+      return {
+        responseTime,
+        uptime: 99.9, // Placeholder
+      };
+    } catch (error) {
+      return {
+        responseTime: -1,
+        uptime: 0,
+        lastDowntime: new Date().toISOString(),
+      };
+    }
+  }
+
+  private async checkSecurity(domain: string): Promise<{
+    sslGrade?: string;
+    hsts: boolean;
+    securityHeaders: boolean;
+  }> {
+    try {
+      const response = await fetch(`https://${domain}`);
+      const headers = response.headers;
+
+      return {
+        sslGrade: 'A', // Placeholder - implement actual SSL grade check
+        hsts: headers.get('Strict-Transport-Security') !== null,
+        securityHeaders: this.checkSecurityHeaders(headers),
+      };
+    } catch (error) {
+      return {
+        hsts: false,
+        securityHeaders: false,
+      };
+    }
+  }
+
+  private checkSecurityHeaders(headers: Headers): boolean {
+    const securityHeaders = [
+      'X-Content-Type-Options',
+      'X-Frame-Options',
+      'X-XSS-Protection',
+      'Content-Security-Policy',
+    ];
+
+    return securityHeaders.some((header) => headers.get(header) !== null);
   }
 
   private async initializeSSL(domain: Domain): Promise<void> {

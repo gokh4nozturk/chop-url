@@ -10,7 +10,13 @@ interface Domain {
   isVerified: boolean;
   verificationToken: string;
   verificationMethod: 'DNS_TXT' | 'DNS_CNAME' | 'FILE';
-  sslStatus: 'PENDING' | 'ACTIVE' | 'FAILED';
+  sslStatus:
+    | 'PENDING'
+    | 'ACTIVE'
+    | 'FAILED'
+    | 'EXPIRED'
+    | 'INITIALIZING'
+    | 'INACTIVE';
   isActive: boolean;
   createdAt: string;
   settings: {
