@@ -18,7 +18,7 @@ import {
 import useUrlStore from '@/lib/store/url';
 import { IUrlGroup } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 import { MoreHorizontal, Trash } from 'lucide-react';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
@@ -79,7 +79,7 @@ export function UrlGroupList() {
           <CardFooter className="text-xs text-muted-foreground">
             {formatDistanceToNow(new Date(group.createdAt), {
               addSuffix: true,
-              locale: 'en',
+              locale: enUS,
             })}
             {' created'}
           </CardFooter>

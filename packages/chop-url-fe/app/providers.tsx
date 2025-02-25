@@ -11,7 +11,7 @@ export function Providers({
   initialSidebarState,
 }: {
   children: React.ReactNode;
-  initialSidebarState: string;
+  initialSidebarState?: string;
 }) {
   const initialize = useAuthStore((state) => state.initialize);
 
@@ -27,7 +27,7 @@ export function Providers({
       disableTransitionOnChange
     >
       <AuthProvider>
-        <SidebarProvider defaultOpen={initialSidebarState === 'true'}>
+        <SidebarProvider defaultOpen={initialSidebarState === 'true' || true}>
           <div className="w-full">{children}</div>
         </SidebarProvider>
       </AuthProvider>
