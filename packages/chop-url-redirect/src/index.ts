@@ -62,7 +62,8 @@ async function trackEvent(
   urlId: number,
   eventType: string,
   eventName: string,
-  additionalProperties: Record<string, unknown> = {}
+  additionalProperties: Record<string, unknown> = {},
+  userId: string | null = null
 ) {
   try {
     const cf = c.req.raw.cf;
@@ -123,16 +124,18 @@ async function trackEvent(
     await c.env.DB.prepare(`
       INSERT INTO events (
         url_id,
+        user_id,
         event_type,
         event_name,
         properties,
         device_info,
         geo_info,
         referrer
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `)
       .bind(
         urlId,
+        userId,
         eventType,
         eventName,
         JSON.stringify(properties),
@@ -145,6 +148,7 @@ async function trackEvent(
     // Create event data for WebSocket
     const eventData = {
       urlId,
+      userId,
       eventType,
       eventName,
       properties,
@@ -163,6 +167,7 @@ async function trackEvent(
 
     console.log('[Event] Event tracked successfully:', {
       urlId,
+      userId,
       eventType,
       eventName,
       properties,
@@ -304,10 +309,10 @@ app.get('/:shortId', async (c: CFContext) => {
     }
 
     const result = await c.env.DB.prepare(
-      'SELECT id, original_url FROM urls WHERE short_id = ?'
+      'SELECT id, original_url, user_id FROM urls WHERE short_id = ?'
     )
       .bind(shortId)
-      .first<{ id: number; original_url: string }>();
+      .first<{ id: number; original_url: string; user_id: string }>();
 
     if (!result) {
       return c.json({ message: 'Short URL not found' }, 404);
@@ -315,10 +320,17 @@ app.get('/:shortId', async (c: CFContext) => {
 
     // Track event asynchronously using waitUntil
     c.executionCtx.waitUntil(
-      trackEvent(c, result.id, 'REDIRECT', 'url_redirect', {
-        shortId,
-        originalUrl: result.original_url,
-      })
+      trackEvent(
+        c,
+        result.id,
+        'REDIRECT',
+        'url_redirect',
+        {
+          shortId,
+          originalUrl: result.original_url,
+        },
+        result.user_id
+      )
     );
 
     // Update visit count asynchronously
