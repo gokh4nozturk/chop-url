@@ -4,10 +4,6 @@ import ClientAnalytics from '@/components/analytics/client-analytics';
 import { RealTimeStats } from '@/components/analytics/real-time-stats';
 import ErrorBoundary from '@/components/error-boundary';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  transformCityData,
-  transformDataForPieChart,
-} from '@/lib/utils/analytics';
 import { useParams } from 'next/navigation';
 import { Suspense } from 'react';
 
