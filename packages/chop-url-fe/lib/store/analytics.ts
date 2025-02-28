@@ -120,15 +120,15 @@ export const useAnalyticsStore = create<AnalyticsState>()(
 
       fetchAnalytics: async (shortId: string) => {
         try {
-          console.log('[Analytics] Fetching analytics for shortId:', shortId);
+          // console.log('[Analytics] Fetching analytics for shortId:', shortId);
           set({ isLoading: true, error: null, currentUrlId: shortId });
 
           const { timeRange } = get();
-          console.log('[Analytics] Using time range:', timeRange);
+          // console.log('[Analytics] Using time range:', timeRange);
 
           // Check if we're offline
           if (typeof window !== 'undefined' && !window.navigator.onLine) {
-            console.log('[Analytics] Offline, using cached data');
+            // console.log('[Analytics] Offline, using cached data');
             const cachedData = localStorage.getItem(getCacheKey(shortId));
             if (cachedData) {
               const { data, timestamp } = JSON.parse(cachedData);
@@ -210,7 +210,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
       },
 
       setTimeRange: (range: TimeRange) => {
-        console.log('[Analytics] Setting time range:', range);
+        // console.log('[Analytics] Setting time range:', range);
         set({ timeRange: range, events: [] });
         const { urlStats } = get();
         // Refresh all URLs when time range changes
@@ -220,7 +220,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
       },
 
       reset: () => {
-        console.log('[Analytics] Resetting store');
+        // console.log('[Analytics] Resetting store');
         set({
           isLoading: false,
           error: null,
