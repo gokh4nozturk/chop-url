@@ -1,8 +1,9 @@
 'use client';
 
+import { NotificationsSheet } from '@/components/notifications';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Bell, LayoutDashboard } from 'lucide-react';
+import { ArrowRight, LayoutDashboard } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useMediaQuery } from 'usehooks-ts';
@@ -33,14 +34,7 @@ export function Navbar() {
           </Link>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-9 h-9"
-            aria-label="Notifications"
-          >
-            <Bell className="h-4 w-4" />
-          </Button>
+          <NotificationsSheet />
           <ThemeSwitcher />
           <Link href="/dashboard" passHref>
             <Button
