@@ -30,6 +30,7 @@ import { Switch } from '@/components/ui/switch';
 import { useDomainStore } from '@/lib/store/domain';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Loader2, Network, Plus, Shield, Trash } from 'lucide-react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
@@ -331,10 +332,11 @@ export default function DomainsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex justify-center">
-              <img
-                src="https://illustrations.popsy.co/amber/web-development.svg"
+              <Image
+                src="https://storage.chop-url.com/assets/productivity-illustration.svg"
                 alt="Coming Soon"
-                className="max-w-[300px]"
+                width={300}
+                height={300}
               />
             </CardContent>
           </Card>
