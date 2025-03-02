@@ -2,6 +2,7 @@ import { Context, Hono } from 'hono';
 import { z } from 'zod';
 import { auth } from '../auth/middleware.js';
 import { IUser } from '../auth/types.js';
+import { withOpenAPI } from '../utils/openapi';
 import { getVisitsByTimeRange } from './service';
 import { UrlService } from './service.js';
 import { H } from './types';
@@ -98,7 +99,7 @@ const updateUrlSchema = z.object({
 
 type Period = (typeof VALID_PERIODS)[number];
 
-export const createUrlRoutes = () => {
+const createBaseUrlRoutes = () => {
   const router = new Hono<H>();
 
   // This endpoint is used by authenticated users to create a short URL
@@ -465,3 +466,6 @@ export const createUrlRoutes = () => {
 
   return router;
 };
+
+// Wrap with OpenAPI documentation
+export const createUrlRoutes = withOpenAPI(createBaseUrlRoutes, '/api');

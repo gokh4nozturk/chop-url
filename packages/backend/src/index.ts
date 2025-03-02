@@ -1,20 +1,20 @@
 import { swaggerUI } from '@hono/swagger-ui';
-import { createFeedbackRoutes } from 'admin/feedback/routes.js';
-import { Hono } from 'hono';
+import { OpenAPIHono } from '@hono/zod-openapi';
+import { apiReference } from '@scalar/hono-api-reference';
 import { cors } from 'hono/cors';
+import { createFeedbackRoutes } from './admin/feedback/routes';
 import { createWaitListRoutes } from './admin/waitlist/routes';
 import { createAnalyticsRoutes } from './analytics/routes';
 import { createAuthRoutes } from './auth/routes';
 import { createDb } from './db/client';
 import { createDomainRoutes } from './domain/routes';
-import { openApiSchema } from './openapi.js';
 import { createQRRoutes } from './qr/routes';
 import { createStorageRoutes } from './storage/routes';
 import { Env, Variables } from './types';
 import { createUrlRoutes } from './url/routes';
 import { WebSocketService } from './websocket/service';
 
-const app = new Hono<{ Bindings: Env; Variables: Variables }>();
+const app = new OpenAPIHono<{ Bindings: Env; Variables: Variables }>();
 const wsService = new WebSocketService();
 
 // Initialize DB middleware
@@ -54,15 +54,30 @@ app.use(
 );
 
 // OpenAPI schema endpoint
-app.get('/openapi.json', (c) => {
-  return c.json(openApiSchema);
+app.doc('/api-docs/openapi.json', {
+  openapi: '3.0.0',
+  info: {
+    title: 'Chop URL API',
+    version: '1.0.0',
+    description: 'URL Shortener Service API Documentation',
+  },
+  servers: [
+    {
+      url: 'http://localhost:8787',
+      description: 'Development server',
+    },
+    {
+      url: 'https://api.chop-url.com',
+      description: 'Production server',
+    },
+  ],
 });
 
 // Add Swagger UI route
 app.get(
   '/docs',
   swaggerUI({
-    url: '/openapi.json',
+    url: '/api-docs/openapi.json',
     defaultModelsExpandDepth: 3,
     docExpansion: 'list',
     persistAuthorization: true,
@@ -92,6 +107,18 @@ app.get('/ws', async (c) => {
   });
 });
 
+// API Documentation UI
+app.get(
+  '/api-docs',
+  apiReference({
+    spec: {
+      url: '/api-docs/openapi.json',
+    },
+    theme: 'saturn',
+    layout: 'modern',
+  })
+);
+
 // Mount routes
 app.route('/api', createAuthRoutes());
 app.route('/api', createUrlRoutes());
@@ -103,9 +130,10 @@ app.route('/api', createQRRoutes());
 // Admin routes
 app.route('/api/admin', createWaitListRoutes());
 app.route('/api/admin', createFeedbackRoutes());
+
 // Root route - redirect to docs
 app.get('/', (c) => {
-  return c.redirect('/docs');
+  return c.redirect('/api-docs');
 });
 
 export default app;

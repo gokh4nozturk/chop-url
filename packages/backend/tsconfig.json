@@ -1,22 +1,15 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "ES2022",
-    "lib": ["ES2020"],
-    "types": ["@cloudflare/workers-types"],
+    "module": "esnext",
+    "target": "esnext",
+    "lib": ["esnext"],
     "moduleResolution": "bundler",
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "allowImportingTsExtensions": true,
-    "baseUrl": ".",
+    "types": ["@cloudflare/workers-types"],
+    "jsx": "react-jsx",
     "paths": {
-      "*": ["src/*"]
-    },
-    "jsx": "react"
+      "@/*": ["./src/*"]
+    }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src", "scripts"]
 }
