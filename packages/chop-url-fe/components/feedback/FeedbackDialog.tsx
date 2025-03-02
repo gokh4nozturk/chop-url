@@ -1,3 +1,6 @@
+'use client';
+
+import { Bird } from '@/components/icons/bird';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -75,7 +78,9 @@ export function FeedbackDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">Feedback</Button>
+        <Button variant="outline" className="absolute bottom-4 right-6 size-8">
+          <Bird />
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
