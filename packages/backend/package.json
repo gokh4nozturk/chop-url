@@ -20,13 +20,10 @@
     "db:tables:prod": "wrangler d1 execute chop-url-db --env production --command \"SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;\" --remote",
     "db:studio": "drizzle-kit studio",
     "log": "wrangler tail chop-url-backend-production --format pretty",
-    "waitlist": "tsx scripts/waitlist.ts"
+    "waitlist:list": "tsx scripts/waitlist.ts list",
+    "waitlist:approve": "tsx scripts/waitlist.ts approve"
   },
-  "keywords": [
-    "url-shortener",
-    "cloudflare-workers",
-    "typescript"
-  ],
+  "keywords": ["url-shortener", "cloudflare-workers", "typescript"],
   "author": "Gokhan Ozturk",
   "license": "MIT",
   "dependencies": {
