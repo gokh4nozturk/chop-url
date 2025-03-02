@@ -6116,7 +6116,7 @@ packages:
       std-env: 3.8.0
       strip-literal: 2.1.1
       test-exclude: 6.0.0
-      vitest: 1.6.1
+      vitest: 1.6.1(@types/node@20.17.17)(jsdom@24.1.3)
     transitivePeerDependencies:
       - supports-color
     dev: true
