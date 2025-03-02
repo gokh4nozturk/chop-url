@@ -1,20 +1,17 @@
 import { renderAsync } from '@react-email/render';
+import type { Context } from 'hono';
+import { env } from 'hono/adapter';
 import { Resend } from 'resend';
 import { WelcomeEmail } from './templates/welcome.tsx';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+export const sendWelcomeEmail = async (
+  c: Context,
+  to: string,
+  temporaryPassword: string,
+  loginUrl: string
+) => {
+  const resend = new Resend(env<{ RESEND_API_KEY: string }>(c).RESEND_API_KEY);
 
-interface SendWelcomeEmailParams {
-  to: string;
-  temporaryPassword: string;
-  loginUrl: string;
-}
-
-export const sendWelcomeEmail = async ({
-  to,
-  temporaryPassword,
-  loginUrl,
-}: SendWelcomeEmailParams) => {
   try {
     const html = await renderAsync(
       WelcomeEmail({
