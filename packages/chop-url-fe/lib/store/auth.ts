@@ -6,6 +6,13 @@ import Cookies from 'js-cookie';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+interface WaitListInput {
+  email: string;
+  name: string;
+  company?: string;
+  useCase: string;
+}
+
 interface AuthActions {
   getUser: () => Promise<void>;
   updateProfile: (data: {
@@ -52,6 +59,7 @@ interface AuthActions {
     newPassword: string,
     confirmPassword: string
   ) => Promise<void>;
+  joinWaitList: (data: WaitListInput) => Promise<void>;
 }
 
 const COOKIE_NAME = 'auth_token';
@@ -438,9 +446,25 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           console.error('Password reset error:', error);
         }
       },
+      joinWaitList: async (data: WaitListInput) => {
+        set({ isLoading: true, error: null });
+        try {
+          await apiClient.post('/api/auth/waitlist', data);
+          set({ error: null });
+          navigate.dashboard();
+        } catch (error) {
+          const authError: AuthError = {
+            code: 'WAITLIST_ERROR',
+            message: getErrorMessage(error),
+          };
+          set({ error: authError });
+        } finally {
+          set({ isLoading: false });
+        }
+      },
     }),
     {
-      name: 'auth-store',
+      name: 'auth-storage',
       partialize: (state) => ({
         user: state.user,
         tokenData: state.tokenData,

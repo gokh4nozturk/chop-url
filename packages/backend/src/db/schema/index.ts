@@ -1,7 +1,7 @@
 export * from './urls';
 export * from './visits';
 export * from './users';
-export * from './url_groups';
+export * from './url-groups';
 export * from './auth-attempts';
 export * from './email-verifications';
 export * from './sessions';
@@ -9,3 +9,4 @@ export * from './recovery-codes';
 export * from './password-resets';
 export * from './qr-codes';
 export * from './domains';
+export * from './wait-list';

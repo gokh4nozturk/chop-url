@@ -65,6 +65,24 @@ interface Variables {
   user: IUser;
 }
 
+const ERROR_MESSAGES: Record<AuthErrorCode, string> = {
+  [AuthErrorCode.USER_NOT_FOUND]: 'User not found.',
+  [AuthErrorCode.INVALID_2FA_CODE]: 'Invalid 2FA code.',
+  [AuthErrorCode.TOO_MANY_ATTEMPTS]:
+    'Too many attempts. Please try again later.',
+  [AuthErrorCode.INVALID_TOKEN]: 'Invalid token.',
+  [AuthErrorCode.VALIDATION_ERROR]: 'Validation error.',
+  [AuthErrorCode.DATABASE_ERROR]: 'Database error occurred.',
+  [AuthErrorCode.USER_EXISTS]: 'User already exists.',
+  [AuthErrorCode.INVALID_CREDENTIALS]: 'Invalid credentials.',
+  [AuthErrorCode.INVALID_PROVIDER]: 'Invalid authentication provider.',
+  [AuthErrorCode.OAUTH_ERROR]:
+    'Authentication error occurred. Please try again.',
+  [AuthErrorCode.EXPIRED_TOKEN]:
+    'Your session has expired. Please log in again.',
+  [AuthErrorCode.NO_TOKEN]: 'No token provided.',
+};
+
 export const createAuthRoutes = () => {
   const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -175,34 +193,8 @@ export const createAuthRoutes = () => {
         return c.json({ success: true, recoveryCodes });
       } catch (error) {
         if (error instanceof AuthError) {
-          const errorMessages: Record<AuthErrorCode, string> = {
-            [AuthErrorCode.USER_NOT_FOUND]:
-              'User not found. Please try logging in again.',
-            [AuthErrorCode.INVALID_2FA_CODE]:
-              'Invalid verification code. Please make sure you entered the correct code from your authenticator app.',
-            [AuthErrorCode.TOO_MANY_ATTEMPTS]:
-              'Too many failed attempts. Please wait for a while before trying again.',
-            [AuthErrorCode.INVALID_TOKEN]:
-              'Your session has expired. Please log in again to continue setup.',
-            [AuthErrorCode.VALIDATION_ERROR]:
-              'Invalid code format. Please enter a 6-digit code.',
-            [AuthErrorCode.DATABASE_ERROR]:
-              'A database error occurred. Please try again later.',
-            [AuthErrorCode.USER_EXISTS]:
-              'This email address is already in use.',
-            [AuthErrorCode.INVALID_CREDENTIALS]:
-              'Invalid credentials. Please log in again.',
-            [AuthErrorCode.INVALID_PROVIDER]:
-              'Invalid authentication provider.',
-            [AuthErrorCode.OAUTH_ERROR]:
-              'Authentication error occurred. Please try again.',
-            [AuthErrorCode.EXPIRED_TOKEN]:
-              'Your session has expired. Please log in again.',
-            [AuthErrorCode.NO_TOKEN]: 'No token provided',
-          };
-
           return c.json(
-            { error: errorMessages[error.code] || error.message },
+            { error: ERROR_MESSAGES[error.code] || error.message },
             400
           );
         }
@@ -264,33 +256,8 @@ export const createAuthRoutes = () => {
         return c.json(result);
       } catch (error) {
         if (error instanceof AuthError) {
-          const errorMessages: Record<AuthErrorCode, string> = {
-            [AuthErrorCode.USER_NOT_FOUND]:
-              'User not found. Please check your email address.',
-            [AuthErrorCode.INVALID_2FA_CODE]:
-              'Invalid verification code. Please check your authenticator app code or recovery code and try again.',
-            [AuthErrorCode.TOO_MANY_ATTEMPTS]:
-              'Too many failed attempts. Please wait for a while before trying again. If the issue persists, you can use your recovery codes or contact support.',
-            [AuthErrorCode.INVALID_TOKEN]:
-              'Invalid or expired session. Please log in again.',
-            [AuthErrorCode.VALIDATION_ERROR]:
-              'Invalid input. Please make sure all fields are filled correctly.',
-            [AuthErrorCode.DATABASE_ERROR]:
-              'A database error occurred. Please try again later.',
-            [AuthErrorCode.USER_EXISTS]:
-              'This email address is already in use.',
-            [AuthErrorCode.INVALID_CREDENTIALS]: 'Invalid credentials.',
-            [AuthErrorCode.INVALID_PROVIDER]:
-              'Invalid authentication provider.',
-            [AuthErrorCode.OAUTH_ERROR]:
-              'Authentication error occurred. Please try again.',
-            [AuthErrorCode.EXPIRED_TOKEN]:
-              'Token has expired. Please log in again.',
-            [AuthErrorCode.NO_TOKEN]: 'No token provided',
-          };
-
           return c.json(
-            { error: errorMessages[error.code] || error.message },
+            { error: ERROR_MESSAGES[error.code] || error.message },
             400
           );
         }
@@ -389,33 +356,8 @@ export const createAuthRoutes = () => {
         return c.json({ user: updatedUser });
       } catch (error) {
         if (error instanceof AuthError) {
-          const errorMessages: Record<AuthErrorCode, string> = {
-            [AuthErrorCode.USER_NOT_FOUND]:
-              'Unable to find your account. Please log in again.',
-            [AuthErrorCode.USER_EXISTS]:
-              'This email is already registered. Please use a different email address.',
-            [AuthErrorCode.VALIDATION_ERROR]:
-              'Please check your input: Name should be between 1-50 characters and email should be valid.',
-            [AuthErrorCode.DATABASE_ERROR]:
-              'Unable to update your profile at the moment. Please try again later.',
-            [AuthErrorCode.INVALID_TOKEN]:
-              'Your session has expired. Please log in again to update your profile.',
-            [AuthErrorCode.INVALID_CREDENTIALS]:
-              'Authentication failed. Please log in again.',
-            [AuthErrorCode.TOO_MANY_ATTEMPTS]:
-              'Too many profile update attempts. Please try again in a few minutes.',
-            [AuthErrorCode.INVALID_2FA_CODE]:
-              'Two-factor authentication failed. Please verify your code.',
-            [AuthErrorCode.INVALID_PROVIDER]: 'Invalid authentication method.',
-            [AuthErrorCode.OAUTH_ERROR]:
-              'Authentication error. Please try logging in again.',
-            [AuthErrorCode.EXPIRED_TOKEN]:
-              'Your session has expired. Please log in again to continue.',
-            [AuthErrorCode.NO_TOKEN]: 'No token provided',
-          };
-
           return c.json(
-            { error: errorMessages[error.code] || error.message },
+            { error: ERROR_MESSAGES[error.code] || error.message },
             400
           );
         }
@@ -639,6 +581,99 @@ export const createAuthRoutes = () => {
         return c.json({ error: error.message }, 400);
       }
       return c.json({ error: 'Internal server error' }, 500);
+    }
+  });
+
+  /**
+   * Join waitlist route
+   */
+  router.post('/api/auth/waitlist', async (c: Context) => {
+    const { email, name, company, useCase } = await c.req.json();
+
+    try {
+      const authService = new AuthService(c.env.DB, {
+        resendApiKey: c.env.RESEND_API_KEY,
+        frontendUrl: c.env.FRONTEND_URL,
+        googleClientId: c.env.GOOGLE_CLIENT_ID,
+        googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
+        githubClientId: c.env.GITHUB_CLIENT_ID,
+        githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
+      });
+
+      const waitlistEntry = await authService.addToWaitlist({
+        email,
+        name,
+        company,
+        useCase,
+      });
+
+      return c.json(waitlistEntry);
+    } catch (error) {
+      if (error instanceof AuthError) {
+        return c.json(
+          {
+            error: {
+              code: error.code,
+              message: error.message,
+            },
+          },
+          error.code === AuthErrorCode.USER_EXISTS ? 409 : 400
+        );
+      }
+
+      return c.json(
+        {
+          error: {
+            code: AuthErrorCode.DATABASE_ERROR,
+            message: 'Failed to join waitlist',
+          },
+        },
+        500
+      );
+    }
+  });
+
+  /**
+   * Get waitlist entry route
+   */
+  router.get('/api/auth/waitlist/:email', async (c: Context) => {
+    const email = c.req.param('email');
+
+    try {
+      const authService = new AuthService(c.env.DB, {
+        resendApiKey: c.env.RESEND_API_KEY,
+        frontendUrl: c.env.FRONTEND_URL,
+        googleClientId: c.env.GOOGLE_CLIENT_ID,
+        googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
+        githubClientId: c.env.GITHUB_CLIENT_ID,
+        githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
+      });
+
+      const waitlistEntry = await authService.getWaitlistEntry(email);
+
+      if (!waitlistEntry) {
+        return c.json(
+          {
+            error: {
+              code: AuthErrorCode.USER_NOT_FOUND,
+              message: 'Waitlist entry not found',
+            },
+          },
+          404
+        );
+      }
+
+      return c.json(waitlistEntry);
+    } catch (error) {
+      return c.json(
+        {
+          error: {
+            code: AuthErrorCode.DATABASE_ERROR,
+            message: 'Failed to get waitlist entry',
+          },
+        },
+        500
+      );
     }
   });
 

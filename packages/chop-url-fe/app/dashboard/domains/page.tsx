@@ -122,6 +122,8 @@ export default function DomainsPage() {
           transition={{ duration: 0.2, delay: index * 0.1 }}
           layout
         >
+          ustunde calistigimizi belirtmek icin engineering team veya domain
+          aramasi yap undrawdan bir gorsel koy
           <Card className="relative overflow-hidden">
             {!domain.isVerified && (
               <motion.div
@@ -304,68 +306,11 @@ export default function DomainsPage() {
         >
           <Dialog>
             <DialogTrigger asChild>
-              <Button>
+              <Button disabled>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Domain
               </Button>
             </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Custom Domain</DialogTitle>
-                <DialogDescription>
-                  Add your domain to start using it with ChopURL.
-                </DialogDescription>
-              </DialogHeader>
-
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="domain">Domain Name</Label>
-                  <Input
-                    id="domain"
-                    placeholder="example.com"
-                    {...register('domain', { required: true })}
-                  />
-                  {errors.domain && (
-                    <p className="text-sm text-destructive">
-                      Domain name is required
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="redirectMode">Redirect Mode</Label>
-                  <Select {...register('redirectMode')} defaultValue="PROXY">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select redirect mode" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="PROXY">Proxy (Recommended)</SelectItem>
-                      <SelectItem value="REDIRECT">Direct Redirect</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="forceSSL"
-                    {...register('forceSSL')}
-                    defaultChecked
-                  />
-                  <Label htmlFor="forceSSL">Force SSL</Label>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Add Domain
-                </Button>
-              </form>
-            </DialogContent>
           </Dialog>
         </motion.div>
       </div>
@@ -374,8 +319,27 @@ export default function DomainsPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.4 }}
-        className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+        className="relative grid gap-4 md:grid-cols-2 lg:grid-cols-3"
       >
+        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/80 backdrop-blur-sm">
+          <Card className="w-full max-w-md border-none bg-transparent shadow-none">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl">Coming Soon</CardTitle>
+              <CardDescription>
+                Custom domains feature will be available in the next release.
+                Stay tuned!
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center">
+              <img
+                src="https://illustrations.popsy.co/amber/web-development.svg"
+                alt="Coming Soon"
+                className="max-w-[300px]"
+              />
+            </CardContent>
+          </Card>
+        </div>
+
         <AnimatePresence mode="popLayout">
           {isLoading
             ? skeletons

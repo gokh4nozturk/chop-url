@@ -1,7 +1,8 @@
 'use client';
 
 import { AnimatedRings } from '@/components/auth/AnimatedRings';
-import { RegisterForm } from '@/components/auth/RegisterForm';
+// import { RegisterForm } from '@/components/auth/RegisterForm';
+import { WaitListForm } from '@/components/auth/WaitListForm';
 import { GoogleIcon } from '@/components/icons/google-icon';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/lib/store/auth';
@@ -19,11 +20,18 @@ export default function RegisterPage() {
         <div className="w-full max-w-sm space-y-6">
           <div className="space-y-2">
             <h1 className="text-2xl md:text-3xl font-bold">
+              Join the Waitlist
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              ChopURL is currently in closed beta. Join our waitlist to get
+              early access.
+            </p>
+            {/* <h1 className="text-2xl md:text-3xl font-bold">
               Create an account
             </h1>
             <p className="text-muted-foreground text-sm">
               Enter your details to create your account
-            </p>
+            </p> */}
           </div>
 
           <Suspense
@@ -35,10 +43,11 @@ export default function RegisterPage() {
               </div>
             }
           >
-            <RegisterForm />
+            <WaitListForm />
+            {/* <RegisterForm /> */}
           </Suspense>
 
-          <div className="relative">
+          {/* <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
@@ -78,7 +87,7 @@ export default function RegisterPage() {
               )}
               GitHub
             </Button>
-          </div>
+          </div> */}
 
           <div className="text-center text-sm">
             <span className="text-muted-foreground">
@@ -91,9 +100,14 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      <AnimatedRings
+      {/* <AnimatedRings
         title="Join Chop URL"
         description="Start shortening your URLs today and make sharing links easier than ever before."
+      /> */}
+
+      <AnimatedRings
+        title="Join the Waitlist"
+        description="Chop URL is currently in closed beta. Join our waitlist to get early access."
       />
     </div>
   );

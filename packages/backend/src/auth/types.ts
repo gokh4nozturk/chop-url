@@ -178,3 +178,33 @@ export interface IOAuthProviderConfig {
   [OAuthProvider.GOOGLE]: IOAuthConfig;
   [OAuthProvider.GITHUB]: IOAuthConfig;
 }
+
+export interface IWaitListEntry {
+  id: number;
+  email: string;
+  name: string;
+  company?: string;
+  useCase: string;
+  status: WaitListStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export enum WaitListStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  INVITED = 'invited',
+  REGISTERED = 'registered',
+}
+
+export interface IWaitListRow {
+  id: number;
+  email: string;
+  name: string;
+  company: string | null;
+  use_case: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}

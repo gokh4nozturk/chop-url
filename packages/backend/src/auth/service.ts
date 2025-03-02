@@ -8,6 +8,7 @@ import {
   recoveryCodes,
   sessions,
   users,
+  waitList,
 } from '../db/schema';
 import { EmailService } from '../email/service.js';
 import {
@@ -22,7 +23,10 @@ import {
   IRegisterCredentials,
   IUser,
   IUserRow,
+  IWaitListEntry,
+  IWaitListRow,
   OAuthProvider,
+  WaitListStatus,
 } from './types.js';
 
 const MAX_ATTEMPTS = 5; // Maximum number of attempts within the time window
@@ -1213,6 +1217,130 @@ export class AuthService {
 
     return {
       message: 'Password reset successful',
+    };
+  }
+
+  /**
+   * Add a new entry to the waitlist
+   */
+  async addToWaitlist(data: {
+    email: string;
+    name: string;
+    company?: string;
+    useCase: string;
+  }): Promise<IWaitListEntry> {
+    try {
+      // Check if email already exists in waitlist
+      const existingEntry = await this.db
+        .select()
+        .from(waitList)
+        .where(eq(waitList.email, data.email))
+        .get();
+
+      if (existingEntry) {
+        throw new AuthError(
+          AuthErrorCode.USER_EXISTS,
+          'Email is already on the waitlist'
+        );
+      }
+
+      // Add to waitlist
+      const result = await this.db
+        .insert(waitList)
+        .values({
+          email: data.email,
+          name: data.name,
+          company: data.company || null,
+          use_case: data.useCase,
+          status: WaitListStatus.PENDING,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .returning()
+        .get();
+
+      return this.mapWaitListRowToEntry(result);
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error;
+      }
+      throw new AuthError(
+        AuthErrorCode.DATABASE_ERROR,
+        'Failed to add to waitlist'
+      );
+    }
+  }
+
+  /**
+   * Get waitlist entry by email
+   */
+  async getWaitlistEntry(email: string): Promise<IWaitListEntry | null> {
+    try {
+      const entry = await this.db
+        .select()
+        .from(waitList)
+        .where(eq(waitList.email, email))
+        .get();
+
+      return entry ? this.mapWaitListRowToEntry(entry) : null;
+    } catch (error) {
+      throw new AuthError(
+        AuthErrorCode.DATABASE_ERROR,
+        'Failed to get waitlist entry'
+      );
+    }
+  }
+
+  /**
+   * Update waitlist entry status
+   */
+  async updateWaitlistStatus(
+    email: string,
+    status: WaitListStatus
+  ): Promise<IWaitListEntry> {
+    try {
+      const result = await this.db
+        .update(waitList)
+        .set({
+          status,
+          updated_at: new Date().toISOString(),
+        })
+        .where(eq(waitList.email, email))
+        .returning()
+        .get();
+
+      if (!result) {
+        throw new AuthError(
+          AuthErrorCode.USER_NOT_FOUND,
+          'Waitlist entry not found'
+        );
+      }
+
+      return this.mapWaitListRowToEntry(result);
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error;
+      }
+      throw new AuthError(
+        AuthErrorCode.DATABASE_ERROR,
+        'Failed to update waitlist status'
+      );
+    }
+  }
+
+  /**
+   * Map waitlist row to entry
+   */
+  private mapWaitListRowToEntry(row: IWaitListRow): IWaitListEntry {
+    return {
+      id: row.id,
+      email: row.email,
+      name: row.name,
+      company: row.company || undefined,
+      useCase: row.use_case,
+      status: row.status as WaitListStatus,
+      createdAt: new Date(row.created_at),
+      updatedAt: new Date(row.updated_at),
     };
   }
 }
