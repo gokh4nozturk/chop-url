@@ -26,9 +26,7 @@
             "example": "Something went wrong"
           }
         },
-        "required": [
-          "error"
-        ]
+        "required": ["error"]
       }
     },
     "parameters": {}
@@ -37,9 +35,7 @@
     "/api/shorten": {
       "post": {
         "description": "POST /api/shorten",
-        "tags": [
-          "SHORTEN"
-        ],
+        "tags": ["SHORTEN"],
         "responses": {
           "200": {
             "description": "POST /api/shorten",
@@ -107,9 +103,7 @@
     "/api/chop": {
       "post": {
         "description": "POST /api/chop",
-        "tags": [
-          "CHOP"
-        ],
+        "tags": ["CHOP"],
         "responses": {
           "200": {
             "description": "POST /api/chop",
@@ -177,9 +171,7 @@
     "/api/urls": {
       "get": {
         "description": "GET /api/urls",
-        "tags": [
-          "URLS"
-        ],
+        "tags": ["URLS"],
         "responses": {
           "200": {
             "description": "GET /api/urls",
@@ -247,9 +239,7 @@
     "/api/urls/{shortId}": {
       "patch": {
         "description": "PATCH /api/urls/:shortId",
-        "tags": [
-          "URLS"
-        ],
+        "tags": ["URLS"],
         "responses": {
           "200": {
             "description": "PATCH /api/urls/:shortId",
@@ -315,9 +305,7 @@
       },
       "delete": {
         "description": "DELETE /api/urls/:shortId",
-        "tags": [
-          "URLS"
-        ],
+        "tags": ["URLS"],
         "responses": {
           "200": {
             "description": "DELETE /api/urls/:shortId",
@@ -383,9 +371,7 @@
       },
       "get": {
         "description": "GET /api/urls/:shortId",
-        "tags": [
-          "URLS"
-        ],
+        "tags": ["URLS"],
         "responses": {
           "200": {
             "description": "GET /api/urls/:shortId",
@@ -453,9 +439,7 @@
     "/api/stats/{shortId}": {
       "get": {
         "description": "GET /api/stats/:shortId",
-        "tags": [
-          "STATS"
-        ],
+        "tags": ["STATS"],
         "responses": {
           "200": {
             "description": "GET /api/stats/:shortId",
@@ -523,9 +507,7 @@
     "/api/stats/{shortId}/visits": {
       "get": {
         "description": "GET /api/stats/:shortId/visits",
-        "tags": [
-          "STATS"
-        ],
+        "tags": ["STATS"],
         "responses": {
           "200": {
             "description": "GET /api/stats/:shortId/visits",
@@ -593,9 +575,7 @@
     "/api/analytics": {
       "get": {
         "description": "GET /api/analytics",
-        "tags": [
-          "ANALYTICS"
-        ],
+        "tags": ["ANALYTICS"],
         "responses": {
           "200": {
             "description": "GET /api/analytics",
@@ -663,9 +643,7 @@
     "/api/analytics/export": {
       "get": {
         "description": "GET /api/analytics/export",
-        "tags": [
-          "ANALYTICS"
-        ],
+        "tags": ["ANALYTICS"],
         "responses": {
           "200": {
             "description": "GET /api/analytics/export",
@@ -733,9 +711,7 @@
     "/api/url-groups": {
       "post": {
         "description": "POST /api/url-groups",
-        "tags": [
-          "URL-GROUPS"
-        ],
+        "tags": ["URL-GROUPS"],
         "responses": {
           "200": {
             "description": "POST /api/url-groups",
@@ -801,9 +777,7 @@
       },
       "get": {
         "description": "GET /api/url-groups",
-        "tags": [
-          "URL-GROUPS"
-        ],
+        "tags": ["URL-GROUPS"],
         "responses": {
           "200": {
             "description": "GET /api/url-groups",
@@ -871,9 +845,7 @@
     "/api/url-groups/{id}": {
       "put": {
         "description": "PUT /api/url-groups/:id",
-        "tags": [
-          "URL-GROUPS"
-        ],
+        "tags": ["URL-GROUPS"],
         "responses": {
           "200": {
             "description": "PUT /api/url-groups/:id",
@@ -939,9 +911,7 @@
       },
       "delete": {
         "description": "DELETE /api/url-groups/:id",
-        "tags": [
-          "URL-GROUPS"
-        ],
+        "tags": ["URL-GROUPS"],
         "responses": {
           "200": {
             "description": "DELETE /api/url-groups/:id",
