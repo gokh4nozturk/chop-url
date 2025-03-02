@@ -1,4 +1,5 @@
 import { swaggerUI } from '@hono/swagger-ui';
+import { createFeedbackRoutes } from 'admin/feedback/routes.js';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { createWaitListRoutes } from './admin/waitlist/routes';
@@ -101,7 +102,7 @@ app.route('/api', createQRRoutes());
 
 // Admin routes
 app.route('/api/admin', createWaitListRoutes());
-
+app.route('/api/admin', createFeedbackRoutes());
 // Root route - redirect to docs
 app.get('/', (c) => {
   return c.redirect('/docs');

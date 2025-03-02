@@ -10,3 +10,4 @@ export * from './password-resets';
 export * from './qr-codes';
 export * from './domains';
 export * from './wait-list';
+export * from './feedback';

@@ -1,5 +1,6 @@
 import { D1Database, R2Bucket } from '@cloudflare/workers-types';
 import { DrizzleD1Database } from 'drizzle-orm/d1';
+import { ContextVariables } from 'hono';
 import * as schema from './db/schema';
 
 export interface Env {
@@ -24,6 +25,19 @@ export interface Env {
   CLOUDFLARE_ZONE_ID: string;
 }
 
-export interface Variables {
+export type Bindings = {
+  DB: D1Database;
+  BUCKET: R2Bucket;
+  JWT_SECRET: string;
+  ENVIRONMENT: string;
+};
+
+export type Variables = {
   db: DrizzleD1Database<typeof schema>;
-}
+  userId?: string;
+};
+
+export type Context = {
+  Bindings: Bindings;
+  Variables: Variables;
+};

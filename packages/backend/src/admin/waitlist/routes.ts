@@ -16,12 +16,7 @@ export const createWaitListRoutes = () => {
       c.env.RESEND_API_KEY,
       c.env.FRONTEND_URL
     );
-    const waitListService = new WaitListServiceImpl(
-      db,
-      emailService,
-      c.env.FRONTEND_URL,
-      c.env.RESEND_API_KEY
-    );
+    const waitListService = new WaitListServiceImpl(db, emailService);
 
     try {
       const waitListUsers = await waitListService.getWaitListUsers();
@@ -42,12 +37,7 @@ export const createWaitListRoutes = () => {
         c.env.RESEND_API_KEY,
         c.env.FRONTEND_URL
       );
-      const waitListService = new WaitListServiceImpl(
-        db,
-        emailService,
-        c.env.FRONTEND_URL,
-        c.env.RESEND_API_KEY
-      );
+      const waitListService = new WaitListServiceImpl(db, emailService);
       const { email } = c.req.valid('json');
       const frontendUrl = c.env.FRONTEND_URL;
 

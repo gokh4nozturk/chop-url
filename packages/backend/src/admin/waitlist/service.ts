@@ -8,9 +8,7 @@ import { WaitListService, WaitListUser } from './types';
 export class WaitListServiceImpl implements WaitListService {
   constructor(
     private readonly db: DrizzleD1Database,
-    private readonly emailService: EmailService,
-    private readonly frontendUrl: string,
-    private readonly resendApiKey: string
+    private readonly emailService: EmailService
   ) {}
 
   async getWaitListUsers(): Promise<WaitListUser[]> {
