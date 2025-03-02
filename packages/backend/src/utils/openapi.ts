@@ -11,17 +11,55 @@ interface RouteSchema {
   response?: z.ZodType;
 }
 
+interface RouteMetadata {
+  tags?: string[];
+  deprecated?: boolean;
+  [key: string]: unknown;
+}
+
 // Schema registry to store all API schemas
 export const schemaRegistry = new Map<string, RouteSchema>();
 
-// Helper to register a route's schemas
+// Enhanced schema validation type
+export interface OpenAPISchemaValidation {
+  description?: string;
+  example?: unknown;
+  deprecated?: boolean;
+  required?: boolean;
+  nullable?: boolean;
+}
+
+// Helper to register a route's schemas with enhanced validation
 export const registerSchema = (
   path: string,
   method: Method,
-  schema: RouteSchema
+  schema: RouteSchema,
+  validation?: OpenAPISchemaValidation
 ) => {
   const key = `${method.toUpperCase()}:${path}`;
-  schemaRegistry.set(key, schema);
+
+  // Validate schema before registration
+  if (schema.request && !('_def' in schema.request)) {
+    throw new Error(`Invalid request schema for ${key}`);
+  }
+
+  if (schema.response && !('_def' in schema.response)) {
+    throw new Error(`Invalid response schema for ${key}`);
+  }
+
+  // Add validation metadata if provided
+  const enrichedSchema = {
+    ...schema,
+    validation: {
+      description: validation?.description || `${method.toUpperCase()} ${path}`,
+      example: validation?.example,
+      deprecated: validation?.deprecated || false,
+      required: validation?.required || false,
+      nullable: validation?.nullable || false,
+    },
+  };
+
+  schemaRegistry.set(key, enrichedSchema);
 };
 
 // Default error schema
@@ -58,14 +96,26 @@ const convertPathToOpenAPI = (path: string) => {
   return path.replace(/:(\w+)/g, '{$1}');
 };
 
-// Helper to register route schemas
+// Helper to register route schemas with enhanced error handling
 export const registerRoute = (
   path: string,
   method: Method,
   description: string,
   schema?: RouteSchema,
-  requiresAuth = false
+  requiresAuth = false,
+  validation?: OpenAPISchemaValidation,
+  metadata?: RouteMetadata
 ): RouteConfig => {
+  // Validate and register schema if provided
+  if (schema) {
+    try {
+      registerSchema(path, method, schema, validation);
+    } catch (error) {
+      console.error(`Failed to register schema for ${method} ${path}:`, error);
+      throw error;
+    }
+  }
+
   const config: RouteConfig = {
     method,
     path: convertPathToOpenAPI(path),
@@ -144,7 +194,7 @@ export const registerRoute = (
       },
     },
     description,
-    tags: [path.split('/')[1].toUpperCase()],
+    tags: metadata?.tags || [path.split('/')[1].toUpperCase()],
     summary: `${method.toUpperCase()} ${path}`,
   };
 
@@ -189,13 +239,18 @@ export const withOpenAPI = <T = unknown>(
       const key = `${method.toUpperCase()}:${path}`;
       const schema = schemaRegistry.get(key);
 
+      // Get metadata from route
+      const metadata = (route as { metadata?: RouteMetadata }).metadata || {};
+
       // Create OpenAPI route with schemas
       const openAPIRoute = registerRoute(
         path,
         method.toLowerCase() as Method,
         description,
         schema,
-        requiresAuth
+        requiresAuth,
+        undefined,
+        metadata
       );
 
       // Add route with OpenAPI documentation

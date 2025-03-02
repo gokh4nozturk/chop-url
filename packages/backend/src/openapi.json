@@ -25,7 +25,7 @@
       }
     },
     "schemas": {
-      "UserProfile": {
+      "User": {
         "type": "object",
         "properties": {
           "id": {
@@ -54,7 +54,7 @@
         "type": "object",
         "properties": {
           "user": {
-            "$ref": "#/components/schemas/UserProfile"
+            "$ref": "#/components/schemas/User"
           }
         },
         "required": [
@@ -72,31 +72,6 @@
         },
         "required": [
           "error"
-        ]
-      },
-      "User": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "number"
-          },
-          "email": {
-            "type": "string",
-            "format": "email"
-          },
-          "name": {
-            "type": "string"
-          },
-          "emailVerified": {
-            "type": "boolean"
-          },
-          "twoFactorEnabled": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "id",
-          "email"
         ]
       },
       "LoginResponse": {
@@ -257,6 +232,31 @@
           "success"
         ]
       },
+      "UserProfile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "name": {
+            "type": "string"
+          },
+          "emailVerified": {
+            "type": "boolean"
+          },
+          "twoFactorEnabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "email"
+        ]
+      },
       "UpdateProfile": {
         "type": "object",
         "properties": {
@@ -333,26 +333,56 @@
           "message"
         ]
       },
-      "SuccessResponse": {
+      "OAuthUrlResponse": {
         "type": "object",
         "properties": {
-          "success": {
-            "type": "boolean",
-            "description": "Operation success status",
-            "example": true
-          },
-          "data": {
-            "nullable": true,
-            "description": "Response data"
-          },
-          "message": {
+          "url": {
             "type": "string",
-            "description": "Success message",
-            "example": "Operation completed successfully"
+            "format": "uri"
           }
         },
         "required": [
-          "success"
+          "url"
+        ]
+      },
+      "OAuthUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "name": {
+            "type": "string"
+          },
+          "emailVerified": {
+            "type": "boolean"
+          },
+          "twoFactorEnabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "email"
+        ]
+      },
+      "OAuthCallbackResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/OAuthUser"
+          }
+        },
+        "required": [
+          "token",
+          "user"
         ]
       },
       "PasswordResetRequestResponse": {
@@ -487,6 +517,28 @@
           "email",
           "name",
           "createdAt"
+        ]
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Operation success status",
+            "example": true
+          },
+          "data": {
+            "nullable": true,
+            "description": "Response data"
+          },
+          "message": {
+            "type": "string",
+            "description": "Success message",
+            "example": "Operation completed successfully"
+          }
+        },
+        "required": [
+          "success"
         ]
       }
     },
@@ -728,16 +780,16 @@
         }
       }
     },
-    "/api/auth/setup-2fa": {
+    "/api/auth/2fa/setup": {
       "post": {
-        "description": "POST /api/auth/setup-2fa",
+        "description": "POST /api/auth/2fa/setup",
         "tags": [
           "AUTH"
         ],
-        "summary": "POST /auth/setup-2fa",
+        "summary": "POST /auth/2fa/setup",
         "responses": {
           "200": {
-            "description": "POST /api/auth/setup-2fa",
+            "description": "POST /api/auth/2fa/setup",
             "content": {
               "application/json": {
                 "schema": {
@@ -799,13 +851,13 @@
         }
       }
     },
-    "/api/auth/verify-2fa-setup": {
+    "/api/auth/2fa/verify-setup": {
       "post": {
-        "description": "POST /api/auth/verify-2fa-setup",
+        "description": "POST /api/auth/2fa/verify-setup",
         "tags": [
           "AUTH"
         ],
-        "summary": "POST /auth/verify-2fa-setup",
+        "summary": "POST /auth/2fa/verify-setup",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -819,7 +871,7 @@
         },
         "responses": {
           "200": {
-            "description": "POST /api/auth/verify-2fa-setup",
+            "description": "POST /api/auth/2fa/verify-setup",
             "content": {
               "application/json": {
                 "schema": {
@@ -881,16 +933,16 @@
         }
       }
     },
-    "/api/auth/recovery-codes": {
+    "/api/auth/2fa/recovery-codes": {
       "get": {
-        "description": "GET /api/auth/recovery-codes",
+        "description": "GET /api/auth/2fa/recovery-codes",
         "tags": [
           "AUTH"
         ],
-        "summary": "GET /auth/recovery-codes",
+        "summary": "GET /auth/2fa/recovery-codes",
         "responses": {
           "200": {
-            "description": "GET /api/auth/recovery-codes",
+            "description": "GET /api/auth/2fa/recovery-codes",
             "content": {
               "application/json": {
                 "schema": {
@@ -952,13 +1004,13 @@
         }
       }
     },
-    "/api/auth/verify-2fa": {
+    "/api/auth/2fa/verify-2fa": {
       "post": {
-        "description": "POST /api/auth/verify-2fa",
+        "description": "POST /api/auth/2fa/verify-2fa",
         "tags": [
           "AUTH"
         ],
-        "summary": "POST /auth/verify-2fa",
+        "summary": "POST /auth/2fa/verify-2fa",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -972,7 +1024,7 @@
         },
         "responses": {
           "200": {
-            "description": "POST /api/auth/verify-2fa",
+            "description": "POST /api/auth/2fa/verify-2fa",
             "content": {
               "application/json": {
                 "schema": {
@@ -1034,13 +1086,13 @@
         }
       }
     },
-    "/api/auth/enable-2fa": {
+    "/api/auth/2fa/enable-2fa": {
       "post": {
-        "description": "POST /api/auth/enable-2fa",
+        "description": "POST /api/auth/2fa/enable-2fa",
         "tags": [
           "AUTH"
         ],
-        "summary": "POST /auth/enable-2fa",
+        "summary": "POST /auth/2fa/enable-2fa",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -1054,7 +1106,7 @@
         },
         "responses": {
           "200": {
-            "description": "POST /api/auth/enable-2fa",
+            "description": "POST /api/auth/2fa/enable-2fa",
             "content": {
               "application/json": {
                 "schema": {
@@ -1116,13 +1168,13 @@
         }
       }
     },
-    "/api/auth/disable-2fa": {
+    "/api/auth/2fa/disable-2fa": {
       "post": {
-        "description": "POST /api/auth/disable-2fa",
+        "description": "POST /api/auth/2fa/disable-2fa",
         "tags": [
           "AUTH"
         ],
-        "summary": "POST /auth/disable-2fa",
+        "summary": "POST /auth/2fa/disable-2fa",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -1136,7 +1188,7 @@
         },
         "responses": {
           "200": {
-            "description": "POST /api/auth/disable-2fa",
+            "description": "POST /api/auth/2fa/disable-2fa",
             "content": {
               "application/json": {
                 "schema": {
@@ -1198,13 +1250,13 @@
         }
       }
     },
-    "/api/auth/profile": {
+    "/api/auth/profile/": {
       "put": {
-        "description": "PUT /api/auth/profile",
+        "description": "PUT /api/auth/profile/",
         "tags": [
           "AUTH"
         ],
-        "summary": "PUT /auth/profile",
+        "summary": "PUT /auth/profile/",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -1218,11 +1270,22 @@
         },
         "responses": {
           "200": {
-            "description": "PUT /api/auth/profile",
+            "description": "PUT /api/auth/profile/",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserProfileResponse"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/UserProfileResponse"
+                    },
+                    {
+                      "properties": {
+                        "user": {
+                          "$ref": "#/components/schemas/UserProfile"
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             }
@@ -1280,13 +1343,13 @@
         }
       }
     },
-    "/api/auth/password": {
+    "/api/auth/profile/password": {
       "put": {
-        "description": "PUT /api/auth/password",
+        "description": "PUT /api/auth/profile/password",
         "tags": [
           "AUTH"
         ],
-        "summary": "PUT /auth/password",
+        "summary": "PUT /auth/profile/password",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -1300,7 +1363,7 @@
         },
         "responses": {
           "200": {
-            "description": "PUT /api/auth/password",
+            "description": "PUT /api/auth/profile/password",
             "content": {
               "application/json": {
                 "schema": {
@@ -1362,13 +1425,13 @@
         }
       }
     },
-    "/api/auth/verify-email": {
+    "/api/auth/email/verify": {
       "post": {
-        "description": "POST /api/auth/verify-email",
+        "description": "POST /api/auth/email/verify",
         "tags": [
           "AUTH"
         ],
-        "summary": "POST /auth/verify-email",
+        "summary": "POST /auth/email/verify",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -1382,7 +1445,7 @@
         },
         "responses": {
           "200": {
-            "description": "POST /api/auth/verify-email",
+            "description": "POST /api/auth/email/verify",
             "content": {
               "application/json": {
                 "schema": {
@@ -1444,16 +1507,16 @@
         }
       }
     },
-    "/api/auth/resend-verification-email": {
+    "/api/auth/email/resend-verification": {
       "post": {
-        "description": "POST /api/auth/resend-verification-email",
+        "description": "POST /api/auth/email/resend-verification",
         "tags": [
           "AUTH"
         ],
-        "summary": "POST /auth/resend-verification-email",
+        "summary": "POST /auth/email/resend-verification",
         "responses": {
           "200": {
-            "description": "POST /api/auth/resend-verification-email",
+            "description": "POST /api/auth/email/resend-verification",
             "content": {
               "application/json": {
                 "schema": {
@@ -1528,7 +1591,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
+                  "$ref": "#/components/schemas/OAuthUrlResponse"
                 }
               }
             }
@@ -1599,7 +1662,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
+                  "$ref": "#/components/schemas/OAuthCallbackResponse"
                 }
               }
             }
@@ -1657,13 +1720,13 @@
         }
       }
     },
-    "/api/auth/request-password-reset": {
+    "/api/auth/password-reset/request": {
       "post": {
-        "description": "POST /api/auth/request-password-reset",
+        "description": "POST /api/auth/password-reset/request",
         "tags": [
           "AUTH"
         ],
-        "summary": "POST /auth/request-password-reset",
+        "summary": "POST /auth/password-reset/request",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -1677,7 +1740,7 @@
         },
         "responses": {
           "200": {
-            "description": "POST /api/auth/request-password-reset",
+            "description": "POST /api/auth/password-reset/request",
             "content": {
               "application/json": {
                 "schema": {
@@ -1739,13 +1802,13 @@
         }
       }
     },
-    "/api/auth/reset-password": {
+    "/api/auth/password-reset/reset": {
       "put": {
-        "description": "PUT /api/auth/reset-password",
+        "description": "PUT /api/auth/password-reset/reset",
         "tags": [
           "AUTH"
         ],
-        "summary": "PUT /auth/reset-password",
+        "summary": "PUT /auth/password-reset/reset",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -1759,7 +1822,7 @@
         },
         "responses": {
           "200": {
-            "description": "PUT /api/auth/reset-password",
+            "description": "PUT /api/auth/password-reset/reset",
             "content": {
               "application/json": {
                 "schema": {
@@ -1821,13 +1884,13 @@
         }
       }
     },
-    "/api/auth/waitlist": {
+    "/api/auth/waitlist/": {
       "post": {
-        "description": "POST /api/auth/waitlist",
+        "description": "POST /api/auth/waitlist/",
         "tags": [
           "AUTH"
         ],
-        "summary": "POST /auth/waitlist",
+        "summary": "POST /auth/waitlist/",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -1841,7 +1904,7 @@
         },
         "responses": {
           "200": {
-            "description": "POST /api/auth/waitlist",
+            "description": "POST /api/auth/waitlist/",
             "content": {
               "application/json": {
                 "schema": {

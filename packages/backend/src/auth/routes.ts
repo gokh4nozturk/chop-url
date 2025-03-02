@@ -1,25 +1,19 @@
 import { D1Database } from '@cloudflare/workers-types';
 import { z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
-import type { RouteConfig, RouteHandler } from '@hono/zod-openapi';
 import { zValidator } from '@hono/zod-validator';
 import { Context, Hono } from 'hono';
+import type { RouteGroup } from '../types/route.types';
 import { H } from '../url/types';
 import {
   registerSchema as registerOpenAPISchema,
   withOpenAPI,
 } from '../utils/openapi';
-import { auth } from './middleware.js';
-import { AuthService } from './service.js';
-import {
-  AuthError,
-  AuthErrorCode,
-  IAuthResponse,
-  ILoginCredentials,
-  IRegisterCredentials,
-  IUser,
-  OAuthProvider,
-} from './types.js';
+import { createRouteGroup } from '../utils/route-factory';
+import { authHandlers } from './handlers';
+import { auth } from './middleware';
+import { authSchemas } from './schemas';
+import { AuthError, AuthErrorCode, IUser } from './types';
 
 // Login schema
 const loginSchema = z
@@ -128,6 +122,29 @@ const twoFactorSetupSchema = z
   })
   .openapi('TwoFactorSetupResponse');
 
+// OAuth URL response schema
+const oAuthUrlResponseSchema = z
+  .object({
+    url: z.string().url(),
+  })
+  .openapi('OAuthUrlResponse');
+
+// OAuth callback response schema
+const oAuthCallbackResponseSchema = z
+  .object({
+    token: z.string(),
+    user: z
+      .object({
+        id: z.number(),
+        email: z.string().email(),
+        name: z.string().optional(),
+        emailVerified: z.boolean().optional(),
+        twoFactorEnabled: z.boolean().optional(),
+      })
+      .openapi('OAuthUser'),
+  })
+  .openapi('OAuthCallbackResponse');
+
 interface Env {
   DB: D1Database;
   FRONTEND_URL: string;
@@ -162,94 +179,72 @@ const getClientIp = (c: Context) =>
   c.req.header('x-forwarded-for') ||
   '0.0.0.0';
 
-// Route group types
-interface RouteGroup {
-  prefix: string;
-  description: string;
-  routes: AuthRouteConfig[];
-}
-
-// Route configuration type
-interface AuthRouteConfig {
-  path: string;
-  method: 'get' | 'post' | 'put' | 'delete';
-  schema?: {
-    request?: z.ZodType;
-    response: z.ZodType;
-  };
-  requiresAuth?: boolean;
-  rateLimit?: {
-    requests: number;
-    window: string;
-  };
-  description?: string;
-}
-
-// Route groups
+// Route groups configuration
 const authGroups: RouteGroup[] = [
   {
     prefix: '/auth',
+    tag: 'AUTH',
     description: 'Basic authentication endpoints',
     routes: [
       {
-        path: '/auth/me',
+        path: '/me',
         method: 'get',
-        schema: { response: userProfileSchema },
+        schema: { response: authSchemas.userProfile },
         requiresAuth: true,
         description: 'Get current user profile',
+        handler: authHandlers.getCurrentUser,
       },
       {
-        path: '/auth/login',
+        path: '/login',
         method: 'post',
         schema: {
-          request: loginSchema,
-          response: loginResponseSchema,
+          request: authSchemas.login,
+          response: authSchemas.loginResponse,
         },
         rateLimit: {
           requests: 5,
           window: '5m',
         },
         description: 'Login with email and password',
+        handler: authHandlers.login,
       },
       {
-        path: '/auth/register',
+        path: '/register',
         method: 'post',
         schema: {
-          request: registerSchema,
-          response: loginResponseSchema,
+          request: authSchemas.register,
+          response: authSchemas.loginResponse,
         },
         rateLimit: {
           requests: 3,
           window: '10m',
         },
         description: 'Register new user',
+        handler: authHandlers.register,
       },
     ],
   },
   {
     prefix: '/auth/2fa',
+    tag: 'TWO_FACTOR',
     description: 'Two-factor authentication endpoints',
     routes: [
       {
-        path: '/auth/setup-2fa',
+        path: '/setup',
         method: 'post',
         schema: {
-          response: z
-            .object({
-              qrCode: z.string(),
-              secret: z.string(),
-            })
-            .openapi('TwoFactorSetupInitResponse'),
+          response: authSchemas.twoFactorSetupInit,
         },
         requiresAuth: true,
         description: 'Initialize 2FA setup',
+        handler: authHandlers.setupTwoFactor,
       },
       {
-        path: '/auth/verify-2fa-setup',
+        path: '/verify-setup',
         method: 'post',
         schema: {
-          request: twoFactorCodeSchema,
-          response: twoFactorSetupSchema,
+          request: authSchemas.twoFactorCode,
+          response: authSchemas.twoFactorSetup,
         },
         requiresAuth: true,
         rateLimit: {
@@ -257,16 +252,18 @@ const authGroups: RouteGroup[] = [
           window: '5m',
         },
         description: 'Verify 2FA setup',
+        handler: authHandlers.verifyTwoFactorSetup,
       },
       {
-        path: '/auth/recovery-codes',
+        path: '/recovery-codes',
         method: 'get',
         schema: { response: recoveryCodesSchema },
         requiresAuth: true,
         description: 'Get 2FA recovery codes',
+        handler: authHandlers.getRecoveryCodes,
       },
       {
-        path: '/auth/verify-2fa',
+        path: '/verify-2fa',
         method: 'post',
         schema: {
           request: twoFactorLoginSchema,
@@ -277,9 +274,10 @@ const authGroups: RouteGroup[] = [
           window: '5m',
         },
         description: 'Verify 2FA code during login',
+        handler: authHandlers.verifyTwoFactorLogin,
       },
       {
-        path: '/auth/enable-2fa',
+        path: '/enable-2fa',
         method: 'post',
         schema: {
           request: twoFactorCodeSchema,
@@ -289,9 +287,10 @@ const authGroups: RouteGroup[] = [
         },
         requiresAuth: true,
         description: 'Enable 2FA',
+        handler: authHandlers.enableTwoFactor,
       },
       {
-        path: '/auth/disable-2fa',
+        path: '/disable-2fa',
         method: 'post',
         schema: {
           request: twoFactorCodeSchema,
@@ -301,15 +300,17 @@ const authGroups: RouteGroup[] = [
         },
         requiresAuth: true,
         description: 'Disable 2FA',
+        handler: authHandlers.disableTwoFactor,
       },
     ],
   },
   {
     prefix: '/auth/profile',
+    tag: 'PROFILE',
     description: 'User profile management endpoints',
     routes: [
       {
-        path: '/auth/profile',
+        path: '/',
         method: 'put',
         schema: {
           request: updateProfileSchema,
@@ -317,9 +318,10 @@ const authGroups: RouteGroup[] = [
         },
         requiresAuth: true,
         description: 'Update user profile',
+        handler: authHandlers.updateProfile,
       },
       {
-        path: '/auth/password',
+        path: '/password',
         method: 'put',
         schema: {
           request: updatePasswordSchema,
@@ -333,15 +335,17 @@ const authGroups: RouteGroup[] = [
           window: '10m',
         },
         description: 'Update password',
+        handler: authHandlers.updatePassword,
       },
     ],
   },
   {
     prefix: '/auth/email',
+    tag: 'EMAIL',
     description: 'Email verification endpoints',
     routes: [
       {
-        path: '/auth/verify-email',
+        path: '/verify',
         method: 'post',
         schema: {
           request: verifyEmailSchema,
@@ -351,9 +355,10 @@ const authGroups: RouteGroup[] = [
         },
         requiresAuth: true,
         description: 'Verify email address',
+        handler: authHandlers.verifyEmail,
       },
       {
-        path: '/auth/resend-verification-email',
+        path: '/resend-verification',
         method: 'post',
         schema: {
           response: z
@@ -366,31 +371,42 @@ const authGroups: RouteGroup[] = [
           window: '10m',
         },
         description: 'Resend verification email',
+        handler: authHandlers.resendVerificationEmail,
       },
     ],
   },
   {
     prefix: '/auth/oauth',
+    tag: 'OAUTH',
     description: 'OAuth authentication endpoints',
     routes: [
       {
-        path: '/auth/oauth/:provider',
+        path: '/:provider',
         method: 'get',
+        schema: {
+          response: oAuthUrlResponseSchema,
+        },
         description: 'Initiate OAuth flow',
+        handler: authHandlers.getOAuthUrl,
       },
       {
-        path: '/auth/oauth/:provider/callback',
+        path: '/:provider/callback',
         method: 'get',
+        schema: {
+          response: oAuthCallbackResponseSchema,
+        },
         description: 'Handle OAuth callback',
+        handler: authHandlers.handleOAuthCallback,
       },
     ],
   },
   {
     prefix: '/auth/password-reset',
+    tag: 'PASSWORD',
     description: 'Password reset endpoints',
     routes: [
       {
-        path: '/auth/request-password-reset',
+        path: '/request',
         method: 'post',
         schema: {
           request: z
@@ -405,9 +421,10 @@ const authGroups: RouteGroup[] = [
           window: '15m',
         },
         description: 'Request password reset',
+        handler: authHandlers.requestPasswordReset,
       },
       {
-        path: '/auth/reset-password',
+        path: '/reset',
         method: 'put',
         schema: {
           request: z
@@ -426,15 +443,17 @@ const authGroups: RouteGroup[] = [
           window: '15m',
         },
         description: 'Reset password with token',
+        handler: authHandlers.resetPassword,
       },
     ],
   },
   {
     prefix: '/auth/waitlist',
+    tag: 'WAITLIST',
     description: 'Waitlist management endpoints',
     routes: [
       {
-        path: '/auth/waitlist',
+        path: '/',
         method: 'post',
         schema: {
           request: z
@@ -457,9 +476,10 @@ const authGroups: RouteGroup[] = [
             .openapi('WaitlistResponse'),
         },
         description: 'Join waitlist',
+        handler: authHandlers.addToWaitlist,
       },
       {
-        path: '/auth/waitlist/:email',
+        path: '/:email',
         method: 'get',
         schema: {
           response: z
@@ -474,36 +494,63 @@ const authGroups: RouteGroup[] = [
             .openapi('WaitlistEntryResponse'),
         },
         description: 'Get waitlist entry',
+        handler: authHandlers.getWaitlistEntry,
       },
     ],
   },
 ];
 
-// Update references to RouteConfig and RouteHandler
-const authRoutes: AuthRouteConfig[] = authGroups.flatMap(
-  (group) => group.routes
-);
+// Create base router with route factory
+const createBaseAuthRoutes = () => {
+  const router = new OpenAPIHono<H>();
 
-// Register schemas for all routes
-const registerAuthSchemas = () => {
-  for (const group of authGroups) {
-    for (const route of group.routes) {
-      if (route.schema) {
-        registerOpenAPISchema(route.path, route.method, {
-          request: route.schema.request,
-          response: route.schema.response,
-        });
-      }
+  // Register all routes from groups
+  const authRoutes = createRouteGroup(authGroups[0]); // Basic auth routes
+  const twoFactorRoutes = createRouteGroup(authGroups[1]); // 2FA routes
+  const profileRoutes = createRouteGroup(authGroups[2]); // Profile routes
+  const emailRoutes = createRouteGroup(authGroups[3]); // Email routes
+  const oauthRoutes = createRouteGroup(authGroups[4]); // OAuth routes
+  const passwordResetRoutes = createRouteGroup(authGroups[5]); // Password reset routes
+  const waitlistRoutes = createRouteGroup(authGroups[6]); // Waitlist routes
+
+  // Add routes to router with middleware
+  for (const route of [
+    ...authRoutes,
+    ...twoFactorRoutes,
+    ...profileRoutes,
+    ...emailRoutes,
+    ...oauthRoutes,
+    ...passwordResetRoutes,
+    ...waitlistRoutes,
+  ]) {
+    const middlewares = [];
+
+    // Add authentication middleware if required
+    if (route.metadata.requiresAuth) {
+      middlewares.push(auth());
     }
+
+    // Add validation middleware if schema exists
+    if (route.schema?.request) {
+      middlewares.push(zValidator('json', route.schema.request));
+    }
+
+    // Register route with error handling
+    router[route.method](route.path, ...middlewares, async (c) => {
+      try {
+        return await route.handler(c);
+      } catch (error) {
+        return handleError(c, error);
+      }
+    });
   }
+
+  return router;
 };
 
-// Handler type for route implementations
-type AuthRouteHandler = (c: Context, service: AuthService) => Promise<Response>;
-
-// Centralized error handler
+// Error handler
 const handleError = (c: Context, error: unknown) => {
-  console.error('Error:', error);
+  console.error('Auth Error:', error);
 
   if (error instanceof AuthError) {
     return c.json(
@@ -523,390 +570,5 @@ const handleError = (c: Context, error: unknown) => {
   );
 };
 
-// Service factory to avoid repetition
-const createAuthService = (c: Context) => {
-  return new AuthService(c.get('db'), {
-    resendApiKey: c.env.RESEND_API_KEY,
-    frontendUrl: c.env.FRONTEND_URL,
-    googleClientId: c.env.GOOGLE_CLIENT_ID,
-    googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
-    githubClientId: c.env.GITHUB_CLIENT_ID,
-    githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
-  });
-};
-
-// Route handler implementations
-const handlers: Record<string, AuthRouteHandler> = {
-  '/auth/me': async (c) => {
-    const user = c.get('user');
-    return c.json({ user });
-  },
-
-  '/auth/login': async (c, service) => {
-    const { email, password } = await c.req.json<ILoginCredentials>();
-    const response = await service.login({ email, password });
-    return c.json(response);
-  },
-
-  '/auth/register': async (c, service) => {
-    const data = await c.req.json<z.infer<typeof registerSchema>>();
-    const credentials: IRegisterCredentials = {
-      email: data.email,
-      password: data.password,
-      name: data.name,
-      confirmPassword: data.confirmPassword,
-    };
-    const response = await service.register(credentials);
-    return c.json(response);
-  },
-
-  '/auth/setup-2fa': async (c, service) => {
-    const user = c.get('user');
-    const response = await service.setupTwoFactor(user.id);
-    return c.json(response);
-  },
-
-  '/auth/verify-2fa-setup': async (c, service) => {
-    const { code } = await c.req.json();
-    const user = c.get('user');
-    const ipAddress = getClientIp(c);
-
-    const recoveryCodes = await service.verifyTwoFactorSetup(
-      user.id,
-      code,
-      ipAddress
-    );
-    return c.json({ success: true, recoveryCodes });
-  },
-
-  '/auth/recovery-codes': async (c, service) => {
-    const user = c.get('user');
-    const codes = await service.getRecoveryCodes(user.id);
-    return c.json({ recoveryCodes: codes });
-  },
-
-  '/auth/verify-2fa': async (c, service) => {
-    const { email, code } = await c.req.json();
-    const ipAddress = getClientIp(c);
-
-    const result = await service.verifyTwoFactorLogin(email, code, ipAddress);
-    return c.json(result);
-  },
-
-  '/auth/enable-2fa': async (c, service) => {
-    const { code } = await c.req.json();
-    const user = c.get('user');
-    const ipAddress = getClientIp(c);
-
-    await service.enableTwoFactor(user.id, code, ipAddress);
-    return c.json({ success: true });
-  },
-
-  '/auth/disable-2fa': async (c, service) => {
-    const { code } = await c.req.json();
-    const user = c.get('user');
-    const ipAddress = getClientIp(c);
-
-    await service.disableTwoFactor(user.id, code, ipAddress);
-    return c.json({ success: true });
-  },
-
-  '/auth/profile': async (c, service) => {
-    const user = c.get('user');
-    const data = await c.req.json();
-    const updatedUser = await service.updateProfile(user.id, data);
-    return c.json({ user: updatedUser });
-  },
-
-  '/auth/password': async (c, service) => {
-    const user = c.get('user');
-    const data = await c.req.json();
-    const ipAddress = getClientIp(c);
-    await service.updatePassword(user.id, data, ipAddress);
-    return c.json({ success: true });
-  },
-
-  '/auth/verify-email': async (c, service) => {
-    const { token } = await c.req.json();
-    const userId = c.get('user').id;
-    await service.verifyEmail(token, userId);
-    return c.json({ message: 'Email verified successfully' });
-  },
-
-  '/auth/resend-verification-email': async (c, service) => {
-    if (!c.env.RESEND_API_KEY) {
-      throw new Error('Email service configuration error');
-    }
-    const user = c.get('user');
-    await service.resendVerificationEmail(user.id);
-    return c.json({ message: 'Verification email sent successfully' });
-  },
-
-  '/auth/oauth/:provider': async (c, service) => {
-    const provider = c.req.param('provider');
-    const authUrl = await service.getOAuthUrl(provider as OAuthProvider);
-    return c.redirect(authUrl);
-  },
-
-  '/auth/oauth/:provider/callback': async (c, service) => {
-    const provider = c.req.param('provider');
-    const code = c.req.query('code');
-
-    if (!code) {
-      throw new Error('Authorization code is missing');
-    }
-
-    const response = await service.handleOAuthCallback(
-      provider as OAuthProvider,
-      code
-    );
-    return c.redirect(
-      `${c.env.FRONTEND_URL}/auth/callback?token=${response.token}`
-    );
-  },
-
-  '/auth/request-password-reset': async (c, service) => {
-    const { email } = await c.req.json();
-    await service.requestPasswordReset(email);
-    return c.json({ message: 'Password reset request sent' });
-  },
-
-  '/auth/reset-password': async (c, service) => {
-    const { token, newPassword, confirmPassword } = await c.req.json();
-    await service.resetPassword(token, newPassword, confirmPassword);
-    return c.json({ message: 'Password reset successful' });
-  },
-
-  '/auth/waitlist': async (c, service) => {
-    const { email, name, company, useCase } = await c.req.json();
-    const waitlistEntry = await service.addToWaitlist({
-      email,
-      name,
-      company,
-      useCase,
-    });
-    return c.json(waitlistEntry);
-  },
-
-  '/auth/waitlist/:email': async (c, service) => {
-    const email = c.req.param('email');
-    const waitlistEntry = await service.getWaitlistEntry(email);
-
-    if (!waitlistEntry) {
-      throw new AuthError(
-        AuthErrorCode.USER_NOT_FOUND,
-        'Waitlist entry not found'
-      );
-    }
-
-    return c.json(waitlistEntry);
-  },
-};
-
-// Higher-order function to wrap handlers with error handling and service creation
-const withErrorHandling = (handler: AuthRouteHandler) => {
-  return async (c: Context) => {
-    try {
-      const service = createAuthService(c);
-      return await handler(c, service);
-    } catch (error) {
-      return handleError(c, error);
-    }
-  };
-};
-
-// Rate limiting middleware
-const createRateLimiter = (config: AuthRouteConfig['rateLimit']) => {
-  if (!config) return null;
-
-  const limits = new Map<string, { count: number; resetAt: number }>();
-  const windowMs = parseTimeWindow(config.window);
-
-  return async (c: Context, next: () => Promise<void>) => {
-    const ip = getClientIp(c);
-    const now = Date.now();
-    const key = `${ip}:${c.req.path}`;
-
-    const limit = limits.get(key);
-
-    if (limit) {
-      // Reset counter if window has passed
-      if (now > limit.resetAt) {
-        limit.count = 0;
-        limit.resetAt = now + windowMs;
-      }
-
-      // Check if limit exceeded
-      if (limit.count >= config.requests) {
-        return c.json(
-          {
-            error: 'Too many requests',
-            resetAt: new Date(limit.resetAt).toISOString(),
-          },
-          429
-        );
-      }
-
-      limit.count++;
-    } else {
-      limits.set(key, {
-        count: 1,
-        resetAt: now + windowMs,
-      });
-    }
-
-    // Clean up old entries periodically
-    if (Math.random() < 0.1) {
-      // 10% chance to clean up
-      for (const [key, value] of limits.entries()) {
-        if (now > value.resetAt) {
-          limits.delete(key);
-        }
-      }
-    }
-
-    return next();
-  };
-};
-
-// Helper to parse time window string (e.g., '5m', '1h') to milliseconds
-const parseTimeWindow = (window: string): number => {
-  const value = parseInt(window);
-  const unit = window.slice(-1);
-
-  switch (unit) {
-    case 's':
-      return value * 1000;
-    case 'm':
-      return value * 60 * 1000;
-    case 'h':
-      return value * 60 * 60 * 1000;
-    case 'd':
-      return value * 24 * 60 * 60 * 1000;
-    default:
-      throw new Error(`Invalid time window unit: ${unit}`);
-  }
-};
-
-// Logging types and utilities
-interface LogEntry {
-  timestamp: string;
-  level: 'info' | 'warn' | 'error';
-  method: string;
-  path: string;
-  ip: string;
-  duration: number;
-  status: number;
-  error?: string;
-  userId?: number;
-  message?: string;
-}
-
-const createLogger = () => {
-  return {
-    log: (entry: LogEntry) => {
-      // In production, you might want to send this to a logging service
-      console.log(JSON.stringify(entry));
-    },
-  };
-};
-
-const logger = createLogger();
-
-// Logging middleware
-const withLogging = (handler: AuthRouteHandler) => {
-  return async (c: Context, service: AuthService) => {
-    const startTime = Date.now();
-    const method = c.req.method;
-    const path = c.req.path;
-    const ip = getClientIp(c);
-
-    try {
-      const response = await handler(c, service);
-
-      // Log successful request
-      logger.log({
-        timestamp: new Date().toISOString(),
-        level: 'info',
-        method,
-        path,
-        ip,
-        duration: Date.now() - startTime,
-        status: response.status,
-        userId: c.get('user')?.id,
-        message: 'Request completed successfully',
-      });
-
-      return response;
-    } catch (error) {
-      // Log error
-      logger.log({
-        timestamp: new Date().toISOString(),
-        level: 'error',
-        method,
-        path,
-        ip,
-        duration: Date.now() - startTime,
-        status: error instanceof AuthError ? 400 : 500,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: c.get('user')?.id,
-        message: 'Request failed',
-      });
-
-      throw error;
-    }
-  };
-};
-
-// Higher-order function to wrap handlers with all middleware
-const withMiddleware = (handler: AuthRouteHandler) => {
-  return withErrorHandling(withLogging(handler));
-};
-
-const createBaseAuthRoutes = () => {
-  registerAuthSchemas();
-  const router = new Hono<H>();
-
-  // Register routes based on configuration
-  for (const route of authRoutes) {
-    const handler = handlers[route.path];
-    if (!handler) continue;
-
-    const middlewares = [];
-
-    // Add authentication middleware if required
-    if (route.requiresAuth) {
-      middlewares.push(auth());
-    }
-
-    // Add rate limiting middleware if configured
-    const rateLimiter = createRateLimiter(route.rateLimit);
-    if (rateLimiter) {
-      middlewares.push(rateLimiter);
-    }
-
-    // Add validation middleware if schema exists
-    if (route.schema?.request) {
-      middlewares.push(zValidator('json', route.schema.request));
-    }
-
-    // Register route with all middlewares
-    router[route.method](route.path, ...middlewares, withMiddleware(handler));
-
-    // Log route registration
-    logger.log({
-      timestamp: new Date().toISOString(),
-      level: 'info',
-      method: route.method,
-      path: route.path,
-      ip: 'system',
-      duration: 0,
-      status: 0,
-      message: `Registered route: ${route.method.toUpperCase()} ${route.path}`,
-    });
-  }
-
-  return router;
-};
-
+// Export the router with OpenAPI documentation
 export const createAuthRoutes = withOpenAPI(createBaseAuthRoutes, '/api');
