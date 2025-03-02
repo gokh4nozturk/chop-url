@@ -16,7 +16,37 @@
     }
   ],
   "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token for authentication"
+      }
+    },
     "schemas": {
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Operation success status",
+            "example": true
+          },
+          "data": {
+            "nullable": true,
+            "description": "Response data"
+          },
+          "message": {
+            "type": "string",
+            "description": "Success message",
+            "example": "Operation completed successfully"
+          }
+        },
+        "required": [
+          "success"
+        ]
+      },
       "DefaultErrorResponse": {
         "type": "object",
         "properties": {
@@ -26,23 +56,1377 @@
             "example": "Something went wrong"
           }
         },
-        "required": ["error"]
+        "required": [
+          "error"
+        ]
       }
     },
     "parameters": {}
   },
   "paths": {
+    "/api/auth/me": {
+      "get": {
+        "description": "GET /api/auth/me",
+        "tags": [
+          "AUTH"
+        ],
+        "summary": "GET /auth/me",
+        "responses": {
+          "200": {
+            "description": "GET /api/auth/me",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "description": "POST /api/auth/login",
+        "tags": [
+          "AUTH"
+        ],
+        "summary": "POST /auth/login",
+        "responses": {
+          "200": {
+            "description": "POST /api/auth/login",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "description": "POST /api/auth/register",
+        "tags": [
+          "AUTH"
+        ],
+        "summary": "POST /auth/register",
+        "responses": {
+          "200": {
+            "description": "POST /api/auth/register",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/setup-2fa": {
+      "post": {
+        "description": "POST /api/auth/setup-2fa",
+        "tags": [
+          "AUTH"
+        ],
+        "summary": "POST /auth/setup-2fa",
+        "responses": {
+          "200": {
+            "description": "POST /api/auth/setup-2fa",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/verify-2fa-setup": {
+      "post": {
+        "description": "POST /api/auth/verify-2fa-setup",
+        "tags": [
+          "AUTH"
+        ],
+        "summary": "POST /auth/verify-2fa-setup",
+        "responses": {
+          "200": {
+            "description": "POST /api/auth/verify-2fa-setup",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/recovery-codes": {
+      "get": {
+        "description": "GET /api/auth/recovery-codes",
+        "tags": [
+          "AUTH"
+        ],
+        "summary": "GET /auth/recovery-codes",
+        "responses": {
+          "200": {
+            "description": "GET /api/auth/recovery-codes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/verify-2fa": {
+      "post": {
+        "description": "POST /api/auth/verify-2fa",
+        "tags": [
+          "AUTH"
+        ],
+        "summary": "POST /auth/verify-2fa",
+        "responses": {
+          "200": {
+            "description": "POST /api/auth/verify-2fa",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/enable-2fa": {
+      "post": {
+        "description": "POST /api/auth/enable-2fa",
+        "tags": [
+          "AUTH"
+        ],
+        "summary": "POST /auth/enable-2fa",
+        "responses": {
+          "200": {
+            "description": "POST /api/auth/enable-2fa",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/disable-2fa": {
+      "post": {
+        "description": "POST /api/auth/disable-2fa",
+        "tags": [
+          "AUTH"
+        ],
+        "summary": "POST /auth/disable-2fa",
+        "responses": {
+          "200": {
+            "description": "POST /api/auth/disable-2fa",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/profile": {
+      "put": {
+        "description": "PUT /api/auth/profile",
+        "tags": [
+          "AUTH"
+        ],
+        "summary": "PUT /auth/profile",
+        "responses": {
+          "200": {
+            "description": "PUT /api/auth/profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/password": {
+      "put": {
+        "description": "PUT /api/auth/password",
+        "tags": [
+          "AUTH"
+        ],
+        "summary": "PUT /auth/password",
+        "responses": {
+          "200": {
+            "description": "PUT /api/auth/password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/verify-email": {
+      "post": {
+        "description": "POST /api/auth/verify-email",
+        "tags": [
+          "AUTH"
+        ],
+        "summary": "POST /auth/verify-email",
+        "responses": {
+          "200": {
+            "description": "POST /api/auth/verify-email",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/resend-verification-email": {
+      "post": {
+        "description": "POST /api/auth/resend-verification-email",
+        "tags": [
+          "AUTH"
+        ],
+        "summary": "POST /auth/resend-verification-email",
+        "responses": {
+          "200": {
+            "description": "POST /api/auth/resend-verification-email",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/oauth/{provider}": {
+      "get": {
+        "description": "GET /api/auth/oauth/:provider",
+        "tags": [
+          "AUTH"
+        ],
+        "summary": "GET /auth/oauth/:provider",
+        "responses": {
+          "200": {
+            "description": "GET /api/auth/oauth/:provider",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/oauth/{provider}/callback": {
+      "get": {
+        "description": "GET /api/auth/oauth/:provider/callback",
+        "tags": [
+          "AUTH"
+        ],
+        "summary": "GET /auth/oauth/:provider/callback",
+        "responses": {
+          "200": {
+            "description": "GET /api/auth/oauth/:provider/callback",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/request-password-reset": {
+      "post": {
+        "description": "POST /api/auth/request-password-reset",
+        "tags": [
+          "AUTH"
+        ],
+        "summary": "POST /auth/request-password-reset",
+        "responses": {
+          "200": {
+            "description": "POST /api/auth/request-password-reset",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/reset-password": {
+      "put": {
+        "description": "PUT /api/auth/reset-password",
+        "tags": [
+          "AUTH"
+        ],
+        "summary": "PUT /auth/reset-password",
+        "responses": {
+          "200": {
+            "description": "PUT /api/auth/reset-password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/waitlist": {
+      "post": {
+        "description": "POST /api/auth/waitlist",
+        "tags": [
+          "AUTH"
+        ],
+        "summary": "POST /auth/waitlist",
+        "responses": {
+          "200": {
+            "description": "POST /api/auth/waitlist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/waitlist/{email}": {
+      "get": {
+        "description": "GET /api/auth/waitlist/:email",
+        "tags": [
+          "AUTH"
+        ],
+        "summary": "GET /auth/waitlist/:email",
+        "responses": {
+          "200": {
+            "description": "GET /api/auth/waitlist/:email",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/shorten": {
       "post": {
         "description": "POST /api/shorten",
-        "tags": ["SHORTEN"],
+        "tags": [
+          "SHORTEN"
+        ],
+        "summary": "POST /shorten",
         "responses": {
           "200": {
             "description": "POST /api/shorten",
             "content": {
               "application/json": {
                 "schema": {
-                  "nullable": true
+                  "$ref": "#/components/schemas/SuccessResponse"
                 }
               }
             }
@@ -103,14 +1487,17 @@
     "/api/chop": {
       "post": {
         "description": "POST /api/chop",
-        "tags": ["CHOP"],
+        "tags": [
+          "CHOP"
+        ],
+        "summary": "POST /chop",
         "responses": {
           "200": {
             "description": "POST /api/chop",
             "content": {
               "application/json": {
                 "schema": {
-                  "nullable": true
+                  "$ref": "#/components/schemas/SuccessResponse"
                 }
               }
             }
@@ -171,14 +1558,17 @@
     "/api/urls": {
       "get": {
         "description": "GET /api/urls",
-        "tags": ["URLS"],
+        "tags": [
+          "URLS"
+        ],
+        "summary": "GET /urls",
         "responses": {
           "200": {
             "description": "GET /api/urls",
             "content": {
               "application/json": {
                 "schema": {
-                  "nullable": true
+                  "$ref": "#/components/schemas/SuccessResponse"
                 }
               }
             }
@@ -239,14 +1629,17 @@
     "/api/urls/{shortId}": {
       "patch": {
         "description": "PATCH /api/urls/:shortId",
-        "tags": ["URLS"],
+        "tags": [
+          "URLS"
+        ],
+        "summary": "PATCH /urls/:shortId",
         "responses": {
           "200": {
             "description": "PATCH /api/urls/:shortId",
             "content": {
               "application/json": {
                 "schema": {
-                  "nullable": true
+                  "$ref": "#/components/schemas/SuccessResponse"
                 }
               }
             }
@@ -305,14 +1698,17 @@
       },
       "delete": {
         "description": "DELETE /api/urls/:shortId",
-        "tags": ["URLS"],
+        "tags": [
+          "URLS"
+        ],
+        "summary": "DELETE /urls/:shortId",
         "responses": {
           "200": {
             "description": "DELETE /api/urls/:shortId",
             "content": {
               "application/json": {
                 "schema": {
-                  "nullable": true
+                  "$ref": "#/components/schemas/SuccessResponse"
                 }
               }
             }
@@ -371,14 +1767,17 @@
       },
       "get": {
         "description": "GET /api/urls/:shortId",
-        "tags": ["URLS"],
+        "tags": [
+          "URLS"
+        ],
+        "summary": "GET /urls/:shortId",
         "responses": {
           "200": {
             "description": "GET /api/urls/:shortId",
             "content": {
               "application/json": {
                 "schema": {
-                  "nullable": true
+                  "$ref": "#/components/schemas/SuccessResponse"
                 }
               }
             }
@@ -439,14 +1838,17 @@
     "/api/stats/{shortId}": {
       "get": {
         "description": "GET /api/stats/:shortId",
-        "tags": ["STATS"],
+        "tags": [
+          "STATS"
+        ],
+        "summary": "GET /stats/:shortId",
         "responses": {
           "200": {
             "description": "GET /api/stats/:shortId",
             "content": {
               "application/json": {
                 "schema": {
-                  "nullable": true
+                  "$ref": "#/components/schemas/SuccessResponse"
                 }
               }
             }
@@ -507,14 +1909,17 @@
     "/api/stats/{shortId}/visits": {
       "get": {
         "description": "GET /api/stats/:shortId/visits",
-        "tags": ["STATS"],
+        "tags": [
+          "STATS"
+        ],
+        "summary": "GET /stats/:shortId/visits",
         "responses": {
           "200": {
             "description": "GET /api/stats/:shortId/visits",
             "content": {
               "application/json": {
                 "schema": {
-                  "nullable": true
+                  "$ref": "#/components/schemas/SuccessResponse"
                 }
               }
             }
@@ -575,14 +1980,17 @@
     "/api/analytics": {
       "get": {
         "description": "GET /api/analytics",
-        "tags": ["ANALYTICS"],
+        "tags": [
+          "ANALYTICS"
+        ],
+        "summary": "GET /analytics",
         "responses": {
           "200": {
             "description": "GET /api/analytics",
             "content": {
               "application/json": {
                 "schema": {
-                  "nullable": true
+                  "$ref": "#/components/schemas/SuccessResponse"
                 }
               }
             }
@@ -643,14 +2051,17 @@
     "/api/analytics/export": {
       "get": {
         "description": "GET /api/analytics/export",
-        "tags": ["ANALYTICS"],
+        "tags": [
+          "ANALYTICS"
+        ],
+        "summary": "GET /analytics/export",
         "responses": {
           "200": {
             "description": "GET /api/analytics/export",
             "content": {
               "application/json": {
                 "schema": {
-                  "nullable": true
+                  "$ref": "#/components/schemas/SuccessResponse"
                 }
               }
             }
@@ -711,14 +2122,17 @@
     "/api/url-groups": {
       "post": {
         "description": "POST /api/url-groups",
-        "tags": ["URL-GROUPS"],
+        "tags": [
+          "URL-GROUPS"
+        ],
+        "summary": "POST /url-groups",
         "responses": {
           "200": {
             "description": "POST /api/url-groups",
             "content": {
               "application/json": {
                 "schema": {
-                  "nullable": true
+                  "$ref": "#/components/schemas/SuccessResponse"
                 }
               }
             }
@@ -777,14 +2191,17 @@
       },
       "get": {
         "description": "GET /api/url-groups",
-        "tags": ["URL-GROUPS"],
+        "tags": [
+          "URL-GROUPS"
+        ],
+        "summary": "GET /url-groups",
         "responses": {
           "200": {
             "description": "GET /api/url-groups",
             "content": {
               "application/json": {
                 "schema": {
-                  "nullable": true
+                  "$ref": "#/components/schemas/SuccessResponse"
                 }
               }
             }
@@ -845,14 +2262,17 @@
     "/api/url-groups/{id}": {
       "put": {
         "description": "PUT /api/url-groups/:id",
-        "tags": ["URL-GROUPS"],
+        "tags": [
+          "URL-GROUPS"
+        ],
+        "summary": "PUT /url-groups/:id",
         "responses": {
           "200": {
             "description": "PUT /api/url-groups/:id",
             "content": {
               "application/json": {
                 "schema": {
-                  "nullable": true
+                  "$ref": "#/components/schemas/SuccessResponse"
                 }
               }
             }
@@ -911,14 +2331,17 @@
       },
       "delete": {
         "description": "DELETE /api/url-groups/:id",
-        "tags": ["URL-GROUPS"],
+        "tags": [
+          "URL-GROUPS"
+        ],
+        "summary": "DELETE /url-groups/:id",
         "responses": {
           "200": {
             "description": "DELETE /api/url-groups/:id",
             "content": {
               "application/json": {
                 "schema": {
-                  "nullable": true
+                  "$ref": "#/components/schemas/SuccessResponse"
                 }
               }
             }

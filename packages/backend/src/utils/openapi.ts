@@ -6,6 +6,24 @@ import { Hono } from 'hono';
 type Method = 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head';
 type RouteCreator<T = unknown> = () => Hono<T>;
 
+interface RouteSchema {
+  request?: z.ZodType;
+  response?: z.ZodType;
+}
+
+// Schema registry to store all API schemas
+export const schemaRegistry = new Map<string, RouteSchema>();
+
+// Helper to register a route's schemas
+export const registerSchema = (
+  path: string,
+  method: Method,
+  schema: RouteSchema
+) => {
+  const key = `${method.toUpperCase()}:${path}`;
+  schemaRegistry.set(key, schema);
+};
+
 // Default error schema
 const defaultErrorSchema = z
   .object({
@@ -16,27 +34,71 @@ const defaultErrorSchema = z
   })
   .openapi('DefaultErrorResponse');
 
+// Default success schema
+const defaultSuccessSchema = z
+  .object({
+    success: z.boolean().openapi({
+      description: 'Operation success status',
+      example: true,
+    }),
+    data: z.any().optional().openapi({
+      description: 'Response data',
+      example: null,
+    }),
+    message: z.string().optional().openapi({
+      description: 'Success message',
+      example: 'Operation completed successfully',
+    }),
+  })
+  .openapi('SuccessResponse');
+
 // Helper to convert path parameters to OpenAPI format
 // e.g., /users/:id -> /users/{id}
 const convertPathToOpenAPI = (path: string) => {
   return path.replace(/:(\w+)/g, '{$1}');
 };
 
-// Helper to create OpenAPI route from existing route
-export const createOpenAPIRoute = (
+// Helper to register route schemas
+export const registerRoute = (
   path: string,
-  method: string,
-  description: string
+  method: Method,
+  description: string,
+  schema?: RouteSchema,
+  requiresAuth = false
 ): RouteConfig => {
-  return {
-    method: method.toLowerCase() as Method,
+  const config: RouteConfig = {
+    method,
     path: convertPathToOpenAPI(path),
+    request:
+      schema?.request && method !== 'get'
+        ? {
+            body: {
+              content: {
+                'application/json': {
+                  schema: schema.request,
+                },
+              },
+              description: 'Request body',
+              required: true,
+            },
+          }
+        : method === 'get' && schema?.request
+          ? {
+              query: z
+                .object({})
+                .merge(
+                  schema.request instanceof z.ZodObject
+                    ? schema.request
+                    : z.object({})
+                ),
+            }
+          : undefined,
     responses: {
       200: {
         description: description || 'Successful operation',
         content: {
           'application/json': {
-            schema: z.any(),
+            schema: schema?.response || defaultSuccessSchema,
           },
         },
       },
@@ -81,9 +143,16 @@ export const createOpenAPIRoute = (
         },
       },
     },
-    description: description,
-    tags: [path.split('/')[1].toUpperCase()], // Use first path segment as tag
+    description,
+    tags: [path.split('/')[1].toUpperCase()],
+    summary: `${method.toUpperCase()} ${path}`,
   };
+
+  if (requiresAuth) {
+    config.security = [{ bearerAuth: [] }];
+  }
+
+  return config;
 };
 
 // HOC to wrap route creators with OpenAPI documentation
@@ -95,14 +164,39 @@ export const withOpenAPI = <T = unknown>(
     const originalRouter = routeCreator();
     const openAPIRouter = new OpenAPIHono<T>();
 
+    // Add security scheme configuration
+    openAPIRouter.openAPIRegistry.registerComponent(
+      'securitySchemes',
+      'bearerAuth',
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'JWT token for authentication',
+      }
+    );
+
     // Copy all routes and add OpenAPI documentation
     for (const route of originalRouter.routes) {
       const { method, handler, path } = route;
       const fullPath = `${basePath}${path}`;
-      const description = `${method} ${fullPath}`;
+      const description = `${method.toUpperCase()} ${fullPath}`;
 
-      // Create OpenAPI route
-      const openAPIRoute = createOpenAPIRoute(path, method, description);
+      // Check if route requires authentication
+      const requiresAuth = handler.toString().includes('auth()');
+
+      // Get schemas from registry
+      const key = `${method.toUpperCase()}:${path}`;
+      const schema = schemaRegistry.get(key);
+
+      // Create OpenAPI route with schemas
+      const openAPIRoute = registerRoute(
+        path,
+        method.toLowerCase() as Method,
+        description,
+        schema,
+        requiresAuth
+      );
 
       // Add route with OpenAPI documentation
       openAPIRouter.openapi(

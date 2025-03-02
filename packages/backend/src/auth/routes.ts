@@ -1,26 +1,83 @@
 import { D1Database } from '@cloudflare/workers-types';
+import { z } from '@hono/zod-openapi';
 import { zValidator } from '@hono/zod-validator';
 import { Context, Hono } from 'hono';
-import { z } from 'zod';
+import { H } from '../url/types';
+import { withOpenAPI } from '../utils/openapi';
 import { auth } from './middleware.js';
 import { AuthService } from './service.js';
 import {
   AuthError,
   AuthErrorCode,
   IAuthResponse,
+  ILoginCredentials,
+  IRegisterCredentials,
   IUser,
   OAuthProvider,
 } from './types.js';
 
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-});
+const loginSchema = z
+  .object({
+    email: z.string().email().openapi({
+      example: 'user@example.com',
+      description: 'User email address',
+    }),
+    password: z.string().min(6).openapi({
+      example: 'password123',
+      description: 'User password (min 6 characters)',
+    }),
+  })
+  .openapi('LoginRequest');
 
-const registerSchema = loginSchema.extend({
-  name: z.string().min(1),
-  confirmPassword: z.string().min(6),
-});
+const loginResponseSchema = z
+  .object({
+    token: z.string().openapi({
+      example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+      description: 'JWT token for authentication',
+    }),
+    user: z
+      .object({
+        id: z.number().openapi({
+          example: 1,
+          description: 'User ID',
+        }),
+        email: z.string().email().openapi({
+          example: 'user@example.com',
+          description: 'User email',
+        }),
+        name: z.string().openapi({
+          example: 'John Doe',
+          description: 'User full name',
+        }),
+      })
+      .openapi('UserInfo'),
+  })
+  .openapi('LoginResponse');
+
+const registerSchema = z
+  .object({
+    email: z.string().email().openapi({
+      example: 'user@example.com',
+      description: 'User email address',
+    }),
+    password: z.string().min(6).openapi({
+      example: 'password123',
+      description: 'User password (min 6 characters)',
+    }),
+    name: z.string().min(1).openapi({
+      example: 'John Doe',
+      description: 'User full name',
+    }),
+    confirmPassword: z.string().min(6).openapi({
+      example: 'password123',
+      description: 'Confirm password (must match password)',
+    }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  })
+  .openapi('RegisterRequest');
 
 const twoFactorCodeSchema = z.object({
   code: z.string().length(6).regex(/^\d+$/),
@@ -83,39 +140,13 @@ const ERROR_MESSAGES: Record<AuthErrorCode, string> = {
   [AuthErrorCode.NO_TOKEN]: 'No token provided.',
 };
 
-export const createAuthRoutes = () => {
-  const router = new Hono<{ Bindings: Env; Variables: Variables }>();
+const createBaseAuthRoutes = () => {
+  const router = new Hono<H>();
 
   router.get('/auth/me', auth(), async (c: Context) => {
     const user = c.get('user');
     return c.json({ user });
   });
-
-  router.post(
-    '/register',
-    zValidator('json', registerSchema),
-    async (c: Context) => {
-      try {
-        const db = c.get('db');
-        const authService = new AuthService(db, {
-          resendApiKey: c.env.RESEND_API_KEY,
-          frontendUrl: c.env.FRONTEND_URL,
-          googleClientId: c.env.GOOGLE_CLIENT_ID,
-          googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
-          githubClientId: c.env.GITHUB_CLIENT_ID,
-          githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
-        });
-        const credentials = await c.req.json<z.infer<typeof registerSchema>>();
-        const response = await authService.register(credentials);
-        return c.json(response);
-      } catch (error) {
-        if (error instanceof Error) {
-          return c.json({ error: error.message }, 400);
-        }
-        return c.json({ error: 'Internal server error' }, 500);
-      }
-    }
-  );
 
   router.post(
     '/auth/login',
@@ -131,12 +162,44 @@ export const createAuthRoutes = () => {
           githubClientId: c.env.GITHUB_CLIENT_ID,
           githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
         });
-        const credentials = await c.req.json<z.infer<typeof loginSchema>>();
-        const response = await authService.login(credentials);
+        const { email, password } = await c.req.json<ILoginCredentials>();
+        const response = await authService.login({ email, password });
         return c.json(response);
       } catch (error) {
         if (error instanceof AuthError) {
           return c.json({ error: error.message }, 401);
+        }
+        return c.json({ error: 'Internal server error' }, 500);
+      }
+    }
+  );
+
+  router.post(
+    '/auth/register',
+    zValidator('json', registerSchema),
+    async (c: Context) => {
+      try {
+        const db = c.get('db');
+        const authService = new AuthService(db, {
+          resendApiKey: c.env.RESEND_API_KEY,
+          frontendUrl: c.env.FRONTEND_URL,
+          googleClientId: c.env.GOOGLE_CLIENT_ID,
+          googleClientSecret: c.env.GOOGLE_CLIENT_SECRET,
+          githubClientId: c.env.GITHUB_CLIENT_ID,
+          githubClientSecret: c.env.GITHUB_CLIENT_SECRET,
+        });
+        const data = await c.req.json<z.infer<typeof registerSchema>>();
+        const credentials: IRegisterCredentials = {
+          email: data.email,
+          password: data.password,
+          name: data.name,
+          confirmPassword: data.confirmPassword,
+        };
+        const response = await authService.register(credentials);
+        return c.json(response);
+      } catch (error) {
+        if (error instanceof Error) {
+          return c.json({ error: error.message }, 400);
         }
         return c.json({ error: 'Internal server error' }, 500);
       }
@@ -165,7 +228,7 @@ export const createAuthRoutes = () => {
   });
 
   router.post(
-    '/verify-2fa-setup',
+    '/auth/verify-2fa-setup',
     auth(),
     zValidator('json', twoFactorCodeSchema),
     async (c: Context) => {
@@ -230,7 +293,7 @@ export const createAuthRoutes = () => {
   });
 
   router.post(
-    '/verify-2fa',
+    '/auth/verify-2fa',
     zValidator('json', twoFactorLoginSchema),
     async (c: Context) => {
       try {
@@ -272,7 +335,7 @@ export const createAuthRoutes = () => {
   );
 
   router.post(
-    '/enable-2fa',
+    '/auth/enable-2fa',
     auth(),
     zValidator('json', twoFactorCodeSchema),
     async (c: Context) => {
@@ -304,7 +367,7 @@ export const createAuthRoutes = () => {
   );
 
   router.post(
-    '/disable-2fa',
+    '/auth/disable-2fa',
     auth(),
     zValidator('json', twoFactorCodeSchema),
     async (c: Context) => {
@@ -336,7 +399,7 @@ export const createAuthRoutes = () => {
   );
 
   router.put(
-    '/profile',
+    '/auth/profile',
     auth(),
     zValidator('json', updateProfileSchema),
     async (c: Context) => {
@@ -373,7 +436,7 @@ export const createAuthRoutes = () => {
   );
 
   router.put(
-    '/password',
+    '/auth/password',
     auth(),
     zValidator('json', updatePasswordSchema),
     async (c: Context) => {
@@ -404,7 +467,7 @@ export const createAuthRoutes = () => {
   );
 
   router.post(
-    '/verify-email',
+    '/auth/verify-email',
     auth(),
     zValidator('json', verifyEmailSchema),
     async (c: Context) => {
@@ -587,7 +650,7 @@ export const createAuthRoutes = () => {
   /**
    * Join waitlist route
    */
-  router.post('/api/auth/waitlist', async (c: Context) => {
+  router.post('/auth/waitlist', async (c: Context) => {
     const { email, name, company, useCase } = await c.req.json();
 
     try {
@@ -636,7 +699,7 @@ export const createAuthRoutes = () => {
   /**
    * Get waitlist entry route
    */
-  router.get('/api/auth/waitlist/:email', async (c: Context) => {
+  router.get('/auth/waitlist/:email', async (c: Context) => {
     const email = c.req.param('email');
 
     try {
@@ -679,3 +742,5 @@ export const createAuthRoutes = () => {
 
   return router;
 };
+
+export const createAuthRoutes = withOpenAPI(createBaseAuthRoutes, '/api');
