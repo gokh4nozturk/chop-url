@@ -143,7 +143,7 @@ export function ActivityFeed({ events, className }: ActivityFeedProps) {
       >
         {activityItems.map((item, index) => (
           <motion.div
-            key={item.timestamp + item.id}
+            key={item.title + item.id}
             variants={itemAnimation}
             initial="hidden"
             animate="show"

@@ -28,9 +28,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import useFeedbackStore from '@/lib/store/feedback';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 const feedbackFormSchema = z.object({
@@ -44,41 +46,34 @@ type FeedbackFormValues = z.infer<typeof feedbackFormSchema>;
 
 export function FeedbackDialog() {
   const [open, setOpen] = useState(false);
+  const { sendFeedback, error: feedbackError } = useFeedbackStore();
 
   const form = useForm<FeedbackFormValues>({
     resolver: zodResolver(feedbackFormSchema),
     defaultValues: {
       priority: 'medium',
+      title: '',
+      description: '',
+      category: 'improvement',
     },
   });
 
   async function onSubmit(data: FeedbackFormValues) {
     try {
-      const response = await fetch('/api/feedback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to submit feedback');
-      }
-
-      console.log('Successfully submitted feedback');
-
+      await sendFeedback(data);
       form.reset();
       setOpen(false);
+      toast.success('Feedback submitted successfully');
     } catch (error) {
-      console.error('Failed to submit feedback:', error);
+      console.error(feedbackError);
+      toast.error('Failed to submit feedback');
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="absolute bottom-4 right-6 size-8">
+        <Button variant="outline" className="absolute bottom-6 right-6 size-10">
           <Bird />
         </Button>
       </DialogTrigger>

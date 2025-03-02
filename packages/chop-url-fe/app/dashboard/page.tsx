@@ -176,7 +176,7 @@ export default function DashboardPage() {
           initial="hidden"
           animate="show"
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="col-span-3"
+          className="col-span-4"
         >
           <Card className="h-full transition-all duration-300 hover:shadow-md">
             <CardHeader>
