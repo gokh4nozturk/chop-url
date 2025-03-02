@@ -210,6 +210,23 @@ export const openApiSchema = {
           },
         },
       },
+      Feedback: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          userId: { type: 'string' },
+          title: { type: 'string' },
+          description: { type: 'string' },
+          category: {
+            type: 'string',
+            enum: ['bug', 'feature', 'improvement', 'other'],
+          },
+          priority: { type: 'string', enum: ['low', 'medium', 'high'] },
+          status: { type: 'string', enum: ['open', 'in_progress', 'closed'] },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
     },
   },
   paths: {
@@ -2668,10 +2685,18 @@ export const openApiSchema = {
             'application/json': {
               schema: {
                 type: 'object',
-                required: ['content'],
+                required: ['title', 'description', 'category'],
                 properties: {
-                  content: { type: 'string' },
-                  type: { type: 'string', enum: ['bug', 'feature', 'other'] },
+                  title: { type: 'string' },
+                  description: { type: 'string' },
+                  category: {
+                    type: 'string',
+                    enum: ['bug', 'feature', 'improvement', 'other'],
+                  },
+                  priority: {
+                    type: 'string',
+                    enum: ['low', 'medium', 'high'],
+                  },
                 },
               },
             },
@@ -2689,6 +2714,22 @@ export const openApiSchema = {
                     id: { type: 'string' },
                   },
                 },
+              },
+            },
+          },
+          '400': {
+            description: 'Invalid request body',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Error' },
+              },
+            },
+          },
+          '401': {
+            description: 'Unauthorized',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Error' },
               },
             },
           },
