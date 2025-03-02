@@ -73,7 +73,7 @@ export function FeedbackDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="absolute bottom-6 right-6 size-10">
+        <Button variant="outline" className="fixed bottom-6 right-6 size-10">
           <Bird />
         </Button>
       </DialogTrigger>
