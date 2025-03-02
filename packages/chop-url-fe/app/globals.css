@@ -94,3 +94,86 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.1);
+  }
+  to {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes spin-reverse-slower {
+  from {
+    transform: rotate(360deg) scale(1.1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1);
+  }
+  to {
+    transform: rotate(0deg) scale(1.1);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 15s ease-in-out infinite;
+}
+
+.animate-spin-reverse-slower {
+  animation: spin-reverse-slower 20s ease-in-out infinite;
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 4s ease-in-out infinite;
+}
+
+.bg-grid-black {
+  background-image: linear-gradient(to right, rgb(0 0 0 / 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(0 0 0 / 0.1) 1px, transparent 1px);
+}
