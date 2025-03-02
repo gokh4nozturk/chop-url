@@ -1,13 +1,13 @@
 import { swaggerUI } from '@hono/swagger-ui';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { createWaitListRoutes } from './admin/waitlist/routes';
 import { createAnalyticsRoutes } from './analytics/routes';
 import { createAuthRoutes } from './auth/routes';
 import { createDb } from './db/client';
 import { createDomainRoutes } from './domain/routes';
 import { openApiSchema } from './openapi.js';
 import { createQRRoutes } from './qr/routes';
-import { waitListRouter } from './routes/admin/waitlist';
 import { createStorageRoutes } from './storage/routes';
 import { Env, Variables } from './types';
 import { createUrlRoutes } from './url/routes';
@@ -100,7 +100,7 @@ app.route('/api', createStorageRoutes());
 app.route('/api', createQRRoutes());
 
 // Admin routes
-app.route('/api/admin/waitlist', waitListRouter);
+app.route('/api/admin', createWaitListRoutes());
 
 // Root route - redirect to docs
 app.get('/', (c) => {
