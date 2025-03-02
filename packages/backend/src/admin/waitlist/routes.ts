@@ -12,7 +12,10 @@ export const createWaitListRoutes = () => {
   // WaitList users list
   router.get('/waitlist', async (c) => {
     const db = drizzle(c.env.DB);
-    const emailService = new EmailService(c.env.RESEND_API_KEY);
+    const emailService = new EmailService(
+      c.env.RESEND_API_KEY,
+      c.env.FRONTEND_URL
+    );
     const waitListService = new WaitListServiceImpl(
       db,
       emailService,
@@ -35,7 +38,10 @@ export const createWaitListRoutes = () => {
     zValidator('json', approveWaitListSchema),
     async (c) => {
       const db = drizzle(c.env.DB);
-      const emailService = new EmailService(c.env.RESEND_API_KEY);
+      const emailService = new EmailService(
+        c.env.RESEND_API_KEY,
+        c.env.FRONTEND_URL
+      );
       const waitListService = new WaitListServiceImpl(
         db,
         emailService,

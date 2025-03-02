@@ -1,8 +1,7 @@
 import { D1Database } from '@cloudflare/workers-types';
 import { eq } from 'drizzle-orm';
 import { DrizzleD1Database } from 'drizzle-orm/d1';
-import { AuthService } from '../auth/service';
-import { db } from '../db';
+import { createDb } from '../db/client';
 import { users } from '../db/schema/users';
 import { EmailService } from '../email/service';
 import { UrlService } from '../url/service';
@@ -36,8 +35,12 @@ export async function sendWeeklyUsageReports(
   try {
     console.log('Starting weekly usage reports job');
 
-    const emailService = new EmailService(config.resendApiKey);
-    const urlService = new UrlService(config.baseUrl, database);
+    const emailService = new EmailService(
+      config.resendApiKey,
+      config.frontendUrl
+    );
+    const db = createDb(database.$client);
+    const urlService = new UrlService(config.baseUrl, db);
 
     // Get all users
     const allUsers = await database
@@ -79,13 +82,18 @@ export async function sendWeeklyUsageReports(
           }));
 
         // Send email
-        await emailService.sendUsageReportEmail(user.email, user.name, {
-          totalUrls: analytics.referrers.length,
-          totalVisits: analytics.totalClicks,
-          topUrls,
-          periodStart,
-          periodEnd,
-        });
+        await emailService.sendUsageReportEmail(
+          user.email,
+          user.name,
+          {
+            totalUrls: analytics.referrers.length,
+            totalVisits: analytics.totalClicks,
+            topUrls,
+            periodStart,
+            periodEnd,
+          },
+          config.frontendUrl
+        );
 
         console.log(`Successfully sent report to user ${user.id}`);
       } catch (error) {

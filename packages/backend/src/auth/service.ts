@@ -76,7 +76,10 @@ export class AuthService {
       githubClientSecret: string;
     }
   ) {
-    this.emailService = new EmailService(config.resendApiKey);
+    this.emailService = new EmailService(
+      config.resendApiKey,
+      config.frontendUrl
+    );
   }
 
   async register(credentials: IRegisterCredentials): Promise<IAuthResponse> {

@@ -21,10 +21,11 @@ interface UsageStats {
 export class EmailService {
   private resend: Resend | null = null;
   private frontendUrl: string | null = null;
-  constructor(resendApiKey?: string) {
+
+  constructor(resendApiKey?: string, frontendUrl?: string) {
     if (resendApiKey) {
       this.resend = new Resend(resendApiKey);
-      this.frontendUrl = process.env.FRONTEND_URL ?? null;
+      this.frontendUrl = frontendUrl ?? null;
     }
   }
 
