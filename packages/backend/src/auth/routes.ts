@@ -1,183 +1,14 @@
-import { D1Database } from '@cloudflare/workers-types';
+import { handleError } from '@/utils/error';
 import { z } from '@hono/zod-openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { zValidator } from '@hono/zod-validator';
-import { Context, Hono } from 'hono';
+import { H } from '../types/hono.types';
 import type { RouteGroup } from '../types/route.types';
-import { H } from '../url/types';
-import {
-  registerSchema as registerOpenAPISchema,
-  withOpenAPI,
-} from '../utils/openapi';
+import { withOpenAPI } from '../utils/openapi';
 import { createRouteGroup } from '../utils/route-factory';
 import { authHandlers } from './handlers';
 import { auth } from './middleware';
 import { authSchemas } from './schemas';
-import { AuthError, AuthErrorCode, IUser } from './types';
-
-// Login schema
-const loginSchema = z
-  .object({
-    email: z.string().email(),
-    password: z.string().min(8),
-    code: z.string().optional(),
-  })
-  .openapi('LoginRequest');
-
-const loginResponseSchema = z
-  .object({
-    token: z.string(),
-    user: z
-      .object({
-        id: z.number(),
-        email: z.string().email(),
-        name: z.string().optional(),
-        emailVerified: z.boolean().optional(),
-        twoFactorEnabled: z.boolean().optional(),
-      })
-      .openapi('User'),
-  })
-  .openapi('LoginResponse');
-
-// Register schema
-const registerSchema = z
-  .object({
-    email: z.string().email(),
-    password: z.string().min(8),
-    confirmPassword: z.string(),
-    name: z.string().optional(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ['confirmPassword'],
-  })
-  .openapi('RegisterRequest');
-
-// Two factor code schema
-const twoFactorCodeSchema = z
-  .object({
-    code: z.string().length(6),
-  })
-  .openapi('TwoFactorCode');
-
-// Two factor login schema
-const twoFactorLoginSchema = z
-  .object({
-    token: z.string(),
-    code: z.string().length(6),
-  })
-  .openapi('TwoFactorLogin');
-
-// Update profile schema
-const updateProfileSchema = z
-  .object({
-    name: z.string().optional(),
-    email: z.string().email().optional(),
-  })
-  .openapi('UpdateProfile');
-
-// Update password schema
-const updatePasswordSchema = z
-  .object({
-    currentPassword: z.string(),
-    newPassword: z.string().min(8),
-    confirmPassword: z.string(),
-  })
-  .openapi('UpdatePassword');
-
-// Verify email schema
-const verifyEmailSchema = z
-  .object({
-    token: z.string(),
-  })
-  .openapi('VerifyEmail');
-
-// User profile response schema
-const userProfileSchema = z
-  .object({
-    user: z
-      .object({
-        id: z.number(),
-        email: z.string().email(),
-        name: z.string().optional(),
-        emailVerified: z.boolean().optional(),
-        twoFactorEnabled: z.boolean().optional(),
-      })
-      .openapi('UserProfile'),
-  })
-  .openapi('UserProfileResponse');
-
-// Recovery codes response schema
-const recoveryCodesSchema = z
-  .object({
-    recoveryCodes: z.array(z.string()),
-  })
-  .openapi('RecoveryCodesResponse');
-
-// Two factor setup response schema
-const twoFactorSetupSchema = z
-  .object({
-    success: z.boolean(),
-    recoveryCodes: z.array(z.string()),
-  })
-  .openapi('TwoFactorSetupResponse');
-
-// OAuth URL response schema
-const oAuthUrlResponseSchema = z
-  .object({
-    url: z.string().url(),
-  })
-  .openapi('OAuthUrlResponse');
-
-// OAuth callback response schema
-const oAuthCallbackResponseSchema = z
-  .object({
-    token: z.string(),
-    user: z
-      .object({
-        id: z.number(),
-        email: z.string().email(),
-        name: z.string().optional(),
-        emailVerified: z.boolean().optional(),
-        twoFactorEnabled: z.boolean().optional(),
-      })
-      .openapi('OAuthUser'),
-  })
-  .openapi('OAuthCallbackResponse');
-
-interface Env {
-  DB: D1Database;
-  FRONTEND_URL: string;
-  RESEND_API_KEY: string;
-}
-
-interface Variables {
-  user: IUser;
-}
-
-const ERROR_MESSAGES: Record<AuthErrorCode, string> = {
-  [AuthErrorCode.USER_NOT_FOUND]: 'User not found.',
-  [AuthErrorCode.INVALID_2FA_CODE]: 'Invalid 2FA code.',
-  [AuthErrorCode.TOO_MANY_ATTEMPTS]:
-    'Too many attempts. Please try again later.',
-  [AuthErrorCode.INVALID_TOKEN]: 'Invalid token.',
-  [AuthErrorCode.VALIDATION_ERROR]: 'Validation error.',
-  [AuthErrorCode.DATABASE_ERROR]: 'Database error occurred.',
-  [AuthErrorCode.USER_EXISTS]: 'User already exists.',
-  [AuthErrorCode.INVALID_CREDENTIALS]: 'Invalid credentials.',
-  [AuthErrorCode.INVALID_PROVIDER]: 'Invalid authentication provider.',
-  [AuthErrorCode.OAUTH_ERROR]:
-    'Authentication error occurred. Please try again.',
-  [AuthErrorCode.EXPIRED_TOKEN]:
-    'Your session has expired. Please log in again.',
-  [AuthErrorCode.NO_TOKEN]: 'No token provided.',
-};
-
-// Utility functions
-const getClientIp = (c: Context) =>
-  c.req.header('cf-connecting-ip') ||
-  c.req.header('x-forwarded-for') ||
-  '0.0.0.0';
 
 // Route groups configuration
 const authGroups: RouteGroup[] = [
@@ -257,7 +88,7 @@ const authGroups: RouteGroup[] = [
       {
         path: '/recovery-codes',
         method: 'get',
-        schema: { response: recoveryCodesSchema },
+        schema: { response: authSchemas.recoveryCodes },
         requiresAuth: true,
         description: 'Get 2FA recovery codes',
         handler: authHandlers.getRecoveryCodes,
@@ -266,8 +97,8 @@ const authGroups: RouteGroup[] = [
         path: '/verify-2fa',
         method: 'post',
         schema: {
-          request: twoFactorLoginSchema,
-          response: loginResponseSchema,
+          request: authSchemas.twoFactorLogin,
+          response: authSchemas.loginResponse,
         },
         rateLimit: {
           requests: 3,
@@ -280,7 +111,7 @@ const authGroups: RouteGroup[] = [
         path: '/enable-2fa',
         method: 'post',
         schema: {
-          request: twoFactorCodeSchema,
+          request: authSchemas.twoFactorCode,
           response: z
             .object({ success: z.boolean() })
             .openapi('TwoFactorEnableResponse'),
@@ -293,7 +124,7 @@ const authGroups: RouteGroup[] = [
         path: '/disable-2fa',
         method: 'post',
         schema: {
-          request: twoFactorCodeSchema,
+          request: authSchemas.twoFactorCode,
           response: z
             .object({ success: z.boolean() })
             .openapi('TwoFactorDisableResponse'),
@@ -313,8 +144,8 @@ const authGroups: RouteGroup[] = [
         path: '/',
         method: 'put',
         schema: {
-          request: updateProfileSchema,
-          response: userProfileSchema,
+          request: authSchemas.updateProfile,
+          response: authSchemas.userProfile,
         },
         requiresAuth: true,
         description: 'Update user profile',
@@ -324,7 +155,7 @@ const authGroups: RouteGroup[] = [
         path: '/password',
         method: 'put',
         schema: {
-          request: updatePasswordSchema,
+          request: authSchemas.updatePassword,
           response: z
             .object({ success: z.boolean() })
             .openapi('PasswordUpdateResponse'),
@@ -348,7 +179,7 @@ const authGroups: RouteGroup[] = [
         path: '/verify',
         method: 'post',
         schema: {
-          request: verifyEmailSchema,
+          request: authSchemas.verifyEmail,
           response: z
             .object({ message: z.string() })
             .openapi('EmailVerificationResponse'),
@@ -384,7 +215,7 @@ const authGroups: RouteGroup[] = [
         path: '/:provider',
         method: 'get',
         schema: {
-          response: oAuthUrlResponseSchema,
+          response: authSchemas.oAuthUrlResponse,
         },
         description: 'Initiate OAuth flow',
         handler: authHandlers.getOAuthUrl,
@@ -393,7 +224,7 @@ const authGroups: RouteGroup[] = [
         path: '/:provider/callback',
         method: 'get',
         schema: {
-          response: oAuthCallbackResponseSchema,
+          response: authSchemas.oAuthCallbackResponse,
         },
         description: 'Handle OAuth callback',
         handler: authHandlers.handleOAuthCallback,
@@ -546,28 +377,6 @@ const createBaseAuthRoutes = () => {
   }
 
   return router;
-};
-
-// Error handler
-const handleError = (c: Context, error: unknown) => {
-  console.error('Auth Error:', error);
-
-  if (error instanceof AuthError) {
-    return c.json(
-      {
-        error: ERROR_MESSAGES[error.code] || error.message,
-      },
-      error.code === AuthErrorCode.INVALID_CREDENTIALS ? 401 : 400
-    );
-  }
-
-  return c.json(
-    {
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error',
-    },
-    500
-  );
 };
 
 // Export the router with OpenAPI documentation

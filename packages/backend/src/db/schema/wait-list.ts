@@ -5,12 +5,12 @@ export const waitList = sqliteTable('wait_list', {
   email: text('email').notNull(),
   name: text('name').notNull(),
   company: text('company'),
-  use_case: text('use_case').notNull(),
+  useCase: text('use_case').notNull(),
   status: text('status', {
     enum: ['pending', 'approved', 'rejected', 'invited', 'registered'],
   })
     .notNull()
     .default('pending'),
-  created_at: text('created_at').notNull(),
-  updated_at: text('updated_at').notNull(),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
 });

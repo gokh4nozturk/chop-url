@@ -104,7 +104,8 @@ export const registerRoute = (
   schema?: RouteSchema,
   requiresAuth = false,
   validation?: OpenAPISchemaValidation,
-  metadata?: RouteMetadata
+  metadata?: RouteMetadata,
+  basePath?: string
 ): RouteConfig => {
   // Validate and register schema if provided
   if (schema) {
@@ -193,9 +194,9 @@ export const registerRoute = (
         },
       },
     },
-    description,
-    tags: metadata?.tags || [path.split('/')[1].toUpperCase()],
-    summary: `${method.toUpperCase()} ${path}`,
+    description: description || `${method.toUpperCase()} ${path}`,
+    tags: metadata?.tags || [],
+    summary: description || `${method.toUpperCase()} ${path}`,
   };
 
   if (requiresAuth) {
@@ -230,7 +231,6 @@ export const withOpenAPI = <T = unknown>(
     for (const route of originalRouter.routes) {
       const { method, handler, path } = route;
       const fullPath = `${basePath}${path}`;
-      const description = `${method.toUpperCase()} ${fullPath}`;
 
       // Check if route requires authentication
       const requiresAuth = handler.toString().includes('auth()');
@@ -240,18 +240,31 @@ export const withOpenAPI = <T = unknown>(
       const schema = schemaRegistry.get(key);
 
       // Get metadata from route
-      const metadata = (route as { metadata?: RouteMetadata }).metadata || {};
+      const routeWithMetadata = route as { metadata?: RouteMetadata };
+      const metadata = routeWithMetadata.metadata || {};
+
+      console.log('Route metadata:', metadata);
 
       // Create OpenAPI route with schemas
       const openAPIRoute = registerRoute(
         path,
         method.toLowerCase() as Method,
-        description,
+        (metadata.description as string) ||
+          `${method.toUpperCase()} ${fullPath}`,
         schema,
-        requiresAuth,
-        undefined,
-        metadata
+        requiresAuth || !!metadata.requiresAuth,
+        {
+          description: metadata.description as string,
+          deprecated: !!metadata.deprecated,
+        },
+        {
+          ...metadata,
+          tags: metadata.tags || [],
+        },
+        basePath
       );
+
+      console.log('OpenAPI route:', openAPIRoute);
 
       // Add route with OpenAPI documentation
       openAPIRouter.openapi(

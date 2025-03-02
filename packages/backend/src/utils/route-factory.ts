@@ -47,6 +47,9 @@ export const createRouteGroup = (
 ): RegisteredRoute[] => {
   const { basePath = '', defaultMetadata = {} } = options;
 
+  // Convert group tag to array if it's a string
+  const groupTags = Array.isArray(group.tag) ? group.tag : [group.tag];
+
   return group.routes.map((route) => {
     // Validate route configuration
     validateRouteConfig(route, group.prefix);
@@ -54,24 +57,26 @@ export const createRouteGroup = (
     // Build full path
     const fullPath = `${basePath}${group.prefix}${route.path}`;
 
-    // Merge metadata from different levels
-    const metadata = mergeMetadata(
-      route,
-      group.defaultMetadata,
-      defaultMetadata
-    );
+    // Extract route metadata
+    const { tags: routeTags, ...routeMetadata } = route;
 
-    // Create enriched route
+    // Create enriched route with properly merged metadata
     const enrichedRoute: RegisteredRoute = {
-      ...metadata,
       path: fullPath,
       method: route.method,
       handler: route.handler,
       metadata: {
-        ...metadata,
-        tags: [...(metadata.tags || []), group.tag],
+        ...defaultMetadata,
+        ...group.defaultMetadata,
+        ...routeMetadata,
+        // Use group tags as the primary source of tags
+        tags: groupTags,
+        description:
+          route.description || `${route.method.toUpperCase()} ${fullPath}`,
       },
       schema: route.schema,
+      description:
+        route.description || `${route.method.toUpperCase()} ${fullPath}`,
     };
 
     // Register OpenAPI schema if present
@@ -81,6 +86,13 @@ export const createRouteGroup = (
         deprecated: enrichedRoute.metadata.deprecated,
       });
     }
+
+    // Log for debugging
+    console.log('Enriched route:', {
+      path: enrichedRoute.path,
+      method: enrichedRoute.method,
+      metadata: enrichedRoute.metadata,
+    });
 
     return enrichedRoute;
   });

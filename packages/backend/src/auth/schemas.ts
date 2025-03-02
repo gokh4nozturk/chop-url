@@ -106,6 +106,19 @@ const recoveryCodes = z
   })
   .openapi('RecoveryCodesResponse');
 
+const oAuthUrlResponse = z
+  .object({
+    url: z.string(),
+  })
+  .openapi('OAuthUrlResponse');
+
+const oAuthCallbackResponse = z
+  .object({
+    token: z.string(),
+    user,
+  })
+  .openapi('OAuthCallbackResponse');
+
 // Export all schemas
 export const authSchemas = {
   user,
@@ -121,4 +134,6 @@ export const authSchemas = {
   updatePassword,
   verifyEmail,
   recoveryCodes,
+  oAuthUrlResponse,
+  oAuthCallbackResponse,
 } as const;

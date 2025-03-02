@@ -1,14 +1,14 @@
-import { Env } from 'hono';
-import { Variables } from 'hono/types';
-
 export interface CreateUrlOptions {
   customSlug?: string;
   expiresAt?: string;
   tags?: string[];
   groupId?: number;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmTerm?: string;
+  utmContent?: string;
 }
-
-export type H = { Bindings: Env; Variables: Variables };
 
 export interface UpdateUrlOptions {
   originalUrl?: string;
@@ -17,6 +17,11 @@ export interface UpdateUrlOptions {
   tags?: string[];
   groupId?: number;
   isActive?: boolean;
+  utmSource?: string | null;
+  utmMedium?: string | null;
+  utmCampaign?: string | null;
+  utmTerm?: string | null;
+  utmContent?: string | null;
 }
 
 export interface IUrlGroup {
@@ -91,3 +96,6 @@ export interface IVisit {
   utmTerm: string | null;
   utmContent: string | null;
 }
+
+export const VALID_PERIODS = ['24h', '7d', '30d', '90d'] as const;
+export type Period = (typeof VALID_PERIODS)[number];

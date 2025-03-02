@@ -548,10 +548,8 @@
     "/api/auth/me": {
       "get": {
         "description": "GET /api/auth/me",
-        "tags": [
-          "AUTH"
-        ],
-        "summary": "GET /auth/me",
+        "tags": [],
+        "summary": "GET /api/auth/me",
         "responses": {
           "200": {
             "description": "GET /api/auth/me",
@@ -619,10 +617,8 @@
     "/api/auth/login": {
       "post": {
         "description": "POST /api/auth/login",
-        "tags": [
-          "AUTH"
-        ],
-        "summary": "POST /auth/login",
+        "tags": [],
+        "summary": "POST /api/auth/login",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -701,10 +697,8 @@
     "/api/auth/register": {
       "post": {
         "description": "POST /api/auth/register",
-        "tags": [
-          "AUTH"
-        ],
-        "summary": "POST /auth/register",
+        "tags": [],
+        "summary": "POST /api/auth/register",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -783,10 +777,8 @@
     "/api/auth/2fa/setup": {
       "post": {
         "description": "POST /api/auth/2fa/setup",
-        "tags": [
-          "AUTH"
-        ],
-        "summary": "POST /auth/2fa/setup",
+        "tags": [],
+        "summary": "POST /api/auth/2fa/setup",
         "responses": {
           "200": {
             "description": "POST /api/auth/2fa/setup",
@@ -854,10 +846,8 @@
     "/api/auth/2fa/verify-setup": {
       "post": {
         "description": "POST /api/auth/2fa/verify-setup",
-        "tags": [
-          "AUTH"
-        ],
-        "summary": "POST /auth/2fa/verify-setup",
+        "tags": [],
+        "summary": "POST /api/auth/2fa/verify-setup",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -936,10 +926,8 @@
     "/api/auth/2fa/recovery-codes": {
       "get": {
         "description": "GET /api/auth/2fa/recovery-codes",
-        "tags": [
-          "AUTH"
-        ],
-        "summary": "GET /auth/2fa/recovery-codes",
+        "tags": [],
+        "summary": "GET /api/auth/2fa/recovery-codes",
         "responses": {
           "200": {
             "description": "GET /api/auth/2fa/recovery-codes",
@@ -1007,10 +995,8 @@
     "/api/auth/2fa/verify-2fa": {
       "post": {
         "description": "POST /api/auth/2fa/verify-2fa",
-        "tags": [
-          "AUTH"
-        ],
-        "summary": "POST /auth/2fa/verify-2fa",
+        "tags": [],
+        "summary": "POST /api/auth/2fa/verify-2fa",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -1089,10 +1075,8 @@
     "/api/auth/2fa/enable-2fa": {
       "post": {
         "description": "POST /api/auth/2fa/enable-2fa",
-        "tags": [
-          "AUTH"
-        ],
-        "summary": "POST /auth/2fa/enable-2fa",
+        "tags": [],
+        "summary": "POST /api/auth/2fa/enable-2fa",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -1171,10 +1155,8 @@
     "/api/auth/2fa/disable-2fa": {
       "post": {
         "description": "POST /api/auth/2fa/disable-2fa",
-        "tags": [
-          "AUTH"
-        ],
-        "summary": "POST /auth/2fa/disable-2fa",
+        "tags": [],
+        "summary": "POST /api/auth/2fa/disable-2fa",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -1253,10 +1235,8 @@
     "/api/auth/profile/": {
       "put": {
         "description": "PUT /api/auth/profile/",
-        "tags": [
-          "AUTH"
-        ],
-        "summary": "PUT /auth/profile/",
+        "tags": [],
+        "summary": "PUT /api/auth/profile/",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -1346,10 +1326,8 @@
     "/api/auth/profile/password": {
       "put": {
         "description": "PUT /api/auth/profile/password",
-        "tags": [
-          "AUTH"
-        ],
-        "summary": "PUT /auth/profile/password",
+        "tags": [],
+        "summary": "PUT /api/auth/profile/password",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -1428,10 +1406,8 @@
     "/api/auth/email/verify": {
       "post": {
         "description": "POST /api/auth/email/verify",
-        "tags": [
-          "AUTH"
-        ],
-        "summary": "POST /auth/email/verify",
+        "tags": [],
+        "summary": "POST /api/auth/email/verify",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -1510,10 +1486,8 @@
     "/api/auth/email/resend-verification": {
       "post": {
         "description": "POST /api/auth/email/resend-verification",
-        "tags": [
-          "AUTH"
-        ],
-        "summary": "POST /auth/email/resend-verification",
+        "tags": [],
+        "summary": "POST /api/auth/email/resend-verification",
         "responses": {
           "200": {
             "description": "POST /api/auth/email/resend-verification",
@@ -1581,10 +1555,8 @@
     "/api/auth/oauth/{provider}": {
       "get": {
         "description": "GET /api/auth/oauth/:provider",
-        "tags": [
-          "AUTH"
-        ],
-        "summary": "GET /auth/oauth/:provider",
+        "tags": [],
+        "summary": "GET /api/auth/oauth/:provider",
         "responses": {
           "200": {
             "description": "GET /api/auth/oauth/:provider",
@@ -1652,10 +1624,8 @@
     "/api/auth/oauth/{provider}/callback": {
       "get": {
         "description": "GET /api/auth/oauth/:provider/callback",
-        "tags": [
-          "AUTH"
-        ],
-        "summary": "GET /auth/oauth/:provider/callback",
+        "tags": [],
+        "summary": "GET /api/auth/oauth/:provider/callback",
         "responses": {
           "200": {
             "description": "GET /api/auth/oauth/:provider/callback",
@@ -1723,10 +1693,8 @@
     "/api/auth/password-reset/request": {
       "post": {
         "description": "POST /api/auth/password-reset/request",
-        "tags": [
-          "AUTH"
-        ],
-        "summary": "POST /auth/password-reset/request",
+        "tags": [],
+        "summary": "POST /api/auth/password-reset/request",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -1805,10 +1773,8 @@
     "/api/auth/password-reset/reset": {
       "put": {
         "description": "PUT /api/auth/password-reset/reset",
-        "tags": [
-          "AUTH"
-        ],
-        "summary": "PUT /auth/password-reset/reset",
+        "tags": [],
+        "summary": "PUT /api/auth/password-reset/reset",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -1887,10 +1853,8 @@
     "/api/auth/waitlist/": {
       "post": {
         "description": "POST /api/auth/waitlist/",
-        "tags": [
-          "AUTH"
-        ],
-        "summary": "POST /auth/waitlist/",
+        "tags": [],
+        "summary": "POST /api/auth/waitlist/",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -1969,10 +1933,8 @@
     "/api/auth/waitlist/{email}": {
       "get": {
         "description": "GET /api/auth/waitlist/:email",
-        "tags": [
-          "AUTH"
-        ],
-        "summary": "GET /auth/waitlist/:email",
+        "tags": [],
+        "summary": "GET /api/auth/waitlist/:email",
         "responses": {
           "200": {
             "description": "GET /api/auth/waitlist/:email",
@@ -2040,10 +2002,8 @@
     "/api/shorten": {
       "post": {
         "description": "POST /api/shorten",
-        "tags": [
-          "SHORTEN"
-        ],
-        "summary": "POST /shorten",
+        "tags": [],
+        "summary": "POST /api/shorten",
         "responses": {
           "200": {
             "description": "POST /api/shorten",
@@ -2111,10 +2071,8 @@
     "/api/chop": {
       "post": {
         "description": "POST /api/chop",
-        "tags": [
-          "CHOP"
-        ],
-        "summary": "POST /chop",
+        "tags": [],
+        "summary": "POST /api/chop",
         "responses": {
           "200": {
             "description": "POST /api/chop",
@@ -2182,10 +2140,8 @@
     "/api/urls": {
       "get": {
         "description": "GET /api/urls",
-        "tags": [
-          "URLS"
-        ],
-        "summary": "GET /urls",
+        "tags": [],
+        "summary": "GET /api/urls",
         "responses": {
           "200": {
             "description": "GET /api/urls",
@@ -2253,10 +2209,8 @@
     "/api/urls/{shortId}": {
       "patch": {
         "description": "PATCH /api/urls/:shortId",
-        "tags": [
-          "URLS"
-        ],
-        "summary": "PATCH /urls/:shortId",
+        "tags": [],
+        "summary": "PATCH /api/urls/:shortId",
         "responses": {
           "200": {
             "description": "PATCH /api/urls/:shortId",
@@ -2322,10 +2276,8 @@
       },
       "delete": {
         "description": "DELETE /api/urls/:shortId",
-        "tags": [
-          "URLS"
-        ],
-        "summary": "DELETE /urls/:shortId",
+        "tags": [],
+        "summary": "DELETE /api/urls/:shortId",
         "responses": {
           "200": {
             "description": "DELETE /api/urls/:shortId",
@@ -2391,10 +2343,8 @@
       },
       "get": {
         "description": "GET /api/urls/:shortId",
-        "tags": [
-          "URLS"
-        ],
-        "summary": "GET /urls/:shortId",
+        "tags": [],
+        "summary": "GET /api/urls/:shortId",
         "responses": {
           "200": {
             "description": "GET /api/urls/:shortId",
@@ -2462,10 +2412,8 @@
     "/api/stats/{shortId}": {
       "get": {
         "description": "GET /api/stats/:shortId",
-        "tags": [
-          "STATS"
-        ],
-        "summary": "GET /stats/:shortId",
+        "tags": [],
+        "summary": "GET /api/stats/:shortId",
         "responses": {
           "200": {
             "description": "GET /api/stats/:shortId",
@@ -2533,10 +2481,8 @@
     "/api/stats/{shortId}/visits": {
       "get": {
         "description": "GET /api/stats/:shortId/visits",
-        "tags": [
-          "STATS"
-        ],
-        "summary": "GET /stats/:shortId/visits",
+        "tags": [],
+        "summary": "GET /api/stats/:shortId/visits",
         "responses": {
           "200": {
             "description": "GET /api/stats/:shortId/visits",
@@ -2604,10 +2550,8 @@
     "/api/analytics": {
       "get": {
         "description": "GET /api/analytics",
-        "tags": [
-          "ANALYTICS"
-        ],
-        "summary": "GET /analytics",
+        "tags": [],
+        "summary": "GET /api/analytics",
         "responses": {
           "200": {
             "description": "GET /api/analytics",
@@ -2675,10 +2619,8 @@
     "/api/analytics/export": {
       "get": {
         "description": "GET /api/analytics/export",
-        "tags": [
-          "ANALYTICS"
-        ],
-        "summary": "GET /analytics/export",
+        "tags": [],
+        "summary": "GET /api/analytics/export",
         "responses": {
           "200": {
             "description": "GET /api/analytics/export",
@@ -2746,10 +2688,8 @@
     "/api/url-groups": {
       "post": {
         "description": "POST /api/url-groups",
-        "tags": [
-          "URL-GROUPS"
-        ],
-        "summary": "POST /url-groups",
+        "tags": [],
+        "summary": "POST /api/url-groups",
         "responses": {
           "200": {
             "description": "POST /api/url-groups",
@@ -2815,10 +2755,8 @@
       },
       "get": {
         "description": "GET /api/url-groups",
-        "tags": [
-          "URL-GROUPS"
-        ],
-        "summary": "GET /url-groups",
+        "tags": [],
+        "summary": "GET /api/url-groups",
         "responses": {
           "200": {
             "description": "GET /api/url-groups",
@@ -2886,10 +2824,8 @@
     "/api/url-groups/{id}": {
       "put": {
         "description": "PUT /api/url-groups/:id",
-        "tags": [
-          "URL-GROUPS"
-        ],
-        "summary": "PUT /url-groups/:id",
+        "tags": [],
+        "summary": "PUT /api/url-groups/:id",
         "responses": {
           "200": {
             "description": "PUT /api/url-groups/:id",
@@ -2955,10 +2891,8 @@
       },
       "delete": {
         "description": "DELETE /api/url-groups/:id",
-        "tags": [
-          "URL-GROUPS"
-        ],
-        "summary": "DELETE /url-groups/:id",
+        "tags": [],
+        "summary": "DELETE /api/url-groups/:id",
         "responses": {
           "200": {
             "description": "DELETE /api/url-groups/:id",
