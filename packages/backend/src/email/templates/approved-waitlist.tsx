@@ -4,6 +4,7 @@ import {
   Head,
   Heading,
   Html,
+  Img,
   Link,
   Preview,
   Text,
@@ -24,6 +25,13 @@ export const ApprovedWaitListEmail = ({
     <Preview>Welcome to Chop URL - Your Account is Ready!</Preview>
     <Body style={main}>
       <Container style={container}>
+        <Img
+          src="https://storage.chop-url.com/assets/logo.svg"
+          alt="ChopURL Logo"
+          width="100"
+          height="100"
+          style={logo}
+        />
         <Heading style={h1}>Welcome to Chop URL!</Heading>
         <Text style={text}>
           Your waitlist application has been approved and your account is now
@@ -103,4 +111,10 @@ const footer = {
   fontSize: '14px',
   lineHeight: '22px',
   margin: '48px 0 0',
+};
+
+const logo = {
+  width: '100px',
+  height: '100px',
+  marginBottom: '20px',
 };
