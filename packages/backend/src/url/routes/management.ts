@@ -5,7 +5,7 @@ import { UrlService } from '../service';
 
 export const managementRoutes: RouteGroup[] = [
   {
-    prefix: '/api/urls',
+    prefix: '/urls',
     tag: 'URL_MANAGEMENT',
     description: 'URL management endpoints',
     defaultMetadata: {
@@ -40,7 +40,7 @@ export const managementRoutes: RouteGroup[] = [
         },
       },
       {
-        path: '',
+        path: '/',
         method: 'get',
         description: 'Get all URLs for the authenticated user',
         handler: async (c: Context) => {

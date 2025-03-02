@@ -521,6 +521,27 @@ export class UrlService {
     }));
   }
 
+  async getUrlGroup(
+    groupId: number,
+    userId: number
+  ): Promise<IUrlGroup | null> {
+    const [group] = await this.db
+      .select()
+      .from(urlGroups)
+      .where(and(eq(urlGroups.id, groupId), eq(urlGroups.userId, userId)));
+
+    if (!group) {
+      return null;
+    }
+
+    return {
+      ...group,
+      description: group.description || undefined,
+      createdAt: group.createdAt || '',
+      updatedAt: group.updatedAt || undefined,
+    };
+  }
+
   async updateUrl(
     shortId: string,
     userId: number,

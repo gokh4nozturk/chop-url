@@ -6,9 +6,9 @@ import { UrlService } from '../service';
 
 export const shorteningRoutes: RouteGroup[] = [
   {
-    prefix: '/api',
+    prefix: '/urls',
     tag: 'URL_SHORTENING',
-    description: 'URL shortening endpoints',
+    description: 'URL shortening operations',
     defaultMetadata: {
       requiresAuth: false,
     },
@@ -52,15 +52,8 @@ export const shorteningRoutes: RouteGroup[] = [
           response: urlResponseSchema,
         },
       },
-    ],
-  },
-  {
-    prefix: '/chop',
-    tag: 'URL_SHORTENING',
-    description: 'Alternative URL shortening endpoint',
-    routes: [
       {
-        path: '',
+        path: '/chop',
         method: 'post',
         schema: {
           request: createUrlSchema,

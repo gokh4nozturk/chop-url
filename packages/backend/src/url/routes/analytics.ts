@@ -6,28 +6,25 @@ import { Period, VALID_PERIODS } from '../types';
 
 export const analyticsRoutes: RouteGroup[] = [
   {
-    prefix: '/api/analytics',
-    tag: 'URL_ANALYTICS',
-    description: 'URL analytics endpoints',
+    prefix: '/urls',
+    tag: 'URL_STATISTICS',
+    description: 'URL statistics endpoints',
     defaultMetadata: {
       requiresAuth: true,
     },
     routes: [
       {
-        path: '/:shortId/stats',
+        path: '/:id/statistics',
         method: 'get',
-        description: 'Get URL statistics',
+        description: 'Get statistics for a specific URL',
         handler: async (c: Context) => {
           try {
-            const { shortId } = c.req.param();
+            const { id } = c.req.param();
             const { period = '24h' } = c.req.query();
             const db = c.get('db');
 
             const urlService = new UrlService(c.env.BASE_URL, db);
-            const stats = await urlService.getUrlStats(
-              shortId,
-              period as Period
-            );
+            const stats = await urlService.getUrlStats(id, period as Period);
 
             if (!stats) {
               return c.json({ error: 'URL not found' }, 404);
@@ -44,9 +41,9 @@ export const analyticsRoutes: RouteGroup[] = [
         },
       },
       {
-        path: '',
+        path: '/statistics',
         method: 'get',
-        description: 'Get user analytics',
+        description: 'Get statistics for all URLs of the authenticated user',
         handler: async (c: Context) => {
           try {
             const user = c.get('user');
@@ -61,8 +58,8 @@ export const analyticsRoutes: RouteGroup[] = [
 
             return c.json(analytics, 200);
           } catch (error) {
-            console.error('Error fetching user analytics:', error);
-            return c.json({ error: 'Failed to fetch user analytics' }, 500);
+            console.error('Error fetching URL statistics:', error);
+            return c.json({ error: 'Failed to fetch URL statistics' }, 500);
           }
         },
         schema: {
@@ -70,9 +67,9 @@ export const analyticsRoutes: RouteGroup[] = [
         },
       },
       {
-        path: '/export',
+        path: '/statistics/export',
         method: 'get',
-        description: 'Export analytics data',
+        description: 'Export URL statistics data',
         handler: async (c: Context) => {
           try {
             const user = c.get('user');
@@ -96,8 +93,8 @@ export const analyticsRoutes: RouteGroup[] = [
 
             return c.json(data, 200);
           } catch (error) {
-            console.error('Error exporting analytics:', error);
-            return c.json({ error: 'Failed to export analytics' }, 500);
+            console.error('Error exporting statistics:', error);
+            return c.json({ error: 'Failed to export statistics' }, 500);
           }
         },
         schema: {

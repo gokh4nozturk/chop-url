@@ -7,9 +7,9 @@ import {
 } from '../schemas';
 import { UrlService } from '../service';
 
-export const groupRoutes: RouteGroup[] = [
+export const urlGroupRoutes: RouteGroup[] = [
   {
-    prefix: '/url-groups',
+    prefix: '/urls',
     tag: 'URL_GROUPS',
     description: 'URL group management endpoints',
     defaultMetadata: {
@@ -17,9 +17,31 @@ export const groupRoutes: RouteGroup[] = [
     },
     routes: [
       {
-        path: '',
+        path: '/groups',
+        method: 'get',
+        description: 'List all URL groups for the authenticated user',
+        handler: async (c: Context) => {
+          try {
+            const user = c.get('user');
+            const db = c.get('db');
+
+            const urlService = new UrlService(c.env.BASE_URL, db);
+            const groups = await urlService.getUserUrlGroups(user.id);
+
+            return c.json(groups, 200);
+          } catch (error) {
+            console.error('Error fetching URL groups:', error);
+            return c.json({ error: 'Failed to fetch URL groups' }, 500);
+          }
+        },
+        schema: {
+          response: urlGroupResponseSchema,
+        },
+      },
+      {
+        path: '/groups',
         method: 'post',
-        description: 'Create a URL group',
+        description: 'Create a new URL group',
         handler: async (c: Context) => {
           try {
             const body = await c.req.json();
@@ -34,7 +56,7 @@ export const groupRoutes: RouteGroup[] = [
               user.id
             );
 
-            return c.json(group, 200);
+            return c.json(group, 201);
           } catch (error) {
             console.error('Error creating URL group:', error);
 
@@ -51,9 +73,36 @@ export const groupRoutes: RouteGroup[] = [
         },
       },
       {
-        path: '/:id',
+        path: '/groups/:id',
+        method: 'get',
+        description: 'Get a specific URL group',
+        handler: async (c: Context) => {
+          try {
+            const groupId = parseInt(c.req.param('id'));
+            const user = c.get('user');
+            const db = c.get('db');
+
+            const urlService = new UrlService(c.env.BASE_URL, db);
+            const group = await urlService.getUrlGroup(groupId, user.id);
+
+            if (!group) {
+              return c.json({ error: 'URL group not found' }, 404);
+            }
+
+            return c.json(group, 200);
+          } catch (error) {
+            console.error('Error fetching URL group:', error);
+            return c.json({ error: 'Failed to fetch URL group' }, 500);
+          }
+        },
+        schema: {
+          response: urlGroupResponseSchema,
+        },
+      },
+      {
+        path: '/groups/:id',
         method: 'put',
-        description: 'Update a URL group',
+        description: 'Update a specific URL group',
         handler: async (c: Context) => {
           try {
             const groupId = parseInt(c.req.param('id'));
@@ -89,9 +138,9 @@ export const groupRoutes: RouteGroup[] = [
         },
       },
       {
-        path: '/:id',
+        path: '/groups/:id',
         method: 'delete',
-        description: 'Delete a URL group',
+        description: 'Delete a specific URL group',
         handler: async (c: Context) => {
           try {
             const groupId = parseInt(c.req.param('id'));
@@ -113,28 +162,6 @@ export const groupRoutes: RouteGroup[] = [
             }
 
             return c.json({ error: 'Failed to delete URL group' }, 500);
-          }
-        },
-        schema: {
-          response: urlGroupResponseSchema,
-        },
-      },
-      {
-        path: '',
-        method: 'get',
-        description: 'Get all URL groups for the authenticated user',
-        handler: async (c: Context) => {
-          try {
-            const user = c.get('user');
-            const db = c.get('db');
-
-            const urlService = new UrlService(c.env.BASE_URL, db);
-            const groups = await urlService.getUserUrlGroups(user.id);
-
-            return c.json(groups, 200);
-          } catch (error) {
-            console.error('Error fetching URL groups:', error);
-            return c.json({ error: 'Failed to fetch URL groups' }, 500);
           }
         },
         schema: {

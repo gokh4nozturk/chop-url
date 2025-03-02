@@ -6,7 +6,7 @@ import { H } from '../../types/hono.types';
 import { handleError } from '../../utils/error';
 import { createRouteGroup } from '../../utils/route-factory';
 import { analyticsRoutes } from './analytics';
-import { groupRoutes } from './groups';
+import { urlGroupRoutes } from './groups';
 import { managementRoutes } from './management';
 import { shorteningRoutes } from './shortening';
 
@@ -16,7 +16,7 @@ const createBaseUrlRoutes = () => {
     ...shorteningRoutes,
     ...managementRoutes,
     ...analyticsRoutes,
-    ...groupRoutes,
+    ...urlGroupRoutes,
   ];
 
   const router = new OpenAPIHono<H>();
