@@ -1,7 +1,8 @@
 import { zValidator } from '@hono/zod-validator';
 import { drizzle } from 'drizzle-orm/d1';
 import { Hono } from 'hono';
-import { Context } from '../../types';
+import { auth } from '../../auth/middleware';
+import { Context, Env, Variables } from '../../types';
 import { FeedbackService } from './service';
 import {
   createFeedbackSchema,
@@ -10,22 +11,26 @@ import {
 } from './types';
 
 export const createFeedbackRoutes = () => {
-  const router = new Hono<Context>();
+  const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
   router.post(
     '/feedback',
+    auth(),
     zValidator('json', createFeedbackSchema),
     async (c) => {
       const db = drizzle(c.env.DB);
       const body = c.req.valid('json');
-      const userId = c.get('userId');
+      const user = c.get('user');
 
-      if (!userId) {
+      if (!user) {
         return c.json({ error: 'Unauthorized' }, 401);
       }
 
       const feedbackService = new FeedbackService(db);
-      const result = await feedbackService.createFeedback(userId, body);
+      const result = await feedbackService.createFeedback(
+        String(user.id),
+        body
+      );
 
       return c.json(
         { message: 'Feedback submitted successfully', id: result.id },
@@ -34,23 +39,24 @@ export const createFeedbackRoutes = () => {
     }
   );
 
-  router.get('/feedback', async (c) => {
+  router.get('/feedback', auth(), async (c) => {
     const db = drizzle(c.env.DB);
-    const userId = c.get('userId');
+    const user = c.get('user');
 
-    if (!userId) {
+    if (!user) {
       return c.json({ error: 'Unauthorized' }, 401);
     }
 
     const feedbackService = new FeedbackService(db);
-    const userFeedback = await feedbackService.getFeedbackByUserId(userId);
+    const userFeedback = await feedbackService.getFeedbackByUserId(
+      String(user.id)
+    );
 
     return c.json(userFeedback);
   });
 
   // Admin routes
-  router.get('/feedback/all', async (c) => {
-    // TODO: Add admin check middleware
+  router.get('/feedback/all', auth(), async (c) => {
     const db = drizzle(c.env.DB);
     const feedbackService = new FeedbackService(db);
     const allFeedback = await feedbackService.getAllFeedback();
@@ -59,9 +65,9 @@ export const createFeedbackRoutes = () => {
 
   router.patch(
     '/feedback/:id/status',
+    auth(),
     zValidator('json', updateFeedbackStatusSchema),
     async (c) => {
-      // TODO: Add admin check middleware
       const id = c.req.param('id');
       const { status } = c.req.valid('json');
       const db = drizzle(c.env.DB);
@@ -75,9 +81,9 @@ export const createFeedbackRoutes = () => {
 
   router.patch(
     '/feedback/:id/priority',
+    auth(),
     zValidator('json', updateFeedbackPrioritySchema),
     async (c) => {
-      // TODO: Add admin check middleware
       const id = c.req.param('id');
       const { priority } = c.req.valid('json');
       const db = drizzle(c.env.DB);
@@ -89,8 +95,7 @@ export const createFeedbackRoutes = () => {
     }
   );
 
-  router.delete('/feedback/:id', async (c) => {
-    // TODO: Add admin check middleware
+  router.delete('/feedback/:id', auth(), async (c) => {
     const id = c.req.param('id');
     const db = drizzle(c.env.DB);
 

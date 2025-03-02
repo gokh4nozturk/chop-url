@@ -1,7 +1,17 @@
 import { D1Database, R2Bucket } from '@cloudflare/workers-types';
 import { DrizzleD1Database } from 'drizzle-orm/d1';
-import { ContextVariables } from 'hono';
+import { Context as HonoContext } from 'hono';
 import * as schema from './db/schema';
+
+export interface IUser {
+  id: number;
+  email: string;
+  name: string;
+  isEmailVerified: boolean;
+  isTwoFactorEnabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface Env {
   BUCKET: R2Bucket;
@@ -32,12 +42,10 @@ export type Bindings = {
   ENVIRONMENT: string;
 };
 
-export type Variables = {
+export interface Variables {
   db: DrizzleD1Database<typeof schema>;
   userId?: string;
-};
+  user?: IUser;
+}
 
-export type Context = {
-  Bindings: Bindings;
-  Variables: Variables;
-};
+export type Context = HonoContext<{ Bindings: Env; Variables: Variables }>;
