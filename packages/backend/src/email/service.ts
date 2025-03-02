@@ -1,4 +1,6 @@
+import { renderAsync } from '@react-email/render';
 import { Resend } from 'resend';
+import { ApprovedWaitListEmail } from './templates/approved-waitlist';
 
 interface UsageStats {
   totalUrls: number;
@@ -306,6 +308,45 @@ export class EmailService {
         name,
       });
       throw new Error(`Email could not be sent: ${(error as Error).message}`);
+    }
+  }
+
+  async sendApprovedWaitListEmail(
+    to: string,
+    temporaryPassword: string,
+    loginUrl: string
+  ): Promise<void> {
+    try {
+      if (!this.resend) {
+        throw new Error('Resend client is not initialized');
+      }
+
+      const html = await renderAsync(
+        ApprovedWaitListEmail({
+          temporaryPassword,
+          loginUrl,
+        })
+      );
+
+      const { data, error } = await this.resend.emails.send({
+        from: 'Chop URL <noreply@chopurl.com>',
+        to,
+        subject: 'Welcome to Chop URL - Your Account is Ready!',
+        html,
+      });
+
+      if (error) {
+        console.error('Failed to send welcome email:', error);
+        throw new Error('Failed to send welcome email');
+      }
+
+      console.log('EmailService: Email sent successfully', data);
+    } catch (error) {
+      console.error('EmailService: Error sending email:', {
+        error: error instanceof Error ? error.message : error,
+        stack: error instanceof Error ? error.stack : undefined,
+        to,
+      });
     }
   }
 }

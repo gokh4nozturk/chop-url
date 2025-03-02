@@ -10,15 +10,15 @@ import {
 } from '@react-email/components';
 import * as React from 'react';
 
-interface WelcomeEmailProps {
+interface ApprovedWaitListEmailProps {
   temporaryPassword: string;
   loginUrl: string;
 }
 
-export const WelcomeEmail = ({
+export const ApprovedWaitListEmail = ({
   temporaryPassword,
   loginUrl,
-}: WelcomeEmailProps) => (
+}: ApprovedWaitListEmailProps) => (
   <Html>
     <Head />
     <Preview>Welcome to Chop URL - Your Account is Ready!</Preview>
@@ -104,5 +104,3 @@ const footer = {
   lineHeight: '22px',
   margin: '48px 0 0',
 };
-
-export default WelcomeEmail;

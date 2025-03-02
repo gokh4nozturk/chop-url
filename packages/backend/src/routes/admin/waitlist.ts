@@ -4,10 +4,9 @@ import { drizzle } from 'drizzle-orm/d1';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { users, waitList } from '../../db/schema';
-import { sendWelcomeEmail } from '../../email/sendEmail';
+import { EmailService } from '../../email/service';
 import { Env } from '../../types';
 import { generateTemporaryPassword, hashPassword } from '../../utils/password';
-
 const waitListRouter = new Hono<{ Bindings: Env }>();
 
 // WaitList users list
@@ -34,6 +33,7 @@ waitListRouter.post(
   async (c) => {
     const db = drizzle(c.env.DB);
     const { email } = c.req.valid('json');
+    const frontendUrl = c.env.FRONTEND_URL;
 
     // Check if WaitList user exists
     const waitListUser = await db
@@ -55,7 +55,7 @@ waitListRouter.post(
     const hashedPassword = await hashPassword(temporaryPassword);
 
     try {
-      // Kullanıcı hesabını oluştur
+      // Create user account
       await db.insert(users).values({
         email,
         name: waitListUser.name,
@@ -70,11 +70,12 @@ waitListRouter.post(
         .where(eq(waitList.email, email));
 
       // Send welcome email
-      await sendWelcomeEmail({
-        to: email,
+      const emailService = new EmailService(c.env.RESEND_API_KEY);
+      await emailService.sendApprovedWaitListEmail(
+        email,
         temporaryPassword,
-        loginUrl: 'https://chopurl.com/login',
-      });
+        `${frontendUrl}/login`
+      );
 
       return c.json({
         success: true,
