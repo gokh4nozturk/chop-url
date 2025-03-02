@@ -1,5 +1,5 @@
-import { randomBytes, scrypt } from 'crypto';
-import { promisify } from 'util';
+import { randomBytes, scrypt } from 'node:crypto';
+import { promisify } from 'node:util';
 
 const scryptAsync = promisify(scrypt);
 

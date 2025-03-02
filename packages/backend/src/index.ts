@@ -7,6 +7,7 @@ import { createDb } from './db/client';
 import { createDomainRoutes } from './domain/routes';
 import { openApiSchema } from './openapi.js';
 import { createQRRoutes } from './qr/routes';
+import { waitListRouter } from './routes/admin/waitlist';
 import { createStorageRoutes } from './storage/routes';
 import { Env, Variables } from './types';
 import { createUrlRoutes } from './url/routes';
@@ -97,6 +98,9 @@ app.route('/api', createDomainRoutes());
 app.route('/api', createAnalyticsRoutes());
 app.route('/api', createStorageRoutes());
 app.route('/api', createQRRoutes());
+
+// Admin routes
+app.route('/api/admin/waitlist', waitListRouter);
 
 // Root route - redirect to docs
 app.get('/', (c) => {

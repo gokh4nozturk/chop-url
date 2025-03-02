@@ -6,21 +6,18 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 interface SendWelcomeEmailParams {
   to: string;
-  username: string;
   temporaryPassword: string;
   loginUrl: string;
 }
 
 export const sendWelcomeEmail = async ({
   to,
-  username,
   temporaryPassword,
   loginUrl,
 }: SendWelcomeEmailParams) => {
   try {
     const html = await renderAsync(
       WelcomeEmail({
-        username,
         temporaryPassword,
         loginUrl,
       })

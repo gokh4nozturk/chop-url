@@ -11,13 +11,11 @@ import {
 import * as React from 'react';
 
 interface WelcomeEmailProps {
-  username: string;
   temporaryPassword: string;
   loginUrl: string;
 }
 
 export const WelcomeEmail = ({
-  username,
   temporaryPassword,
   loginUrl,
 }: WelcomeEmailProps) => (
@@ -27,7 +25,6 @@ export const WelcomeEmail = ({
     <Body style={main}>
       <Container style={container}>
         <Heading style={h1}>Welcome to Chop URL!</Heading>
-        <Text style={text}>Hi {username},</Text>
         <Text style={text}>
           Your waitlist application has been approved and your account is now
           ready to use. Here are your temporary login credentials:
