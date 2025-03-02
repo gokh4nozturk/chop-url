@@ -3,7 +3,7 @@ import { z } from '@hono/zod-openapi';
 import { zValidator } from '@hono/zod-validator';
 import { Context, Hono } from 'hono';
 import { H } from '../url/types';
-import { withOpenAPI } from '../utils/openapi';
+import { registerSchema as register, withOpenAPI } from '../utils/openapi';
 import { auth } from './middleware.js';
 import { AuthService } from './service.js';
 import {
@@ -16,62 +16,37 @@ import {
   OAuthProvider,
 } from './types.js';
 
+// Login schema
 const loginSchema = z
   .object({
-    email: z.string().email().openapi({
-      example: 'user@example.com',
-      description: 'User email address',
-    }),
-    password: z.string().min(6).openapi({
-      example: 'password123',
-      description: 'User password (min 6 characters)',
-    }),
+    email: z.string().email(),
+    password: z.string().min(8),
+    code: z.string().optional(),
   })
   .openapi('LoginRequest');
 
 const loginResponseSchema = z
   .object({
-    token: z.string().openapi({
-      example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-      description: 'JWT token for authentication',
-    }),
+    token: z.string(),
     user: z
       .object({
-        id: z.number().openapi({
-          example: 1,
-          description: 'User ID',
-        }),
-        email: z.string().email().openapi({
-          example: 'user@example.com',
-          description: 'User email',
-        }),
-        name: z.string().openapi({
-          example: 'John Doe',
-          description: 'User full name',
-        }),
+        id: z.number(),
+        email: z.string().email(),
+        name: z.string().optional(),
+        emailVerified: z.boolean().optional(),
+        twoFactorEnabled: z.boolean().optional(),
       })
-      .openapi('UserInfo'),
+      .openapi('User'),
   })
   .openapi('LoginResponse');
 
+// Register schema
 const registerSchema = z
   .object({
-    email: z.string().email().openapi({
-      example: 'user@example.com',
-      description: 'User email address',
-    }),
-    password: z.string().min(6).openapi({
-      example: 'password123',
-      description: 'User password (min 6 characters)',
-    }),
-    name: z.string().min(1).openapi({
-      example: 'John Doe',
-      description: 'User full name',
-    }),
-    confirmPassword: z.string().min(6).openapi({
-      example: 'password123',
-      description: 'Confirm password (must match password)',
-    }),
+    email: z.string().email(),
+    password: z.string().min(8),
+    confirmPassword: z.string(),
+    name: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -79,38 +54,74 @@ const registerSchema = z
   })
   .openapi('RegisterRequest');
 
-const twoFactorCodeSchema = z.object({
-  code: z.string().length(6).regex(/^\d+$/),
-});
+// Two factor code schema
+const twoFactorCodeSchema = z
+  .object({
+    code: z.string().length(6),
+  })
+  .openapi('TwoFactorCode');
 
-const twoFactorLoginSchema = z.object({
-  email: z.string().email(),
-  code: z.string().length(6).regex(/^\d+$/),
-});
+// Two factor login schema
+const twoFactorLoginSchema = z
+  .object({
+    token: z.string(),
+    code: z.string().length(6),
+  })
+  .openapi('TwoFactorLogin');
 
-const updateProfileSchema = z.object({
-  email: z.string().email(),
-  name: z.string().min(1).max(50),
-});
+// Update profile schema
+const updateProfileSchema = z
+  .object({
+    name: z.string().optional(),
+    email: z.string().email().optional(),
+  })
+  .openapi('UpdateProfile');
 
+// Update password schema
 const updatePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1),
-    newPassword: z.string().min(8).max(100),
+    currentPassword: z.string(),
+    newPassword: z.string().min(8),
     confirmPassword: z.string(),
   })
-  .refine(
-    (data: { newPassword: string; confirmPassword: string }) =>
-      data.newPassword === data.confirmPassword,
-    {
-      message: "Passwords don't match",
-      path: ['confirmPassword'],
-    }
-  );
+  .openapi('UpdatePassword');
 
-const verifyEmailSchema = z.object({
-  token: z.string().min(1),
-});
+// Verify email schema
+const verifyEmailSchema = z
+  .object({
+    token: z.string(),
+  })
+  .openapi('VerifyEmail');
+
+// User profile response schema
+const userProfileSchema = z
+  .object({
+    user: z
+      .object({
+        id: z.number(),
+        email: z.string().email(),
+        name: z.string().optional(),
+        emailVerified: z.boolean().optional(),
+        twoFactorEnabled: z.boolean().optional(),
+      })
+      .openapi('UserProfile'),
+  })
+  .openapi('UserProfileResponse');
+
+// Recovery codes response schema
+const recoveryCodesSchema = z
+  .object({
+    recoveryCodes: z.array(z.string()),
+  })
+  .openapi('RecoveryCodesResponse');
+
+// Two factor setup response schema
+const twoFactorSetupSchema = z
+  .object({
+    success: z.boolean(),
+    recoveryCodes: z.array(z.string()),
+  })
+  .openapi('TwoFactorSetupResponse');
 
 interface Env {
   DB: D1Database;
@@ -140,7 +151,162 @@ const ERROR_MESSAGES: Record<AuthErrorCode, string> = {
   [AuthErrorCode.NO_TOKEN]: 'No token provided.',
 };
 
+// Register schemas for all routes
+const registerAuthSchemas = () => {
+  // /auth/me
+  register('/auth/me', 'get', {
+    response: userProfileSchema,
+  });
+
+  // /auth/login
+  register('/auth/login', 'post', {
+    request: loginSchema,
+    response: loginResponseSchema,
+  });
+
+  // /auth/register
+  register('/auth/register', 'post', {
+    request: registerSchema,
+    response: loginResponseSchema,
+  });
+
+  // /auth/setup-2fa
+  register('/auth/setup-2fa', 'post', {
+    response: z
+      .object({
+        qrCode: z.string(),
+        secret: z.string(),
+      })
+      .openapi('TwoFactorSetupInitResponse'),
+  });
+
+  // /auth/verify-2fa-setup
+  register('/auth/verify-2fa-setup', 'post', {
+    request: twoFactorCodeSchema,
+    response: twoFactorSetupSchema,
+  });
+
+  // /auth/recovery-codes
+  register('/auth/recovery-codes', 'get', {
+    response: recoveryCodesSchema,
+  });
+
+  // /auth/verify-2fa
+  register('/auth/verify-2fa', 'post', {
+    request: twoFactorLoginSchema,
+    response: loginResponseSchema,
+  });
+
+  // /auth/enable-2fa
+  register('/auth/enable-2fa', 'post', {
+    request: twoFactorCodeSchema,
+    response: z
+      .object({ success: z.boolean() })
+      .openapi('TwoFactorEnableResponse'),
+  });
+
+  // /auth/disable-2fa
+  register('/auth/disable-2fa', 'post', {
+    request: twoFactorCodeSchema,
+    response: z
+      .object({ success: z.boolean() })
+      .openapi('TwoFactorDisableResponse'),
+  });
+
+  // /auth/profile
+  register('/auth/profile', 'put', {
+    request: updateProfileSchema,
+    response: userProfileSchema,
+  });
+
+  // /auth/password
+  register('/auth/password', 'put', {
+    request: updatePasswordSchema,
+    response: z
+      .object({ success: z.boolean() })
+      .openapi('PasswordUpdateResponse'),
+  });
+
+  // /auth/verify-email
+  register('/auth/verify-email', 'post', {
+    request: verifyEmailSchema,
+    response: z
+      .object({ message: z.string() })
+      .openapi('EmailVerificationResponse'),
+  });
+
+  // /auth/resend-verification-email
+  register('/auth/resend-verification-email', 'post', {
+    response: z
+      .object({ message: z.string() })
+      .openapi('ResendVerificationResponse'),
+  });
+
+  // /auth/request-password-reset
+  register('/auth/request-password-reset', 'post', {
+    request: z
+      .object({ email: z.string().email() })
+      .openapi('PasswordResetRequestSchema'),
+    response: z
+      .object({ message: z.string() })
+      .openapi('PasswordResetRequestResponse'),
+  });
+
+  // /auth/reset-password
+  register('/auth/reset-password', 'put', {
+    request: z
+      .object({
+        token: z.string(),
+        newPassword: z.string().min(8),
+        confirmPassword: z.string(),
+      })
+      .openapi('PasswordResetSchema'),
+    response: z
+      .object({ message: z.string() })
+      .openapi('PasswordResetResponse'),
+  });
+
+  // /auth/waitlist
+  register('/auth/waitlist', 'post', {
+    request: z
+      .object({
+        email: z.string().email(),
+        name: z.string(),
+        company: z.string().optional(),
+        useCase: z.string().optional(),
+      })
+      .openapi('WaitlistRequestSchema'),
+    response: z
+      .object({
+        id: z.number(),
+        email: z.string(),
+        name: z.string(),
+        company: z.string().optional(),
+        useCase: z.string().optional(),
+        createdAt: z.string(),
+      })
+      .openapi('WaitlistResponse'),
+  });
+
+  // /auth/waitlist/:email
+  register('/auth/waitlist/:email', 'get', {
+    response: z
+      .object({
+        id: z.number(),
+        email: z.string(),
+        name: z.string(),
+        company: z.string().optional(),
+        useCase: z.string().optional(),
+        createdAt: z.string(),
+      })
+      .openapi('WaitlistEntryResponse'),
+  });
+};
+
 const createBaseAuthRoutes = () => {
+  // Register all schemas
+  registerAuthSchemas();
+
   const router = new Hono<H>();
 
   router.get('/auth/me', auth(), async (c: Context) => {
