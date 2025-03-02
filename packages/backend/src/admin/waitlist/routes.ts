@@ -13,7 +13,12 @@ export const createWaitListRoutes = () => {
   router.get('/waitlist', async (c) => {
     const db = drizzle(c.env.DB);
     const emailService = new EmailService(c.env.RESEND_API_KEY);
-    const waitListService = new WaitListServiceImpl(db, emailService);
+    const waitListService = new WaitListServiceImpl(
+      db,
+      emailService,
+      c.env.FRONTEND_URL,
+      c.env.RESEND_API_KEY
+    );
 
     try {
       const waitListUsers = await waitListService.getWaitListUsers();
@@ -31,7 +36,12 @@ export const createWaitListRoutes = () => {
     async (c) => {
       const db = drizzle(c.env.DB);
       const emailService = new EmailService(c.env.RESEND_API_KEY);
-      const waitListService = new WaitListServiceImpl(db, emailService);
+      const waitListService = new WaitListServiceImpl(
+        db,
+        emailService,
+        c.env.FRONTEND_URL,
+        c.env.RESEND_API_KEY
+      );
       const { email } = c.req.valid('json');
       const frontendUrl = c.env.FRONTEND_URL;
 
