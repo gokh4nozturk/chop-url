@@ -15,6 +15,13 @@
       "when": 1740912505053,
       "tag": "0001_quick_electro",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1740931944778,
+      "tag": "0002_curious_wolfpack",
+      "breakpoints": true
     }
   ]
 }
