@@ -3,6 +3,7 @@
 import { StatGroup } from '@/components/analytics/stat-group';
 import { ActivityFeed } from '@/components/dashboard/activity-feed';
 import { RecentLinks } from '@/components/dashboard/recent-links';
+import { Bird } from '@/components/icons/bird';
 import FrameIcon from '@/components/icons/frame';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -188,6 +189,7 @@ export default function DashboardPage() {
           </Card>
         </motion.div>
       </div>
+      <Bird className="absolute bottom-0 right-0 size-10" />
     </motion.div>
   );
 }
