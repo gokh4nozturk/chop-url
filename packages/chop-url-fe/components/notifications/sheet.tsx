@@ -7,13 +7,17 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { useAuth } from '@/lib/auth-context';
 import { Bell, Construction } from 'lucide-react';
 
 export function NotificationsSheet() {
+  const { user } = useAuth();
+
   return (
     <Sheet>
       <SheetTrigger asChild>
         <Button
+          disabled={!user}
           variant="ghost"
           size="icon"
           className="w-9 h-9"
