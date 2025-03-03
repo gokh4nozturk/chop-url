@@ -6024,12 +6024,12 @@
     },
     "/api/admin/waitlist/": {
       "get": {
-        "description": "GET /api/waitlist/",
+        "description": "GET /api/admin/waitlist/",
         "tags": [],
-        "summary": "GET /api/waitlist/",
+        "summary": "GET /api/admin/waitlist/",
         "responses": {
           "200": {
-            "description": "GET /api/waitlist/",
+            "description": "GET /api/admin/waitlist/",
             "content": {
               "application/json": {
                 "schema": {
@@ -6147,9 +6147,9 @@
     },
     "/api/admin/waitlist/approve": {
       "post": {
-        "description": "POST /api/waitlist/approve",
+        "description": "POST /api/admin/waitlist/approve",
         "tags": [],
-        "summary": "POST /api/waitlist/approve",
+        "summary": "POST /api/admin/waitlist/approve",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -6170,7 +6170,7 @@
         },
         "responses": {
           "200": {
-            "description": "POST /api/waitlist/approve",
+            "description": "POST /api/admin/waitlist/approve",
             "content": {
               "application/json": {
                 "schema": {
@@ -6243,9 +6243,9 @@
     },
     "/api/admin/feedback/": {
       "post": {
-        "description": "POST /api/feedback/",
+        "description": "POST /api/admin/feedback/",
         "tags": [],
-        "summary": "POST /api/feedback/",
+        "summary": "POST /api/admin/feedback/",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -6280,7 +6280,7 @@
         },
         "responses": {
           "200": {
-            "description": "POST /api/feedback/",
+            "description": "POST /api/admin/feedback/",
             "content": {
               "application/json": {
                 "schema": {
@@ -6351,12 +6351,12 @@
         }
       },
       "get": {
-        "description": "GET /api/feedback/",
+        "description": "GET /api/admin/feedback/",
         "tags": [],
-        "summary": "GET /api/feedback/",
+        "summary": "GET /api/admin/feedback/",
         "responses": {
           "200": {
-            "description": "GET /api/feedback/",
+            "description": "GET /api/admin/feedback/",
             "content": {
               "application/json": {
                 "schema": {
@@ -6466,12 +6466,12 @@
     },
     "/api/admin/feedback/all": {
       "get": {
-        "description": "GET /api/feedback/all",
+        "description": "GET /api/admin/feedback/all",
         "tags": [],
-        "summary": "GET /api/feedback/all",
+        "summary": "GET /api/admin/feedback/all",
         "responses": {
           "200": {
-            "description": "GET /api/feedback/all",
+            "description": "GET /api/admin/feedback/all",
             "content": {
               "application/json": {
                 "schema": {
@@ -6581,9 +6581,9 @@
     },
     "/api/admin/feedback/{id}/status": {
       "patch": {
-        "description": "PATCH /api/feedback/:id/status",
+        "description": "PATCH /api/admin/feedback/:id/status",
         "tags": [],
-        "summary": "PATCH /api/feedback/:id/status",
+        "summary": "PATCH /api/admin/feedback/:id/status",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -6604,7 +6604,7 @@
         },
         "responses": {
           "200": {
-            "description": "PATCH /api/feedback/:id/status",
+            "description": "PATCH /api/admin/feedback/:id/status",
             "content": {
               "application/json": {
                 "schema": {
@@ -6677,9 +6677,9 @@
     },
     "/api/admin/feedback/{id}/priority": {
       "patch": {
-        "description": "PATCH /api/feedback/:id/priority",
+        "description": "PATCH /api/admin/feedback/:id/priority",
         "tags": [],
-        "summary": "PATCH /api/feedback/:id/priority",
+        "summary": "PATCH /api/admin/feedback/:id/priority",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -6700,7 +6700,7 @@
         },
         "responses": {
           "200": {
-            "description": "PATCH /api/feedback/:id/priority",
+            "description": "PATCH /api/admin/feedback/:id/priority",
             "content": {
               "application/json": {
                 "schema": {
@@ -6773,12 +6773,12 @@
     },
     "/api/admin/feedback/{id}": {
       "delete": {
-        "description": "DELETE /api/feedback/:id",
+        "description": "DELETE /api/admin/feedback/:id",
         "tags": [],
-        "summary": "DELETE /api/feedback/:id",
+        "summary": "DELETE /api/admin/feedback/:id",
         "responses": {
           "200": {
-            "description": "DELETE /api/feedback/:id",
+            "description": "DELETE /api/admin/feedback/:id",
             "content": {
               "application/json": {
                 "schema": {
