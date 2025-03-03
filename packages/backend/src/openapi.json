@@ -45,10 +45,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "id",
-          "email"
-        ]
+        "required": ["id", "email"]
       },
       "UserProfileResponse": {
         "type": "object",
@@ -57,9 +54,7 @@
             "$ref": "#/components/schemas/User"
           }
         },
-        "required": [
-          "user"
-        ]
+        "required": ["user"]
       },
       "DefaultErrorResponse": {
         "type": "object",
@@ -70,9 +65,7 @@
             "example": "Something went wrong"
           }
         },
-        "required": [
-          "error"
-        ]
+        "required": ["error"]
       },
       "LoginResponse": {
         "type": "object",
@@ -84,10 +77,7 @@
             "$ref": "#/components/schemas/User"
           }
         },
-        "required": [
-          "token",
-          "user"
-        ]
+        "required": ["token", "user"]
       },
       "LoginRequest": {
         "type": "object",
@@ -104,10 +94,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "email",
-          "password"
-        ]
+        "required": ["email", "password"]
       },
       "RegisterRequest": {
         "type": "object",
@@ -127,11 +114,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "email",
-          "password",
-          "confirmPassword"
-        ]
+        "required": ["email", "password", "confirmPassword"]
       },
       "TwoFactorSetupInitResponse": {
         "type": "object",
@@ -143,10 +126,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "qrCode",
-          "secret"
-        ]
+        "required": ["qrCode", "secret"]
       },
       "TwoFactorSetupResponse": {
         "type": "object",
@@ -161,10 +141,7 @@
             }
           }
         },
-        "required": [
-          "success",
-          "recoveryCodes"
-        ]
+        "required": ["success", "recoveryCodes"]
       },
       "TwoFactorCode": {
         "type": "object",
@@ -175,9 +152,7 @@
             "maxLength": 6
           }
         },
-        "required": [
-          "code"
-        ]
+        "required": ["code"]
       },
       "RecoveryCodesResponse": {
         "type": "object",
@@ -189,9 +164,7 @@
             }
           }
         },
-        "required": [
-          "recoveryCodes"
-        ]
+        "required": ["recoveryCodes"]
       },
       "TwoFactorLogin": {
         "type": "object",
@@ -205,10 +178,7 @@
             "maxLength": 6
           }
         },
-        "required": [
-          "token",
-          "code"
-        ]
+        "required": ["token", "code"]
       },
       "TwoFactorEnableResponse": {
         "type": "object",
@@ -217,9 +187,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "success"
-        ]
+        "required": ["success"]
       },
       "TwoFactorDisableResponse": {
         "type": "object",
@@ -228,9 +196,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "success"
-        ]
+        "required": ["success"]
       },
       "UpdateProfile": {
         "type": "object",
@@ -251,9 +217,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "success"
-        ]
+        "required": ["success"]
       },
       "UpdatePassword": {
         "type": "object",
@@ -269,11 +233,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "currentPassword",
-          "newPassword",
-          "confirmPassword"
-        ]
+        "required": ["currentPassword", "newPassword", "confirmPassword"]
       },
       "EmailVerificationResponse": {
         "type": "object",
@@ -282,9 +242,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "message"
-        ]
+        "required": ["message"]
       },
       "VerifyEmail": {
         "type": "object",
@@ -293,9 +251,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "token"
-        ]
+        "required": ["token"]
       },
       "ResendVerificationResponse": {
         "type": "object",
@@ -304,9 +260,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "message"
-        ]
+        "required": ["message"]
       },
       "OAuthUrlResponse": {
         "type": "object",
@@ -315,9 +269,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "url"
-        ]
+        "required": ["url"]
       },
       "OAuthCallbackResponse": {
         "type": "object",
@@ -329,10 +281,7 @@
             "$ref": "#/components/schemas/User"
           }
         },
-        "required": [
-          "token",
-          "user"
-        ]
+        "required": ["token", "user"]
       },
       "PasswordResetRequestResponse": {
         "type": "object",
@@ -341,9 +290,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "message"
-        ]
+        "required": ["message"]
       },
       "PasswordResetRequestSchema": {
         "type": "object",
@@ -353,9 +300,7 @@
             "format": "email"
           }
         },
-        "required": [
-          "email"
-        ]
+        "required": ["email"]
       },
       "PasswordResetResponse": {
         "type": "object",
@@ -364,9 +309,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "message"
-        ]
+        "required": ["message"]
       },
       "PasswordResetSchema": {
         "type": "object",
@@ -382,11 +325,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "token",
-          "newPassword",
-          "confirmPassword"
-        ]
+        "required": ["token", "newPassword", "confirmPassword"]
       },
       "WaitlistResponse": {
         "type": "object",
@@ -410,12 +349,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "id",
-          "email",
-          "name",
-          "createdAt"
-        ]
+        "required": ["id", "email", "name", "createdAt"]
       },
       "WaitlistRequestSchema": {
         "type": "object",
@@ -434,10 +368,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "email",
-          "name"
-        ]
+        "required": ["email", "name"]
       },
       "WaitlistEntryResponse": {
         "type": "object",
@@ -461,12 +392,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "id",
-          "email",
-          "name",
-          "createdAt"
-        ]
+        "required": ["id", "email", "name", "createdAt"]
       },
       "UrlResponse": {
         "type": "object",
@@ -539,9 +465,7 @@
             "type": "number"
           }
         },
-        "required": [
-          "url"
-        ]
+        "required": ["url"]
       },
       "UpdateUrlRequest": {
         "type": "object",
@@ -592,10 +516,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "cities": {
@@ -610,10 +531,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "regions": {
@@ -628,10 +546,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "timezones": {
@@ -646,10 +561,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "referrers": {
@@ -664,10 +576,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "devices": {
@@ -682,10 +591,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "browsers": {
@@ -700,10 +606,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "operatingSystems": {
@@ -718,10 +621,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "clicksByDate": {
@@ -736,10 +636,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "date",
-                "count"
-              ]
+              "required": ["date", "count"]
             }
           }
         },
@@ -778,10 +675,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "cities": {
@@ -796,10 +690,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "regions": {
@@ -814,10 +705,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "timezones": {
@@ -832,10 +720,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "referrers": {
@@ -850,10 +735,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "devices": {
@@ -868,10 +750,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "browsers": {
@@ -886,10 +765,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "operatingSystems": {
@@ -904,10 +780,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "clicksByDate": {
@@ -922,10 +795,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "date",
-                "count"
-              ]
+              "required": ["date", "count"]
             }
           }
         },
@@ -965,12 +835,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "id",
-          "name",
-          "userId",
-          "createdAt"
-        ]
+        "required": ["id", "name", "userId", "createdAt"]
       },
       "CreateUrlGroupRequest": {
         "type": "object",
@@ -983,9 +848,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "name"
-        ]
+        "required": ["name"]
       },
       "UpdateUrlGroupRequest": {
         "type": "object",
