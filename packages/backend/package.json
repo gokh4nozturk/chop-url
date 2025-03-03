@@ -22,13 +22,9 @@
     "log": "wrangler tail chop-url-backend-production --format pretty",
     "waitlist:list": "tsx scripts/waitlist.ts list",
     "waitlist:approve": "tsx scripts/waitlist.ts approve",
-    "docs:generate": "tsx scripts/generate-openapi.ts"
+    "docs:gen": "tsx scripts/generate-openapi.ts"
   },
-  "keywords": [
-    "url-shortener",
-    "cloudflare-workers",
-    "typescript"
-  ],
+  "keywords": ["url-shortener", "cloudflare-workers", "typescript"],
   "author": "Gokhan Ozturk",
   "license": "MIT",
   "dependencies": {
