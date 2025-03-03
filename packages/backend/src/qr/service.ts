@@ -1,30 +1,9 @@
-import { eq } from 'drizzle-orm';
-import { sql } from 'drizzle-orm';
+import { withSchema } from '@/db/helpers';
+import { eq, sql } from 'drizzle-orm';
 import type { Database } from '../db/client';
 import { qrCodes } from '../db/schema/qr-codes';
-import { R2StorageService } from '../storage/service';
-import { Env } from '../types';
+import { CreateQRCodeData, IQRCode, UpdateQRCodeData } from './types.js';
 
-export interface IQRCode {
-  id: number;
-  urlId: number;
-  imageUrl: string;
-  downloadCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface CreateQRCodeData {
-  urlId: number;
-  imageUrl: string;
-}
-
-interface UpdateQRCodeData {
-  imageUrl?: string;
-  logoUrl?: string;
-  logoSize?: number;
-  logoPosition?: string;
-}
 export class QRCodeService {
   constructor(private readonly db: Database) {}
 
@@ -109,10 +88,12 @@ export class QRCodeService {
   async incrementDownloadCount(id: number): Promise<void> {
     await this.db
       .update(qrCodes)
-      .set({
-        downloadCount: sql`${qrCodes.downloadCount} + 1`,
-        updatedAt: new Date().toISOString(),
-      })
+      .set(
+        withSchema({
+          downloadCount: sql`${qrCodes.downloadCount} + 1`,
+          updatedAt: new Date().toISOString(),
+        })
+      )
       .where(eq(qrCodes.id, id));
   }
 }
