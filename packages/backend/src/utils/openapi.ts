@@ -243,8 +243,6 @@ export const withOpenAPI = <T = unknown>(
       const routeWithMetadata = route as { metadata?: RouteMetadata };
       const metadata = routeWithMetadata.metadata || {};
 
-      console.log('Route metadata:', metadata);
-
       // Create OpenAPI route with schemas
       const openAPIRoute = registerRoute(
         path,
@@ -263,8 +261,6 @@ export const withOpenAPI = <T = unknown>(
         },
         basePath
       );
-
-      console.log('OpenAPI route:', openAPIRoute);
 
       // Add route with OpenAPI documentation
       openAPIRouter.openapi(

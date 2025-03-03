@@ -23,24 +23,6 @@ const validateRouteConfig = (route: RouteDefinition, groupPrefix: string) => {
   }
 };
 
-// Helper to merge metadata
-const mergeMetadata = (
-  routeMetadata: Partial<RouteDefinition>,
-  groupMetadata: Partial<RouteDefinition> = {},
-  defaultMetadata: Partial<RouteDefinition> = {}
-): RouteDefinition => {
-  return {
-    ...defaultMetadata,
-    ...groupMetadata,
-    ...routeMetadata,
-    tags: [
-      ...(defaultMetadata.tags || []),
-      ...(groupMetadata.tags || []),
-      ...(routeMetadata.tags || []),
-    ],
-  } as RouteDefinition;
-};
-
 export const createRouteGroup = (
   group: RouteGroup,
   options: RouteRegistrationOptions = {}
@@ -86,13 +68,6 @@ export const createRouteGroup = (
         deprecated: enrichedRoute.metadata.deprecated,
       });
     }
-
-    // Log for debugging
-    console.log('Enriched route:', {
-      path: enrichedRoute.path,
-      method: enrichedRoute.method,
-      metadata: enrichedRoute.metadata,
-    });
 
     return enrichedRoute;
   });
