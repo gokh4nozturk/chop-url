@@ -1,3 +1,4 @@
+import { withSchema } from '@/db/helpers';
 import { ChopUrl } from '@chop-url/lib';
 import { and, desc, eq, gte, inArray, or, sql } from 'drizzle-orm';
 import { UAParser } from 'ua-parser-js';
@@ -445,12 +446,14 @@ export class UrlService {
   ): Promise<IUrlGroup> {
     const [group] = await this.db
       .insert(urlGroups)
-      .values({
-        name,
-        description,
-        userId,
-        createdAt: new Date().toISOString(),
-      })
+      .values(
+        withSchema({
+          name,
+          description,
+          userId,
+          createdAt: new Date().toISOString(),
+        })
+      )
       .returning();
 
     return {
@@ -468,10 +471,12 @@ export class UrlService {
   ): Promise<IUrlGroup> {
     const [group] = await this.db
       .update(urlGroups)
-      .set({
-        ...data,
-        updatedAt: new Date().toISOString(),
-      })
+      .set(
+        withSchema({
+          ...data,
+          updatedAt: new Date().toISOString(),
+        })
+      )
       .where(and(eq(urlGroups.id, groupId), eq(urlGroups.userId, userId)))
       .returning();
 
@@ -492,7 +497,7 @@ export class UrlService {
       // Remove group association from URLs
       await tx
         .update(urls)
-        .set({ groupId: null })
+        .set(withSchema({ groupId: null }))
         .where(eq(urls.groupId, groupId));
 
       // Delete the group
@@ -549,14 +554,16 @@ export class UrlService {
   ): Promise<IUrl> {
     const [url] = await this.db
       .update(urls)
-      .set({
-        originalUrl: data.originalUrl,
-        customSlug: data.customSlug,
-        expiresAt: data.expiresAt,
-        tags: data.tags ? JSON.stringify(data.tags) : undefined,
-        groupId: data.groupId,
-        isActive: data.isActive,
-      })
+      .set(
+        withSchema({
+          originalUrl: data.originalUrl,
+          customSlug: data.customSlug,
+          expiresAt: data.expiresAt,
+          tags: data.tags ? JSON.stringify(data.tags) : undefined,
+          groupId: data.groupId,
+          isActive: data.isActive,
+        })
+      )
       .where(and(eq(urls.shortId, shortId), eq(urls.userId, userId)))
       .returning();
 
@@ -606,7 +613,7 @@ export async function trackVisit(
     const os = parser.getOS();
     const device = parser.getDevice();
 
-    // Cloudflare'dan gelen lokasyon bilgilerini kullan
+    // Use Cloudflare's location data if available, otherwise use 'Unknown'
     const country = cf?.country || 'Unknown';
     const city = cf?.city || 'Unknown';
 
@@ -622,27 +629,31 @@ export async function trackVisit(
     // Update visit count and last accessed time
     await db
       .update(urls)
-      .set({
-        visitCount: (currentUrl.visitCount || 0) + 1,
-        lastAccessedAt: new Date().toISOString(),
-      })
+      .set(
+        withSchema({
+          visitCount: (currentUrl.visitCount || 0) + 1,
+          lastAccessedAt: new Date().toISOString(),
+        })
+      )
       .where(eq(urls.id, urlId));
 
     // Insert visit record
-    await db.insert(visits).values({
-      urlId,
-      ipAddress,
-      userAgent,
-      referrer,
-      browser: browser.name || null,
-      browserVersion: browser.version || null,
-      os: os.name || null,
-      osVersion: os.version || null,
-      deviceType: device.type || null,
-      country,
-      city,
-      visitedAt: new Date().toISOString(),
-    });
+    await db.insert(visits).values(
+      withSchema({
+        urlId,
+        ipAddress,
+        userAgent,
+        referrer,
+        browser: browser.name || null,
+        browserVersion: browser.version || null,
+        os: os.name || null,
+        osVersion: os.version || null,
+        deviceType: device.type || null,
+        country,
+        city,
+        visitedAt: new Date().toISOString(),
+      })
+    );
   } catch (error) {
     console.error('Error in trackVisit:', error);
     throw error;

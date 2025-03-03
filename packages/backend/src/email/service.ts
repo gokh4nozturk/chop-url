@@ -121,18 +121,26 @@ export class EmailService {
     }
   }
 
-  async sendPasswordResetEmail(
-    to: string,
-    resetLink: string,
-    name: string
-  ): Promise<void> {
+  async sendPasswordResetEmail({
+    email,
+    name,
+    token,
+  }: {
+    email: string;
+    name: string;
+    token: string;
+  }): Promise<void> {
     try {
       if (!this.resend) {
         throw new Error('Resend client is not initialized');
       }
 
+      const resetLink = `${
+        this.frontendUrl ?? 'https://app.chop-url.com'
+      }/auth/reset-password?token=${token}`;
+
       console.log('EmailService: Starting to send password reset email', {
-        to,
+        to: email,
         name,
         apiKey: this.resend ? 'present' : 'missing',
       });
@@ -146,7 +154,7 @@ export class EmailService {
 
       const { data, error } = await this.resend.emails.send({
         from: 'ChopURL <noreply@chop-url.com>',
-        to: [to],
+        to: [email],
         subject: 'Reset your password',
         html,
       });
@@ -161,7 +169,7 @@ export class EmailService {
       console.error('EmailService: Error sending email:', {
         error: error instanceof Error ? error.message : error,
         stack: error instanceof Error ? error.stack : undefined,
-        to,
+        to: email,
         name,
       });
       throw new Error(`Email could not be sent: ${(error as Error).message}`);

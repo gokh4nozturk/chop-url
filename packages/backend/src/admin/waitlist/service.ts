@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { DrizzleD1Database } from 'drizzle-orm/d1';
+import { IUserRow, IWaitListRow } from '../../auth/types';
 import { users, waitList } from '../../db/schema';
 import { EmailService } from '../../email/service';
 import { generateTemporaryPassword, hashPassword } from '../../utils/password';
@@ -16,9 +17,18 @@ export class WaitListServiceImpl implements WaitListService {
       .select()
       .from(waitList)
       .where(eq(waitList.status, 'pending'))
-      .orderBy(waitList.created_at);
+      .orderBy(waitList.createdAt);
 
-    return waitListUsers;
+    return waitListUsers.map((user) => ({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      company: user.company,
+      use_case: user.useCase,
+      status: user.status,
+      created_at: user.createdAt,
+      updated_at: user.updatedAt,
+    }));
   }
 
   async approveWaitListUser(email: string, frontendUrl: string): Promise<void> {
@@ -48,12 +58,12 @@ export class WaitListServiceImpl implements WaitListService {
         name: waitListUser.name,
         passwordHash: hashedPassword,
         isEmailVerified: true,
-      });
+      } as unknown as IUserRow);
 
       // Update WaitList status
       await this.db
         .update(waitList)
-        .set({ status: 'approved' })
+        .set({ status: 'approved' as const } as unknown as IWaitListRow)
         .where(eq(waitList.email, email));
 
       // Send welcome email

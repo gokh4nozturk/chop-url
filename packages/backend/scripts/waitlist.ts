@@ -23,7 +23,7 @@ const API_URL = 'http://localhost:8787';
 
 async function fetchWaitlist(): Promise<WaitlistUser[]> {
   const response = await fetch(`${API_URL}/api/admin/waitlist`);
-  const data = await response.json();
+  const data = (await response.json()) as { waitListUsers: WaitlistUser[] };
   return data.waitListUsers;
 }
 
@@ -36,13 +36,11 @@ async function approveUser(email: string): Promise<void> {
     body: JSON.stringify({ email }),
   });
 
-  const data = await response.json();
+  const data = (await response.json()) as { error?: string };
 
   if (!response.ok) {
     throw new Error(data.error || 'Failed to approve user');
   }
-
-  return data;
 }
 
 async function listUsers() {

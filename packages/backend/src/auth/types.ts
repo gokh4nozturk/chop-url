@@ -68,6 +68,7 @@ export enum AuthAttemptType {
   RECOVERY = 'recovery',
   PASSWORD = 'password',
   EMAIL_VERIFICATION = 'email_verification',
+  TWO_FACTOR_SETUP = 'two_factor_setup',
 }
 
 /**
@@ -98,6 +99,9 @@ export enum AuthErrorCode {
   INVALID_2FA_CODE = 'INVALID_2FA_CODE',
   EXPIRED_TOKEN = 'EXPIRED_TOKEN',
   NO_TOKEN = 'NO_TOKEN',
+  TWO_FACTOR_NOT_SETUP = 'TWO_FACTOR_NOT_SETUP',
+  TWO_FACTOR_ALREADY_ENABLED = 'TWO_FACTOR_ALREADY_ENABLED',
+  INVALID_TWO_FACTOR_CODE = 'INVALID_TWO_FACTOR_CODE',
 }
 
 /**

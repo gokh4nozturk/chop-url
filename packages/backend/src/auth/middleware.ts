@@ -23,7 +23,7 @@ export const auth = () => {
       });
 
       try {
-        const user = await authService.verifyToken(token);
+        const user = await authService.verifySession(token);
         if (!user) {
           console.error('Auth middleware: User not found for token');
           throw new AuthError(AuthErrorCode.INVALID_TOKEN, 'Invalid token');
