@@ -49,3 +49,10 @@ export interface Variables {
 }
 
 export type Context = HonoContext<{ Bindings: Env; Variables: Variables }>;
+
+// Hono zValidator için tip tanımlaması
+declare module 'hono' {
+  interface ContextVariableMap {
+    json: unknown;
+  }
+}

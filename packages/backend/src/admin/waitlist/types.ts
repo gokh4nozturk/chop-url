@@ -1,10 +1,19 @@
 import { z } from 'zod';
-
-export const approveWaitListSchema = z.object({
-  email: z.string().email(),
-});
+import { Env } from '../../types';
+import { approveWaitListSchema } from './schemas';
 
 export type ApproveWaitListRequest = z.infer<typeof approveWaitListSchema>;
+
+export type WaitListStatus =
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'invited'
+  | 'registered';
+
+export interface WaitListContext {
+  Bindings: Env;
+}
 
 export interface WaitListService {
   getWaitListUsers(): Promise<WaitListUser[]>;
@@ -17,7 +26,7 @@ export interface WaitListUser {
   name: string;
   company: string | null;
   use_case: string;
-  status: 'pending' | 'approved' | 'rejected' | 'invited' | 'registered';
+  status: WaitListStatus;
   created_at: string;
   updated_at: string;
 }

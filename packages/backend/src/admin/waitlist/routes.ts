@@ -1,60 +1,80 @@
+import { withOpenAPI } from '@/utils/openapi';
+import { OpenAPIHono } from '@hono/zod-openapi';
 import { zValidator } from '@hono/zod-validator';
-import { drizzle } from 'drizzle-orm/d1';
-import { Hono } from 'hono';
-import { EmailService } from '../../email/service';
-import { Env } from '../../types';
-import { WaitListServiceImpl } from './service';
-import { approveWaitListSchema } from './types';
+import { z } from 'zod';
+import { H } from '../../types/hono.types';
+import { RouteGroup } from '../../types/route.types';
+import { handleError } from '../../utils/error';
+import { createRouteGroup } from '../../utils/route-factory';
+import {
+  approveWaitListUserHandler,
+  getWaitListUsersHandler,
+} from './handlers';
+import {
+  approveResponseSchema,
+  approveWaitListSchema,
+  waitlistUsersResponseSchema,
+} from './schemas';
 
-export const createWaitListRoutes = () => {
-  const router = new Hono<{ Bindings: Env }>();
+// Waitlist route groups
+const waitlistRoutes: RouteGroup[] = [
+  {
+    prefix: '/waitlist',
+    tag: 'WAITLIST',
+    description: 'Waitlist management endpoints',
+    routes: [
+      {
+        path: '/',
+        method: 'get',
+        description: 'Get waitlist users',
+        schema: {
+          response: waitlistUsersResponseSchema,
+        },
+        handler: getWaitListUsersHandler,
+      },
+      {
+        path: '/approve',
+        method: 'post',
+        description: 'Approve waitlist user',
+        schema: {
+          request: approveWaitListSchema,
+          response: approveResponseSchema,
+        },
+        handler: approveWaitListUserHandler,
+      },
+    ],
+  },
+];
 
-  // WaitList users list
-  router.get('/waitlist', async (c) => {
-    const db = drizzle(c.env.DB);
-    const emailService = new EmailService(
-      c.env.RESEND_API_KEY,
-      c.env.FRONTEND_URL
-    );
-    const waitListService = new WaitListServiceImpl(db, emailService);
+// Create base router
+const createBaseWaitListRoutes = () => {
+  const router = new OpenAPIHono<H>();
 
-    try {
-      const waitListUsers = await waitListService.getWaitListUsers();
-      return c.json({ waitListUsers });
-    } catch (error) {
-      console.error('Error fetching waitlist users:', error);
-      return c.json({ error: 'Failed to fetch waitlist users' }, 500);
+  // Register all routes with middleware
+  for (const route of waitlistRoutes.flatMap((group) =>
+    createRouteGroup(group)
+  )) {
+    const middlewares = [];
+
+    // Add validation middleware if schema exists
+    if (route.schema?.request) {
+      middlewares.push(zValidator('json', route.schema.request));
     }
-  });
 
-  // Approve WaitList user and create account
-  router.post(
-    '/waitlist/approve',
-    zValidator('json', approveWaitListSchema),
-    async (c) => {
-      const db = drizzle(c.env.DB);
-      const emailService = new EmailService(
-        c.env.RESEND_API_KEY,
-        c.env.FRONTEND_URL
-      );
-      const waitListService = new WaitListServiceImpl(db, emailService);
-      const { email } = c.req.valid('json');
-      const frontendUrl = c.env.FRONTEND_URL;
-
+    // Register route with error handling
+    router[route.method](route.path, ...middlewares, async (c) => {
       try {
-        await waitListService.approveWaitListUser(email, frontendUrl);
-        return c.json({
-          success: true,
-          message: 'User account created and welcome email sent',
-        });
+        return await route.handler(c);
       } catch (error) {
-        if (error instanceof Error) {
-          return c.json({ error: error.message }, 400);
-        }
-        return c.json({ error: 'Failed to process waitlist approval' }, 500);
+        return handleError(c, error);
       }
-    }
-  );
+    });
+  }
 
   return router;
 };
+
+export const createWaitListRoutes = withOpenAPI(
+  createBaseWaitListRoutes,
+  '/api'
+);

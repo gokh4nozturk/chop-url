@@ -8,3 +8,7 @@ export const presignedUrlSchema = z.object({
 export const publicUrlSchema = z.object({
   path: z.string().min(1, 'Path is required'),
 });
+
+export const urlResponseSchema = z.object({
+  url: z.string(),
+});

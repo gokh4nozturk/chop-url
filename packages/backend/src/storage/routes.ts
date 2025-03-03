@@ -1,19 +1,73 @@
 import { withOpenAPI } from '@/utils/openapi';
-import { Hono } from 'hono';
+import { OpenAPIHono } from '@hono/zod-openapi';
+import { zValidator } from '@hono/zod-validator';
+import { z } from 'zod';
+import { H } from '../types/hono.types';
+import { RouteGroup } from '../types/route.types';
+import { handleError } from '../utils/error';
+import { createRouteGroup } from '../utils/route-factory';
 import { generatePresignedUrlHandler, getPublicUrlHandler } from './handlers';
-import { StorageContext } from './types';
+import {
+  presignedUrlSchema,
+  publicUrlSchema,
+  urlResponseSchema,
+} from './schemas';
 
+// Storage route groups
+const storageRoutes: RouteGroup[] = [
+  {
+    prefix: '/storage',
+    tag: 'STORAGE',
+    description: 'Storage management endpoints',
+    routes: [
+      {
+        path: '/generate-presigned-url',
+        method: 'post',
+        description: 'Generate a presigned URL for file upload/download',
+        schema: {
+          request: presignedUrlSchema,
+          response: urlResponseSchema,
+        },
+        handler: generatePresignedUrlHandler,
+      },
+      {
+        path: '/public-url',
+        method: 'get',
+        description: 'Get a public URL for a file',
+        schema: {
+          request: publicUrlSchema,
+          response: urlResponseSchema,
+        },
+        handler: getPublicUrlHandler,
+      },
+    ],
+  },
+];
+
+// Create base router
 const createBaseStorageRoutes = () => {
-  const router = new Hono<StorageContext>();
+  const router = new OpenAPIHono<H>();
 
-  // Group routes by functionality
-  const storageRouter = router.basePath('/storage');
+  // Register all routes with middleware
+  for (const route of storageRoutes.flatMap((group) =>
+    createRouteGroup(group)
+  )) {
+    const middlewares = [];
 
-  // Presigned URL generation
-  storageRouter.post('/generate-presigned-url', generatePresignedUrlHandler);
+    // Add validation middleware if schema exists
+    if (route.schema?.request) {
+      middlewares.push(zValidator('json', route.schema.request));
+    }
 
-  // Public URL generation
-  storageRouter.get('/public-url', getPublicUrlHandler);
+    // Register route with error handling
+    router[route.method](route.path, ...middlewares, async (c) => {
+      try {
+        return await route.handler(c);
+      } catch (error) {
+        return handleError(c, error);
+      }
+    });
+  }
 
   return router;
 };
