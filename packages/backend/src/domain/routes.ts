@@ -1,347 +1,181 @@
+import { withOpenAPI } from '@/utils/openapi';
+import { OpenAPIHono } from '@hono/zod-openapi';
 import { zValidator } from '@hono/zod-validator';
-import { Context, Hono } from 'hono';
-import { z } from 'zod';
 import { auth } from '../auth/middleware';
-import { DomainService } from './service';
+import { H } from '../types/hono.types';
+import { RouteGroup } from '../types/route.types';
+import { handleError } from '../utils/error';
+import { createRouteGroup } from '../utils/route-factory';
+import { domainHandlers } from './handlers';
+import {
+  addDnsRecordSchema,
+  addDomainSchema,
+  dnsRecordResponseSchema,
+  dnsRecordsResponseSchema,
+  domainResponseSchema,
+  domainsResponseSchema,
+  healthResponseSchema,
+  sslStatusResponseSchema,
+  successResponseSchema,
+  updateDomainSchema,
+  verifyResponseSchema,
+} from './schemas';
 
-const addDomainSchema = z.object({
-  domain: z.string().min(1),
-  settings: z
-    .object({
-      redirectMode: z.enum(['PROXY', 'REDIRECT']).optional(),
-      customNameservers: z.string().nullable().optional(),
-      forceSSL: z.boolean().optional(),
-    })
-    .optional(),
-});
+// Domain route groups
+const domainRoutes: RouteGroup[] = [
+  {
+    prefix: '/domains',
+    tag: 'DOMAINS',
+    description: 'Domain management endpoints',
+    routes: [
+      {
+        path: '/',
+        method: 'get',
+        description: 'Get all domains for user',
+        requiresAuth: true,
+        schema: {
+          response: domainsResponseSchema,
+        },
+        handler: domainHandlers.getDomains,
+      },
+      {
+        path: '/',
+        method: 'post',
+        description: 'Add a new domain',
+        requiresAuth: true,
+        schema: {
+          request: addDomainSchema,
+          response: domainResponseSchema,
+        },
+        handler: domainHandlers.addDomain,
+      },
+      {
+        path: '/:id',
+        method: 'get',
+        description: 'Get a specific domain',
+        requiresAuth: true,
+        schema: {
+          response: domainResponseSchema,
+        },
+        handler: domainHandlers.getDomainById,
+      },
+      {
+        path: '/:id',
+        method: 'patch',
+        description: 'Update a domain',
+        requiresAuth: true,
+        schema: {
+          request: updateDomainSchema,
+          response: domainResponseSchema,
+        },
+        handler: domainHandlers.updateDomain,
+      },
+      {
+        path: '/:id',
+        method: 'delete',
+        description: 'Delete a domain',
+        requiresAuth: true,
+        schema: {
+          response: successResponseSchema,
+        },
+        handler: domainHandlers.deleteDomain,
+      },
+      {
+        path: '/:id/verify',
+        method: 'post',
+        description: 'Verify domain ownership',
+        requiresAuth: true,
+        schema: {
+          response: verifyResponseSchema,
+        },
+        handler: domainHandlers.verifyDomain,
+      },
+      {
+        path: '/:id/dns',
+        method: 'post',
+        description: 'Add DNS record',
+        requiresAuth: true,
+        schema: {
+          request: addDnsRecordSchema,
+          response: dnsRecordResponseSchema,
+        },
+        handler: domainHandlers.addDnsRecord,
+      },
+      {
+        path: '/:id/dns',
+        method: 'get',
+        description: 'Get DNS records',
+        requiresAuth: true,
+        schema: {
+          response: dnsRecordsResponseSchema,
+        },
+        handler: domainHandlers.getDnsRecords,
+      },
+      {
+        path: '/:id/ssl/status',
+        method: 'get',
+        description: 'Get SSL status',
+        requiresAuth: true,
+        schema: {
+          response: sslStatusResponseSchema,
+        },
+        handler: domainHandlers.getSslStatus,
+      },
+      {
+        path: '/:id/ssl/renew',
+        method: 'post',
+        description: 'Renew SSL certificate',
+        requiresAuth: true,
+        schema: {
+          response: successResponseSchema,
+        },
+        handler: domainHandlers.renewSsl,
+      },
+      {
+        path: '/:id/health',
+        method: 'get',
+        description: 'Check domain health',
+        requiresAuth: true,
+        schema: {
+          response: healthResponseSchema,
+        },
+        handler: domainHandlers.getDomainHealth,
+      },
+    ],
+  },
+];
 
-const updateDomainSchema = z.object({
-  domain: z.string().optional(),
-  verificationMethod: z.enum(['DNS_TXT', 'DNS_CNAME', 'FILE']).optional(),
-  isActive: z.boolean().optional(),
-});
+// Create base router
+const createBaseDomainRoutes = () => {
+  const router = new OpenAPIHono<H>();
 
-const addDnsRecordSchema = z.object({
-  type: z.enum(['A', 'AAAA', 'CNAME', 'TXT', 'MX', 'NS']),
-  name: z.string().min(1),
-  content: z.string().min(1),
-  ttl: z.number().optional(),
-  priority: z.number().optional(),
-  proxied: z.boolean().optional(),
-});
+  // Register all routes with middleware
+  for (const route of domainRoutes.flatMap((group) =>
+    createRouteGroup(group)
+  )) {
+    const middlewares = [];
 
-interface Env {
-  CLOUDFLARE_API_TOKEN: string;
-  CLOUDFLARE_ACCOUNT_ID: string;
-  CLOUDFLARE_ZONE_ID: string;
-}
-
-export const createDomainRoutes = () => {
-  const router = new Hono<{ Bindings: Env }>();
-
-  // Add a new domain
-  router.post('/domains', auth(), async (c: Context) => {
-    try {
-      console.log('Handling POST /domains request');
-
-      const user = c.get('user');
-      console.log('User from context:', user);
-
-      const domainService = new DomainService(c.get('db'), {
-        cloudflareApiToken: c.env.CLOUDFLARE_API_TOKEN,
-        cloudflareAccountId: c.env.CLOUDFLARE_ACCOUNT_ID,
-        cloudflareZoneId: c.env.CLOUDFLARE_ZONE_ID,
-      });
-
-      const body = await c.req.json();
-      console.log('Request body:', body);
-
-      const { domain, settings } = addDomainSchema.parse(body);
-      console.log('Parsed domain and settings:', { domain, settings });
-
-      const result = await domainService.addDomain(user.id, domain, settings);
-      return c.json(result, 201);
-    } catch (error) {
-      console.error('Error in POST /domains:', {
-        error,
-        stack: error instanceof Error ? error.stack : undefined,
-        user: c.get('user'),
-      });
-
-      if (error instanceof z.ZodError) {
-        return c.json(
-          { error: 'Invalid request body', details: error.errors },
-          400
-        );
-      }
-      if (error instanceof Error) {
-        if (error.message === 'Domain already exists') {
-          return c.json({ error: 'Domain already exists' }, 409);
-        }
-        if (error.message === 'Invalid domain format') {
-          return c.json({ error: 'Invalid domain format' }, 400);
-        }
-      }
-      return c.json({ error: 'Failed to add domain' }, 500);
+    // Add authentication middleware if required
+    if (route.metadata.requiresAuth) {
+      middlewares.push(auth());
     }
-  });
 
-  // Get all domains for user
-  router.get('/domains', auth(), async (c: Context) => {
-    try {
-      console.log('Handling GET /domains request');
+    // Add validation middleware if schema exists
+    if (route.schema?.request) {
+      middlewares.push(zValidator('json', route.schema.request));
+    }
 
-      const user = c.get('user');
-      console.log('User from context:', user);
-
-      if (!user || !user.id) {
-        console.error('No user or user ID in context');
-        return c.json({ error: 'User not found' }, 401);
+    // Register route with error handling
+    router[route.method](route.path, ...middlewares, async (c) => {
+      try {
+        return await route.handler(c);
+      } catch (error) {
+        return handleError(c, error);
       }
-
-      const domainService = new DomainService(c.get('db'), {
-        cloudflareApiToken: c.env.CLOUDFLARE_API_TOKEN,
-        cloudflareAccountId: c.env.CLOUDFLARE_ACCOUNT_ID,
-        cloudflareZoneId: c.env.CLOUDFLARE_ZONE_ID,
-      });
-
-      const domains = await domainService.getUserDomains(user.id);
-      console.log('Successfully retrieved domains:', { count: domains.length });
-
-      return c.json(domains);
-    } catch (error) {
-      console.error('Error in GET /domains:', {
-        error,
-        stack: error instanceof Error ? error.stack : undefined,
-        user: c.get('user'),
-      });
-
-      if (error instanceof Error) {
-        return c.json({ error: error.message }, 500);
-      }
-      return c.json({ error: 'Failed to get domains' }, 500);
-    }
-  });
-
-  // Get a specific domain
-  router.get('/domains/:id', auth(), async (c: Context) => {
-    try {
-      const domainService = new DomainService(c.get('db'), {
-        cloudflareApiToken: c.env.CLOUDFLARE_API_TOKEN,
-        cloudflareAccountId: c.env.CLOUDFLARE_ACCOUNT_ID,
-        cloudflareZoneId: c.env.CLOUDFLARE_ZONE_ID,
-      });
-
-      const domainId = parseInt(c.req.param('id'));
-      const user = c.get('user');
-
-      const domain = await domainService.getDomainWithSettings(
-        domainId,
-        user.id
-      );
-      if (!domain) {
-        return c.json({ error: 'Domain not found' }, 404);
-      }
-
-      return c.json(domain);
-    } catch (error) {
-      return c.json({ error: 'Failed to get domain' }, 500);
-    }
-  });
-
-  // Update a domain
-  router.patch('/domains/:id', auth(), async (c: Context) => {
-    try {
-      const domainService = new DomainService(c.get('db'), {
-        cloudflareApiToken: c.env.CLOUDFLARE_API_TOKEN,
-        cloudflareAccountId: c.env.CLOUDFLARE_ACCOUNT_ID,
-        cloudflareZoneId: c.env.CLOUDFLARE_ZONE_ID,
-      });
-
-      const domainId = parseInt(c.req.param('id'));
-      const user = c.get('user');
-      const body = await c.req.json();
-      const updates = updateDomainSchema.parse(body);
-
-      const domain = await domainService.updateDomain(
-        domainId,
-        user.id,
-        updates
-      );
-      if (!domain) {
-        return c.json({ error: 'Domain not found' }, 404);
-      }
-
-      return c.json(domain);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return c.json({ error: 'Invalid request body' }, 400);
-      }
-      return c.json({ error: 'Failed to update domain' }, 500);
-    }
-  });
-
-  // Delete a domain
-  router.delete('/domains/:id', auth(), async (c: Context) => {
-    try {
-      const domainService = new DomainService(c.get('db'), {
-        cloudflareApiToken: c.env.CLOUDFLARE_API_TOKEN,
-        cloudflareAccountId: c.env.CLOUDFLARE_ACCOUNT_ID,
-        cloudflareZoneId: c.env.CLOUDFLARE_ZONE_ID,
-      });
-
-      const domainId = parseInt(c.req.param('id'));
-      const user = c.get('user');
-
-      await domainService.deleteDomain(domainId, user.id);
-      return c.json({ message: 'Domain deleted successfully' });
-    } catch (error) {
-      return c.json({ error: 'Failed to delete domain' }, 500);
-    }
-  });
-
-  // Verify domain ownership
-  router.post('/domains/:id/verify', auth(), async (c: Context) => {
-    try {
-      const domainService = new DomainService(c.get('db'), {
-        cloudflareApiToken: c.env.CLOUDFLARE_API_TOKEN,
-        cloudflareAccountId: c.env.CLOUDFLARE_ACCOUNT_ID,
-        cloudflareZoneId: c.env.CLOUDFLARE_ZONE_ID,
-      });
-
-      const domainId = parseInt(c.req.param('id'));
-      const user = c.get('user');
-
-      const isVerified = await domainService.verifyDomain(domainId, user.id);
-      return c.json({ verified: isVerified });
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.message === 'Domain not found') {
-          return c.json({ error: 'Domain not found' }, 404);
-        }
-      }
-      return c.json({ error: 'Failed to verify domain' }, 500);
-    }
-  });
-
-  // Add DNS record
-  router.post('/domains/:id/dns', auth(), async (c: Context) => {
-    try {
-      const domainService = new DomainService(c.get('db'), {
-        cloudflareApiToken: c.env.CLOUDFLARE_API_TOKEN,
-        cloudflareAccountId: c.env.CLOUDFLARE_ACCOUNT_ID,
-        cloudflareZoneId: c.env.CLOUDFLARE_ZONE_ID,
-      });
-
-      const domainId = parseInt(c.req.param('id'));
-      const user = c.get('user');
-      const body = await c.req.json();
-      const record = addDnsRecordSchema.parse(body);
-
-      const result = await domainService.addDnsRecord(
-        domainId,
-        user.id,
-        record
-      );
-      return c.json(result, 201);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return c.json({ error: 'Invalid request body' }, 400);
-      }
-      if (error instanceof Error) {
-        if (error.message === 'Domain not found') {
-          return c.json({ error: 'Domain not found' }, 404);
-        }
-      }
-      return c.json({ error: 'Failed to add DNS record' }, 500);
-    }
-  });
-
-  // Get DNS records
-  router.get('/domains/:id/dns', auth(), async (c: Context) => {
-    try {
-      const domainService = new DomainService(c.get('db'), {
-        cloudflareApiToken: c.env.CLOUDFLARE_API_TOKEN,
-        cloudflareAccountId: c.env.CLOUDFLARE_ACCOUNT_ID,
-        cloudflareZoneId: c.env.CLOUDFLARE_ZONE_ID,
-      });
-
-      const domainId = parseInt(c.req.param('id'));
-      const user = c.get('user');
-
-      const records = await domainService.getDnsRecords(domainId, user.id);
-      return c.json(records);
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.message === 'Domain not found') {
-          return c.json({ error: 'Domain not found' }, 404);
-        }
-      }
-      return c.json({ error: 'Failed to get DNS records' }, 500);
-    }
-  });
-
-  // SSL Management
-  router.get('/domains/:id/ssl/status', async (c: Context) => {
-    const domainId = parseInt(c.req.param('id'));
-    const userId = c.get('userId');
-
-    try {
-      const domainService = new DomainService(c.get('db'), {
-        cloudflareApiToken: c.env.CLOUDFLARE_API_TOKEN,
-        cloudflareAccountId: c.env.CLOUDFLARE_ACCOUNT_ID,
-        cloudflareZoneId: c.env.CLOUDFLARE_ZONE_ID,
-      });
-
-      const status = await domainService.checkAndUpdateSslStatus(
-        domainId,
-        userId
-      );
-      return c.json({ status });
-    } catch (error) {
-      console.error('Error getting SSL status:', error);
-      return c.json({ error: 'Failed to get SSL status' }, 500);
-    }
-  });
-
-  router.post('/domains/:id/ssl/renew', async (c: Context) => {
-    const domainId = parseInt(c.req.param('id'));
-    const userId = c.get('userId');
-
-    try {
-      const domainService = new DomainService(c.get('db'), {
-        cloudflareApiToken: c.env.CLOUDFLARE_API_TOKEN,
-        cloudflareAccountId: c.env.CLOUDFLARE_ACCOUNT_ID,
-        cloudflareZoneId: c.env.CLOUDFLARE_ZONE_ID,
-      });
-
-      await domainService.renewSslCertificate(domainId, userId);
-      return c.json({ message: 'SSL certificate renewal initiated' });
-    } catch (error) {
-      console.error('Error renewing SSL certificate:', error);
-      return c.json({ error: 'Failed to renew SSL certificate' }, 500);
-    }
-  });
-
-  // Health Monitoring
-  router.get('/domains/:id/health', async (c: Context) => {
-    const domainId = parseInt(c.req.param('id'));
-    const userId = c.get('userId');
-
-    try {
-      const domainService = new DomainService(c.get('db'), {
-        cloudflareApiToken: c.env.CLOUDFLARE_API_TOKEN,
-        cloudflareAccountId: c.env.CLOUDFLARE_ACCOUNT_ID,
-        cloudflareZoneId: c.env.CLOUDFLARE_ZONE_ID,
-      });
-
-      const health = await domainService.checkDomainHealth(domainId, userId);
-      return c.json(health);
-    } catch (error) {
-      console.error('Error checking domain health:', error);
-      return c.json({ error: 'Failed to check domain health' }, 500);
-    }
-  });
+    });
+  }
 
   return router;
 };
+
+export const createDomainRoutes = withOpenAPI(createBaseDomainRoutes, '/api');

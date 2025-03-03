@@ -140,5 +140,5 @@ const createBaseFeedbackRoutes = () => {
 
 export const createFeedbackRoutes = withOpenAPI(
   createBaseFeedbackRoutes,
-  '/api'
+  '/api/admin'
 );

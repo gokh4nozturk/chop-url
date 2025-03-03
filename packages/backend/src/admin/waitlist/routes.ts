@@ -76,5 +76,5 @@ const createBaseWaitListRoutes = () => {
 
 export const createWaitListRoutes = withOpenAPI(
   createBaseWaitListRoutes,
-  '/api'
+  '/api/admin'
 );
