@@ -1,3 +1,4 @@
+import { withSchema } from '@/db/helpers';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { createDb } from '../db/client';
 import {
@@ -109,10 +110,12 @@ export class AnalyticsService {
         };
         return this.database.insert(customEvents).values(insertData);
       }
-      return this.database.insert(customEvents).values({
-        ...data,
-        properties: data.properties ? JSON.stringify(data.properties) : null,
-      });
+      return this.database.insert(customEvents).values(
+        withSchema({
+          ...data,
+          properties: data.properties ? JSON.stringify(data.properties) : null,
+        })
+      );
     } catch (error) {
       throw new ValidationError('Invalid custom event data', error);
     }
