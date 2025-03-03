@@ -38,9 +38,9 @@ export interface EventData {
   userId?: number;
   eventType: EventType;
   eventName: string;
-  properties?: Record<string, unknown>;
-  deviceInfo?: Record<string, unknown>;
-  geoInfo?: Record<string, unknown>;
+  properties?: EventProperties | Record<string, unknown>;
+  deviceInfo?: DeviceInfo | Record<string, unknown>;
+  geoInfo?: GeoInfo | Record<string, unknown>;
   referrer?: string;
 }
 

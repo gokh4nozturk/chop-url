@@ -1,8 +1,6 @@
-import crypto from 'crypto';
-import { generateTOTP, verifyTOTP } from '@chop-url/lib';
+import crypto from 'node:crypto';
+import { verifyTOTP } from '@chop-url/lib';
 import { and, eq, gt, not, sql } from 'drizzle-orm';
-import { type InferSelectModel } from 'drizzle-orm';
-import { DrizzleD1Database } from 'drizzle-orm/d1';
 import { createDb } from '../db/client';
 import { withSchema } from '../db/helpers';
 import {

@@ -1,447 +1,182 @@
+import { withOpenAPI } from '@/utils/openapi';
+import { OpenAPIHono } from '@hono/zod-openapi';
 import { zValidator } from '@hono/zod-validator';
-import { Context, Hono } from 'hono';
-import { z } from 'zod';
 import { auth } from '../auth/middleware';
-import { IUser } from '../auth/types';
-import { createDb } from '../db/client';
-import { WebSocketService } from '../websocket/service';
-import { AnalyticsService } from './service';
-import { DatabaseTableError, UrlNotFoundError } from './service';
-import { TimeRange } from './types';
-const timeRangeSchema = z.enum(['24h', '7d', '30d', '90d']);
+import { H } from '../types/hono.types';
+import { RouteGroup } from '../types/route.types';
+import { handleError } from '../utils/error';
+import { createRouteGroup } from '../utils/route-factory';
+import { analyticsHandlers } from './handlers';
+import { analyticsSchemas } from './schemas';
 
-interface Variables {
-  user?: IUser;
-}
+// Analytics route groups
+const analyticsRoutes: RouteGroup[] = [
+  {
+    prefix: '/analytics',
+    tag: 'EVENTS',
+    description: 'Event tracking endpoints',
+    routes: [
+      {
+        path: '/events',
+        method: 'post',
+        description: 'Track an event',
+        schema: {
+          request: analyticsSchemas.trackEvent,
+          response: analyticsSchemas.success,
+        },
+        handler: analyticsHandlers.trackEvent,
+      },
+      {
+        path: '/custom-events',
+        method: 'post',
+        description: 'Create a custom event',
+        schema: {
+          request: analyticsSchemas.createCustomEvent,
+          response: analyticsSchemas.success,
+        },
+        handler: analyticsHandlers.createCustomEvent,
+      },
+      {
+        path: '/events/:urlId',
+        method: 'get',
+        description: 'Get events for a URL by ID',
+        schema: {
+          response: analyticsSchemas.events,
+        },
+        handler: analyticsHandlers.getEvents,
+      },
+      {
+        path: '/custom-events/:userId',
+        method: 'get',
+        description: 'Get custom events for a user',
+        schema: {
+          response: analyticsSchemas.customEvents,
+        },
+        handler: analyticsHandlers.getCustomEvents,
+      },
+    ],
+  },
+  {
+    prefix: '/analytics/urls',
+    tag: 'URL_ANALYTICS',
+    description: 'URL analytics endpoints',
+    routes: [
+      {
+        path: '/:shortId/stats',
+        method: 'get',
+        description: 'Get statistics for a URL',
+        schema: {
+          response: analyticsSchemas.urlStats,
+        },
+        handler: analyticsHandlers.getUrlStats,
+      },
+      {
+        path: '/:shortId/events',
+        method: 'get',
+        description: 'Get events for a URL',
+        schema: {
+          response: analyticsSchemas.urlEvents,
+        },
+        handler: analyticsHandlers.getUrlEvents,
+      },
+    ],
+  },
+  {
+    prefix: '/analytics/urls',
+    tag: 'DETAILED_ANALYTICS',
+    description: 'Detailed analytics endpoints',
+    routes: [
+      {
+        path: '/:shortId/geo',
+        method: 'get',
+        description: 'Get geographic statistics for a URL',
+        schema: {
+          response: analyticsSchemas.geoStats,
+        },
+        handler: analyticsHandlers.getGeoStats,
+      },
+      {
+        path: '/:shortId/devices',
+        method: 'get',
+        description: 'Get device statistics for a URL',
+        schema: {
+          response: analyticsSchemas.deviceStats,
+        },
+        handler: analyticsHandlers.getDeviceStats,
+      },
+      {
+        path: '/:shortId/utm',
+        method: 'get',
+        description: 'Get UTM statistics for a URL',
+        schema: {
+          response: analyticsSchemas.utmStats,
+        },
+        handler: analyticsHandlers.getUtmStats,
+      },
+      {
+        path: '/:shortId/clicks',
+        method: 'get',
+        description: 'Get click history for a URL',
+        schema: {
+          response: analyticsSchemas.clickHistory,
+        },
+        handler: analyticsHandlers.getClickHistory,
+      },
+    ],
+  },
+  {
+    prefix: '/analytics/users',
+    tag: 'USER_ANALYTICS',
+    description: 'User analytics endpoints',
+    routes: [
+      {
+        path: '/:userId',
+        method: 'get',
+        description: 'Get analytics for a user',
+        requiresAuth: true,
+        schema: {
+          response: analyticsSchemas.userAnalytics,
+        },
+        handler: analyticsHandlers.getUserAnalytics,
+      },
+    ],
+  },
+];
 
-interface Env {
-  DB: D1Database;
-}
+// Create base router
+const createBaseAnalyticsRoutes = () => {
+  const router = new OpenAPIHono<H>();
 
-type HandlerContext = Context<{ Bindings: Env; Variables: Variables }>;
+  // Register all routes with middleware
+  for (const route of analyticsRoutes.flatMap((group) =>
+    createRouteGroup(group)
+  )) {
+    const middlewares = [];
 
-export const createAnalyticsRoutes = () => {
-  const router = new Hono<{ Bindings: Env; Variables: Variables }>();
-  const wsService = new WebSocketService();
+    // Add authentication middleware if required
+    if (route.metadata.requiresAuth) {
+      middlewares.push(auth());
+    }
 
-  const trackEventSchema = z.object({
-    urlId: z.number(),
-    userId: z.number().optional(),
-    eventType: z.enum([
-      'REDIRECT',
-      'PAGE_VIEW',
-      'CLICK',
-      'CONVERSION',
-      'CUSTOM',
-    ]),
-    eventName: z.string(),
-    properties: z
-      .object({
-        source: z.string().nullable(),
-        medium: z.string().nullable(),
-        campaign: z.string().nullable(),
-        term: z.string().nullable(),
-        content: z.string().nullable(),
-        shortId: z.string(),
-        originalUrl: z.string(),
-      })
-      .optional(),
-    deviceInfo: z
-      .object({
-        userAgent: z.string(),
-        ip: z.string(),
-        browser: z.string(),
-        browserVersion: z.string(),
-        os: z.string(),
-        osVersion: z.string(),
-        deviceType: z.enum(['desktop', 'mobile', 'tablet', 'unknown']),
-      })
-      .optional(),
-    geoInfo: z
-      .object({
-        country: z.string(),
-        city: z.string(),
-        region: z.string(),
-        regionCode: z.string(),
-        timezone: z.string(),
-        longitude: z.string(),
-        latitude: z.string(),
-        postalCode: z.string(),
-      })
-      .optional(),
-    referrer: z.string().optional(),
-  });
+    // Add validation middleware if schema exists
+    if (route.schema?.request) {
+      middlewares.push(zValidator('json', route.schema.request));
+    }
 
-  const createCustomEventSchema = z.object({
-    userId: z.number(),
-    name: z.string(),
-    description: z.string().optional(),
-    properties: z.array(z.string()),
-  });
-
-  type TrackEventInput = z.infer<typeof trackEventSchema>;
-  type CreateCustomEventInput = z.infer<typeof createCustomEventSchema>;
-
-  router.post('/events', async (c: HandlerContext) => {
-    const db = createDb(c.env.DB);
-    const analyticsService = new AnalyticsService({
-      database: db,
-      wsService,
+    // Register route with error handling
+    router[route.method](route.path, ...middlewares, async (c) => {
+      try {
+        return await route.handler(c);
+      } catch (error) {
+        return handleError(c, error);
+      }
     });
-
-    const result = await trackEventSchema.safeParseAsync(await c.req.json());
-
-    if (!result.success) {
-      return c.json({ error: 'Invalid request body' }, 400);
-    }
-
-    await analyticsService.trackEvent(result.data);
-    return c.json({ success: true });
-  });
-
-  router.post('/custom-events', async (c: HandlerContext) => {
-    const db = createDb(c.env.DB);
-    const analyticsService = new AnalyticsService({
-      database: db,
-      wsService,
-    });
-
-    const result = await createCustomEventSchema.safeParseAsync(
-      await c.req.json()
-    );
-
-    if (!result.success) {
-      return c.json({ error: 'Invalid request body' }, 400);
-    }
-
-    await analyticsService.createCustomEvent(result.data);
-    return c.json({ success: true });
-  });
-
-  router.get('/events/:urlId', async (c) => {
-    const db = createDb(c.env.DB);
-    const analyticsService = new AnalyticsService({
-      database: db,
-      wsService,
-    });
-    const urlId = Number(c.req.param('urlId'));
-
-    const events = await analyticsService.getEvents(urlId);
-    return c.json(events);
-  });
-
-  router.get('/custom-events/:userId', async (c) => {
-    const db = createDb(c.env.DB);
-    const analyticsService = new AnalyticsService({
-      database: db,
-      wsService,
-    });
-    const userId = Number(c.req.param('userId'));
-
-    const events = await analyticsService.getCustomEvents(userId);
-    return c.json(events);
-  });
-
-  // URL Stats endpoint
-  router.get('/urls/:shortId/stats', async (c) => {
-    const db = createDb(c.env.DB);
-    const analyticsService = new AnalyticsService({
-      database: db,
-      wsService,
-    });
-
-    const shortId = c.req.param('shortId');
-    const timeRange = c.req.query('timeRange') || '7d';
-
-    if (!timeRangeSchema.safeParse(timeRange).success) {
-      return c.json({ error: 'Invalid time range' }, 400);
-    }
-
-    try {
-      const stats = await analyticsService.getUrlStats(
-        shortId,
-        timeRange as TimeRange
-      );
-      return c.json(stats);
-    } catch (error) {
-      if (error instanceof UrlNotFoundError) {
-        return c.json({ error: error.message }, 404);
-      }
-      if (error instanceof DatabaseTableError) {
-        return c.json({ error: error.message }, 503);
-      }
-      console.error('Error getting URL stats:', error);
-      return c.json({ error: 'Failed to get URL stats' }, 500);
-    }
-  });
-
-  // Event Analytics endpoints
-  router.get('/urls/:shortId/events', async (c) => {
-    const db = createDb(c.env.DB);
-    const analyticsService = new AnalyticsService({
-      database: db,
-      wsService,
-    });
-    const shortId = c.req.param('shortId');
-    const timeRange = c.req.query('timeRange') || '7d';
-    const eventType = c.req.query('eventType');
-
-    if (!timeRangeSchema.safeParse(timeRange).success) {
-      return c.json({ error: 'Invalid time range' }, 400);
-    }
-
-    try {
-      const events = await analyticsService.getUrlEvents(
-        shortId,
-        timeRange as TimeRange,
-        eventType || undefined
-      );
-      return c.json(events);
-    } catch (error) {
-      if (error instanceof UrlNotFoundError) {
-        return c.json({ error: error.message }, 404);
-      }
-      if (error instanceof DatabaseTableError) {
-        return c.json({ error: error.message }, 503);
-      }
-      console.error('Error getting URL events:', error);
-      return c.json({ error: 'Failed to get URL events' }, 500);
-    }
-  });
-
-  // Geographic Analytics
-  router.get('/urls/:shortId/geo', async (c) => {
-    const db = createDb(c.env.DB);
-    const analyticsService = new AnalyticsService({
-      database: db,
-      wsService,
-    });
-
-    const shortId = c.req.param('shortId');
-    const timeRange = c.req.query('timeRange') || '7d';
-
-    if (!timeRangeSchema.safeParse(timeRange).success) {
-      return c.json({ error: 'Invalid time range' }, 400);
-    }
-
-    try {
-      const geoStats = await analyticsService.getGeoStats(
-        shortId,
-        timeRange as TimeRange
-      );
-      return c.json(geoStats);
-    } catch (error) {
-      if (error instanceof UrlNotFoundError) {
-        return c.json({ error: error.message }, 404);
-      }
-      if (error instanceof DatabaseTableError) {
-        return c.json({ error: error.message }, 503);
-      }
-      console.error('Error getting geo stats:', error);
-      return c.json({ error: 'Failed to get geo stats' }, 500);
-    }
-  });
-
-  // Device Analytics
-  router.get('/urls/:shortId/devices', async (c) => {
-    const db = createDb(c.env.DB);
-    const analyticsService = new AnalyticsService({
-      database: db,
-      wsService,
-    });
-    const shortId = c.req.param('shortId');
-    const timeRange = c.req.query('timeRange') || '7d';
-
-    if (!timeRangeSchema.safeParse(timeRange).success) {
-      return c.json({ error: 'Invalid time range' }, 400);
-    }
-
-    try {
-      const deviceStats = await analyticsService.getDeviceStats(
-        shortId,
-        timeRange as TimeRange
-      );
-      return c.json(deviceStats);
-    } catch (error) {
-      if (error instanceof UrlNotFoundError) {
-        return c.json({ error: error.message }, 404);
-      }
-      if (error instanceof DatabaseTableError) {
-        return c.json({ error: error.message }, 503);
-      }
-      console.error('Error getting device stats:', error);
-      return c.json({ error: 'Failed to get device stats' }, 500);
-    }
-  });
-
-  // UTM Analytics
-  router.get('/urls/:shortId/utm', async (c) => {
-    const db = createDb(c.env.DB);
-    const analyticsService = new AnalyticsService({
-      database: db,
-      wsService,
-    });
-    const shortId = c.req.param('shortId');
-    const timeRange = c.req.query('timeRange') || '7d';
-
-    if (!timeRangeSchema.safeParse(timeRange).success) {
-      return c.json({ error: 'Invalid time range' }, 400);
-    }
-
-    try {
-      const utmStats = await analyticsService.getUtmStats(
-        shortId,
-        timeRange as TimeRange
-      );
-      return c.json(utmStats);
-    } catch (error) {
-      if (error instanceof UrlNotFoundError) {
-        return c.json({ error: error.message }, 404);
-      }
-      if (error instanceof DatabaseTableError) {
-        return c.json({ error: error.message }, 503);
-      }
-      console.error('Error getting UTM stats:', error);
-      return c.json({ error: 'Failed to get UTM stats' }, 500);
-    }
-  });
-
-  // Click History
-  router.get('/urls/:shortId/clicks', async (c) => {
-    const db = createDb(c.env.DB);
-    const analyticsService = new AnalyticsService({
-      database: db,
-      wsService,
-    });
-    const shortId = c.req.param('shortId');
-    const timeRange = c.req.query('timeRange') || '7d';
-
-    if (!timeRangeSchema.safeParse(timeRange).success) {
-      return c.json({ error: 'Invalid time range' }, 400);
-    }
-
-    try {
-      const clickHistory = await analyticsService.getClickHistory(
-        shortId,
-        timeRange as TimeRange
-      );
-      return c.json(clickHistory);
-    } catch (error) {
-      if (error instanceof UrlNotFoundError) {
-        return c.json({ error: error.message }, 404);
-      }
-      if (error instanceof DatabaseTableError) {
-        return c.json({ error: error.message }, 503);
-      }
-      console.error('Error getting click history:', error);
-      return c.json({ error: 'Failed to get click history' }, 500);
-    }
-  });
-
-  // User Analytics -> Dashboard
-  router.get('/user/analytics', auth(), async (c) => {
-    const db = createDb(c.env.DB);
-    const analyticsService = new AnalyticsService({
-      database: db,
-      wsService,
-    });
-    const timeRange = c.req.query('timeRange') || '7d';
-    const user = c.get('user') as IUser;
-
-    if (!timeRangeSchema.safeParse(timeRange).success) {
-      return c.json({ error: 'Invalid time range' }, 400);
-    }
-
-    const analytics = await analyticsService.getUserAnalytics(
-      user.id,
-      timeRange as TimeRange
-    );
-    return c.json(analytics);
-  });
-
-  // Export endpoint
-  router.get('/urls/:shortId/export', async (c) => {
-    const db = createDb(c.env.DB);
-    const analyticsService = new AnalyticsService({
-      database: db,
-      wsService,
-    });
-
-    const shortId = c.req.param('shortId');
-    const timeRange = c.req.query('timeRange') || '7d';
-    const format = c.req.query('format') as 'csv' | 'json';
-
-    if (!timeRangeSchema.safeParse(timeRange).success) {
-      return c.json({ error: 'Invalid time range' }, 400);
-    }
-
-    try {
-      const events = await analyticsService.getUrlEvents(
-        shortId,
-        timeRange as TimeRange
-      );
-
-      if (format === 'csv') {
-        const csvContent = events
-          .map((event) => {
-            const deviceInfo = JSON.parse(event.deviceInfo || '{}');
-            const geoInfo = JSON.parse(event.geoInfo || '{}');
-            const properties = JSON.parse(event.properties || '{}');
-
-            return [
-              event.id,
-              event.eventType,
-              shortId,
-              event.createdAt,
-              deviceInfo.browser,
-              deviceInfo.os,
-              deviceInfo.deviceType,
-              geoInfo.country,
-              geoInfo.city,
-              geoInfo.region,
-              properties.source,
-              properties.medium,
-              properties.campaign,
-            ].join(',');
-          })
-          .join('\n');
-
-        const headers = [
-          'id',
-          'type',
-          'shortId',
-          'createdAt',
-          'browser',
-          'os',
-          'deviceType',
-          'country',
-          'city',
-          'region',
-          'source',
-          'medium',
-          'campaign',
-        ].join(',');
-
-        return c.text(`${headers}\n${csvContent}`, {
-          headers: {
-            'Content-Type': 'text/csv',
-            'Content-Disposition': `attachment; filename="analytics-${shortId}-${timeRange}.csv"`,
-          },
-        });
-      }
-
-      return c.json(events);
-    } catch (error) {
-      if (error instanceof UrlNotFoundError) {
-        return c.json({ error: error.message }, 404);
-      }
-      if (error instanceof DatabaseTableError) {
-        return c.json({ error: error.message }, 503);
-      }
-      console.error('Error exporting analytics:', error);
-      return c.json({ error: 'Failed to export analytics' }, 500);
-    }
-  });
+  }
 
   return router;
 };
+
+export const createAnalyticsRoutes = withOpenAPI(
+  createBaseAnalyticsRoutes,
+  '/api'
+);

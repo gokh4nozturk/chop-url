@@ -861,6 +861,287 @@
             "type": "string"
           }
         }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": ["success"]
+      },
+      "TrackEventSchema": {
+        "type": "object",
+        "properties": {
+          "urlId": {
+            "type": "number"
+          },
+          "userId": {
+            "type": "number"
+          },
+          "eventType": {
+            "type": "string",
+            "enum": ["REDIRECT", "PAGE_VIEW", "CLICK", "CONVERSION", "CUSTOM"]
+          },
+          "eventName": {
+            "type": "string"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string",
+                "nullable": true
+              },
+              "medium": {
+                "type": "string",
+                "nullable": true
+              },
+              "campaign": {
+                "type": "string",
+                "nullable": true
+              },
+              "term": {
+                "type": "string",
+                "nullable": true
+              },
+              "content": {
+                "type": "string",
+                "nullable": true
+              },
+              "shortId": {
+                "type": "string"
+              },
+              "originalUrl": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "source",
+              "medium",
+              "campaign",
+              "term",
+              "content",
+              "shortId",
+              "originalUrl"
+            ]
+          },
+          "deviceInfo": {
+            "type": "object",
+            "properties": {
+              "userAgent": {
+                "type": "string"
+              },
+              "ip": {
+                "type": "string"
+              },
+              "browser": {
+                "type": "string"
+              },
+              "browserVersion": {
+                "type": "string"
+              },
+              "os": {
+                "type": "string"
+              },
+              "osVersion": {
+                "type": "string"
+              },
+              "deviceType": {
+                "type": "string",
+                "enum": ["desktop", "mobile", "tablet", "unknown"]
+              }
+            },
+            "required": [
+              "userAgent",
+              "ip",
+              "browser",
+              "browserVersion",
+              "os",
+              "osVersion",
+              "deviceType"
+            ]
+          },
+          "geoInfo": {
+            "type": "object",
+            "properties": {
+              "country": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              },
+              "region": {
+                "type": "string"
+              },
+              "regionCode": {
+                "type": "string"
+              },
+              "timezone": {
+                "type": "string"
+              },
+              "longitude": {
+                "type": "string"
+              },
+              "latitude": {
+                "type": "string"
+              },
+              "postalCode": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "country",
+              "city",
+              "region",
+              "regionCode",
+              "timezone",
+              "longitude",
+              "latitude",
+              "postalCode"
+            ]
+          },
+          "referrer": {
+            "type": "string"
+          }
+        },
+        "required": ["urlId", "eventType", "eventName"]
+      },
+      "CreateCustomEventSchema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {
+              "nullable": true
+            }
+          }
+        },
+        "required": ["userId", "name"]
+      },
+      "EventsResponse": {
+        "type": "array",
+        "items": {
+          "nullable": true
+        }
+      },
+      "CustomEventsResponse": {
+        "type": "array",
+        "items": {
+          "nullable": true
+        }
+      },
+      "UrlEventsResponse": {
+        "type": "array",
+        "items": {
+          "nullable": true
+        }
+      },
+      "GeoStatsResponse": {
+        "type": "object",
+        "properties": {
+          "countries": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "cities": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "regions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "timezones": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          }
+        },
+        "required": ["countries", "cities", "regions", "timezones"]
+      },
+      "DeviceStatsResponse": {
+        "type": "object",
+        "properties": {
+          "browsers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "devices": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "operatingSystems": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          }
+        },
+        "required": ["browsers", "devices", "operatingSystems"]
+      },
+      "UtmStatsResponse": {
+        "type": "object",
+        "properties": {
+          "sources": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "mediums": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "campaigns": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          }
+        },
+        "required": ["sources", "mediums", "campaigns"]
+      },
+      "ClickHistoryResponse": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            }
+          },
+          "required": ["name", "value"]
+        }
+      },
+      "UserAnalyticsResponse": {
+        "nullable": true
       }
     },
     "parameters": {}
@@ -3263,6 +3544,834 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UrlGroupResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/events": {
+      "post": {
+        "description": "POST /api/analytics/events",
+        "tags": [],
+        "summary": "POST /api/analytics/events",
+        "requestBody": {
+          "description": "Request body",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrackEventSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "POST /api/analytics/events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/custom-events": {
+      "post": {
+        "description": "POST /api/analytics/custom-events",
+        "tags": [],
+        "summary": "POST /api/analytics/custom-events",
+        "requestBody": {
+          "description": "Request body",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomEventSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "POST /api/analytics/custom-events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/events/{urlId}": {
+      "get": {
+        "description": "GET /api/analytics/events/:urlId",
+        "tags": [],
+        "summary": "GET /api/analytics/events/:urlId",
+        "responses": {
+          "200": {
+            "description": "GET /api/analytics/events/:urlId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/custom-events/{userId}": {
+      "get": {
+        "description": "GET /api/analytics/custom-events/:userId",
+        "tags": [],
+        "summary": "GET /api/analytics/custom-events/:userId",
+        "responses": {
+          "200": {
+            "description": "GET /api/analytics/custom-events/:userId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomEventsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/urls/{shortId}/stats": {
+      "get": {
+        "description": "GET /api/analytics/urls/:shortId/stats",
+        "tags": [],
+        "summary": "GET /api/analytics/urls/:shortId/stats",
+        "responses": {
+          "200": {
+            "description": "GET /api/analytics/urls/:shortId/stats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/UrlStatsResponse"
+                    },
+                    {
+                      "properties": {
+                        "totalEvents": {
+                          "type": "number"
+                        },
+                        "uniqueVisitors": {
+                          "type": "number"
+                        },
+                        "lastEventAt": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "url": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "number"
+                            },
+                            "shortId": {
+                              "type": "string"
+                            },
+                            "originalUrl": {
+                              "type": "string"
+                            },
+                            "createdAt": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "shortId",
+                            "originalUrl",
+                            "createdAt"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "totalEvents",
+                        "uniqueVisitors",
+                        "lastEventAt",
+                        "url"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/urls/{shortId}/events": {
+      "get": {
+        "description": "GET /api/analytics/urls/:shortId/events",
+        "tags": [],
+        "summary": "GET /api/analytics/urls/:shortId/events",
+        "responses": {
+          "200": {
+            "description": "GET /api/analytics/urls/:shortId/events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UrlEventsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/urls/{shortId}/geo": {
+      "get": {
+        "description": "GET /api/analytics/urls/:shortId/geo",
+        "tags": [],
+        "summary": "GET /api/analytics/urls/:shortId/geo",
+        "responses": {
+          "200": {
+            "description": "GET /api/analytics/urls/:shortId/geo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeoStatsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/urls/{shortId}/devices": {
+      "get": {
+        "description": "GET /api/analytics/urls/:shortId/devices",
+        "tags": [],
+        "summary": "GET /api/analytics/urls/:shortId/devices",
+        "responses": {
+          "200": {
+            "description": "GET /api/analytics/urls/:shortId/devices",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceStatsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/urls/{shortId}/utm": {
+      "get": {
+        "description": "GET /api/analytics/urls/:shortId/utm",
+        "tags": [],
+        "summary": "GET /api/analytics/urls/:shortId/utm",
+        "responses": {
+          "200": {
+            "description": "GET /api/analytics/urls/:shortId/utm",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UtmStatsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/urls/{shortId}/clicks": {
+      "get": {
+        "description": "GET /api/analytics/urls/:shortId/clicks",
+        "tags": [],
+        "summary": "GET /api/analytics/urls/:shortId/clicks",
+        "responses": {
+          "200": {
+            "description": "GET /api/analytics/urls/:shortId/clicks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClickHistoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/users/{userId}": {
+      "get": {
+        "description": "GET /api/analytics/users/:userId",
+        "tags": [],
+        "summary": "GET /api/analytics/users/:userId",
+        "responses": {
+          "200": {
+            "description": "GET /api/analytics/users/:userId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserAnalyticsResponse"
                 }
               }
             }
