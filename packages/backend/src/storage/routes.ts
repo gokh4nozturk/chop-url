@@ -1,61 +1,21 @@
+import { withOpenAPI } from '@/utils/openapi';
 import { Hono } from 'hono';
-import { Env, Variables } from '../types';
-import { R2StorageService } from './service';
+import { generatePresignedUrlHandler, getPublicUrlHandler } from './handlers';
+import { StorageContext } from './types';
 
-export const createStorageRoutes = () => {
-  const router = new Hono<{ Bindings: Env; Variables: Variables }>();
+const createBaseStorageRoutes = () => {
+  const router = new Hono<StorageContext>();
 
-  router.post('/storage/generate-presigned-url', async (c) => {
-    try {
-      console.log('Received presigned URL request');
-      const { path, operation = 'write' } = await c.req.json();
+  // Group routes by functionality
+  const storageRouter = router.basePath('/storage');
 
-      if (!path || typeof path !== 'string') {
-        console.error('Invalid path:', path);
-        return c.json({ error: 'Path is required' }, 400);
-      }
+  // Presigned URL generation
+  storageRouter.post('/generate-presigned-url', generatePresignedUrlHandler);
 
-      console.log('Generating presigned URL for path:', path);
-      const storageService = new R2StorageService(c.env);
-      const { url } = await storageService.getPresignedUrl(path, operation);
-
-      console.log('Generated presigned URL:', url);
-      return c.json({ url });
-    } catch (error) {
-      console.error('Error generating URL:', error);
-      return c.json(
-        {
-          error: 'Failed to generate URL',
-          details: error instanceof Error ? error.message : 'Unknown error',
-        },
-        500
-      );
-    }
-  });
-
-  router.get('/storage/public-url', async (c) => {
-    try {
-      const { path } = c.req.query();
-
-      if (!path) {
-        return c.json({ error: 'Path is required' }, 400);
-      }
-
-      const storageService = new R2StorageService(c.env);
-      const publicUrl = storageService.getPublicUrl(path);
-
-      return c.json({ url: publicUrl });
-    } catch (error) {
-      console.error('Error getting public URL:', error);
-      return c.json(
-        {
-          error: 'Failed to get public URL',
-          details: error instanceof Error ? error.message : 'Unknown error',
-        },
-        500
-      );
-    }
-  });
+  // Public URL generation
+  storageRouter.get('/public-url', getPublicUrlHandler);
 
   return router;
 };
+
+export const createStorageRoutes = withOpenAPI(createBaseStorageRoutes, '/api');

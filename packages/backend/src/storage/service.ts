@@ -5,6 +5,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Env } from '../types';
+import { StorageOperation } from './types';
 
 export class R2StorageService {
   private readonly client: S3Client;
@@ -22,7 +23,7 @@ export class R2StorageService {
 
   async getPresignedUrl(
     path: string,
-    operation: 'read' | 'write' = 'read',
+    operation: StorageOperation = 'read',
     expiresIn = 3600 // 1 hour
   ): Promise<{ url: string }> {
     try {

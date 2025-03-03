@@ -4489,6 +4489,188 @@
         }
       }
     },
+    "/api/storage/generate-presigned-url": {
+      "post": {
+        "description": "POST /api/storage/generate-presigned-url",
+        "tags": [],
+        "summary": "POST /api/storage/generate-presigned-url",
+        "responses": {
+          "200": {
+            "description": "POST /api/storage/generate-presigned-url",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    },
+                    {
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "description": "Operation success status",
+                          "example": true
+                        },
+                        "data": {
+                          "nullable": true,
+                          "description": "Response data"
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Success message",
+                          "example": "Operation completed successfully"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/storage/public-url": {
+      "get": {
+        "description": "GET /api/storage/public-url",
+        "tags": [],
+        "summary": "GET /api/storage/public-url",
+        "responses": {
+          "200": {
+            "description": "GET /api/storage/public-url",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    },
+                    {
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "description": "Operation success status",
+                          "example": true
+                        },
+                        "data": {
+                          "nullable": true,
+                          "description": "Response data"
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Success message",
+                          "example": "Operation completed successfully"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/qr/": {
       "post": {
         "description": "POST /api/qr/",
