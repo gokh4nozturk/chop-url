@@ -4,12 +4,12 @@ import {
   Head,
   Heading,
   Html,
-  Img,
   Link,
   Preview,
   Text,
 } from '@react-email/components';
 import * as React from 'react';
+import { Logo } from '../components/logo';
 
 interface ApprovedWaitListEmailProps {
   temporaryPassword: string;
@@ -25,13 +25,7 @@ export const ApprovedWaitListEmail = ({
     <Preview>Welcome to Chop URL - Your Account is Ready!</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img
-          src="https://storage.chop-url.com/assets/logo.svg"
-          alt="ChopURL Logo"
-          width="100"
-          height="100"
-          style={logo}
-        />
+        <Logo />
         <Heading style={h1}>Welcome to Chop URL!</Heading>
         <Text style={text}>
           Your waitlist application has been approved and your account is now

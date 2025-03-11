@@ -4,12 +4,12 @@ import {
   Head,
   Heading,
   Html,
-  Img,
   Link,
   Preview,
   Text,
 } from '@react-email/components';
 import * as React from 'react';
+import { Logo } from '../components/logo';
 
 interface ResetPasswordProps {
   name: string;
@@ -22,13 +22,7 @@ export const ResetPassword = ({ name, resetLink }: ResetPasswordProps) => (
     <Preview>Reset your ChopURL password</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img
-          src="https://storage.chop-url.com/assets/logo.svg"
-          alt="ChopURL Logo"
-          width="100"
-          height="100"
-          style={logo}
-        />
+        <Logo />
         <Heading style={h1}>Hello {name},</Heading>
         <Text style={text}>We received a request to reset your password.</Text>
         <Text style={text}>Click the button below to reset your password:</Text>

@@ -6,7 +6,6 @@ import {
   Heading,
   Hr,
   Html,
-  Img,
   Link,
   Preview,
   Row,
@@ -14,6 +13,7 @@ import {
   Text,
 } from '@react-email/components';
 import * as React from 'react';
+import { Logo } from '../components/logo';
 
 interface UsageReportProps {
   name: string;
@@ -48,13 +48,7 @@ export const UsageReport = ({ name, stats, frontendUrl }: UsageReportProps) => (
     </Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img
-          src="https://storage.chop-url.com/assets/logo.svg"
-          alt="ChopURL Logo"
-          width="100"
-          height="100"
-          style={logo}
-        />
+        <Logo />
         <Heading style={h1}>Hello {name},</Heading>
         <Text style={text}>Here's your URL usage report for the period:</Text>
         <Text style={periodText}>

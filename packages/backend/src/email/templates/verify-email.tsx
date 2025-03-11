@@ -4,12 +4,12 @@ import {
   Head,
   Heading,
   Html,
-  Img,
   Link,
   Preview,
   Text,
 } from '@react-email/components';
 import * as React from 'react';
+import { Logo } from '../components/logo';
 
 interface VerifyEmailProps {
   name: string;
@@ -22,13 +22,7 @@ export const VerifyEmail = ({ name, verificationLink }: VerifyEmailProps) => (
     <Preview>Verify your email address for ChopURL</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img
-          src="https://chop-url.com/logo.svg"
-          alt="ChopURL Logo"
-          width="100"
-          height="100"
-          style={logo}
-        />
+        <Logo />
         <Heading style={h1}>Hello {name},</Heading>
         <Text style={text}>Thank you for creating a ChopURL account.</Text>
         <Text style={text}>

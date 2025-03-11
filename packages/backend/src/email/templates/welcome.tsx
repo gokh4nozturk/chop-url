@@ -4,12 +4,12 @@ import {
   Head,
   Heading,
   Html,
-  Img,
   Link,
   Preview,
   Text,
 } from '@react-email/components';
 import * as React from 'react';
+import { Logo } from '../components/logo';
 
 interface WelcomeEmailProps {
   name: string;
@@ -22,13 +22,7 @@ export const WelcomeEmail = ({ name, dashboardUrl }: WelcomeEmailProps) => (
     <Preview>Welcome to Chop URL!</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Img
-          src="https://storage.chop-url.com/assets/logo.svg"
-          alt="ChopURL Logo"
-          width="100"
-          height="100"
-          style={logo}
-        />
+        <Logo />
         <Heading style={h1}>Hello {name},</Heading>
         <Text style={text}>
           Welcome to ChopURL! We're excited to have you on board.
