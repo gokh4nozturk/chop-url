@@ -151,7 +151,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
             throw new Error('No token found');
           }
 
-          const response = await apiClient.post('/api/auth/refresh');
+          const response = await apiClient.post('/api/auth/token/refresh');
           const { user, token, expiresAt } = response.data;
 
           if (!token) {
@@ -309,7 +309,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
       verifyTwoFactorLogin: async (email: string, code: string) => {
         try {
-          const response = await apiClient.post('/api/auth/verify-2fa', {
+          const response = await apiClient.post('/api/auth/2fa/verify', {
             email,
             code,
           });
@@ -342,7 +342,9 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       verifyEmail: async (token: string) => {
         try {
           set({ isLoading: true, error: null });
-          await apiClient.post('/api/auth/verify-email', { token });
+          const response = await apiClient.post('/api/auth/email/verify', {
+            token,
+          });
           const user = get().user;
           if (user) {
             set({ user: { ...user, isEmailVerified: true } });
@@ -361,7 +363,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
       resendVerificationEmail: async () => {
         try {
-          await apiClient.post('/api/auth/resend-verification-email');
+          await apiClient.post('/api/auth/email/resend-verification');
         } catch (error) {
           console.error('Resend verification email error:', error);
         }
@@ -369,7 +371,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 
       setupTwoFactor: async () => {
         try {
-          const response = await apiClient.post('/api/auth/setup-2fa');
+          const response = await apiClient.post('/api/auth/2fa/setup');
           return response.data;
         } catch (error) {
           throw new Error(getErrorMessage(error));
@@ -377,14 +379,14 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
       verifyTwoFactor: async (code: string) => {
         try {
-          await apiClient.post('/api/auth/verify-2fa-setup', { code });
+          await apiClient.post('/api/auth/2fa/setup/verify', { code });
         } catch (error) {
           throw new Error(getErrorMessage(error));
         }
       },
       enableTwoFactor: async (code: string) => {
         try {
-          const response = await apiClient.post('/api/auth/enable-2fa', {
+          const response = await apiClient.post('/api/auth/2fa/enable', {
             code,
           });
           const { success } = response.data;
@@ -400,7 +402,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
       getRecoveryCodes: async () => {
         try {
-          const response = await apiClient.get('/api/auth/recovery-codes');
+          const response = await apiClient.get('/api/auth/2fa/recovery-codes');
           return response.data;
         } catch (error) {
           throw new Error(getErrorMessage(error));
@@ -408,7 +410,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
       disableTwoFactor: async (code: string) => {
         try {
-          const response = await apiClient.post('/api/auth/disable-2fa', {
+          const response = await apiClient.post('/api/auth/2fa/disable', {
             code,
           });
           const { success } = response.data;
@@ -424,7 +426,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
       requestPasswordReset: async (email: string) => {
         try {
-          await apiClient.post('/api/auth/request-password-reset', {
+          await apiClient.post('/api/auth/password/reset-request', {
             email,
           });
         } catch (error) {
@@ -437,7 +439,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         confirmPassword: string
       ) => {
         try {
-          await apiClient.put('/api/auth/reset-password', {
+          await apiClient.put('/api/auth/password/reset', {
             token,
             newPassword,
             confirmPassword,
@@ -449,7 +451,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       joinWaitList: async (data: WaitListInput) => {
         set({ isLoading: true, error: null });
         try {
-          await apiClient.post('/api/auth/waitlist', data);
+          await apiClient.post('/api/waitlist', data);
           set({ error: null });
           navigate.dashboard();
         } catch (error) {

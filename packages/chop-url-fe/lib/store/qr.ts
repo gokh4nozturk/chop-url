@@ -74,7 +74,7 @@ export const useQRStore = create<QRState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const response = await apiClient.get<QRResponse>(`/api/qr/url/${urlId}`);
+      const response = await apiClient.get<QRResponse>(`/api/qr/${urlId}`);
 
       if (response.status === 204) {
         set({ status: response.status });
@@ -198,13 +198,10 @@ export const useQRStore = create<QRState>((set, get) => ({
   fetchPresignedUrl: async (urlId: string) => {
     try {
       set({ isLoading: true });
-      const { data } = await apiClient.post(
-        '/api/storage/generate-presigned-url',
-        {
-          path: `qr/${urlId}.svg`,
-          operation: 'write',
-        }
-      );
+      const { data } = await apiClient.post('/api/storage/presigned-url', {
+        path: `qr/${urlId}.svg`,
+        operation: 'write',
+      });
 
       return {
         presignedUrl: data.url,

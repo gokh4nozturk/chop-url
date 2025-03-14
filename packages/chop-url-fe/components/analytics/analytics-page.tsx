@@ -62,7 +62,7 @@ export default function AnalyticsPage() {
     try {
       setError(null);
       const { data } = await apiClient.get<AnalyticsResponse>(
-        `/api/user/analytics?timeRange=${timeRange}`
+        `/api/analytics/user?timeRange=${timeRange}`
       );
 
       if (!data) {

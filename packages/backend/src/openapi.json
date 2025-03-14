@@ -3224,14 +3224,14 @@
         }
       }
     },
-    "/api/urls/": {
+    "/api/urls/user": {
       "get": {
-        "description": "GET /api/urls/",
+        "description": "GET /api/urls/user",
         "tags": [],
-        "summary": "GET /api/urls/",
+        "summary": "GET /api/urls/user",
         "responses": {
           "200": {
-            "description": "GET /api/urls/",
+            "description": "GET /api/urls/user",
             "content": {
               "application/json": {
                 "schema": {

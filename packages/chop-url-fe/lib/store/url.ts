@@ -102,7 +102,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   createShortUrl: async (url: string, options?: CreateUrlOptions) => {
     try {
       set({ isLoading: true, error: null });
-      const { data } = await apiClient.post('/api/shorten', {
+      const { data } = await apiClient.post('/api/urls/shorten', {
         url,
         ...options,
       });
@@ -126,7 +126,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   getUserUrls: async () => {
     try {
       set({ isLoading: true, error: null });
-      const { data } = await apiClient.get('/api/urls');
+      const { data } = await apiClient.get('/api/urls/user');
       set({ urls: data });
     } catch (error) {
       set({
@@ -167,7 +167,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       const { data } = await apiClient.get(
-        `/api/stats/${shortId}?period=${period}`
+        `/api/urls/${shortId}/analytics?period=${period}`
       );
       set({ urlStats: data });
     } catch (error) {
@@ -188,7 +188,9 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   getUrlVisits: async (shortId: string, period: Period) => {
     try {
       set({ isLoading: true, error: null });
-      await apiClient.get(`/api/stats/${shortId}/visits?period=${period}`);
+      await apiClient.get(
+        `/api/urls/${shortId}/analytics/visits?period=${period}`
+      );
     } catch (error) {
       set({
         error: {
@@ -256,7 +258,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   createUrlGroup: async (name: string, description?: string) => {
     try {
       set({ isLoading: true, error: null });
-      const { data: group } = await apiClient.post('/api/url-groups', {
+      const { data: group } = await apiClient.post('/api/urls/groups', {
         name,
         description,
       });
@@ -283,7 +285,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       const { data: updatedGroup } = await apiClient.put(
-        `/api/url-groups/${groupId}`,
+        `/api/urls/groups/${groupId}`,
         data
       );
       set((state) => ({
@@ -310,7 +312,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   deleteUrlGroup: async (groupId: number) => {
     try {
       set({ isLoading: true, error: null });
-      await apiClient.delete(`/api/url-groups/${groupId}`);
+      await apiClient.delete(`/api/urls/groups/${groupId}`);
       set((state) => ({
         urlGroups: state.urlGroups.filter((group) => group.id !== groupId),
         urls: state.urls.map((url) =>
@@ -336,7 +338,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   getUserUrlGroups: async () => {
     try {
       set({ isLoading: true, error: null });
-      const { data } = await apiClient.get('/api/url-groups');
+      const { data } = await apiClient.get('/api/urls/groups');
       set({ urlGroups: data });
     } catch (error) {
       set({
