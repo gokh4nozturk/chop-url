@@ -131,6 +131,10 @@ app.route('/api', createQRRoutes());
 app.route('/api/admin', createWaitListRoutes());
 app.route('/api/admin', createFeedbackRoutes());
 
+app.routes.map((route) => {
+  console.log('app.routes', route.path);
+});
+
 // Root route - redirect to docs
 app.get('/', (c) => {
   return c.redirect('/api-docs');
