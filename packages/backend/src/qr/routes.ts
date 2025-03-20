@@ -93,4 +93,4 @@ const createBaseQRRoutes = () => {
   return router;
 };
 
-export const createQRRoutes = withOpenAPI(createBaseQRRoutes, '/api');
+export const createQRRoutes = withOpenAPI(createBaseQRRoutes, '');

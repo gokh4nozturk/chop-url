@@ -72,4 +72,4 @@ const createBaseStorageRoutes = () => {
   return router;
 };
 
-export const createStorageRoutes = withOpenAPI(createBaseStorageRoutes, '/api');
+export const createStorageRoutes = withOpenAPI(createBaseStorageRoutes, '');

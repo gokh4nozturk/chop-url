@@ -48,4 +48,4 @@ const createBaseUrlRoutes = () => {
   return router;
 };
 
-export const createUrlRoutes = withOpenAPI(createBaseUrlRoutes, '/api');
+export const createUrlRoutes = withOpenAPI(createBaseUrlRoutes, '');

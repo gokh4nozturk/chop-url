@@ -178,4 +178,4 @@ const createBaseDomainRoutes = () => {
   return router;
 };
 
-export const createDomainRoutes = withOpenAPI(createBaseDomainRoutes, '/api');
+export const createDomainRoutes = withOpenAPI(createBaseDomainRoutes, '');

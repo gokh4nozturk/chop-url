@@ -176,7 +176,4 @@ const createBaseAnalyticsRoutes = () => {
   return router;
 };
 
-export const createAnalyticsRoutes = withOpenAPI(
-  createBaseAnalyticsRoutes,
-  '/api'
-);
+export const createAnalyticsRoutes = withOpenAPI(createBaseAnalyticsRoutes, '');

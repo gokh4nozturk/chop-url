@@ -380,4 +380,4 @@ const createBaseAuthRoutes = () => {
 };
 
 // Export the router with OpenAPI documentation
-export const createAuthRoutes = withOpenAPI(createBaseAuthRoutes, '/api');
+export const createAuthRoutes = withOpenAPI(createBaseAuthRoutes, '');
