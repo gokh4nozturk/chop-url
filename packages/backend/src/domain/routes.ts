@@ -1,6 +1,8 @@
 import { withOpenAPI } from '@/utils/openapi';
 import { OpenAPIHono } from '@hono/zod-openapi';
+import { z } from '@hono/zod-openapi';
 import { zValidator } from '@hono/zod-validator';
+import { Context } from 'hono';
 import { auth } from '../auth/middleware';
 import { H } from '../types/hono.types';
 import { RouteGroup } from '../types/route.types';
@@ -12,7 +14,10 @@ import {
   addDomainSchema,
   dnsRecordResponseSchema,
   dnsRecordsResponseSchema,
+  domainExistsErrorSchema,
+  domainNotFoundErrorSchema,
   domainResponseSchema,
+  domainValidationErrorSchema,
   domainsResponseSchema,
   healthResponseSchema,
   sslStatusResponseSchema,
@@ -46,18 +51,30 @@ const domainRoutes: RouteGroup[] = [
         schema: {
           request: addDomainSchema,
           response: domainResponseSchema,
+          errors: {
+            400: domainValidationErrorSchema,
+            409: domainExistsErrorSchema,
+          },
         },
         handler: domainHandlers.addDomain,
       },
       {
         path: '/:id',
         method: 'get',
-        description: 'Get a specific domain',
-        requiresAuth: true,
+        description: 'Get domain by ID',
+        handler: async (c) => {
+          try {
+            return await domainHandlers.getDomainById(c);
+          } catch (error) {
+            return handleError(c, error);
+          }
+        },
         schema: {
           response: domainResponseSchema,
+          errors: {
+            404: domainNotFoundErrorSchema,
+          },
         },
-        handler: domainHandlers.getDomainById,
       },
       {
         path: '/:id',

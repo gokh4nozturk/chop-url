@@ -54,6 +54,14 @@ export interface RouteSchema {
     required?: boolean;
     nullable?: boolean;
   };
+  errors?: {
+    400?: z.ZodType;
+    401?: z.ZodType;
+    403?: z.ZodType;
+    404?: z.ZodType;
+    500?: z.ZodType;
+    [key: number]: z.ZodType | undefined;
+  };
 }
 
 export interface RouteGroup {

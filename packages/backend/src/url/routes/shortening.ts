@@ -1,7 +1,11 @@
 import { Context } from 'hono';
 import { RouteGroup } from '../../types/route.types';
 import { rateLimitHandler } from '../middleware/rate-limit';
-import { createUrlSchema, urlResponseSchema } from '../schemas';
+import {
+  createUrlSchema,
+  urlResponseSchema,
+  urlValidationErrorSchema,
+} from '../schemas';
 import { UrlService } from '../service';
 
 export const shorteningRoutes: RouteGroup[] = [
@@ -50,6 +54,9 @@ export const shorteningRoutes: RouteGroup[] = [
         schema: {
           request: createUrlSchema,
           response: urlResponseSchema,
+          errors: {
+            400: urlValidationErrorSchema,
+          },
         },
       },
       {
@@ -58,6 +65,9 @@ export const shorteningRoutes: RouteGroup[] = [
         schema: {
           request: createUrlSchema,
           response: urlResponseSchema,
+          errors: {
+            400: urlValidationErrorSchema,
+          },
         },
         description: 'Create a shortened URL (alternative endpoint)',
         handler: async (c: Context) => {

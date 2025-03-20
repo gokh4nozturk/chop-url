@@ -1,7 +1,33 @@
+import { z } from '@hono/zod-openapi';
 import { Context } from 'hono';
 import { RouteGroup } from '../../types/route.types';
-import { updateUrlSchema, urlResponseSchema } from '../schemas';
+import {
+  updateUrlSchema,
+  urlEmailValidationErrorSchema,
+  urlNotFoundErrorSchema,
+  urlResponseSchema,
+  urlValidationErrorSchema,
+} from '../schemas';
 import { UrlService } from '../service';
+
+// Define a schema specifically for the URL list response
+const urlListResponseSchema = z
+  .array(urlResponseSchema)
+  .openapi('UrlListResponse');
+
+// Create an unauthorized error specific to the URL list endpoint
+const urlListUnauthorizedSchema = z
+  .object({
+    code: z.literal('UNAUTHORIZED').openapi({
+      example: 'UNAUTHORIZED',
+      description: 'Unauthorized error code',
+    }),
+    message: z.string().openapi({
+      example: 'You must be logged in to view your URLs.',
+      description: 'Detailed error message',
+    }),
+  })
+  .openapi('UrlListUnauthorizedSchema');
 
 export const managementRoutes: RouteGroup[] = [
   {
@@ -19,17 +45,12 @@ export const managementRoutes: RouteGroup[] = [
         handler: async (c: Context) => {
           try {
             const user = c.get('user');
-            console.log('User from context:', user);
 
             const db = c.get('db');
-            console.log('DB from context exists:', !!db);
 
             const urlService = new UrlService(c.env.BASE_URL, db);
-            console.log('URL Service created with base URL:', c.env.BASE_URL);
 
-            console.log('Attempting to get URLs for user ID:', user.id);
             const urls = await urlService.getUserUrls(user.id.toString());
-            console.log('URLs retrieved:', urls.length);
 
             return c.json(urls, 200);
           } catch (error) {
@@ -38,7 +59,23 @@ export const managementRoutes: RouteGroup[] = [
           }
         },
         schema: {
-          response: urlResponseSchema,
+          response: urlListResponseSchema,
+          errors: {
+            401: urlListUnauthorizedSchema,
+            400: urlEmailValidationErrorSchema,
+            500: z
+              .object({
+                code: z.literal('INTERNAL_SERVER_ERROR').openapi({
+                  example: 'INTERNAL_SERVER_ERROR',
+                  description: 'Server error code',
+                }),
+                message: z.string().openapi({
+                  example: 'Failed to fetch URLs',
+                  description: 'Error message',
+                }),
+              })
+              .openapi('UrlListServerErrorSchema'),
+          },
         },
       },
       {
@@ -66,6 +103,10 @@ export const managementRoutes: RouteGroup[] = [
         },
         schema: {
           response: urlResponseSchema,
+          errors: {
+            404: urlNotFoundErrorSchema,
+            401: urlListUnauthorizedSchema,
+          },
         },
       },
       {
@@ -97,6 +138,11 @@ export const managementRoutes: RouteGroup[] = [
         schema: {
           request: updateUrlSchema,
           response: urlResponseSchema,
+          errors: {
+            400: urlValidationErrorSchema,
+            404: urlNotFoundErrorSchema,
+            401: urlListUnauthorizedSchema,
+          },
         },
       },
       {
@@ -125,6 +171,10 @@ export const managementRoutes: RouteGroup[] = [
         },
         schema: {
           response: urlResponseSchema,
+          errors: {
+            404: urlNotFoundErrorSchema,
+            401: urlListUnauthorizedSchema,
+          },
         },
       },
     ],

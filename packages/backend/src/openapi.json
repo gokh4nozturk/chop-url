@@ -185,6 +185,40 @@
         },
         "required": ["token", "user"]
       },
+      "InvalidCredentialsErrorSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["INVALID_CREDENTIALS"],
+            "description": "Invalid credentials error code",
+            "example": "INVALID_CREDENTIALS"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Invalid credentials."
+          }
+        },
+        "required": ["code", "message"]
+      },
+      "UserNotFoundErrorSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["USER_NOT_FOUND"],
+            "description": "User not found error code",
+            "example": "USER_NOT_FOUND"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "User not found."
+          }
+        },
+        "required": ["code", "message"]
+      },
       "LoginRequest": {
         "type": "object",
         "properties": {
@@ -201,6 +235,75 @@
           }
         },
         "required": ["email", "password"]
+      },
+      "AuthValidationErrorSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["VALIDATION_ERROR"],
+            "description": "Validation error code",
+            "example": "VALIDATION_ERROR"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Invalid request body"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Error code",
+                  "example": "invalid_string"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "Error description",
+                  "example": "Invalid email format"
+                },
+                "path": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Path to the invalid field",
+                  "example": ["email"]
+                }
+              },
+              "required": ["code", "message", "path"]
+            },
+            "description": "Validation error details",
+            "example": [
+              {
+                "code": "invalid_string",
+                "message": "Invalid email format",
+                "path": ["email"]
+              }
+            ]
+          }
+        },
+        "required": ["code", "message", "details"]
+      },
+      "UserExistsErrorSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["USER_EXISTS"],
+            "description": "User already exists error code",
+            "example": "USER_EXISTS"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "User already exists."
+          }
+        },
+        "required": ["code", "message"]
       },
       "RegisterRequest": {
         "type": "object",
@@ -547,6 +650,58 @@
           "createdAt"
         ]
       },
+      "UrlValidationErrorSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["VALIDATION_ERROR"],
+            "description": "Validation error code",
+            "example": "VALIDATION_ERROR"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Invalid request body"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Validation error type",
+                  "example": "invalid_string"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "Error description",
+                  "example": "Required"
+                },
+                "path": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Path to the invalid field",
+                  "example": ["url"]
+                }
+              },
+              "required": ["code", "message", "path"]
+            },
+            "description": "URL validation error details",
+            "example": [
+              {
+                "code": "invalid_string",
+                "message": "Invalid url",
+                "path": ["url"]
+              }
+            ]
+          }
+        },
+        "required": ["code", "message", "details"]
+      },
       "CreateUrlRequest": {
         "type": "object",
         "properties": {
@@ -572,6 +727,115 @@
           }
         },
         "required": ["url"]
+      },
+      "UrlListResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/UrlResponse"
+        }
+      },
+      "UrlEmailValidationErrorSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["VALIDATION_ERROR"],
+            "description": "Validation error code",
+            "example": "VALIDATION_ERROR"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Invalid request body"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Validation error type",
+                  "example": "invalid_string"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "Error description",
+                  "example": "Required"
+                },
+                "path": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Path to the invalid field",
+                  "example": ["email"]
+                }
+              },
+              "required": ["code", "message", "path"]
+            },
+            "description": "Validation error details for email-related fields",
+            "example": [
+              {
+                "code": "invalid_string",
+                "message": "Required",
+                "path": ["email"]
+              }
+            ]
+          }
+        },
+        "required": ["code", "message", "details"]
+      },
+      "UrlListUnauthorizedSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["UNAUTHORIZED"],
+            "description": "Unauthorized error code",
+            "example": "UNAUTHORIZED"
+          },
+          "message": {
+            "type": "string",
+            "description": "Detailed error message",
+            "example": "You must be logged in to view your URLs."
+          }
+        },
+        "required": ["code", "message"]
+      },
+      "UrlListServerErrorSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["INTERNAL_SERVER_ERROR"],
+            "description": "Server error code",
+            "example": "INTERNAL_SERVER_ERROR"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Failed to fetch URLs"
+          }
+        },
+        "required": ["code", "message"]
+      },
+      "UrlNotFoundErrorSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["URL_NOT_FOUND"],
+            "description": "URL not found error code",
+            "example": "URL_NOT_FOUND"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "URL not found."
+          }
+        },
+        "required": ["code", "message"]
       },
       "UpdateUrlRequest": {
         "type": "object",
@@ -968,23 +1232,33 @@
           }
         }
       },
-      "DomainResponseSchema": {
+      "DomainSchema": {
         "type": "object",
         "properties": {
           "id": {
             "type": "number"
           },
+          "name": {
+            "type": "string"
+          },
           "userId": {
             "type": "number"
           },
-          "domain": {
+          "verified": {
+            "type": "boolean"
+          },
+          "verificationToken": {
             "type": "string"
           },
-          "isVerified": {
-            "type": "boolean"
+          "recordType": {
+            "type": "string",
+            "enum": ["TXT", "CNAME"]
           },
-          "isActive": {
-            "type": "boolean"
+          "recordValue": {
+            "type": "string"
+          },
+          "recordName": {
+            "type": "string"
           },
           "createdAt": {
             "type": "string"
@@ -992,38 +1266,97 @@
           "updatedAt": {
             "type": "string"
           },
-          "settings": {
-            "type": "object",
-            "properties": {
-              "redirectMode": {
-                "type": "string",
-                "enum": ["PROXY", "REDIRECT"]
-              },
-              "customNameservers": {
-                "type": "string",
-                "nullable": true
-              },
-              "forceSSL": {
-                "type": "boolean"
-              }
-            }
+          "isDefault": {
+            "type": "boolean"
           }
         },
         "required": [
           "id",
+          "name",
           "userId",
-          "domain",
-          "isVerified",
-          "isActive",
-          "createdAt",
-          "updatedAt"
+          "verified",
+          "recordType",
+          "recordValue",
+          "createdAt"
         ]
       },
       "DomainsResponseSchema": {
         "type": "array",
         "items": {
-          "$ref": "#/components/schemas/DomainResponseSchema"
+          "$ref": "#/components/schemas/DomainSchema"
         }
+      },
+      "DomainResponseSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "$ref": "#/components/schemas/DomainSchema"
+          }
+        },
+        "required": ["domain"]
+      },
+      "DomainValidationErrorSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["VALIDATION_ERROR"],
+            "description": "Validation error code",
+            "example": "VALIDATION_ERROR"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Invalid request body"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": ["code", "message", "path"]
+            },
+            "description": "Domain validation error details",
+            "example": [
+              {
+                "code": "invalid_string",
+                "message": "Required",
+                "path": ["name"]
+              }
+            ]
+          }
+        },
+        "required": ["code", "message", "details"]
+      },
+      "DomainExistsErrorSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["BAD_REQUEST"],
+            "description": "Domain already exists error code",
+            "example": "BAD_REQUEST"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Domain already exists."
+          }
+        },
+        "required": ["code", "message"]
       },
       "AddDomainSchema": {
         "type": "object",
@@ -1050,6 +1383,23 @@
           }
         },
         "required": ["domain"]
+      },
+      "DomainNotFoundErrorSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["RESOURCE_NOT_FOUND"],
+            "description": "Domain not found error code",
+            "example": "RESOURCE_NOT_FOUND"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Domain not found."
+          }
+        },
+        "required": ["code", "message"]
       },
       "UpdateDomainSchema": {
         "type": "object",
@@ -1353,6 +1703,69 @@
           "nullable": true
         }
       },
+      "AnalyticsValidationErrorSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["VALIDATION_ERROR"],
+            "description": "Validation error code",
+            "example": "VALIDATION_ERROR"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Invalid request body"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": ["code", "message", "path"]
+            },
+            "description": "Validation error details",
+            "example": [
+              {
+                "code": "invalid_enum_value",
+                "message": "Invalid time range. Expected one of: 24h, 7d, 30d, 90d",
+                "path": ["timeRange"]
+              }
+            ]
+          }
+        },
+        "required": ["code", "message", "details"]
+      },
+      "AnalyticsUrlNotFoundErrorSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["URL_NOT_FOUND"],
+            "description": "URL not found error code",
+            "example": "URL_NOT_FOUND"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "URL not found. Cannot retrieve analytics data."
+          }
+        },
+        "required": ["code", "message"]
+      },
       "GeoStatsResponse": {
         "type": "object",
         "properties": {
@@ -1614,7 +2027,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorSchema"
+                  "$ref": "#/components/schemas/InvalidCredentialsErrorSchema"
                 }
               }
             }
@@ -1644,7 +2057,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotFoundErrorSchema"
+                  "$ref": "#/components/schemas/UserNotFoundErrorSchema"
                 }
               }
             }
@@ -1694,7 +2107,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorSchema"
+                  "$ref": "#/components/schemas/AuthValidationErrorSchema"
                 }
               }
             }
@@ -1725,6 +2138,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NotFoundErrorSchema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserExistsErrorSchema"
                 }
               }
             }
@@ -2988,7 +3411,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorSchema"
+                  "$ref": "#/components/schemas/UrlValidationErrorSchema"
                 }
               }
             }
@@ -3068,7 +3491,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorSchema"
+                  "$ref": "#/components/schemas/UrlValidationErrorSchema"
                 }
               }
             }
@@ -3127,7 +3550,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UrlResponse"
+                  "$ref": "#/components/schemas/UrlListResponse"
                 }
               }
             }
@@ -3137,7 +3560,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorSchema"
+                  "$ref": "#/components/schemas/UrlEmailValidationErrorSchema"
                 }
               }
             }
@@ -3147,7 +3570,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
+                  "$ref": "#/components/schemas/UrlListUnauthorizedSchema"
                 }
               }
             }
@@ -3177,7 +3600,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UrlListServerErrorSchema"
                 }
               }
             }
@@ -3216,7 +3639,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
+                  "$ref": "#/components/schemas/UrlListUnauthorizedSchema"
                 }
               }
             }
@@ -3236,7 +3659,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotFoundErrorSchema"
+                  "$ref": "#/components/schemas/UrlNotFoundErrorSchema"
                 }
               }
             }
@@ -3284,7 +3707,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorSchema"
+                  "$ref": "#/components/schemas/UrlValidationErrorSchema"
                 }
               }
             }
@@ -3294,7 +3717,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
+                  "$ref": "#/components/schemas/UrlListUnauthorizedSchema"
                 }
               }
             }
@@ -3314,7 +3737,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotFoundErrorSchema"
+                  "$ref": "#/components/schemas/UrlNotFoundErrorSchema"
                 }
               }
             }
@@ -3361,7 +3784,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
+                  "$ref": "#/components/schemas/UrlListUnauthorizedSchema"
                 }
               }
             }
@@ -3381,7 +3804,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotFoundErrorSchema"
+                  "$ref": "#/components/schemas/UrlNotFoundErrorSchema"
                 }
               }
             }
@@ -4068,7 +4491,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorSchema"
+                  "$ref": "#/components/schemas/DomainValidationErrorSchema"
                 }
               }
             }
@@ -4099,6 +4522,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NotFoundErrorSchema"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error 409",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainExistsErrorSchema"
                 }
               }
             }
@@ -4167,7 +4600,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotFoundErrorSchema"
+                  "$ref": "#/components/schemas/DomainNotFoundErrorSchema"
                 }
               }
             }
@@ -5219,6 +5652,122 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NotFoundErrorSchema"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error - An unexpected error occurred on the server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/urls/url/{urlId}/stats": {
+      "get": {
+        "description": "GET /analytics/urls/url/:urlId/stats",
+        "tags": [],
+        "summary": "GET /analytics/urls/url/:urlId/stats",
+        "responses": {
+          "200": {
+            "description": "GET /analytics/urls/url/:urlId/stats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/UrlStatsResponse"
+                    },
+                    {
+                      "properties": {
+                        "totalEvents": {
+                          "type": "number"
+                        },
+                        "uniqueVisitors": {
+                          "type": "number"
+                        },
+                        "lastEventAt": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "url": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "number"
+                            },
+                            "shortId": {
+                              "type": "string"
+                            },
+                            "originalUrl": {
+                              "type": "string"
+                            },
+                            "createdAt": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "shortId",
+                            "originalUrl",
+                            "createdAt"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "totalEvents",
+                        "uniqueVisitors",
+                        "lastEventAt",
+                        "url"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsValidationErrorSchema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication is required or has failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found - The requested resource could not be found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsUrlNotFoundErrorSchema"
                 }
               }
             }

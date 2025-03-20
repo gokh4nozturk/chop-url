@@ -23,53 +23,68 @@ const validateRouteConfig = (route: RouteDefinition, groupPrefix: string) => {
   }
 };
 
+// Helper to register a route with its schema
+const registerRouteSchema = (
+  route: RouteDefinition,
+  prefix: string,
+  basePath = ''
+) => {
+  const path = `${prefix}${route.path}`;
+  const fullPath = `${basePath}${path}`;
+
+  if (route.schema) {
+    try {
+      const method = route.method.toLowerCase() as never;
+      registerSchema(path, method, route.schema, {
+        description: route.description,
+      });
+    } catch (error) {
+      console.error(`Error registering schema for ${fullPath}:`, error);
+      throw error;
+    }
+  }
+
+  return fullPath;
+};
+
+// Create a route group based on configuration
 export const createRouteGroup = (
   group: RouteGroup,
   options: RouteRegistrationOptions = {}
 ): RegisteredRoute[] => {
-  const { basePath = '', defaultMetadata = {} } = options;
+  // Normalize prefix
+  const prefix = group.prefix.endsWith('/')
+    ? group.prefix.slice(0, -1)
+    : group.prefix;
 
-  // Convert group tag to array if it's a string
-  const groupTags = Array.isArray(group.tag) ? group.tag : [group.tag];
-
+  // Register routes
   return group.routes.map((route) => {
     // Validate route configuration
-    validateRouteConfig(route, group.prefix);
+    validateRouteConfig(route, prefix);
 
-    // Build full path
-    const fullPath = `${basePath}${group.prefix}${route.path}`;
-
-    // Extract route metadata
-    const { tags: routeTags, ...routeMetadata } = route;
-
-    // Create enriched route with properly merged metadata
-    const enrichedRoute: RegisteredRoute = {
-      path: fullPath,
-      method: route.method,
-      handler: route.handler,
-      metadata: {
-        ...defaultMetadata,
-        ...group.defaultMetadata,
-        ...routeMetadata,
-        // Use group tags as the primary source of tags
-        tags: groupTags,
-        description:
-          route.description || `${route.method.toUpperCase()} ${fullPath}`,
-      },
-      schema: route.schema,
-      description:
-        route.description || `${route.method.toUpperCase()} ${fullPath}`,
-    };
-
-    // Register OpenAPI schema if present
-    if (enrichedRoute.schema) {
-      registerSchema(fullPath, enrichedRoute.method, enrichedRoute.schema, {
-        description: enrichedRoute.description,
-        deprecated: enrichedRoute.metadata.deprecated,
-      });
+    // Register route schema if present
+    if (route.schema) {
+      registerRouteSchema(route, prefix, options.basePath);
     }
 
-    return enrichedRoute;
+    // Merge metadata
+    const metadata = {
+      ...options.defaultMetadata,
+      ...group.defaultMetadata,
+      ...route,
+      tags: [...(options.defaultMetadata?.tags || []), group.tag],
+    };
+
+    return {
+      path: `${prefix}${route.path}`,
+      method: route.method,
+      handler: route.handler,
+      metadata,
+      schema: route.schema,
+      description:
+        route.description ||
+        `${route.method.toUpperCase()} ${prefix}${route.path}`,
+    };
   });
 };
 

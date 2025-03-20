@@ -351,7 +351,8 @@ export const withOpenAPI = <T = unknown>(
       }
     );
 
-    // Add custom error schemas to the registry
+    // Register standard error schemas - these are the base schemas
+    // Others will be registered from the schema registry below
     openAPIRouter.openAPIRegistry.registerComponent(
       'schemas',
       'ValidationErrorSchema',
@@ -381,6 +382,37 @@ export const withOpenAPI = <T = unknown>(
       'DefaultErrorResponse',
       defaultErrorSchema.shape
     );
+
+    // Get all schemas from schemaRegistry
+    // Search for any custom error schemas and add them
+    // Register all custom error schemas defined in each route's schema.errors
+    for (const [key, schema] of schemaRegistry.entries()) {
+      if (schema.errors) {
+        for (const [statusCode, errorSchema] of Object.entries(schema.errors)) {
+          if (errorSchema && '_def' in errorSchema) {
+            try {
+              // @ts-ignore accessing internal properties
+              const refId = errorSchema._def.openapi?.refId;
+              if (refId) {
+                // For all schema types, use ts-ignore to bypass complex type checking
+                // @ts-ignore OpenAPI schema compatibility issues
+                openAPIRouter.openAPIRegistry.registerComponent(
+                  'schemas',
+                  refId,
+                  // @ts-ignore OpenAPI schema compatibility issues
+                  'shape' in errorSchema ? errorSchema.shape : errorSchema
+                );
+              }
+            } catch (error) {
+              console.warn(
+                `Failed to register error schema for ${key}:${statusCode}`,
+                error
+              );
+            }
+          }
+        }
+      }
+    }
 
     // Copy all routes and add OpenAPI documentation
     for (const route of originalRouter.routes) {

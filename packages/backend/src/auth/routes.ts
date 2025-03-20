@@ -8,7 +8,11 @@ import { withOpenAPI } from '../utils/openapi';
 import { createRouteGroup } from '../utils/route-factory';
 import { authHandlers } from './handlers';
 import { auth } from './middleware';
-import { authSchemas } from './schemas';
+import {
+  authSchemas,
+  invalidCredentialsErrorSchema,
+  userNotFoundErrorSchema,
+} from './schemas';
 
 // Route groups configuration
 const authGroups: RouteGroup[] = [
@@ -31,6 +35,10 @@ const authGroups: RouteGroup[] = [
         schema: {
           request: authSchemas.login,
           response: authSchemas.loginResponse,
+          errors: {
+            400: invalidCredentialsErrorSchema,
+            404: userNotFoundErrorSchema,
+          },
         },
         rateLimit: {
           requests: 5,
@@ -42,16 +50,26 @@ const authGroups: RouteGroup[] = [
       {
         path: '/register',
         method: 'post',
+        description: 'Register a new user',
+        handler: async (c) => {
+          try {
+            return await authHandlers.register(c);
+          } catch (error) {
+            return handleError(c, error);
+          }
+        },
         schema: {
           request: authSchemas.register,
           response: authSchemas.loginResponse,
+          errors: {
+            400: authSchemas.validationError,
+            409: authSchemas.userExistsError,
+          },
         },
         rateLimit: {
-          requests: 3,
-          window: '10m',
+          requests: 5,
+          window: '1m',
         },
-        description: 'Register new user',
-        handler: authHandlers.register,
       },
     ],
   },

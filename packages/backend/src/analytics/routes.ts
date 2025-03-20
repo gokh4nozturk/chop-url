@@ -79,6 +79,25 @@ const analyticsRoutes: RouteGroup[] = [
         },
         handler: analyticsHandlers.getUrlEvents,
       },
+      {
+        path: '/url/:urlId/stats',
+        method: 'get',
+        description: 'Get statistics for a specific URL',
+        handler: async (c) => {
+          try {
+            return await analyticsHandlers.getUrlStats(c);
+          } catch (error) {
+            return handleError(c, error);
+          }
+        },
+        schema: {
+          response: analyticsSchemas.urlStats,
+          errors: {
+            404: analyticsSchemas.urlNotFoundError,
+            400: analyticsSchemas.validationError,
+          },
+        },
+      },
     ],
   },
   {

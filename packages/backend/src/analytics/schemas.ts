@@ -1,4 +1,5 @@
 import { z } from '@hono/zod-openapi';
+import { ErrorCode } from '../utils/error';
 
 // Time range schema
 export const timeRangeSchema = z.enum(['24h', '7d', '30d', '90d']);
@@ -137,6 +138,95 @@ export const userAnalyticsResponseSchema = z
   .any()
   .openapi('UserAnalyticsResponse');
 
+// Analytics-specific error schemas
+export const analyticsValidationErrorSchema = z
+  .object({
+    code: z.literal(ErrorCode.VALIDATION_ERROR).openapi({
+      example: ErrorCode.VALIDATION_ERROR,
+      description: 'Validation error code',
+    }),
+    message: z.string().openapi({
+      example: 'Invalid request body',
+      description: 'Error message',
+    }),
+    details: z
+      .array(
+        z.object({
+          code: z.string(),
+          message: z.string(),
+          path: z.array(z.string()),
+        })
+      )
+      .openapi({
+        description: 'Validation error details',
+        example: [
+          {
+            code: 'invalid_enum_value',
+            message: 'Invalid time range. Expected one of: 24h, 7d, 30d, 90d',
+            path: ['timeRange'],
+          },
+        ],
+      }),
+  })
+  .openapi('AnalyticsValidationErrorSchema');
+
+export const analyticsUrlNotFoundErrorSchema = z
+  .object({
+    code: z.literal(ErrorCode.URL_NOT_FOUND).openapi({
+      example: ErrorCode.URL_NOT_FOUND,
+      description: 'URL not found error code',
+    }),
+    message: z.string().openapi({
+      example: 'URL not found. Cannot retrieve analytics data.',
+      description: 'Error message',
+    }),
+  })
+  .openapi('AnalyticsUrlNotFoundErrorSchema');
+
+export const analyticsDataErrorSchema = z
+  .object({
+    code: z.literal(ErrorCode.INTERNAL_SERVER_ERROR).openapi({
+      example: ErrorCode.INTERNAL_SERVER_ERROR,
+      description: 'Analytics data error code',
+    }),
+    message: z.string().openapi({
+      example: 'Failed to retrieve analytics data',
+      description: 'Error message',
+    }),
+  })
+  .openapi('AnalyticsDataErrorSchema');
+
+export const customEventValidationErrorSchema = z
+  .object({
+    code: z.literal(ErrorCode.VALIDATION_ERROR).openapi({
+      example: ErrorCode.VALIDATION_ERROR,
+      description: 'Validation error code',
+    }),
+    message: z.string().openapi({
+      example: 'Invalid custom event data',
+      description: 'Error message',
+    }),
+    details: z
+      .array(
+        z.object({
+          code: z.string(),
+          message: z.string(),
+          path: z.array(z.string()),
+        })
+      )
+      .openapi({
+        description: 'Validation error details',
+        example: [
+          {
+            code: 'invalid_string',
+            message: 'Required',
+            path: ['name'],
+          },
+        ],
+      }),
+  })
+  .openapi('CustomEventValidationErrorSchema');
+
 // Schema collections
 export const analyticsSchemas = {
   timeRange: timeRangeSchema,
@@ -153,4 +243,9 @@ export const analyticsSchemas = {
   utmStats: utmStatsResponseSchema,
   clickHistory: clickHistoryResponseSchema,
   userAnalytics: userAnalyticsResponseSchema,
+  // Error schemas
+  validationError: analyticsValidationErrorSchema,
+  urlNotFoundError: analyticsUrlNotFoundErrorSchema,
+  dataError: analyticsDataErrorSchema,
+  customEventValidationError: customEventValidationErrorSchema,
 };
