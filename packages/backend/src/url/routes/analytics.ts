@@ -1,106 +1,145 @@
-import { Context } from 'hono';
-import { RouteGroup } from '../../types/route.types';
+import { auth } from '@/auth/middleware';
+import { Env, Variables } from '@/types';
+import { errorResponseSchemas, handleError } from '@/utils/error';
+import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { analyticsResponseSchema, urlStatsSchema } from '../schemas';
 import { UrlService } from '../service';
 import { Period, VALID_PERIODS } from '../types';
 
-export const analyticsRoutes: RouteGroup[] = [
-  {
-    prefix: '/urls',
-    tag: ['URL_STATISTICS'],
-    description: 'URL statistics endpoints',
-    defaultMetadata: {
-      requiresAuth: true,
+const analyticsRouter = new OpenAPIHono<{
+  Bindings: Env;
+  Variables: Variables;
+}>();
+
+analyticsRouter.use('*', auth());
+
+analyticsRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/:id',
+    summary: 'Get statistics for a specific URL',
+    description: 'Get statistics for a specific URL',
+    tags: ['Url Analytics'],
+    responses: {
+      200: {
+        description: 'Success',
+        content: {
+          'application/json': {
+            schema: urlStatsSchema,
+          },
+        },
+      },
+      ...errorResponseSchemas.notFoundError,
+      ...errorResponseSchemas.serverError,
     },
-    routes: [
-      {
-        path: '/:id/statistics',
-        method: 'get',
-        description: 'Get statistics for a specific URL',
-        handler: async (c: Context) => {
-          try {
-            const { id } = c.req.param();
-            const { period = '24h' } = c.req.query();
-            const db = c.get('db');
+  }),
+  async (c) => {
+    try {
+      const { id } = c.req.param();
+      const { period = '24h' } = c.req.query();
+      const db = c.get('db');
 
-            const urlService = new UrlService(c.env.BASE_URL, db);
-            const stats = await urlService.getUrlStats(id, period as Period);
+      const urlService = new UrlService(c.env.BASE_URL, db);
+      const stats = await urlService.getUrlStats(id, period as Period);
 
-            if (!stats) {
-              return c.json({ error: 'URL not found' }, 404);
-            }
+      if (!stats) {
+        return c.json({ error: 'URL not found' }, 404);
+      }
 
-            return c.json(stats, 200);
-          } catch (error) {
-            console.error('Error fetching URL stats:', error);
-            return c.json({ error: 'Failed to fetch URL stats' }, 500);
-          }
-        },
-        schema: {
-          response: urlStatsSchema,
-        },
-      },
-      {
-        path: '/statistics',
-        method: 'get',
-        description: 'Get statistics for all URLs of the authenticated user',
-        handler: async (c: Context) => {
-          try {
-            const user = c.get('user');
-            const { period = '7d' } = c.req.query();
-            const db = c.get('db');
+      return c.json(stats, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
 
-            const urlService = new UrlService(c.env.BASE_URL, db);
-            const analytics = await urlService.getUserAnalytics(
-              user.id.toString(),
-              period as Period
-            );
-
-            return c.json(analytics, 200);
-          } catch (error) {
-            console.error('Error fetching URL statistics:', error);
-            return c.json({ error: 'Failed to fetch URL statistics' }, 500);
-          }
-        },
-        schema: {
-          response: analyticsResponseSchema,
+analyticsRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/list',
+    summary: 'Get statistics for all URLs of the authenticated user',
+    description: 'Get statistics for all URLs of the authenticated user',
+    tags: ['Url Analytics'],
+    responses: {
+      200: {
+        description: 'Success',
+        content: {
+          'application/json': {
+            schema: analyticsResponseSchema,
+          },
         },
       },
-      {
-        path: '/statistics/export',
-        method: 'get',
-        description: 'Export URL statistics data',
-        handler: async (c: Context) => {
-          try {
-            const user = c.get('user');
-            const period = (c.req.query('period') as Period) || '7d';
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.notFoundError,
+    },
+  }),
+  async (c) => {
+    try {
+      const user = c.get('user');
+      const { period = '7d' } = c.req.query();
+      const db = c.get('db');
 
-            if (!VALID_PERIODS.includes(period)) {
-              return c.json(
-                {
-                  error: 'Invalid period. Valid periods are: 24h, 7d, 30d, 90d',
-                },
-                400
-              );
-            }
+      const urlService = new UrlService(c.env.BASE_URL, db);
+      const analytics = await urlService.getUserAnalytics(
+        user.id.toString(),
+        period as Period
+      );
 
-            const db = c.get('db');
-            const urlService = new UrlService(c.env.BASE_URL, db);
-            const data = await urlService.getUserAnalytics(
-              user.id.toString(),
-              period
-            );
+      return c.json(analytics, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
 
-            return c.json(data, 200);
-          } catch (error) {
-            console.error('Error exporting statistics:', error);
-            return c.json({ error: 'Failed to export statistics' }, 500);
-          }
-        },
-        schema: {
-          response: analyticsResponseSchema,
+analyticsRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/export',
+    summary: 'Export URL statistics data',
+    description: 'Export URL statistics data',
+    tags: ['Url Analytics'],
+    responses: {
+      200: {
+        description: 'Success',
+        content: {
+          'application/json': {
+            schema: analyticsResponseSchema,
+          },
         },
       },
-    ],
-  },
-];
+      ...errorResponseSchemas.badRequestError,
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.notFoundError,
+    },
+  }),
+  async (c) => {
+    try {
+      const user = c.get('user');
+      const { period = '7d' } = c.req.query();
+
+      if (!VALID_PERIODS.includes(period as Period)) {
+        return c.json(
+          {
+            error: 'Invalid period. Valid periods are: 24h, 7d, 30d, 90d',
+          },
+          400
+        );
+      }
+
+      const db = c.get('db');
+
+      const urlService = new UrlService(c.env.BASE_URL, db);
+      const data = await urlService.getUserAnalytics(
+        user.id.toString(),
+        period as Period
+      );
+
+      return c.json(data, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+export default analyticsRouter;

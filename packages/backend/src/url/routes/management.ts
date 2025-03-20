@@ -1,182 +1,165 @@
-import { z } from '@hono/zod-openapi';
-import { Context } from 'hono';
-import { RouteGroup } from '../../types/route.types';
+import { auth } from '@/auth/middleware';
+import { Env, Variables } from '@/types';
+import { errorResponseSchemas, handleError } from '@/utils/error';
+import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import {
   updateUrlSchema,
-  urlEmailValidationErrorSchema,
-  urlNotFoundErrorSchema,
+  urlListResponseSchema,
   urlResponseSchema,
-  urlValidationErrorSchema,
 } from '../schemas';
 import { UrlService } from '../service';
 
-// Define a schema specifically for the URL list response
-const urlListResponseSchema = z
-  .array(urlResponseSchema)
-  .openapi('UrlListResponse');
+const urlManagementRouter = new OpenAPIHono<{
+  Bindings: Env;
+  Variables: Variables;
+}>();
 
-// Create an unauthorized error specific to the URL list endpoint
-const urlListUnauthorizedSchema = z
-  .object({
-    code: z.literal('UNAUTHORIZED').openapi({
-      example: 'UNAUTHORIZED',
-      description: 'Unauthorized error code',
-    }),
-    message: z.string().openapi({
-      example: 'You must be logged in to view your URLs.',
-      description: 'Detailed error message',
-    }),
-  })
-  .openapi('UrlListUnauthorizedSchema');
+// Apply auth middleware to all routes
+urlManagementRouter.use('*', auth());
 
-export const managementRoutes: RouteGroup[] = [
-  {
-    prefix: '/urls',
-    tag: 'URL_MANAGEMENT',
-    description: 'URL management endpoints',
-    defaultMetadata: {
-      requiresAuth: true,
+urlManagementRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/',
+    summary: 'Get all URLs for the authenticated user',
+    description: 'Get all URLs for the authenticated user',
+    tags: ['URL Management'],
+    responses: {
+      200: {
+        description: 'Success',
+        content: {
+          'application/json': {
+            schema: urlListResponseSchema,
+          },
+        },
+      },
+      ...errorResponseSchemas.badRequestError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.notFoundError,
     },
-    routes: [
-      {
-        path: '/list',
-        method: 'get',
-        description: 'Get all URLs for the authenticated user',
-        handler: async (c: Context) => {
-          try {
-            const user = c.get('user');
+  }),
+  async (c) => {
+    try {
+      const user = c.get('user');
+      const db = c.get('db');
+      const urlService = new UrlService(c.env.BASE_URL, db);
+      const urls = await urlService.getUserUrls(user.id.toString());
+      return c.json(urls, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
 
-            const db = c.get('db');
-
-            const urlService = new UrlService(c.env.BASE_URL, db);
-
-            const urls = await urlService.getUserUrls(user.id.toString());
-
-            return c.json(urls, 200);
-          } catch (error) {
-            console.error('Error fetching URLs:', error);
-            return c.json({ error: 'Failed to fetch URLs' }, 500);
-          }
-        },
-        schema: {
-          response: urlListResponseSchema,
-          errors: {
-            401: urlListUnauthorizedSchema,
-            400: urlEmailValidationErrorSchema,
-            500: z
-              .object({
-                code: z.literal('INTERNAL_SERVER_ERROR').openapi({
-                  example: 'INTERNAL_SERVER_ERROR',
-                  description: 'Server error code',
-                }),
-                message: z.string().openapi({
-                  example: 'Failed to fetch URLs',
-                  description: 'Error message',
-                }),
-              })
-              .openapi('UrlListServerErrorSchema'),
+urlManagementRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/:shortId',
+    summary: 'Get a specific URL by short ID',
+    description: 'Get a specific URL by short ID',
+    tags: ['URL Management'],
+    responses: {
+      200: {
+        description: 'Success',
+        content: {
+          'application/json': {
+            schema: urlResponseSchema,
           },
         },
       },
-      {
-        path: '/:shortId',
-        method: 'get',
-        description: 'Get URL details by short ID',
-        handler: async (c: Context) => {
-          try {
-            const { shortId } = c.req.param();
-            const user = c.get('user');
-            const db = c.get('db');
+      ...errorResponseSchemas.badRequestError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.notFoundError,
+    },
+  }),
+  async (c) => {
+    try {
+      const shortId = c.req.param('shortId');
+      const user = c.get('user');
+      const db = c.get('db');
+      const urlService = new UrlService(c.env.BASE_URL, db);
+      const url = await urlService.getUrl(shortId);
+      return c.json(url, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
 
-            const urlService = new UrlService(c.env.BASE_URL, db);
-            const url = await urlService.getUrl(shortId);
-
-            if (!url) {
-              return c.json({ error: 'URL not found' }, 404);
-            }
-
-            return c.json(url, 200);
-          } catch (error) {
-            console.error('Error fetching URL:', error);
-            return c.json({ error: 'Failed to fetch URL' }, 500);
-          }
-        },
-        schema: {
-          response: urlResponseSchema,
-          errors: {
-            404: urlNotFoundErrorSchema,
-            401: urlListUnauthorizedSchema,
+urlManagementRouter.openapi(
+  createRoute({
+    method: 'patch',
+    path: '/:shortId',
+    summary: 'Update a URL',
+    description: 'Update a URL',
+    tags: ['URL Management'],
+    responses: {
+      200: {
+        description: 'Success',
+        content: {
+          'application/json': {
+            schema: urlResponseSchema,
           },
         },
       },
-      {
-        path: '/:shortId',
-        method: 'patch',
-        description: 'Update a URL',
-        handler: async (c: Context) => {
-          try {
-            const shortId = c.req.param('shortId');
-            const body = await c.req.json();
-            const data = updateUrlSchema.parse(body);
-            const user = c.get('user');
-            const db = c.get('db');
+      ...errorResponseSchemas.badRequestError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.notFoundError,
+    },
+  }),
+  async (c) => {
+    try {
+      const shortId = c.req.param('shortId');
+      const user = c.get('user');
+      const db = c.get('db');
+      const body = await c.req.json();
+      const data = updateUrlSchema.parse(body);
+      const urlService = new UrlService(c.env.BASE_URL, db);
+      const url = await urlService.updateUrl(shortId, user.id, data);
+      return c.json(url, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
 
-            const urlService = new UrlService(c.env.BASE_URL, db);
-            const url = await urlService.updateUrl(shortId, user.id, data);
-
-            return c.json(url, 200);
-          } catch (error) {
-            console.error('Error updating URL:', error);
-
-            if (error instanceof Error && error.message === 'URL not found') {
-              return c.json({ error: 'URL not found' }, 404);
-            }
-
-            return c.json({ error: 'Failed to update URL' }, 500);
-          }
-        },
-        schema: {
-          request: updateUrlSchema,
-          response: urlResponseSchema,
-          errors: {
-            400: urlValidationErrorSchema,
-            404: urlNotFoundErrorSchema,
-            401: urlListUnauthorizedSchema,
+urlManagementRouter.openapi(
+  createRoute({
+    method: 'delete',
+    path: '/:shortId',
+    summary: 'Delete a URL',
+    description: 'Delete a URL',
+    tags: ['URL Management'],
+    responses: {
+      200: {
+        description: 'Success',
+        content: {
+          'application/json': {
+            schema: urlResponseSchema,
           },
         },
       },
-      {
-        path: '/:shortId',
-        method: 'delete',
-        description: 'Delete a URL',
-        handler: async (c: Context) => {
-          try {
-            const shortId = c.req.param('shortId');
-            const user = c.get('user');
-            const db = c.get('db');
+      ...errorResponseSchemas.badRequestError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.notFoundError,
+    },
+  }),
+  async (c) => {
+    try {
+      const shortId = c.req.param('shortId');
+      const user = c.get('user');
+      const db = c.get('db');
+      const urlService = new UrlService(c.env.BASE_URL, db);
+      await urlService.deleteUrl(shortId, user.id);
+      return c.json({ message: 'URL deleted successfully' }, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
 
-            const urlService = new UrlService(c.env.BASE_URL, db);
-            await urlService.deleteUrl(shortId, user.id);
-
-            return c.json({ message: 'URL deleted successfully' }, 200);
-          } catch (error) {
-            console.error('Error deleting URL:', error);
-
-            if (error instanceof Error && error.message === 'URL not found') {
-              return c.json({ error: 'URL not found' }, 404);
-            }
-
-            return c.json({ error: 'Failed to delete URL' }, 500);
-          }
-        },
-        schema: {
-          response: urlResponseSchema,
-          errors: {
-            404: urlNotFoundErrorSchema,
-            401: urlListUnauthorizedSchema,
-          },
-        },
-      },
-    ],
-  },
-];
+export default urlManagementRouter;

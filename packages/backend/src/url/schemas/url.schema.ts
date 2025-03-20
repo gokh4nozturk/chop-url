@@ -37,6 +37,12 @@ export const urlResponseSchema = z
   })
   .openapi('UrlResponse');
 
+export const urlListResponseSchema = z
+  .object({
+    urls: z.array(urlResponseSchema),
+  })
+  .openapi('UrlListResponse');
+
 // Custom error schemas for URL endpoints
 export const urlValidationErrorSchema = z
   .object({

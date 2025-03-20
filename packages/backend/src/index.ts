@@ -1,4 +1,9 @@
-import { swaggerUI } from '@hono/swagger-ui';
+import {
+  analyticsRoutes,
+  managementRoutes,
+  shorteningRoutes,
+  urlGroupRouter,
+} from '@/url/routes';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { apiReference } from '@scalar/hono-api-reference';
 import { cors } from 'hono/cors';
@@ -11,7 +16,6 @@ import { createDomainRoutes } from './domain/routes';
 import { createQRRoutes } from './qr/routes';
 import { createStorageRoutes } from './storage/routes';
 import { Env, Variables } from './types';
-import { createUrlRoutes } from './url/routes';
 import { WebSocketService } from './websocket/service';
 
 const app = new OpenAPIHono<{ Bindings: Env; Variables: Variables }>();
@@ -109,11 +113,21 @@ app.get(
 );
 
 // Mount routes
+
+// Auth routes
 app.route('/api', createAuthRoutes());
-app.route('/api', createUrlRoutes());
+// URL routes
+app.route('/api/urls', shorteningRoutes);
+app.route('/api/urls/groups', urlGroupRouter);
+app.route('/api/urls/analytics', analyticsRoutes);
+app.route('/api/urls/management', managementRoutes);
+// Domain routes
 app.route('/api', createDomainRoutes());
+// Analytics routes
 app.route('/api', createAnalyticsRoutes());
+// Storage routes
 app.route('/api', createStorageRoutes());
+// QR routes
 app.route('/api', createQRRoutes());
 
 // Admin routes

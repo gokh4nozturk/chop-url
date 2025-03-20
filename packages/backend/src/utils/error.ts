@@ -132,8 +132,6 @@ export class AppError extends Error {
 }
 
 export const handleError = (c: Context, error: unknown) => {
-  console.error('Error:', error);
-
   if (error instanceof z.ZodError) {
     return c.json(
       {
@@ -157,7 +155,31 @@ export const handleError = (c: Context, error: unknown) => {
     );
   }
 
-  // Fallback for unknown errors
+  if (
+    error instanceof Error &&
+    (error.message.includes('unauthorized') || error.message.includes('token'))
+  ) {
+    // For auth errors
+    return c.json(
+      {
+        code: ErrorCode.UNAUTHORIZED,
+        message: 'Authentication required',
+      },
+      401
+    );
+  }
+
+  if (error instanceof Error && error.message.includes('not found')) {
+    return c.json(
+      {
+        code: ErrorCode.RESOURCE_NOT_FOUND,
+        message: 'Requested resource not found',
+      },
+      404
+    );
+  }
+
+  // Server errors
   return c.json(
     {
       code: ErrorCode.INTERNAL_SERVER_ERROR,
@@ -165,4 +187,70 @@ export const handleError = (c: Context, error: unknown) => {
     },
     500 as HTTPStatusCode
   );
+};
+
+export const errorResponseSchemas = {
+  badRequestError: {
+    400: {
+      description: 'Bad request',
+      content: {
+        'application/json': {
+          schema: z.object({
+            code: z.enum([ErrorCode.BAD_REQUEST]),
+            message: z.string(),
+          }),
+        },
+      },
+    },
+  },
+
+  authError: {
+    401: {
+      description: 'Unauthorized',
+      content: {
+        'application/json': {
+          schema: z.object({
+            code: z.enum([
+              ErrorCode.UNAUTHORIZED,
+              ErrorCode.INVALID_TOKEN,
+              ErrorCode.NO_TOKEN,
+              ErrorCode.EXPIRED_TOKEN,
+            ]),
+            message: z.string(),
+          }),
+        },
+      },
+    },
+  },
+
+  notFoundError: {
+    404: {
+      description: 'Resource not found',
+      content: {
+        'application/json': {
+          schema: z.object({
+            code: z.enum([ErrorCode.RESOURCE_NOT_FOUND]),
+            message: z.string(),
+          }),
+        },
+      },
+    },
+  },
+
+  serverError: {
+    500: {
+      description: 'Server error',
+      content: {
+        'application/json': {
+          schema: z.object({
+            code: z.enum([
+              ErrorCode.INTERNAL_SERVER_ERROR,
+              ErrorCode.DATABASE_ERROR,
+            ]),
+            message: z.string(),
+          }),
+        },
+      },
+    },
+  },
 };
