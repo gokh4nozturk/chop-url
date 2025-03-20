@@ -20,7 +20,7 @@ waitlistRouter.openapi(
     method: 'get',
     path: '/',
     description: 'Get waitlist users',
-    tags: ['Waitlist'],
+    tags: ['Admin Waitlist'],
     responses: {
       200: {
         description: 'Waitlist users retrieved successfully',
@@ -51,7 +51,7 @@ waitlistRouter.openapi(
     method: 'post',
     path: '/approve',
     description: 'Approve waitlist user',
-    tags: ['Waitlist'],
+    tags: ['Admin Waitlist'],
     responses: {
       200: {
         description: 'Waitlist user approved successfully',

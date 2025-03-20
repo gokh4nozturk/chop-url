@@ -10,11 +10,18 @@ import {
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { apiReference } from '@scalar/hono-api-reference';
 import { cors } from 'hono/cors';
-import { createAuthRoutes } from './auth/routes';
+import {
+  authRouter,
+  emailRouter,
+  oauthRouter,
+  profileRouter,
+  twoFactorRouter,
+  waitlistRouter,
+} from './auth/routes';
 import { createDb } from './db/client';
 import { createDomainRoutes } from './domain/routes';
-import { createQRRoutes } from './qr/routes';
-import { createStorageRoutes } from './storage/routes';
+import qrRouter from './qr/routes';
+import storageRouter from './storage/routes';
 import { Env, Variables } from './types';
 import { WebSocketService } from './websocket/service';
 
@@ -115,20 +122,23 @@ app.get(
 // Mount routes
 
 // Auth routes
-app.route('/api', createAuthRoutes());
+app.route('/api/auth', authRouter);
+app.route('/api/auth/email', emailRouter);
+app.route('/api/auth/oauth', oauthRouter);
+app.route('/api/auth/profile', profileRouter);
+app.route('/api/auth/waitlist', waitlistRouter);
+app.route('/api/auth/2fa', twoFactorRouter);
 // URL routes
 app.route('/api/urls', shorteningRoutes);
 app.route('/api/urls/groups', urlGroupRouter);
 app.route('/api/urls/analytics', urlAnalyticsRoutes);
 app.route('/api/urls/management', managementRoutes);
-// Domain routes
-app.route('/api', createDomainRoutes());
 // Analytics routes
 app.route('/api/analytics', analyticsRoutes);
 // Storage routes
-app.route('/api', createStorageRoutes());
+app.route('/api/storage', storageRouter);
 // QR routes
-app.route('/api', createQRRoutes());
+app.route('/api/qr', qrRouter);
 
 // Admin routes
 app.route('/api/admin/waitlist', waitlistRoutes);

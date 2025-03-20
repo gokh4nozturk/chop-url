@@ -1,96 +1,186 @@
-import { withOpenAPI } from '@/utils/openapi';
-import { OpenAPIHono } from '@hono/zod-openapi';
-import { zValidator } from '@hono/zod-validator';
-import { H } from '../types/hono.types';
-import { RouteGroup } from '../types/route.types';
-import { handleError } from '../utils/error';
-import { createRouteGroup } from '../utils/route-factory';
+import { auth } from '@/auth/middleware';
+import { Env, Variables } from '@/types';
+import { errorResponseSchemas, handleError } from '@/utils/error';
+import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { qrHandlers } from './handlers';
 import { qrSchemas } from './schemas';
 
-// QR route groups
-const qrRoutes: RouteGroup[] = [
-  {
-    prefix: '/qr',
-    tag: 'QR_CODES',
-    description: 'QR code operations',
-    routes: [
-      {
-        path: '/create',
-        method: 'post',
-        description: 'Create a QR code',
-        schema: {
-          request: qrSchemas.createQRCode,
-          response: qrSchemas.qrCode,
-        },
-        requiresAuth: true,
-        handler: qrHandlers.createQRCode,
-      },
-      {
-        path: '/url/:urlId',
-        method: 'get',
-        description: 'Get QR code by URL ID',
-        schema: {
-          response: qrSchemas.qrCode,
-        },
-        handler: qrHandlers.getQRCodeByUrlId,
-      },
-      {
-        path: '/:id',
-        method: 'get',
-        description: 'Get QR code by ID',
-        schema: {
-          response: qrSchemas.qrCode,
-        },
-        handler: qrHandlers.getQRCodeById,
-      },
-      {
-        path: '/:id',
-        method: 'put',
-        description: 'Update QR code',
-        schema: {
-          request: qrSchemas.updateQRCode,
-          response: qrSchemas.qrCode,
-        },
-        handler: qrHandlers.updateQRCode,
-      },
-      {
-        path: '/:id/download',
-        method: 'post',
-        description: 'Increment download count',
-        schema: {
-          response: qrSchemas.success,
-        },
-        handler: qrHandlers.incrementDownloadCount,
-      },
-    ],
-  },
-];
+const qrRouter = new OpenAPIHono<{ Bindings: Env; Variables: Variables }>();
 
-// Create base router
-const createBaseQRRoutes = () => {
-  const router = new OpenAPIHono<H>();
+qrRouter.use('*', auth());
 
-  // Register all routes with middleware
-  for (const route of qrRoutes.flatMap((group) => createRouteGroup(group))) {
-    const middlewares = [];
+qrRouter.openapi(
+  createRoute({
+    method: 'post',
+    path: '/',
+    description: 'Create a QR code',
+    tags: ['QR Codes'],
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: qrSchemas.createQRCode,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: 'QR code created successfully',
+        content: {
+          'application/json': {
+            schema: qrSchemas.qrCode,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.badRequestError,
+      ...errorResponseSchemas.notFoundError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await qrHandlers.createQRCode(c);
 
-    // Add validation middleware if schema exists
-    if (route.schema?.request) {
-      middlewares.push(zValidator('json', route.schema.request));
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
     }
-
-    // Register route with error handling
-    router[route.method](route.path, ...middlewares, async (c) => {
-      try {
-        return await route.handler(c);
-      } catch (error) {
-        return handleError(c, error);
-      }
-    });
   }
+);
 
-  return router;
-};
+qrRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/:id',
+    description: 'Get a QR code by ID',
+    tags: ['QR Codes'],
+    responses: {
+      200: {
+        description: 'QR code retrieved successfully',
+        content: {
+          'application/json': {
+            schema: qrSchemas.qrCode,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.notFoundError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await qrHandlers.getQRCodeById(c);
 
-export const createQRRoutes = withOpenAPI(createBaseQRRoutes, '');
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+qrRouter.openapi(
+  createRoute({
+    method: 'put',
+    path: '/:id',
+    description: 'Update a QR code by ID',
+    tags: ['QR Codes'],
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: qrSchemas.updateQRCode,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: 'QR code updated successfully',
+        content: {
+          'application/json': {
+            schema: qrSchemas.qrCode,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.notFoundError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await qrHandlers.updateQRCode(c);
+
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+qrRouter.openapi(
+  createRoute({
+    method: 'post',
+    path: '/:id/download',
+    description: 'Increment download count',
+    tags: ['QR Codes'],
+    responses: {
+      200: {
+        description: 'Download count incremented successfully',
+        content: {
+          'application/json': {
+            schema: qrSchemas.success,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.notFoundError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await qrHandlers.incrementDownloadCount(c);
+
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+qrRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/url/:urlId',
+    description: 'Get QR code by URL ID',
+    tags: ['QR Codes'],
+    responses: {
+      200: {
+        description: 'QR code retrieved successfully',
+        content: {
+          'application/json': {
+            schema: qrSchemas.qrCode,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.notFoundError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await qrHandlers.getQRCodeByUrlId(c);
+
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+export default qrRouter;
