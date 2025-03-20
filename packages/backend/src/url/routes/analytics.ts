@@ -7,7 +7,7 @@ import { Period, VALID_PERIODS } from '../types';
 export const analyticsRoutes: RouteGroup[] = [
   {
     prefix: '/urls',
-    tag: 'URL_STATISTICS',
+    tag: ['URL_STATISTICS'],
     description: 'URL statistics endpoints',
     defaultMetadata: {
       requiresAuth: true,

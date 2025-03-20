@@ -213,6 +213,13 @@ export const registerRoute = (
     }
   }
 
+  // Ensure tags is always an array
+  const tags = Array.isArray(metadata?.tags)
+    ? metadata.tags
+    : metadata?.tags
+      ? [metadata.tags]
+      : [];
+
   const config: RouteConfig = {
     method,
     path: convertPathToOpenAPI(path),
@@ -294,7 +301,7 @@ export const registerRoute = (
       },
     },
     description: description || `${method.toUpperCase()} ${path}`,
-    tags: metadata?.tags || [],
+    tags: tags,
     summary: description || `${method.toUpperCase()} ${path}`,
   };
 
@@ -383,6 +390,39 @@ export const withOpenAPI = <T = unknown>(
       defaultErrorSchema.shape
     );
 
+    // Register all OpenAPI tags
+    const uniqueTags = new Set<string>();
+
+    // First, get all tags from route metadata
+    for (const route of originalRouter.routes) {
+      const routeWithMetadata = route as { metadata?: RouteMetadata };
+      const metadata = routeWithMetadata.metadata || {};
+
+      if (metadata.tags && metadata.tags.length > 0) {
+        for (const tag of metadata.tags) {
+          uniqueTags.add(tag);
+        }
+      }
+    }
+
+    // Add all unique tags to the OpenAPI document
+    const tagObjects = Array.from(uniqueTags).map((tag) => ({
+      name: tag,
+      description: `Operations tagged with ${tag}`,
+    }));
+
+    // Add tags to registry
+    if (tagObjects.length > 0) {
+      openAPIRouter.doc('/openapi.json', {
+        openapi: '3.0.0',
+        info: {
+          title: 'API Documentation',
+          version: '1.0.0',
+        },
+        tags: tagObjects,
+      });
+    }
+
     // Get all schemas from schemaRegistry
     // Search for any custom error schemas and add them
     // Register all custom error schemas defined in each route's schema.errors
@@ -430,6 +470,123 @@ export const withOpenAPI = <T = unknown>(
       const routeWithMetadata = route as { metadata?: RouteMetadata };
       const metadata = routeWithMetadata.metadata || {};
 
+      // Add manual tags for specific routes
+      const routeTags = Array.isArray(metadata.tags)
+        ? [...metadata.tags]
+        : metadata.tags
+          ? [metadata.tags]
+          : [];
+
+      // Helper function to add a tag only if it doesn't already exist
+      const addTagIfNotExists = (tag: string) => {
+        if (!routeTags.includes(tag)) {
+          routeTags.push(tag);
+        }
+      };
+
+      // Define interfaces for type safety
+      interface PatternTagMapping {
+        [pattern: string]: string;
+      }
+
+      interface RouteTagMapping {
+        default?: string;
+        patterns?: PatternTagMapping;
+      }
+
+      interface PathTagMapping {
+        [pathPrefix: string]: RouteTagMapping;
+      }
+
+      // Define path pattern to tag mapping
+      const PATH_TAG_MAPPING: PathTagMapping = {
+        // Auth routes
+        auth: {
+          default: 'AUTH',
+          patterns: {
+            '/2fa': 'TWO_FACTOR',
+            '/profile': 'PROFILE',
+            '/email': 'EMAIL',
+            '/oauth': 'OAUTH',
+            '/password-reset': 'PASSWORD',
+            '/waitlist': 'WAITLIST',
+          },
+        },
+        // URLs routes
+        urls: {
+          default: 'URL_MANAGEMENT',
+          patterns: {
+            '/shorten': 'URL_SHORTENING',
+            '/chop': 'URL_SHORTENING',
+            '/groups': 'URL_GROUPS',
+            '/statistics': 'URL_STATISTICS',
+          },
+        },
+        // Domain routes
+        domains: {
+          default: 'DOMAINS',
+        },
+        // Analytics routes
+        analytics: {
+          patterns: {
+            '/events': 'EVENTS',
+            '/custom-events': 'EVENTS',
+            '/geo': 'DETAILED_ANALYTICS',
+            '/devices': 'DETAILED_ANALYTICS',
+            '/utm': 'DETAILED_ANALYTICS',
+            '/clicks': 'DETAILED_ANALYTICS',
+            '/urls': 'URL_ANALYTICS',
+            '/users': 'USER_ANALYTICS',
+          },
+        },
+        // Other routes
+        storage: {
+          default: 'STORAGE',
+        },
+        qr: {
+          default: 'QR_CODES',
+        },
+        waitlist: {
+          default: 'WAITLIST',
+        },
+        feedback: {
+          default: 'ADMIN_FEEDBACK',
+          patterns: {
+            '/submit': 'USER_FEEDBACK',
+            '/list': 'USER_FEEDBACK',
+          },
+        },
+      };
+
+      // Apply tags based on path pattern mapping
+      const applyTagsFromMapping = () => {
+        // Extract the first segment of the path
+        const pathSegment = path.split('/')[1]; // e.g., 'auth', 'urls', etc.
+
+        if (pathSegment && PATH_TAG_MAPPING[pathSegment]) {
+          const mapping = PATH_TAG_MAPPING[pathSegment];
+
+          // Check for specific patterns first
+          let matched = false;
+          if (mapping.patterns) {
+            for (const [pattern, tag] of Object.entries(mapping.patterns)) {
+              if (path.includes(pattern)) {
+                addTagIfNotExists(tag);
+                matched = true;
+              }
+            }
+          }
+
+          // If no specific pattern matched or default is needed
+          if (!matched && mapping.default) {
+            addTagIfNotExists(mapping.default);
+          }
+        }
+      };
+
+      // Apply tags based on path patterns
+      applyTagsFromMapping();
+
       // Create OpenAPI route with schemas
       const openAPIRoute = registerRoute(
         path,
@@ -444,7 +601,7 @@ export const withOpenAPI = <T = unknown>(
         },
         {
           ...metadata,
-          tags: metadata.tags || [],
+          tags: routeTags,
         },
         basePath
       );

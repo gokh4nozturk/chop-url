@@ -72,8 +72,18 @@ export const createRouteGroup = (
       ...options.defaultMetadata,
       ...group.defaultMetadata,
       ...route,
-      tags: [...(options.defaultMetadata?.tags || []), group.tag],
+      tags: [
+        ...(options.defaultMetadata?.tags || []),
+        ...(Array.isArray(group.tag) ? group.tag : [group.tag]).filter(Boolean),
+        ...(route.tags || []),
+      ],
     };
+
+    // Debug the result
+    console.log(
+      `Route ${route.method.toUpperCase()} ${prefix}${route.path} tags:`,
+      metadata.tags
+    );
 
     return {
       path: `${prefix}${route.path}`,

@@ -66,7 +66,7 @@ export interface RouteSchema {
 
 export interface RouteGroup {
   prefix: string;
-  tag: string;
+  tag: string | string[];
   description: string;
   defaultMetadata?: RouteMetadata;
   routes: RouteDefinition[];
