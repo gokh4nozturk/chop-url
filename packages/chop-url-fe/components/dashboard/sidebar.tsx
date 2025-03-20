@@ -49,11 +49,11 @@ const items = [
     href: '/dashboard/analytics',
     icon: BarChart2,
   },
-  {
-    title: 'Domains',
-    href: '/dashboard/domains',
-    icon: Earth,
-  },
+  // {
+  //   title: 'Domains',
+  //   href: '/dashboard/domains',
+  //   icon: Earth,
+  // },
   {
     title: 'Settings',
     href: '/dashboard/settings',
