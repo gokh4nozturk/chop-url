@@ -79,4 +79,21 @@ export class FeedbackService {
   async deleteFeedback(id: string): Promise<void> {
     await this.db.delete(feedbackTable).where(eq(feedbackTable.id, id));
   }
+
+  async getFeedbackById(id: string): Promise<FeedbackResponse[]> {
+    const result = await this.db
+      .select()
+      .from(feedbackTable)
+      .where(eq(feedbackTable.id, id));
+
+    if (result.length === 0) {
+      throw new Error('Feedback not found');
+    }
+
+    return result.map((item) => ({
+      ...item,
+      createdAt: item.createdAt.toISOString(),
+      updatedAt: item.updatedAt.toISOString(),
+    }));
+  }
 }

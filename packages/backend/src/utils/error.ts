@@ -131,6 +131,10 @@ export class AppError extends Error {
   }
 }
 
+/**
+ * Type-safe version of handleError that explicitly returns specific status codes
+ * for OpenAPI compatibility.
+ */
 export const handleError = (c: Context, error: unknown) => {
   if (error instanceof z.ZodError) {
     return c.json(
@@ -139,19 +143,88 @@ export const handleError = (c: Context, error: unknown) => {
         message: 'Invalid request body',
         details: error.errors,
       },
-      400 as HTTPStatusCode
+      400
     );
   }
 
   if (error instanceof AppError) {
     const errorDef = ERROR_DEFINITIONS[error.code];
+
+    // Handle specific status codes explicitly for type safety
+    if (errorDef.status === 400) {
+      return c.json(
+        {
+          code: error.code,
+          message: errorDef.message,
+          ...(error.details && { details: error.details }),
+        },
+        400
+      );
+    }
+
+    if (errorDef.status === 401) {
+      return c.json(
+        {
+          code: error.code,
+          message: errorDef.message,
+          ...(error.details && { details: error.details }),
+        },
+        401
+      );
+    }
+
+    if (errorDef.status === 403) {
+      return c.json(
+        {
+          code: error.code,
+          message: errorDef.message,
+          ...(error.details && { details: error.details }),
+        },
+        403
+      );
+    }
+
+    if (errorDef.status === 404) {
+      return c.json(
+        {
+          code: error.code,
+          message: errorDef.message,
+          ...(error.details && { details: error.details }),
+        },
+        404
+      );
+    }
+
+    if (errorDef.status === 409) {
+      return c.json(
+        {
+          code: error.code,
+          message: errorDef.message,
+          ...(error.details && { details: error.details }),
+        },
+        409
+      );
+    }
+
+    if (errorDef.status === 429) {
+      return c.json(
+        {
+          code: error.code,
+          message: errorDef.message,
+          ...(error.details && { details: error.details }),
+        },
+        429
+      );
+    }
+
+    // Default to 500 for any other status
     return c.json(
       {
         code: error.code,
         message: errorDef.message,
         ...(error.details && { details: error.details }),
       },
-      errorDef.status as HTTPStatusCode
+      500
     );
   }
 
@@ -185,7 +258,7 @@ export const handleError = (c: Context, error: unknown) => {
       code: ErrorCode.INTERNAL_SERVER_ERROR,
       message: ERROR_DEFINITIONS[ErrorCode.INTERNAL_SERVER_ERROR].message,
     },
-    500 as HTTPStatusCode
+    500
   );
 };
 

@@ -1,5 +1,5 @@
+import { Env, Variables } from '@/types';
 import { z } from 'zod';
-import { Env } from '../../types';
 import { approveWaitListSchema } from './schemas';
 
 export type ApproveWaitListRequest = z.infer<typeof approveWaitListSchema>;
@@ -13,6 +13,7 @@ export type WaitListStatus =
 
 export interface WaitListContext {
   Bindings: Env;
+  Variables: Variables;
 }
 
 export interface WaitListService {

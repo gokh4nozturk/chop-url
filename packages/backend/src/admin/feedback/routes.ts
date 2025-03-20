@@ -1,17 +1,12 @@
-import { withOpenAPI } from '@/utils/openapi';
-import { OpenAPIHono } from '@hono/zod-openapi';
-import { zValidator } from '@hono/zod-validator';
-import { Hono } from 'hono';
-import { z } from 'zod';
-import { auth } from '../../auth/middleware';
-import { H } from '../../types/hono.types';
-import { RouteGroup } from '../../types/route.types';
-import { handleError } from '../../utils/error';
-import { createRouteGroup } from '../../utils/route-factory';
+import { auth } from '@/auth/middleware';
+import { Env, Variables } from '@/types';
+import { errorResponseSchemas, handleError } from '@/utils/error';
+import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import {
   createFeedbackHandler,
   deleteFeedbackHandler,
   getAllFeedbackHandler,
+  getFeedbackByIdHandler,
   getUserFeedbackHandler,
   updateFeedbackPriorityHandler,
   updateFeedbackStatusHandler,
@@ -20,125 +15,226 @@ import {
   createFeedbackSchema,
   feedbackResponseSchema,
   successResponseSchema,
-  updateFeedbackPrioritySchema,
-  updateFeedbackStatusSchema,
 } from './schemas';
 
-// Feedback route groups
-const feedbackRoutes: RouteGroup[] = [
-  {
-    prefix: '/feedback',
-    tag: 'USER_FEEDBACK',
-    description: 'User feedback endpoints',
-    routes: [
-      {
-        path: '/submit',
-        method: 'post',
-        description: 'Submit feedback',
-        requiresAuth: true,
-        schema: {
-          request: createFeedbackSchema,
-          response: successResponseSchema,
-        },
-        handler: createFeedbackHandler,
-      },
-      {
-        path: '/list',
-        method: 'get',
-        description: 'Get user feedback',
-        requiresAuth: true,
-        schema: {
-          response: feedbackResponseSchema,
-        },
-        handler: getUserFeedbackHandler,
-      },
-    ],
-  },
-  {
-    prefix: '/feedback',
-    tag: 'ADMIN_FEEDBACK',
-    description: 'Admin feedback management endpoints',
-    routes: [
-      {
-        path: '/all',
-        method: 'get',
-        description: 'Get all feedback',
-        requiresAuth: true,
-        schema: {
-          response: feedbackResponseSchema,
-        },
-        handler: getAllFeedbackHandler,
-      },
-      {
-        path: '/:id/status',
-        method: 'patch',
-        description: 'Update feedback status',
-        requiresAuth: true,
-        schema: {
-          request: updateFeedbackStatusSchema,
-          response: successResponseSchema,
-        },
-        handler: updateFeedbackStatusHandler,
-      },
-      {
-        path: '/:id/priority',
-        method: 'patch',
-        description: 'Update feedback priority',
-        requiresAuth: true,
-        schema: {
-          request: updateFeedbackPrioritySchema,
-          response: successResponseSchema,
-        },
-        handler: updateFeedbackPriorityHandler,
-      },
-      {
-        path: '/:id',
-        method: 'delete',
-        description: 'Delete feedback',
-        requiresAuth: true,
-        schema: {
-          response: successResponseSchema,
-        },
-        handler: deleteFeedbackHandler,
-      },
-    ],
-  },
-];
+const feedbackRouter = new OpenAPIHono<{
+  Bindings: Env;
+  Variables: Variables;
+}>();
 
-// Create base router
-const createBaseFeedbackRoutes = () => {
-  const router = new OpenAPIHono<H>();
+feedbackRouter.use('*', auth());
 
-  // Register all routes with middleware
-  for (const route of feedbackRoutes.flatMap((group) =>
-    createRouteGroup(group)
-  )) {
-    const middlewares = [];
-
-    // Add authentication middleware if required
-    if (route.metadata.requiresAuth) {
-      middlewares.push(auth());
+feedbackRouter.openapi(
+  createRoute({
+    method: 'post',
+    path: '/',
+    description: 'Submit feedback',
+    tags: ['Admin Feedback'],
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: createFeedbackSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Feedback submitted successfully',
+        content: {
+          'application/json': {
+            schema: successResponseSchema,
+          },
+        },
+      },
+      ...errorResponseSchemas.badRequestError,
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.authError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await createFeedbackHandler(c);
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
     }
-
-    // Add validation middleware if schema exists
-    if (route.schema?.request) {
-      middlewares.push(zValidator('json', route.schema.request));
-    }
-
-    // Register route with error handling
-    router[route.method](route.path, ...middlewares, async (c) => {
-      try {
-        return await route.handler(c);
-      } catch (error) {
-        return handleError(c, error);
-      }
-    });
   }
-
-  return router;
-};
-
-export const createFeedbackRoutes = withOpenAPI(
-  createBaseFeedbackRoutes,
-  '/api/admin'
 );
+
+feedbackRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/',
+    description: 'Get all feedback',
+    tags: ['Admin Feedback'],
+    responses: {
+      200: {
+        description: 'Feedback retrieved successfully',
+        content: {
+          'application/json': {
+            schema: feedbackResponseSchema,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.authError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await getAllFeedbackHandler(c);
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+feedbackRouter.openapi(
+  createRoute({
+    method: 'patch',
+    path: '/:id/status',
+    description: 'Update feedback status',
+    tags: ['Admin Feedback'],
+    responses: {
+      200: {
+        description: 'Feedback status updated successfully',
+        content: {
+          'application/json': {
+            schema: successResponseSchema,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.authError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await updateFeedbackStatusHandler(c);
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+feedbackRouter.openapi(
+  createRoute({
+    method: 'patch',
+    path: '/:id/priority',
+    description: 'Update feedback priority',
+    tags: ['Admin Feedback'],
+    responses: {
+      200: {
+        description: 'Feedback priority updated successfully',
+        content: {
+          'application/json': {
+            schema: successResponseSchema,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.authError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await updateFeedbackPriorityHandler(c);
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+feedbackRouter.openapi(
+  createRoute({
+    method: 'delete',
+    path: '/:id',
+    description: 'Delete feedback',
+    tags: ['Admin Feedback'],
+    responses: {
+      200: {
+        description: 'Feedback deleted successfully',
+        content: {
+          'application/json': {
+            schema: successResponseSchema,
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await deleteFeedbackHandler(c);
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+feedbackRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/:id',
+    description: 'Get feedback by ID  ',
+    tags: ['Admin Feedback'],
+    responses: {
+      200: {
+        description: 'Feedback retrieved successfully',
+        content: {
+          'application/json': {
+            schema: feedbackResponseSchema,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.authError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await getFeedbackByIdHandler(c);
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+feedbackRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/user/:id',
+    description: 'Get feedback by user ID',
+    tags: ['Admin Feedback'],
+    responses: {
+      200: {
+        description: 'Feedback retrieved successfully',
+        content: {
+          'application/json': {
+            schema: feedbackResponseSchema,
+          },
+        },
+      },
+      ...errorResponseSchemas.badRequestError,
+      ...errorResponseSchemas.notFoundError,
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.authError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await getUserFeedbackHandler(c);
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+export default feedbackRouter;

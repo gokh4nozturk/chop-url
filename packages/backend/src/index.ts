@@ -1,3 +1,5 @@
+import feedbackRoutes from '@/admin/feedback/routes';
+import waitlistRoutes from '@/admin/waitlist/routes';
 import analyticsRoutes from '@/analytics/routes';
 import {
   analyticsRoutes as urlAnalyticsRoutes,
@@ -8,8 +10,6 @@ import {
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { apiReference } from '@scalar/hono-api-reference';
 import { cors } from 'hono/cors';
-import { createFeedbackRoutes } from './admin/feedback/routes';
-import { createWaitListRoutes } from './admin/waitlist/routes';
 import { createAuthRoutes } from './auth/routes';
 import { createDb } from './db/client';
 import { createDomainRoutes } from './domain/routes';
@@ -131,8 +131,8 @@ app.route('/api', createStorageRoutes());
 app.route('/api', createQRRoutes());
 
 // Admin routes
-app.route('/api/admin', createWaitListRoutes());
-app.route('/api/admin', createFeedbackRoutes());
+app.route('/api/admin/waitlist', waitlistRoutes);
+app.route('/api/admin/feedback', feedbackRoutes);
 // Root route - redirect to docs
 app.get('/', (c) => {
   return c.redirect('/api-docs');

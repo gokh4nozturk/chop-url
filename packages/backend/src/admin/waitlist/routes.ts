@@ -1,80 +1,80 @@
-import { withOpenAPI } from '@/utils/openapi';
-import { OpenAPIHono } from '@hono/zod-openapi';
-import { zValidator } from '@hono/zod-validator';
-import { z } from 'zod';
-import { H } from '../../types/hono.types';
-import { RouteGroup } from '../../types/route.types';
-import { handleError } from '../../utils/error';
-import { createRouteGroup } from '../../utils/route-factory';
+import { auth } from '@/auth/middleware';
+import { Env, Variables } from '@/types';
+import { errorResponseSchemas, handleError } from '@/utils/error';
+import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import {
   approveWaitListUserHandler,
   getWaitListUsersHandler,
 } from './handlers';
-import {
-  approveResponseSchema,
-  approveWaitListSchema,
-  waitlistUsersResponseSchema,
-} from './schemas';
+import { approveResponseSchema, waitlistUsersResponseSchema } from './schemas';
 
-// Waitlist route groups
-const waitlistRoutes: RouteGroup[] = [
-  {
-    prefix: '/waitlist',
-    tag: 'WAITLIST',
-    description: 'Waitlist management endpoints',
-    routes: [
-      {
-        path: '/list',
-        method: 'get',
-        description: 'Get waitlist users',
-        schema: {
-          response: waitlistUsersResponseSchema,
+const waitlistRouter = new OpenAPIHono<{
+  Bindings: Env;
+  Variables: Variables;
+}>();
+
+waitlistRouter.use('*', auth());
+
+waitlistRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/',
+    description: 'Get waitlist users',
+    tags: ['Waitlist'],
+    responses: {
+      200: {
+        description: 'Waitlist users retrieved successfully',
+        content: {
+          'application/json': {
+            schema: waitlistUsersResponseSchema,
+          },
         },
-        handler: getWaitListUsersHandler,
       },
-      {
-        path: '/approve',
-        method: 'post',
-        description: 'Approve waitlist user',
-        schema: {
-          request: approveWaitListSchema,
-          response: approveResponseSchema,
-        },
-        handler: approveWaitListUserHandler,
-      },
-    ],
-  },
-];
-
-// Create base router
-const createBaseWaitListRoutes = () => {
-  const router = new OpenAPIHono<H>();
-
-  // Register all routes with middleware
-  for (const route of waitlistRoutes.flatMap((group) =>
-    createRouteGroup(group)
-  )) {
-    const middlewares = [];
-
-    // Add validation middleware if schema exists
-    if (route.schema?.request) {
-      middlewares.push(zValidator('json', route.schema.request));
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.badRequestError,
+      ...errorResponseSchemas.notFoundError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await getWaitListUsersHandler(c);
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
     }
-
-    // Register route with error handling
-    router[route.method](route.path, ...middlewares, async (c) => {
-      try {
-        return await route.handler(c);
-      } catch (error) {
-        return handleError(c, error);
-      }
-    });
   }
-
-  return router;
-};
-
-export const createWaitListRoutes = withOpenAPI(
-  createBaseWaitListRoutes,
-  '/api/admin'
 );
+
+waitlistRouter.openapi(
+  createRoute({
+    method: 'post',
+    path: '/approve',
+    description: 'Approve waitlist user',
+    tags: ['Waitlist'],
+    responses: {
+      200: {
+        description: 'Waitlist user approved successfully',
+        content: {
+          'application/json': {
+            schema: approveResponseSchema,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.badRequestError,
+      ...errorResponseSchemas.notFoundError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await approveWaitListUserHandler(c);
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+export default waitlistRouter;

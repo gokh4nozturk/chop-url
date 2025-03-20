@@ -87,3 +87,13 @@ export const deleteFeedbackHandler = async (c: Context<FeedbackContext>) => {
 
   return c.json({ message: 'Feedback deleted successfully' });
 };
+
+export const getFeedbackByIdHandler = async (c: Context<FeedbackContext>) => {
+  const id = c.req.param('id');
+  const db = drizzle(c.env.DB);
+
+  const feedbackService = new FeedbackService(db);
+  const feedback = await feedbackService.getFeedbackById(id);
+
+  return c.json(feedback);
+};
