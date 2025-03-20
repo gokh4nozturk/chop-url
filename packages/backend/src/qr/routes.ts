@@ -23,6 +23,7 @@ const qrRoutes: RouteGroup[] = [
           request: qrSchemas.createQRCode,
           response: qrSchemas.qrCode,
         },
+        requiresAuth: true,
         handler: qrHandlers.createQRCode,
       },
       {

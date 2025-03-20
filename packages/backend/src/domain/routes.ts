@@ -31,7 +31,7 @@ const domainRoutes: RouteGroup[] = [
       {
         path: '/',
         method: 'get',
-        description: 'Get all domains for user',
+        description: 'Get all domains for the authenticated user',
         requiresAuth: true,
         schema: {
           response: domainsResponseSchema,

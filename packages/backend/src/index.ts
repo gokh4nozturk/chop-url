@@ -24,6 +24,25 @@ app.use('*', async (c, next) => {
   await next();
 });
 
+// Trailing slash middleware - redirects or removes trailing slashes
+app.use('*', async (c, next) => {
+  const url = new URL(c.req.url);
+
+  // Only apply to paths that aren't root or legitimate index endpoints
+  // Allow routes specifically ending with '/' like '/api/auth/profile/'
+  if (
+    url.pathname.length > 1 &&
+    url.pathname.endsWith('/') &&
+    !url.pathname.endsWith('/index/') &&
+    !url.pathname.match(/\/api\/[^\/]+\/$/)
+  ) {
+    // Remove trailing slash
+    const newPath = url.pathname.slice(0, -1) + url.search;
+    return c.redirect(newPath, 301);
+  }
+  await next();
+});
+
 // CORS middleware
 app.use(
   '*',

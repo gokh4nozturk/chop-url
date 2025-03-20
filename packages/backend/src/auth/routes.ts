@@ -306,7 +306,7 @@ const authGroups: RouteGroup[] = [
             })
             .openapi('WaitlistResponse'),
         },
-        description: 'Join waitlist',
+        description: 'Add to waitlist',
         handler: authHandlers.addToWaitlist,
       },
       {
