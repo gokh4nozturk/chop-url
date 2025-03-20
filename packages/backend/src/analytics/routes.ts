@@ -1,198 +1,378 @@
-import { withOpenAPI } from '@/utils/openapi';
-import { OpenAPIHono } from '@hono/zod-openapi';
-import { zValidator } from '@hono/zod-validator';
-import { auth } from '../auth/middleware';
-import { H } from '../types/hono.types';
-import { RouteGroup } from '../types/route.types';
-import { handleError } from '../utils/error';
-import { createRouteGroup } from '../utils/route-factory';
+import { auth } from '@/auth/middleware';
+import { Env, Variables } from '@/types';
+import { errorResponseSchemas, handleError } from '@/utils/error';
+import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
+
 import { analyticsHandlers } from './handlers';
 import { analyticsSchemas } from './schemas';
 
-// Analytics route groups
-const analyticsRoutes: RouteGroup[] = [
-  {
-    prefix: '/analytics',
-    tag: 'EVENTS',
-    description: 'Event tracking endpoints',
-    routes: [
-      {
-        path: '/events',
-        method: 'post',
-        description: 'Track an event',
-        schema: {
-          request: analyticsSchemas.trackEvent,
-          response: analyticsSchemas.success,
-        },
-        handler: analyticsHandlers.trackEvent,
-      },
-      {
-        path: '/custom-events',
-        method: 'post',
-        description: 'Create a custom event',
-        schema: {
-          request: analyticsSchemas.createCustomEvent,
-          response: analyticsSchemas.success,
-        },
-        handler: analyticsHandlers.createCustomEvent,
-      },
-      {
-        path: '/events/:urlId',
-        method: 'get',
-        description: 'Get events for a URL by ID',
-        schema: {
-          response: analyticsSchemas.events,
-        },
-        handler: analyticsHandlers.getEvents,
-      },
-      {
-        path: '/custom-events/:userId',
-        method: 'get',
-        description: 'Get custom events for a user',
-        schema: {
-          response: analyticsSchemas.customEvents,
-        },
-        handler: analyticsHandlers.getCustomEvents,
-      },
-    ],
-  },
-  {
-    prefix: '/analytics/urls',
-    tag: 'URL_ANALYTICS',
-    description: 'URL analytics endpoints',
-    routes: [
-      {
-        path: '/:shortId/stats',
-        method: 'get',
-        description: 'Get statistics for a URL',
-        schema: {
-          response: analyticsSchemas.urlStats,
-        },
-        handler: analyticsHandlers.getUrlStats,
-      },
-      {
-        path: '/:shortId/events',
-        method: 'get',
-        description: 'Get events for a URL',
-        schema: {
-          response: analyticsSchemas.urlEvents,
-        },
-        handler: analyticsHandlers.getUrlEvents,
-      },
-      {
-        path: '/url/:urlId/stats',
-        method: 'get',
-        description: 'Get statistics for a specific URL',
-        handler: async (c) => {
-          try {
-            return await analyticsHandlers.getUrlStats(c);
-          } catch (error) {
-            return handleError(c, error);
-          }
-        },
-        schema: {
-          response: analyticsSchemas.urlStats,
-          errors: {
-            404: analyticsSchemas.urlNotFoundError,
-            400: analyticsSchemas.validationError,
+const analyticsRouter = new OpenAPIHono<{
+  Bindings: Env;
+  Variables: Variables;
+}>();
+
+analyticsRouter.use('*', auth());
+
+analyticsRouter.openapi(
+  createRoute({
+    method: 'post',
+    path: '/events',
+    description: 'Track an event',
+    tags: ['Analytics Events'],
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: analyticsSchemas.trackEvent,
           },
         },
       },
-    ],
-  },
-  {
-    prefix: '/analytics/urls',
-    tag: 'DETAILED_ANALYTICS',
-    description: 'Detailed analytics endpoints',
-    routes: [
-      {
-        path: '/:shortId/geo',
-        method: 'get',
-        description: 'Get geographic statistics for a URL',
-        schema: {
-          response: analyticsSchemas.geoStats,
+    },
+    responses: {
+      200: {
+        description: 'Success',
+        content: {
+          'application/json': {
+            schema: analyticsSchemas.success,
+          },
         },
-        handler: analyticsHandlers.getGeoStats,
       },
-      {
-        path: '/:shortId/devices',
-        method: 'get',
-        description: 'Get device statistics for a URL',
-        schema: {
-          response: analyticsSchemas.deviceStats,
-        },
-        handler: analyticsHandlers.getDeviceStats,
-      },
-      {
-        path: '/:shortId/utm',
-        method: 'get',
-        description: 'Get UTM statistics for a URL',
-        schema: {
-          response: analyticsSchemas.utmStats,
-        },
-        handler: analyticsHandlers.getUtmStats,
-      },
-      {
-        path: '/:shortId/clicks',
-        method: 'get',
-        description: 'Get click history for a URL',
-        schema: {
-          response: analyticsSchemas.clickHistory,
-        },
-        handler: analyticsHandlers.getClickHistory,
-      },
-    ],
-  },
-  {
-    prefix: '/analytics/users',
-    tag: 'USER_ANALYTICS',
-    description: 'User analytics endpoints',
-    routes: [
-      {
-        path: '/:userId',
-        method: 'get',
-        description: 'Get analytics for a user',
-        requiresAuth: true,
-        schema: {
-          response: analyticsSchemas.userAnalytics,
-        },
-        handler: analyticsHandlers.getUserAnalytics,
-      },
-    ],
-  },
-];
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.notFoundError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.badRequestError,
+    },
+  }),
+  async (c) => {
+    try {
+      // Get user analytics
+      const result = await analyticsHandlers.trackEvent(c);
 
-// Create base router
-const createBaseAnalyticsRoutes = () => {
-  const router = new OpenAPIHono<H>();
-
-  // Register all routes with middleware
-  for (const route of analyticsRoutes.flatMap((group) =>
-    createRouteGroup(group)
-  )) {
-    const middlewares = [];
-
-    // Add authentication middleware if required
-    if (route.metadata.requiresAuth) {
-      middlewares.push(auth());
+      // Ensure we return with a 200 status code
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
     }
-
-    // Add validation middleware if schema exists
-    if (route.schema?.request) {
-      middlewares.push(zValidator('json', route.schema.request));
-    }
-
-    // Register route with error handling
-    router[route.method](route.path, ...middlewares, async (c) => {
-      try {
-        return await route.handler(c);
-      } catch (error) {
-        return handleError(c, error);
-      }
-    });
   }
+);
 
-  return router;
-};
+analyticsRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/events/:urlId',
+    description: 'Get events for a URL by ID',
+    tags: ['Analytics Events'],
+    responses: {
+      200: {
+        description: 'Success',
+        content: {
+          'application/json': {
+            schema: analyticsSchemas.events,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.notFoundError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.badRequestError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await analyticsHandlers.getEvents(c);
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
 
-export const createAnalyticsRoutes = withOpenAPI(createBaseAnalyticsRoutes, '');
+analyticsRouter.openapi(
+  createRoute({
+    method: 'post',
+    path: '/custom-events',
+    description: 'Create a custom event',
+    tags: ['Analytics/Custom Events'],
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: analyticsSchemas.createCustomEvent,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Success',
+        content: {
+          'application/json': {
+            schema: analyticsSchemas.success,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.notFoundError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.badRequestError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await analyticsHandlers.createCustomEvent(c);
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+analyticsRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/custom-events/:userId',
+    description: 'Get custom events for a user',
+    tags: ['Analytics/Custom Events'],
+    responses: {
+      200: {
+        description: 'Success',
+        content: {
+          'application/json': {
+            schema: analyticsSchemas.customEvents,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.notFoundError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.badRequestError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await analyticsHandlers.getCustomEvents(c);
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+analyticsRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/:shortId/stats',
+    description: 'Get statistics for a URL',
+    tags: ['Analytics/URL Events Analytics'],
+    responses: {
+      200: {
+        description: 'Success',
+        content: {
+          'application/json': {
+            schema: analyticsSchemas.urlStats,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.notFoundError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.badRequestError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await analyticsHandlers.getUrlStats(c);
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+analyticsRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/:shortId/events',
+    description: 'Get events for a URL',
+    tags: ['Analytics/URL Events Analytics'],
+    responses: {
+      200: {
+        description: 'Success',
+        content: {
+          'application/json': {
+            schema: analyticsSchemas.urlEvents,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.notFoundError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.badRequestError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await analyticsHandlers.getUrlEvents(c);
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+analyticsRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/:shortId/geo',
+    description: 'Get geographic statistics for a URL',
+    tags: ['Analytics/Detailed Analytics'],
+    responses: {
+      200: {
+        description: 'Success',
+        content: {
+          'application/json': {
+            schema: analyticsSchemas.geoStats,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.notFoundError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.badRequestError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await analyticsHandlers.getGeoStats(c);
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+analyticsRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/:shortId/devices',
+    description: 'Get device statistics for a URL',
+    tags: ['Analytics/Detailed Analytics'],
+    responses: {
+      200: {
+        description: 'Success',
+        content: {
+          'application/json': {
+            schema: analyticsSchemas.deviceStats,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.notFoundError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.badRequestError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await analyticsHandlers.getDeviceStats(c);
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+analyticsRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/:shortId/utm',
+    description: 'Get UTM statistics for a URL',
+    tags: ['Analytics/Detailed Analytics'],
+    responses: {
+      200: {
+        description: 'Success',
+        content: {
+          'application/json': {
+            schema: analyticsSchemas.utmStats,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.notFoundError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.badRequestError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await analyticsHandlers.getUtmStats(c);
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+analyticsRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/:shortId/clicks',
+    description: 'Get click history for a URL',
+    tags: ['Analytics/Detailed Analytics'],
+    responses: {
+      200: {
+        description: 'Success',
+        content: {
+          'application/json': {
+            schema: analyticsSchemas.clickHistory,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.notFoundError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.badRequestError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await analyticsHandlers.getClickHistory(c);
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+analyticsRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/:userId',
+    description: 'Get analytics for a user',
+    tags: ['Analytics/User Analytics'],
+    responses: {
+      200: {
+        description: 'Success',
+        content: {
+          'application/json': {
+            schema: analyticsSchemas.userAnalytics,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.notFoundError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.badRequestError,
+    },
+  }),
+  async (c) => {
+    try {
+      const result = await analyticsHandlers.getUserAnalytics(c);
+      return c.json(result, 200);
+    } catch (error) {
+      handleError(c, error);
+    }
+  }
+);
+
+export default analyticsRouter;

@@ -1543,6 +1543,12 @@
         },
         "required": ["urlId", "eventType", "eventName"]
       },
+      "EventsResponse": {
+        "type": "array",
+        "items": {
+          "nullable": true
+        }
+      },
       "CreateCustomEventSchema": {
         "type": "object",
         "properties": {
@@ -1564,12 +1570,6 @@
         },
         "required": ["userId", "name"]
       },
-      "EventsResponse": {
-        "type": "array",
-        "items": {
-          "nullable": true
-        }
-      },
       "CustomEventsResponse": {
         "type": "array",
         "items": {
@@ -1581,69 +1581,6 @@
         "items": {
           "nullable": true
         }
-      },
-      "AnalyticsValidationErrorSchema": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string",
-            "enum": ["VALIDATION_ERROR"],
-            "description": "Validation error code",
-            "example": "VALIDATION_ERROR"
-          },
-          "message": {
-            "type": "string",
-            "description": "Error message",
-            "example": "Invalid request body"
-          },
-          "details": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "string"
-                },
-                "message": {
-                  "type": "string"
-                },
-                "path": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              },
-              "required": ["code", "message", "path"]
-            },
-            "description": "Validation error details",
-            "example": [
-              {
-                "code": "invalid_enum_value",
-                "message": "Invalid time range. Expected one of: 24h, 7d, 30d, 90d",
-                "path": ["timeRange"]
-              }
-            ]
-          }
-        },
-        "required": ["code", "message", "details"]
-      },
-      "AnalyticsUrlNotFoundErrorSchema": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string",
-            "enum": ["URL_NOT_FOUND"],
-            "description": "URL not found error code",
-            "example": "URL_NOT_FOUND"
-          },
-          "message": {
-            "type": "string",
-            "description": "Error message",
-            "example": "URL not found. Cannot retrieve analytics data."
-          }
-        },
-        "required": ["code", "message"]
       },
       "GeoStatsResponse": {
         "type": "object",
@@ -5356,12 +5293,9 @@
     },
     "/api/analytics/events": {
       "post": {
-        "description": "POST /analytics/events",
-        "tags": ["EVENTS"],
-        "summary": "POST /analytics/events",
+        "description": "Track an event",
+        "tags": ["Analytics Events"],
         "requestBody": {
-          "description": "Request body",
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -5372,7 +5306,7 @@
         },
         "responses": {
           "200": {
-            "description": "POST /analytics/events",
+            "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
@@ -5382,51 +5316,189 @@
             }
           },
           "400": {
-            "description": "Invalid request - The request was malformed or contained invalid parameters",
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["BAD_REQUEST"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized - Authentication is required or has failed",
+            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - The authenticated user does not have permission to access the resource",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "UNAUTHORIZED",
+                        "INVALID_TOKEN",
+                        "NO_TOKEN",
+                        "EXPIRED_TOKEN"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "404": {
-            "description": "Not found - The requested resource could not be found",
+            "description": "Resource not found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotFoundErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["RESOURCE_NOT_FOUND"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error - An unexpected error occurred on the server",
+            "description": "Server error",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics/events/:urlId": {
+      "get": {
+        "description": "Get events for a URL by ID",
+        "tags": ["Analytics Events"],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["BAD_REQUEST"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "UNAUTHORIZED",
+                        "INVALID_TOKEN",
+                        "NO_TOKEN",
+                        "EXPIRED_TOKEN"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["RESOURCE_NOT_FOUND"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5436,12 +5508,9 @@
     },
     "/api/analytics/custom-events": {
       "post": {
-        "description": "POST /analytics/custom-events",
-        "tags": ["EVENTS"],
-        "summary": "POST /analytics/custom-events",
+        "description": "Create a custom event",
+        "tags": ["Analytics/Custom Events"],
         "requestBody": {
-          "description": "Request body",
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -5452,7 +5521,7 @@
         },
         "responses": {
           "200": {
-            "description": "POST /analytics/custom-events",
+            "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
@@ -5462,51 +5531,86 @@
             }
           },
           "400": {
-            "description": "Invalid request - The request was malformed or contained invalid parameters",
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["BAD_REQUEST"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized - Authentication is required or has failed",
+            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - The authenticated user does not have permission to access the resource",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "UNAUTHORIZED",
+                        "INVALID_TOKEN",
+                        "NO_TOKEN",
+                        "EXPIRED_TOKEN"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "404": {
-            "description": "Not found - The requested resource could not be found",
+            "description": "Resource not found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotFoundErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["RESOURCE_NOT_FOUND"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error - An unexpected error occurred on the server",
+            "description": "Server error",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5514,83 +5618,13 @@
         }
       }
     },
-    "/api/analytics/events/{urlId}": {
+    "/api/analytics/custom-events/:userId": {
       "get": {
-        "description": "GET /analytics/events/:urlId",
-        "tags": ["EVENTS"],
-        "summary": "GET /analytics/events/:urlId",
+        "description": "Get custom events for a user",
+        "tags": ["Analytics/Custom Events"],
         "responses": {
           "200": {
-            "description": "GET /analytics/events/:urlId",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EventsResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request - The request was malformed or contained invalid parameters",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorSchema"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Authentication is required or has failed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - The authenticated user does not have permission to access the resource",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found - The requested resource could not be found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotFoundErrorSchema"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error - An unexpected error occurred on the server",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/analytics/custom-events/{userId}": {
-      "get": {
-        "description": "GET /analytics/custom-events/:userId",
-        "tags": ["EVENTS"],
-        "summary": "GET /analytics/custom-events/:userId",
-        "responses": {
-          "200": {
-            "description": "GET /analytics/custom-events/:userId",
+            "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
@@ -5600,51 +5634,86 @@
             }
           },
           "400": {
-            "description": "Invalid request - The request was malformed or contained invalid parameters",
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["BAD_REQUEST"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized - Authentication is required or has failed",
+            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - The authenticated user does not have permission to access the resource",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "UNAUTHORIZED",
+                        "INVALID_TOKEN",
+                        "NO_TOKEN",
+                        "EXPIRED_TOKEN"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "404": {
-            "description": "Not found - The requested resource could not be found",
+            "description": "Resource not found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotFoundErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["RESOURCE_NOT_FOUND"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error - An unexpected error occurred on the server",
+            "description": "Server error",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5652,14 +5721,13 @@
         }
       }
     },
-    "/api/analytics/urls/{shortId}/stats": {
+    "/api/analytics/:shortId/stats": {
       "get": {
-        "description": "GET /analytics/urls/:shortId/stats",
-        "tags": ["URL_ANALYTICS"],
-        "summary": "GET /analytics/urls/:shortId/stats",
+        "description": "Get statistics for a URL",
+        "tags": ["Analytics/URL Events Analytics"],
         "responses": {
           "200": {
-            "description": "GET /analytics/urls/:shortId/stats",
+            "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
@@ -5716,51 +5784,86 @@
             }
           },
           "400": {
-            "description": "Invalid request - The request was malformed or contained invalid parameters",
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["BAD_REQUEST"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized - Authentication is required or has failed",
+            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - The authenticated user does not have permission to access the resource",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "UNAUTHORIZED",
+                        "INVALID_TOKEN",
+                        "NO_TOKEN",
+                        "EXPIRED_TOKEN"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "404": {
-            "description": "Not found - The requested resource could not be found",
+            "description": "Resource not found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotFoundErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["RESOURCE_NOT_FOUND"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error - An unexpected error occurred on the server",
+            "description": "Server error",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5768,14 +5871,13 @@
         }
       }
     },
-    "/api/analytics/urls/{shortId}/events": {
+    "/api/analytics/:shortId/events": {
       "get": {
-        "description": "GET /analytics/urls/:shortId/events",
-        "tags": ["EVENTS", "URL_ANALYTICS"],
-        "summary": "GET /analytics/urls/:shortId/events",
+        "description": "Get events for a URL",
+        "tags": ["Analytics/URL Events Analytics"],
         "responses": {
           "200": {
-            "description": "GET /analytics/urls/:shortId/events",
+            "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
@@ -5785,167 +5887,86 @@
             }
           },
           "400": {
-            "description": "Invalid request - The request was malformed or contained invalid parameters",
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorSchema"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Authentication is required or has failed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - The authenticated user does not have permission to access the resource",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found - The requested resource could not be found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotFoundErrorSchema"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error - An unexpected error occurred on the server",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/analytics/urls/url/{urlId}/stats": {
-      "get": {
-        "description": "GET /analytics/urls/url/:urlId/stats",
-        "tags": ["URL_ANALYTICS"],
-        "summary": "GET /analytics/urls/url/:urlId/stats",
-        "responses": {
-          "200": {
-            "description": "GET /analytics/urls/url/:urlId/stats",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/UrlStatsResponse"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["BAD_REQUEST"]
                     },
-                    {
-                      "properties": {
-                        "totalEvents": {
-                          "type": "number"
-                        },
-                        "uniqueVisitors": {
-                          "type": "number"
-                        },
-                        "lastEventAt": {
-                          "type": "string",
-                          "nullable": true
-                        },
-                        "url": {
-                          "type": "object",
-                          "properties": {
-                            "id": {
-                              "type": "number"
-                            },
-                            "shortId": {
-                              "type": "string"
-                            },
-                            "originalUrl": {
-                              "type": "string"
-                            },
-                            "createdAt": {
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "id",
-                            "shortId",
-                            "originalUrl",
-                            "createdAt"
-                          ]
-                        }
-                      },
-                      "required": [
-                        "totalEvents",
-                        "uniqueVisitors",
-                        "lastEventAt",
-                        "url"
-                      ]
+                    "message": {
+                      "type": "string"
                     }
-                  ]
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request - The request was malformed or contained invalid parameters",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AnalyticsValidationErrorSchema"
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized - Authentication is required or has failed",
+            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - The authenticated user does not have permission to access the resource",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "UNAUTHORIZED",
+                        "INVALID_TOKEN",
+                        "NO_TOKEN",
+                        "EXPIRED_TOKEN"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "404": {
-            "description": "Not found - The requested resource could not be found",
+            "description": "Resource not found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AnalyticsUrlNotFoundErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["RESOURCE_NOT_FOUND"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error - An unexpected error occurred on the server",
+            "description": "Server error",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5953,14 +5974,13 @@
         }
       }
     },
-    "/api/analytics/urls/{shortId}/geo": {
+    "/api/analytics/:shortId/geo": {
       "get": {
-        "description": "GET /analytics/urls/:shortId/geo",
-        "tags": ["DETAILED_ANALYTICS", "URL_ANALYTICS"],
-        "summary": "GET /analytics/urls/:shortId/geo",
+        "description": "Get geographic statistics for a URL",
+        "tags": ["Analytics/Detailed Analytics"],
         "responses": {
           "200": {
-            "description": "GET /analytics/urls/:shortId/geo",
+            "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
@@ -5970,51 +5990,86 @@
             }
           },
           "400": {
-            "description": "Invalid request - The request was malformed or contained invalid parameters",
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["BAD_REQUEST"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized - Authentication is required or has failed",
+            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - The authenticated user does not have permission to access the resource",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "UNAUTHORIZED",
+                        "INVALID_TOKEN",
+                        "NO_TOKEN",
+                        "EXPIRED_TOKEN"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "404": {
-            "description": "Not found - The requested resource could not be found",
+            "description": "Resource not found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotFoundErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["RESOURCE_NOT_FOUND"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error - An unexpected error occurred on the server",
+            "description": "Server error",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6022,14 +6077,13 @@
         }
       }
     },
-    "/api/analytics/urls/{shortId}/devices": {
+    "/api/analytics/:shortId/devices": {
       "get": {
-        "description": "GET /analytics/urls/:shortId/devices",
-        "tags": ["DETAILED_ANALYTICS", "URL_ANALYTICS"],
-        "summary": "GET /analytics/urls/:shortId/devices",
+        "description": "Get device statistics for a URL",
+        "tags": ["Analytics/Detailed Analytics"],
         "responses": {
           "200": {
-            "description": "GET /analytics/urls/:shortId/devices",
+            "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
@@ -6039,51 +6093,86 @@
             }
           },
           "400": {
-            "description": "Invalid request - The request was malformed or contained invalid parameters",
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["BAD_REQUEST"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized - Authentication is required or has failed",
+            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - The authenticated user does not have permission to access the resource",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "UNAUTHORIZED",
+                        "INVALID_TOKEN",
+                        "NO_TOKEN",
+                        "EXPIRED_TOKEN"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "404": {
-            "description": "Not found - The requested resource could not be found",
+            "description": "Resource not found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotFoundErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["RESOURCE_NOT_FOUND"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error - An unexpected error occurred on the server",
+            "description": "Server error",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6091,14 +6180,13 @@
         }
       }
     },
-    "/api/analytics/urls/{shortId}/utm": {
+    "/api/analytics/:shortId/utm": {
       "get": {
-        "description": "GET /analytics/urls/:shortId/utm",
-        "tags": ["DETAILED_ANALYTICS", "URL_ANALYTICS"],
-        "summary": "GET /analytics/urls/:shortId/utm",
+        "description": "Get UTM statistics for a URL",
+        "tags": ["Analytics/Detailed Analytics"],
         "responses": {
           "200": {
-            "description": "GET /analytics/urls/:shortId/utm",
+            "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
@@ -6108,51 +6196,86 @@
             }
           },
           "400": {
-            "description": "Invalid request - The request was malformed or contained invalid parameters",
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["BAD_REQUEST"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized - Authentication is required or has failed",
+            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - The authenticated user does not have permission to access the resource",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "UNAUTHORIZED",
+                        "INVALID_TOKEN",
+                        "NO_TOKEN",
+                        "EXPIRED_TOKEN"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "404": {
-            "description": "Not found - The requested resource could not be found",
+            "description": "Resource not found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotFoundErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["RESOURCE_NOT_FOUND"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error - An unexpected error occurred on the server",
+            "description": "Server error",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6160,14 +6283,13 @@
         }
       }
     },
-    "/api/analytics/urls/{shortId}/clicks": {
+    "/api/analytics/:shortId/clicks": {
       "get": {
-        "description": "GET /analytics/urls/:shortId/clicks",
-        "tags": ["DETAILED_ANALYTICS", "URL_ANALYTICS"],
-        "summary": "GET /analytics/urls/:shortId/clicks",
+        "description": "Get click history for a URL",
+        "tags": ["Analytics/Detailed Analytics"],
         "responses": {
           "200": {
-            "description": "GET /analytics/urls/:shortId/clicks",
+            "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
@@ -6177,51 +6299,86 @@
             }
           },
           "400": {
-            "description": "Invalid request - The request was malformed or contained invalid parameters",
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["BAD_REQUEST"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized - Authentication is required or has failed",
+            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - The authenticated user does not have permission to access the resource",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "UNAUTHORIZED",
+                        "INVALID_TOKEN",
+                        "NO_TOKEN",
+                        "EXPIRED_TOKEN"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "404": {
-            "description": "Not found - The requested resource could not be found",
+            "description": "Resource not found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotFoundErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["RESOURCE_NOT_FOUND"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error - An unexpected error occurred on the server",
+            "description": "Server error",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6229,14 +6386,13 @@
         }
       }
     },
-    "/api/analytics/users/{userId}": {
+    "/api/analytics/:userId": {
       "get": {
-        "description": "GET /analytics/users/:userId",
-        "tags": ["USER_ANALYTICS"],
-        "summary": "GET /analytics/users/:userId",
+        "description": "Get analytics for a user",
+        "tags": ["Analytics/User Analytics"],
         "responses": {
           "200": {
-            "description": "GET /analytics/users/:userId",
+            "description": "Success",
             "content": {
               "application/json": {
                 "schema": {
@@ -6246,51 +6402,86 @@
             }
           },
           "400": {
-            "description": "Invalid request - The request was malformed or contained invalid parameters",
+            "description": "Bad request",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["BAD_REQUEST"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized - Authentication is required or has failed",
+            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - The authenticated user does not have permission to access the resource",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "UNAUTHORIZED",
+                        "INVALID_TOKEN",
+                        "NO_TOKEN",
+                        "EXPIRED_TOKEN"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "404": {
-            "description": "Not found - The requested resource could not be found",
+            "description": "Resource not found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotFoundErrorSchema"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["RESOURCE_NOT_FOUND"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error - An unexpected error occurred on the server",
+            "description": "Server error",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["code", "message"]
                 }
               }
             }

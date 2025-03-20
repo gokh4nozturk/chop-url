@@ -1,5 +1,6 @@
+import analyticsRoutes from '@/analytics/routes';
 import {
-  analyticsRoutes,
+  analyticsRoutes as urlAnalyticsRoutes,
   managementRoutes,
   shorteningRoutes,
   urlGroupRouter,
@@ -9,7 +10,6 @@ import { apiReference } from '@scalar/hono-api-reference';
 import { cors } from 'hono/cors';
 import { createFeedbackRoutes } from './admin/feedback/routes';
 import { createWaitListRoutes } from './admin/waitlist/routes';
-import { createAnalyticsRoutes } from './analytics/routes';
 import { createAuthRoutes } from './auth/routes';
 import { createDb } from './db/client';
 import { createDomainRoutes } from './domain/routes';
@@ -119,12 +119,12 @@ app.route('/api', createAuthRoutes());
 // URL routes
 app.route('/api/urls', shorteningRoutes);
 app.route('/api/urls/groups', urlGroupRouter);
-app.route('/api/urls/analytics', analyticsRoutes);
+app.route('/api/urls/analytics', urlAnalyticsRoutes);
 app.route('/api/urls/management', managementRoutes);
 // Domain routes
 app.route('/api', createDomainRoutes());
 // Analytics routes
-app.route('/api', createAnalyticsRoutes());
+app.route('/api/analytics', analyticsRoutes);
 // Storage routes
 app.route('/api', createStorageRoutes());
 // QR routes
