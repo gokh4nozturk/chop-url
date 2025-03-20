@@ -29,7 +29,7 @@ const domainRoutes: RouteGroup[] = [
     description: 'Domain management endpoints',
     routes: [
       {
-        path: '/',
+        path: '/list',
         method: 'get',
         description: 'Get all domains for the authenticated user',
         requiresAuth: true,
@@ -39,7 +39,7 @@ const domainRoutes: RouteGroup[] = [
         handler: domainHandlers.getDomains,
       },
       {
-        path: '/',
+        path: '/create',
         method: 'post',
         description: 'Add a new domain',
         requiresAuth: true,

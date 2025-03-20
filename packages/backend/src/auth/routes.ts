@@ -141,7 +141,7 @@ const authGroups: RouteGroup[] = [
     description: 'User profile management endpoints',
     routes: [
       {
-        path: '/',
+        path: '/update',
         method: 'put',
         schema: {
           request: authSchemas.updateProfile,
@@ -284,7 +284,7 @@ const authGroups: RouteGroup[] = [
     description: 'Waitlist management endpoints',
     routes: [
       {
-        path: '/',
+        path: '/join',
         method: 'post',
         schema: {
           request: z

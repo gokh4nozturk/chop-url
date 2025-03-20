@@ -24,7 +24,7 @@ const waitlistRoutes: RouteGroup[] = [
     description: 'Waitlist management endpoints',
     routes: [
       {
-        path: '/',
+        path: '/list',
         method: 'get',
         description: 'Get waitlist users',
         schema: {

@@ -32,7 +32,7 @@ const feedbackRoutes: RouteGroup[] = [
     description: 'User feedback endpoints',
     routes: [
       {
-        path: '/',
+        path: '/submit',
         method: 'post',
         description: 'Submit feedback',
         requiresAuth: true,
@@ -43,7 +43,7 @@ const feedbackRoutes: RouteGroup[] = [
         handler: createFeedbackHandler,
       },
       {
-        path: '/',
+        path: '/list',
         method: 'get',
         description: 'Get user feedback',
         requiresAuth: true,

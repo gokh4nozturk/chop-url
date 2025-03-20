@@ -40,7 +40,7 @@ export const managementRoutes: RouteGroup[] = [
         },
       },
       {
-        path: '/user',
+        path: '/list',
         method: 'get',
         description: 'Get all URLs for the authenticated user',
         handler: async (c: Context) => {

@@ -16,7 +16,7 @@ const qrRoutes: RouteGroup[] = [
     description: 'QR code operations',
     routes: [
       {
-        path: '/',
+        path: '/create',
         method: 'post',
         description: 'Create a QR code',
         schema: {

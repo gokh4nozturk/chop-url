@@ -2094,11 +2094,11 @@
         }
       }
     },
-    "/api/auth/profile/": {
+    "/api/auth/profile/update": {
       "put": {
-        "description": "PUT /api/auth/profile/",
+        "description": "PUT /api/auth/profile/update",
         "tags": [],
-        "summary": "PUT /api/auth/profile/",
+        "summary": "PUT /api/auth/profile/update",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -2112,7 +2112,7 @@
         },
         "responses": {
           "200": {
-            "description": "PUT /api/auth/profile/",
+            "description": "PUT /api/auth/profile/update",
             "content": {
               "application/json": {
                 "schema": {
@@ -2701,11 +2701,11 @@
         }
       }
     },
-    "/api/auth/waitlist/": {
+    "/api/auth/waitlist/join": {
       "post": {
-        "description": "POST /api/auth/waitlist/",
+        "description": "POST /api/auth/waitlist/join",
         "tags": [],
-        "summary": "POST /api/auth/waitlist/",
+        "summary": "POST /api/auth/waitlist/join",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -2719,7 +2719,7 @@
         },
         "responses": {
           "200": {
-            "description": "POST /api/auth/waitlist/",
+            "description": "POST /api/auth/waitlist/join",
             "content": {
               "application/json": {
                 "schema": {
@@ -3861,14 +3861,14 @@
         }
       }
     },
-    "/api/domains/": {
+    "/api/domains/list": {
       "get": {
-        "description": "GET /api/domains/",
+        "description": "GET /api/domains/list",
         "tags": [],
-        "summary": "GET /api/domains/",
+        "summary": "GET /api/domains/list",
         "responses": {
           "200": {
-            "description": "GET /api/domains/",
+            "description": "GET /api/domains/list",
             "content": {
               "application/json": {
                 "schema": {
@@ -3928,11 +3928,13 @@
             }
           }
         }
-      },
+      }
+    },
+    "/api/domains/create": {
       "post": {
-        "description": "POST /api/domains/",
+        "description": "POST /api/domains/create",
         "tags": [],
-        "summary": "POST /api/domains/",
+        "summary": "POST /api/domains/create",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -3946,7 +3948,7 @@
         },
         "responses": {
           "200": {
-            "description": "POST /api/domains/",
+            "description": "POST /api/domains/create",
             "content": {
               "application/json": {
                 "schema": {
@@ -5657,11 +5659,11 @@
         }
       }
     },
-    "/api/qr/": {
+    "/api/qr/create": {
       "post": {
-        "description": "POST /api/qr/",
+        "description": "POST /api/qr/create",
         "tags": [],
-        "summary": "POST /api/qr/",
+        "summary": "POST /api/qr/create",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -5675,7 +5677,7 @@
         },
         "responses": {
           "200": {
-            "description": "POST /api/qr/",
+            "description": "POST /api/qr/create",
             "content": {
               "application/json": {
                 "schema": {
@@ -6022,14 +6024,14 @@
         }
       }
     },
-    "/api/admin/waitlist/": {
+    "/api/admin/waitlist/list": {
       "get": {
-        "description": "GET /api/admin/waitlist/",
+        "description": "GET /api/admin/waitlist/list",
         "tags": [],
-        "summary": "GET /api/admin/waitlist/",
+        "summary": "GET /api/admin/waitlist/list",
         "responses": {
           "200": {
-            "description": "GET /api/admin/waitlist/",
+            "description": "GET /api/admin/waitlist/list",
             "content": {
               "application/json": {
                 "schema": {
@@ -6241,11 +6243,11 @@
         }
       }
     },
-    "/api/admin/feedback/": {
+    "/api/admin/feedback/submit": {
       "post": {
-        "description": "POST /api/admin/feedback/",
+        "description": "POST /api/admin/feedback/submit",
         "tags": [],
-        "summary": "POST /api/admin/feedback/",
+        "summary": "POST /api/admin/feedback/submit",
         "requestBody": {
           "description": "Request body",
           "required": true,
@@ -6280,7 +6282,7 @@
         },
         "responses": {
           "200": {
-            "description": "POST /api/admin/feedback/",
+            "description": "POST /api/admin/feedback/submit",
             "content": {
               "application/json": {
                 "schema": {
@@ -6349,14 +6351,16 @@
             }
           }
         }
-      },
+      }
+    },
+    "/api/admin/feedback/list": {
       "get": {
-        "description": "GET /api/admin/feedback/",
+        "description": "GET /api/admin/feedback/list",
         "tags": [],
-        "summary": "GET /api/admin/feedback/",
+        "summary": "GET /api/admin/feedback/list",
         "responses": {
           "200": {
-            "description": "GET /api/admin/feedback/",
+            "description": "GET /api/admin/feedback/list",
             "content": {
               "application/json": {
                 "schema": {
