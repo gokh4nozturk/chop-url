@@ -1,3 +1,5 @@
+import app from '../index';
+
 // Get OpenAPI document from the app
 const openApiDoc = app.getOpenAPIDocument({
   openapi: '3.0.0',
