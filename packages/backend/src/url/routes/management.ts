@@ -13,6 +13,35 @@ export const managementRoutes: RouteGroup[] = [
     },
     routes: [
       {
+        path: '/list',
+        method: 'get',
+        description: 'Get all URLs for the authenticated user',
+        handler: async (c: Context) => {
+          try {
+            const user = c.get('user');
+            console.log('User from context:', user);
+
+            const db = c.get('db');
+            console.log('DB from context exists:', !!db);
+
+            const urlService = new UrlService(c.env.BASE_URL, db);
+            console.log('URL Service created with base URL:', c.env.BASE_URL);
+
+            console.log('Attempting to get URLs for user ID:', user.id);
+            const urls = await urlService.getUserUrls(user.id.toString());
+            console.log('URLs retrieved:', urls.length);
+
+            return c.json(urls, 200);
+          } catch (error) {
+            console.error('Error fetching URLs:', error);
+            return c.json({ error: 'Failed to fetch URLs' }, 500);
+          }
+        },
+        schema: {
+          response: urlResponseSchema,
+        },
+      },
+      {
         path: '/:shortId',
         method: 'get',
         description: 'Get URL details by short ID',
@@ -33,28 +62,6 @@ export const managementRoutes: RouteGroup[] = [
           } catch (error) {
             console.error('Error fetching URL:', error);
             return c.json({ error: 'Failed to fetch URL' }, 500);
-          }
-        },
-        schema: {
-          response: urlResponseSchema,
-        },
-      },
-      {
-        path: '/list',
-        method: 'get',
-        description: 'Get all URLs for the authenticated user',
-        handler: async (c: Context) => {
-          try {
-            const user = c.get('user');
-            const db = c.get('db');
-
-            const urlService = new UrlService(c.env.BASE_URL, db);
-            const urls = await urlService.getUserUrls(user.id.toString());
-
-            return c.json(urls, 200);
-          } catch (error) {
-            console.error('Error fetching URLs:', error);
-            return c.json({ error: 'Failed to fetch URLs' }, 500);
           }
         },
         schema: {

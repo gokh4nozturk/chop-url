@@ -156,25 +156,40 @@ export class UrlService {
   }
 
   async getUserUrls(userId: string) {
-    const userUrls = await this.db
-      .select()
-      .from(urls)
-      .where(eq(urls.userId, parseInt(userId)))
-      .orderBy(desc(urls.createdAt));
+    console.log('getUserUrls called with userId:', userId);
+    console.log('userId type:', typeof userId);
 
-    return userUrls.map((url: Url) => ({
-      id: url.id,
-      shortId: url.shortId,
-      shortUrl: `${this.baseUrl}/${url.shortId}`,
-      originalUrl: url.originalUrl,
-      createdAt: url.createdAt || '',
-      lastAccessedAt: url.lastAccessedAt || '',
-      visitCount: url.visitCount || 0,
-      isActive: url.isActive || false,
-      expiresAt: url.expiresAt || '',
-      userId: url.userId || 0,
-      customSlug: url.customSlug || '',
-    }));
+    try {
+      console.log('Starting DB query with parsed userId:', parseInt(userId));
+      const userUrls = await this.db
+        .select()
+        .from(urls)
+        .where(eq(urls.userId, parseInt(userId)))
+        .orderBy(desc(urls.createdAt));
+
+      console.log('DB query completed, results:', userUrls.length);
+      console.log(
+        'First result (if any):',
+        userUrls[0] ? JSON.stringify(userUrls[0]) : 'No results'
+      );
+
+      return userUrls.map((url: Url) => ({
+        id: url.id,
+        shortId: url.shortId,
+        shortUrl: `${this.baseUrl}/${url.shortId}`,
+        originalUrl: url.originalUrl,
+        createdAt: url.createdAt || '',
+        lastAccessedAt: url.lastAccessedAt || '',
+        visitCount: url.visitCount || 0,
+        isActive: url.isActive || false,
+        expiresAt: url.expiresAt || '',
+        userId: url.userId || 0,
+        customSlug: url.customSlug || '',
+      }));
+    } catch (error) {
+      console.error('Error in getUserUrls:', error);
+      throw error;
+    }
   }
 
   async getUrl(shortId: string): Promise<IUrl | null> {
