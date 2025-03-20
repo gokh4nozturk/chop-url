@@ -126,7 +126,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   getUserUrls: async () => {
     try {
       set({ isLoading: true, error: null });
-      const { data } = await apiClient.get('/api/urls/user');
+      const { data } = await apiClient.get('/api/urls/list');
       set({ urls: data });
     } catch (error) {
       set({
@@ -258,7 +258,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   createUrlGroup: async (name: string, description?: string) => {
     try {
       set({ isLoading: true, error: null });
-      const { data: group } = await apiClient.post('/api/urls/groups', {
+      const { data: group } = await apiClient.post('/api/urls/groups/create', {
         name,
         description,
       });
@@ -338,7 +338,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   getUserUrlGroups: async () => {
     try {
       set({ isLoading: true, error: null });
-      const { data } = await apiClient.get('/api/urls/groups');
+      const { data } = await apiClient.get('/api/urls/groups/list');
       set({ urlGroups: data });
     } catch (error) {
       set({

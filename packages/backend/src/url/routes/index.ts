@@ -19,10 +19,35 @@ const createBaseUrlRoutes = () => {
     ...urlGroupRoutes,
   ];
 
+  console.log(
+    '[DEBUG] URL Routes - All route groups:',
+    JSON.stringify(
+      allRoutes.map((g) => ({
+        prefix: g.prefix,
+        tag: g.tag,
+        routes: g.routes.map((r) => ({ path: r.path, method: r.method })),
+      })),
+      null,
+      2
+    )
+  );
+
   const router = new OpenAPIHono<H>();
 
   // Register all routes with middleware
-  for (const route of allRoutes.flatMap((group) => createRouteGroup(group))) {
+  for (const route of allRoutes.flatMap((group) => {
+    console.log('[DEBUG] Processing route group:', group.prefix, group.tag);
+    const routes = createRouteGroup(group);
+    console.log(
+      '[DEBUG] Routes created:',
+      JSON.stringify(
+        routes.map((r) => ({ path: r.path, method: r.method })),
+        null,
+        2
+      )
+    );
+    return routes;
+  })) {
     const middlewares = [];
 
     // Add authentication middleware if required
@@ -35,11 +60,26 @@ const createBaseUrlRoutes = () => {
       middlewares.push(zValidator('json', route.schema.request));
     }
 
+    console.log(
+      `[DEBUG] Registering route: ${route.method.toUpperCase()} ${route.path}`
+    );
+
     // Register route with error handling
     router[route.method](route.path, ...middlewares, async (c) => {
       try {
+        console.log(
+          `[DEBUG] Route handler called: ${route.method.toUpperCase()} ${
+            route.path
+          }`
+        );
         return await route.handler(c);
       } catch (error) {
+        console.error(
+          `[DEBUG] Error in route handler: ${route.method.toUpperCase()} ${
+            route.path
+          }`,
+          error
+        );
         return handleError(c, error);
       }
     });

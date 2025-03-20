@@ -17,20 +17,32 @@ export const urlGroupRoutes: RouteGroup[] = [
     },
     routes: [
       {
-        path: '/groups',
+        path: '/groups/list',
         method: 'get',
         description: 'List all URL groups for the authenticated user',
         handler: async (c: Context) => {
           try {
+            console.log('[DEBUG] GET /api/urls/groups/list - Starting handler');
             const user = c.get('user');
+            console.log('[DEBUG] User ID:', user.id);
             const db = c.get('db');
+            console.log('[DEBUG] DB connection retrieved');
 
             const urlService = new UrlService(c.env.BASE_URL, db);
+            console.log(
+              '[DEBUG] URL service created with BASE_URL:',
+              c.env.BASE_URL
+            );
+            console.log(
+              '[DEBUG] Calling getUserUrlGroups with user ID:',
+              user.id
+            );
             const groups = await urlService.getUserUrlGroups(user.id);
+            console.log('[DEBUG] Groups retrieved:', groups);
 
             return c.json(groups, 200);
           } catch (error) {
-            console.error('Error fetching URL groups:', error);
+            console.error('[DEBUG] Error fetching URL groups:', error);
             return c.json({ error: 'Failed to fetch URL groups' }, 500);
           }
         },
@@ -39,7 +51,7 @@ export const urlGroupRoutes: RouteGroup[] = [
         },
       },
       {
-        path: '/groups',
+        path: '/groups/create',
         method: 'post',
         description: 'Create a new URL group',
         handler: async (c: Context) => {
