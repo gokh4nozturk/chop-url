@@ -1781,6 +1781,7 @@
     },
     "/api/auth/waitlist/join": {
       "post": {
+        "operationId": "joinWaitlist",
         "description": "Join the waitlist",
         "tags": ["Waitlist"],
         "requestBody": {
@@ -1853,6 +1854,7 @@
     },
     "/api/auth/waitlist/:email": {
       "get": {
+        "operationId": "getWaitlistEntry",
         "description": "Get waitlist entry",
         "tags": ["Waitlist"],
         "responses": {

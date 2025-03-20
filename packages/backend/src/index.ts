@@ -35,6 +35,25 @@ app.use('*', async (c, next) => {
   await next();
 });
 
+app.getOpenAPIDocument({
+  openapi: '3.1.0',
+  info: {
+    title: 'Chop URL API',
+    version: '1.0.0',
+    description: 'URL Shortener Service API Documentation',
+  },
+  servers: [
+    {
+      url: 'http://localhost:8787',
+      description: 'Development server',
+    },
+    {
+      url: 'https://api.chop-url.com',
+      description: 'Production server',
+    },
+  ],
+});
+
 // CORS middleware
 app.use(
   '*',
@@ -66,7 +85,7 @@ app.use(
 
 // OpenAPI schema endpoint
 app.doc('/api-docs/openapi.json', {
-  openapi: '3.0.0',
+  openapi: '3.1.0',
   info: {
     title: 'Chop URL API',
     version: '1.0.0',

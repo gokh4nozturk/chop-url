@@ -12,6 +12,7 @@ waitlistRouter.openapi(
   createRoute({
     method: 'post',
     path: '/join',
+    operationId: 'joinWaitlist',
     description: 'Join the waitlist',
     tags: ['Waitlist'],
     request: {
@@ -66,6 +67,7 @@ waitlistRouter.openapi(
   createRoute({
     method: 'get',
     path: '/:email',
+    operationId: 'getWaitlistEntry',
     description: 'Get waitlist entry',
     tags: ['Waitlist'],
     responses: {
