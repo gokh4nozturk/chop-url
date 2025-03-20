@@ -111,3 +111,38 @@ const { isEnabled } = await draftMode()
 // Handle async params in layouts/pages
 const params = await props.params
 const searchParams = await props.searchParams
+
+```
+
+## Hono Framework Best Practices
+
+### Route Ordering
+
+- **Always define specific routes before wildcard/parameter routes**
+- Route order matters in Hono - the first matching route will be used
+- Place static paths (e.g., `/list`) before dynamic paths (e.g., `/:id`)
+- Example of correct ordering:
+  ```typescript
+  // Correct order
+  app.get('/users/list', listUsersHandler);
+  app.get('/users/:id', getUserByIdHandler);
+  ```
+- Example of problematic ordering:
+  ```typescript
+  // Incorrect order - '/users/list' will never be reached
+  app.get('/users/:id', getUserByIdHandler);
+  app.get('/users/list', listUsersHandler);
+  ```
+- This applies to all route definitions in the codebase, including OpenAPIHono
+
+### Error Handling
+
+- Implement consistent error handling across all routes
+- Use middleware for common error patterns
+- Return appropriate HTTP status codes and standardized error responses
+
+### Middleware Usage
+
+- Apply authentication and validation middleware consistently
+- Create reusable middleware for common functionality
+- Consider the order of middleware execution

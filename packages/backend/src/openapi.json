@@ -25,6 +25,123 @@
       }
     },
     "schemas": {
+      "ValidationErrorSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["VALIDATION_ERROR"],
+            "description": "Validation error code",
+            "example": "VALIDATION_ERROR"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Invalid request body"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": ["code", "message", "path"]
+            },
+            "description": "Validation error details",
+            "example": [
+              {
+                "code": "invalid_string",
+                "message": "Required",
+                "path": ["email"]
+              }
+            ]
+          }
+        },
+        "required": ["code", "message", "details"]
+      },
+      "UnauthorizedErrorSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["UNAUTHORIZED", "INVALID_TOKEN", "EXPIRED_TOKEN"],
+            "description": "Authorization error code",
+            "example": "UNAUTHORIZED"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Unauthorized access."
+          }
+        },
+        "required": ["code", "message"]
+      },
+      "ForbiddenErrorSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["FORBIDDEN"],
+            "description": "Forbidden error code",
+            "example": "FORBIDDEN"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Access forbidden."
+          }
+        },
+        "required": ["code", "message"]
+      },
+      "NotFoundErrorSchema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["RESOURCE_NOT_FOUND", "URL_NOT_FOUND"],
+            "description": "Not found error code",
+            "example": "RESOURCE_NOT_FOUND"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Requested resource not found."
+          }
+        },
+        "required": ["code", "message"]
+      },
+      "DefaultErrorResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Error code identifying the type of error",
+            "example": "INTERNAL_SERVER_ERROR"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human readable error message",
+            "example": "Internal server error occurred."
+          },
+          "details": {
+            "nullable": true,
+            "description": "Additional error details, such as validation errors"
+          }
+        },
+        "required": ["code", "message"]
+      },
       "User": {
         "type": "object",
         "properties": {
@@ -55,17 +172,6 @@
           }
         },
         "required": ["user"]
-      },
-      "DefaultErrorResponse": {
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "string",
-            "description": "Error message describing what went wrong",
-            "example": "Something went wrong"
-          }
-        },
-        "required": ["error"]
       },
       "LoginResponse": {
         "type": "object",
@@ -1424,47 +1530,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -1504,47 +1610,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -1584,47 +1690,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -1653,47 +1759,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -1733,47 +1839,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -1802,47 +1908,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -1882,47 +1988,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -1962,47 +2068,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -2042,47 +2148,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -2122,47 +2228,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -2202,47 +2308,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -2282,47 +2388,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -2351,47 +2457,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -2420,47 +2526,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -2489,47 +2595,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -2569,47 +2675,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -2649,47 +2755,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -2729,47 +2835,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -2798,47 +2904,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -2878,47 +2984,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -2958,37 +3064,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -2996,9 +3112,68 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/urls/list": {
+      "get": {
+        "description": "GET /urls/list",
+        "tags": [],
+        "summary": "GET /urls/list",
+        "responses": {
+          "200": {
+            "description": "GET /urls/list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UrlResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication is required or has failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found - The requested resource could not be found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
+                }
+              }
+            }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -3027,47 +3202,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -3105,47 +3280,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -3172,116 +3347,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/urls/list": {
-      "get": {
-        "description": "GET /urls/list",
-        "tags": [],
-        "summary": "GET /urls/list",
-        "responses": {
-          "200": {
-            "description": "GET /urls/list",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UrlResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -3310,47 +3416,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -3379,47 +3485,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -3448,47 +3554,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -3517,47 +3623,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -3595,47 +3701,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -3664,47 +3770,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -3742,47 +3848,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -3809,47 +3915,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -3878,47 +3984,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -3958,47 +4064,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -4027,47 +4133,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -4105,47 +4211,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -4172,47 +4278,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -4241,47 +4347,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -4321,47 +4427,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -4388,47 +4494,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -4457,47 +4563,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -4526,47 +4632,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -4595,47 +4701,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -4675,47 +4781,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -4755,47 +4861,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -4824,47 +4930,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -4893,47 +4999,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -5009,47 +5115,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -5078,47 +5184,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -5147,47 +5253,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -5216,47 +5322,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -5285,47 +5391,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -5354,47 +5460,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -5423,47 +5529,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -5521,47 +5627,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -5607,47 +5713,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -5687,47 +5793,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -5756,47 +5862,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -5825,47 +5931,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -5903,47 +6009,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -5972,47 +6078,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -6095,47 +6201,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -6191,47 +6297,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -6301,47 +6407,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -6416,47 +6522,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -6531,47 +6637,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -6627,47 +6733,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -6723,47 +6829,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {
@@ -6801,47 +6907,47 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request - The request was malformed or contained invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ValidationErrorSchema"
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized",
+            "description": "Unauthorized - Authentication is required or has failed",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/UnauthorizedErrorSchema"
                 }
               }
             }
           },
           "403": {
-            "description": "Forbidden",
+            "description": "Forbidden - The authenticated user does not have permission to access the resource",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/ForbiddenErrorSchema"
                 }
               }
             }
           },
           "404": {
-            "description": "Not found",
+            "description": "Not found - The requested resource could not be found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DefaultErrorResponse"
+                  "$ref": "#/components/schemas/NotFoundErrorSchema"
                 }
               }
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Internal server error - An unexpected error occurred on the server",
             "content": {
               "application/json": {
                 "schema": {

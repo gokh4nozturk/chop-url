@@ -2,6 +2,7 @@ import { OpenAPIHono } from '@hono/zod-openapi';
 import { z } from '@hono/zod-openapi';
 import type { RouteConfig, RouteHandler } from '@hono/zod-openapi';
 import { Hono } from 'hono';
+import { ErrorCode } from './error';
 
 type Method = 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head';
 type RouteCreator<T = unknown> = () => Hono<T>;
@@ -9,6 +10,14 @@ type RouteCreator<T = unknown> = () => Hono<T>;
 interface RouteSchema {
   request?: z.ZodType;
   response?: z.ZodType;
+  errors?: {
+    400?: z.ZodType;
+    401?: z.ZodType;
+    403?: z.ZodType;
+    404?: z.ZodType;
+    500?: z.ZodType;
+    [key: number]: z.ZodType | undefined;
+  };
 }
 
 interface RouteMetadata {
@@ -65,12 +74,99 @@ export const registerSchema = (
 // Default error schema
 const defaultErrorSchema = z
   .object({
-    error: z.string().openapi({
-      example: 'Something went wrong',
-      description: 'Error message describing what went wrong',
+    code: z.string().openapi({
+      example: 'INTERNAL_SERVER_ERROR',
+      description: 'Error code identifying the type of error',
+    }),
+    message: z.string().openapi({
+      example: 'Internal server error occurred.',
+      description: 'Human readable error message',
+    }),
+    details: z.any().optional().openapi({
+      description: 'Additional error details, such as validation errors',
+      example: null,
     }),
   })
   .openapi('DefaultErrorResponse');
+
+// Common error schemas for reuse
+export const validationErrorSchema = z
+  .object({
+    code: z.literal(ErrorCode.VALIDATION_ERROR).openapi({
+      example: ErrorCode.VALIDATION_ERROR,
+      description: 'Validation error code',
+    }),
+    message: z.string().openapi({
+      example: 'Invalid request body',
+      description: 'Error message',
+    }),
+    details: z
+      .array(
+        z.object({
+          code: z.string(),
+          message: z.string(),
+          path: z.array(z.string()),
+        })
+      )
+      .openapi({
+        description: 'Validation error details',
+        example: [
+          {
+            code: 'invalid_string',
+            message: 'Required',
+            path: ['email'],
+          },
+        ],
+      }),
+  })
+  .openapi('ValidationErrorSchema');
+
+export const unauthorizedErrorSchema = z
+  .object({
+    code: z
+      .enum([
+        ErrorCode.UNAUTHORIZED,
+        ErrorCode.INVALID_TOKEN,
+        ErrorCode.EXPIRED_TOKEN,
+      ])
+      .openapi({
+        example: ErrorCode.UNAUTHORIZED,
+        description: 'Authorization error code',
+      }),
+    message: z.string().openapi({
+      example: 'Unauthorized access.',
+      description: 'Error message',
+    }),
+  })
+  .openapi('UnauthorizedErrorSchema');
+
+export const forbiddenErrorSchema = z
+  .object({
+    code: z.literal(ErrorCode.FORBIDDEN).openapi({
+      example: ErrorCode.FORBIDDEN,
+      description: 'Forbidden error code',
+    }),
+    message: z.string().openapi({
+      example: 'Access forbidden.',
+      description: 'Error message',
+    }),
+  })
+  .openapi('ForbiddenErrorSchema');
+
+export const notFoundErrorSchema = z
+  .object({
+    code: z
+      .enum([ErrorCode.RESOURCE_NOT_FOUND, ErrorCode.URL_NOT_FOUND])
+      .openapi({
+        example: ErrorCode.RESOURCE_NOT_FOUND,
+        description: 'Not found error code',
+      }),
+    message: z.string().openapi({
+      example: 'Requested resource not found.',
+      description: 'Error message',
+    }),
+  })
+  .openapi('NotFoundErrorSchema');
 
 // Default success schema
 const defaultSuccessSchema = z
@@ -154,42 +250,45 @@ export const registerRoute = (
         },
       },
       400: {
-        description: 'Invalid request',
+        description:
+          'Invalid request - The request was malformed or contained invalid parameters',
         content: {
           'application/json': {
-            schema: defaultErrorSchema,
+            schema: schema?.errors?.[400] || validationErrorSchema,
           },
         },
       },
       401: {
-        description: 'Unauthorized',
+        description: 'Unauthorized - Authentication is required or has failed',
         content: {
           'application/json': {
-            schema: defaultErrorSchema,
+            schema: schema?.errors?.[401] || unauthorizedErrorSchema,
           },
         },
       },
       403: {
-        description: 'Forbidden',
+        description:
+          'Forbidden - The authenticated user does not have permission to access the resource',
         content: {
           'application/json': {
-            schema: defaultErrorSchema,
+            schema: schema?.errors?.[403] || forbiddenErrorSchema,
           },
         },
       },
       404: {
-        description: 'Not found',
+        description: 'Not found - The requested resource could not be found',
         content: {
           'application/json': {
-            schema: defaultErrorSchema,
+            schema: schema?.errors?.[404] || notFoundErrorSchema,
           },
         },
       },
       500: {
-        description: 'Internal server error',
+        description:
+          'Internal server error - An unexpected error occurred on the server',
         content: {
           'application/json': {
-            schema: defaultErrorSchema,
+            schema: schema?.errors?.[500] || defaultErrorSchema,
           },
         },
       },
@@ -198,6 +297,31 @@ export const registerRoute = (
     tags: metadata?.tags || [],
     summary: description || `${method.toUpperCase()} ${path}`,
   };
+
+  // Add custom error status codes if provided
+  if (schema?.errors) {
+    for (const [statusCode, errorSchema] of Object.entries(schema.errors)) {
+      const code = parseInt(statusCode, 10);
+      // Skip standard error codes that are already handled
+      if (
+        code !== 400 &&
+        code !== 401 &&
+        code !== 403 &&
+        code !== 404 &&
+        code !== 500 &&
+        errorSchema
+      ) {
+        config.responses[code] = {
+          description: `Error ${code}`,
+          content: {
+            'application/json': {
+              schema: errorSchema,
+            },
+          },
+        };
+      }
+    }
+  }
 
   if (requiresAuth) {
     config.security = [{ bearerAuth: [] }];
@@ -225,6 +349,37 @@ export const withOpenAPI = <T = unknown>(
         bearerFormat: 'JWT',
         description: 'JWT token for authentication',
       }
+    );
+
+    // Add custom error schemas to the registry
+    openAPIRouter.openAPIRegistry.registerComponent(
+      'schemas',
+      'ValidationErrorSchema',
+      validationErrorSchema.shape
+    );
+
+    openAPIRouter.openAPIRegistry.registerComponent(
+      'schemas',
+      'UnauthorizedErrorSchema',
+      unauthorizedErrorSchema.shape
+    );
+
+    openAPIRouter.openAPIRegistry.registerComponent(
+      'schemas',
+      'ForbiddenErrorSchema',
+      forbiddenErrorSchema.shape
+    );
+
+    openAPIRouter.openAPIRegistry.registerComponent(
+      'schemas',
+      'NotFoundErrorSchema',
+      notFoundErrorSchema.shape
+    );
+
+    openAPIRouter.openAPIRegistry.registerComponent(
+      'schemas',
+      'DefaultErrorResponse',
+      defaultErrorSchema.shape
     );
 
     // Copy all routes and add OpenAPI documentation
@@ -275,3 +430,42 @@ export const withOpenAPI = <T = unknown>(
     return openAPIRouter;
   };
 };
+
+/**
+ * Example usage of custom error schemas:
+ *
+ * ```typescript
+ * // Define a custom error schema for a specific endpoint
+ * const customNotFoundSchema = z
+ *   .object({
+ *     code: z.literal(ErrorCode.URL_NOT_FOUND).openapi({
+ *       example: ErrorCode.URL_NOT_FOUND,
+ *       description: 'URL not found error',
+ *     }),
+ *     message: z.string().openapi({
+ *       example: 'The requested short URL was not found.',
+ *       description: 'Detailed error message',
+ *     }),
+ *   })
+ *   .openapi('CustomUrlNotFoundError');
+ *
+ * // Use in route definition
+ * const routes = {
+ *   prefix: '/urls',
+ *   routes: [
+ *     {
+ *       path: '/:id',
+ *       method: 'get',
+ *       schema: {
+ *         response: urlResponseSchema,
+ *         errors: {
+ *           404: customNotFoundSchema,
+ *           400: validationErrorSchema
+ *         }
+ *       },
+ *       handler: getUrlHandler
+ *     }
+ *   ]
+ * };
+ * ```
+ */
