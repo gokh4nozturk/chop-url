@@ -27,7 +27,6 @@ urlGroupRouter.openapi(
   createRoute({
     method: 'post',
     path: '/create',
-    summary: 'Create a new URL group',
     description: 'Create a new URL group',
     tags: ['URL Groups'],
     request: {
@@ -80,7 +79,6 @@ urlGroupRouter.openapi(
   createRoute({
     method: 'get',
     path: '/',
-    summary: 'List all URL groups',
     description: 'List all URL groups for the authenticated user',
     tags: ['URL Groups'],
     responses: {
@@ -115,7 +113,6 @@ urlGroupRouter.openapi(
   createRoute({
     method: 'get',
     path: '/:id',
-    summary: 'Get a specific URL group',
     description: 'Get a specific URL group by ID',
     tags: ['URL Groups'],
     responses: {
@@ -163,7 +160,6 @@ urlGroupRouter.openapi(
   createRoute({
     method: 'put',
     path: '/:id',
-    summary: 'Update a specific URL group',
     description: 'Update a specific URL group by ID',
     tags: ['URL Groups'],
     request: {
@@ -211,7 +207,6 @@ urlGroupRouter.openapi(
   createRoute({
     method: 'delete',
     path: '/:id',
-    summary: 'Delete a specific URL group',
     description: 'Delete a specific URL group by ID',
     tags: ['URL Groups'],
     responses: {

@@ -17,7 +17,6 @@ analyticsRouter.openapi(
   createRoute({
     method: 'get',
     path: '/:id',
-    summary: 'Get statistics for a specific URL',
     description: 'Get statistics for a specific URL',
     tags: ['Url Analytics'],
     responses: {
@@ -57,7 +56,6 @@ analyticsRouter.openapi(
   createRoute({
     method: 'get',
     path: '/list',
-    summary: 'Get statistics for all URLs of the authenticated user',
     description: 'Get statistics for all URLs of the authenticated user',
     tags: ['Url Analytics'],
     responses: {
@@ -96,7 +94,6 @@ analyticsRouter.openapi(
   createRoute({
     method: 'get',
     path: '/export',
-    summary: 'Export URL statistics data',
     description: 'Export URL statistics data',
     tags: ['Url Analytics'],
     responses: {

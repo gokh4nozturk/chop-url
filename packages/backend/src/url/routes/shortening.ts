@@ -18,7 +18,6 @@ shorteningRouter.openapi(
   createRoute({
     method: 'post',
     path: '/shorten',
-    summary: 'Create a shortened URL',
     description: 'Create a shortened URL',
     tags: ['URL Shortening'],
     responses: {
@@ -65,7 +64,6 @@ shorteningRouter.openapi(
   createRoute({
     method: 'post',
     path: '/chop',
-    summary: 'Create a shortened URL (alternative endpoint)',
     description: 'Create a shortened URL (alternative endpoint)',
     tags: ['URL Shortening'],
     responses: {

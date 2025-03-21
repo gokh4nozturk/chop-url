@@ -149,10 +149,10 @@ export const useAnalyticsStore = create<AnalyticsState>()(
 
           // Fetch all data in parallel
           const [{ data: urlStats }, { data: events }] = await Promise.all([
-            apiClient.get(`/analytics/urls/${shortId}/stats`, {
+            apiClient.get(`/analytics/${shortId}/stats`, {
               params: { timeRange },
             }),
-            apiClient.get(`/analytics/urls/${shortId}/events`, {
+            apiClient.get(`/analytics/${shortId}/events`, {
               params: { timeRange },
             }),
           ]);

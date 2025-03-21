@@ -21,7 +21,6 @@ urlManagementRouter.openapi(
   createRoute({
     method: 'get',
     path: '/',
-    summary: 'Get all URLs for the authenticated user',
     description: 'Get all URLs for the authenticated user',
     tags: ['URL Management'],
     responses: {
@@ -56,7 +55,6 @@ urlManagementRouter.openapi(
   createRoute({
     method: 'get',
     path: '/:shortId',
-    summary: 'Get a specific URL by short ID',
     description: 'Get a specific URL by short ID',
     tags: ['URL Management'],
     responses: {
@@ -92,7 +90,6 @@ urlManagementRouter.openapi(
   createRoute({
     method: 'patch',
     path: '/:shortId',
-    summary: 'Update a URL',
     description: 'Update a URL',
     tags: ['URL Management'],
     responses: {
@@ -130,7 +127,6 @@ urlManagementRouter.openapi(
   createRoute({
     method: 'delete',
     path: '/:shortId',
-    summary: 'Delete a URL',
     description: 'Delete a URL',
     tags: ['URL Management'],
     responses: {
