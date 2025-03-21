@@ -1,142 +1,52 @@
-import { auth } from '@/auth/middleware';
 import { Env, Variables } from '@/types';
-import { errorResponseSchemas, handleError } from '@/utils/error';
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
-import { analyticsResponseSchema, urlStatsSchema } from '../schemas';
-import { UrlService } from '../service';
-import { Period, VALID_PERIODS } from '../types';
+
+/**
+ * IMPORTANT: These endpoints have been consolidated under the main analytics router.
+ * Please use the following endpoints instead:
+ *
+ * - GET /analytics/url/:id/stats - Get statistics for a specific URL
+ * - GET /analytics/url/list - Get statistics for all URLs of the authenticated user
+ * - GET /analytics/url/export - Export URL statistics data
+ *
+ * This file is kept for backward compatibility but will be removed in a future release.
+ */
 
 const analyticsRouter = new OpenAPIHono<{
   Bindings: Env;
   Variables: Variables;
 }>();
 
-analyticsRouter.use('*', auth());
+// Redirect old endpoints to new consolidated analytics endpoints
+analyticsRouter.get('/:id', (c) => {
+  const url = new URL(c.req.url);
+  const id = c.req.param('id');
+  const period = c.req.query('period') || '24h';
 
-analyticsRouter.openapi(
-  createRoute({
-    method: 'get',
-    path: '/:id',
-    description: 'Get statistics for a specific URL',
-    tags: ['Url Analytics'],
-    responses: {
-      200: {
-        description: 'Success',
-        content: {
-          'application/json': {
-            schema: urlStatsSchema,
-          },
-        },
-      },
-      ...errorResponseSchemas.notFoundError,
-      ...errorResponseSchemas.serverError,
-    },
-  }),
-  async (c) => {
-    try {
-      const { id } = c.req.param();
-      const { period = '24h' } = c.req.query();
-      const db = c.get('db');
+  url.pathname = `/analytics/url/${id}/stats`;
+  url.searchParams.set('period', period);
 
-      const urlService = new UrlService(c.env.BASE_URL, db);
-      const stats = await urlService.getUrlStats(id, period as Period);
+  return c.redirect(url.toString());
+});
 
-      if (!stats) {
-        return c.json({ error: 'URL not found' }, 404);
-      }
+analyticsRouter.get('/list', (c) => {
+  const url = new URL(c.req.url);
+  const period = c.req.query('period') || '7d';
 
-      return c.json(stats, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
-  }
-);
+  url.pathname = '/analytics/url/list';
+  url.searchParams.set('period', period);
 
-analyticsRouter.openapi(
-  createRoute({
-    method: 'get',
-    path: '/list',
-    description: 'Get statistics for all URLs of the authenticated user',
-    tags: ['Url Analytics'],
-    responses: {
-      200: {
-        description: 'Success',
-        content: {
-          'application/json': {
-            schema: analyticsResponseSchema,
-          },
-        },
-      },
-      ...errorResponseSchemas.serverError,
-      ...errorResponseSchemas.notFoundError,
-    },
-  }),
-  async (c) => {
-    try {
-      const user = c.get('user');
-      const { period = '7d' } = c.req.query();
-      const db = c.get('db');
+  return c.redirect(url.toString());
+});
 
-      const urlService = new UrlService(c.env.BASE_URL, db);
-      const analytics = await urlService.getUserAnalytics(
-        user.id.toString(),
-        period as Period
-      );
+analyticsRouter.get('/export', (c) => {
+  const url = new URL(c.req.url);
+  const period = c.req.query('period') || '7d';
 
-      return c.json(analytics, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
-  }
-);
+  url.pathname = '/analytics/url/export';
+  url.searchParams.set('period', period);
 
-analyticsRouter.openapi(
-  createRoute({
-    method: 'get',
-    path: '/export',
-    description: 'Export URL statistics data',
-    tags: ['Url Analytics'],
-    responses: {
-      200: {
-        description: 'Success',
-        content: {
-          'application/json': {
-            schema: analyticsResponseSchema,
-          },
-        },
-      },
-      ...errorResponseSchemas.badRequestError,
-      ...errorResponseSchemas.serverError,
-      ...errorResponseSchemas.notFoundError,
-    },
-  }),
-  async (c) => {
-    try {
-      const user = c.get('user');
-      const { period = '7d' } = c.req.query();
-
-      if (!VALID_PERIODS.includes(period as Period)) {
-        return c.json(
-          {
-            error: 'Invalid period. Valid periods are: 24h, 7d, 30d, 90d',
-          },
-          400
-        );
-      }
-
-      const db = c.get('db');
-
-      const urlService = new UrlService(c.env.BASE_URL, db);
-      const data = await urlService.getUserAnalytics(
-        user.id.toString(),
-        period as Period
-      );
-
-      return c.json(data, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
-  }
-);
+  return c.redirect(url.toString());
+});
 
 export default analyticsRouter;

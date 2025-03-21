@@ -248,4 +248,66 @@ export const analyticsSchemas = {
   urlNotFoundError: analyticsUrlNotFoundErrorSchema,
   dataError: analyticsDataErrorSchema,
   customEventValidationError: customEventValidationErrorSchema,
+
+  // Analytics response schema for consolidated URL analytics
+  analyticsResponse: z
+    .object({
+      totalClicks: z.number(),
+      uniqueVisitors: z.number(),
+      countries: z.array(
+        z.object({
+          name: z.string(),
+          count: z.number(),
+        })
+      ),
+      cities: z.array(
+        z.object({
+          name: z.string(),
+          count: z.number(),
+        })
+      ),
+      regions: z.array(
+        z.object({
+          name: z.string(),
+          count: z.number(),
+        })
+      ),
+      timezones: z.array(
+        z.object({
+          name: z.string(),
+          count: z.number(),
+        })
+      ),
+      referrers: z.array(
+        z.object({
+          name: z.string(),
+          count: z.number(),
+        })
+      ),
+      devices: z.array(
+        z.object({
+          name: z.string(),
+          count: z.number(),
+        })
+      ),
+      browsers: z.array(
+        z.object({
+          name: z.string(),
+          count: z.number(),
+        })
+      ),
+      operatingSystems: z.array(
+        z.object({
+          name: z.string(),
+          count: z.number(),
+        })
+      ),
+      clicksByDate: z.array(
+        z.object({
+          date: z.string(),
+          count: z.number(),
+        })
+      ),
+    })
+    .openapi('AnalyticsResponse'),
 };

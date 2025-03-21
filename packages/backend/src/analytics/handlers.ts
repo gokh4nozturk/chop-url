@@ -47,7 +47,8 @@ export const analyticsHandlers = {
 
   getCustomEvents: async (c: Context) => {
     const analyticsService = createAnalyticsService(c);
-    const userId = Number(c.req.param('userId'));
+    const user = c.get('user');
+    const userId = user.id;
 
     const events = await analyticsService.getCustomEvents(userId);
     return c.json(events);
@@ -180,7 +181,8 @@ export const analyticsHandlers = {
   // User analytics
   getUserAnalytics: async (c: Context) => {
     const analyticsService = createAnalyticsService(c);
-    const userId = Number(c.req.param('userId'));
+    const user = c.get('user');
+    const userId = user.id;
     const timeRange = c.req.query('timeRange') || '7d';
 
     try {
@@ -196,6 +198,48 @@ export const analyticsHandlers = {
     } catch (error) {
       console.error('Error getting user analytics:', error);
       return c.json({ error: 'Failed to get user analytics' }, 500);
+    }
+  },
+
+  // Consolidated URL analytics endpoints
+  getUrlStatsById: async (c: Context) => {
+    const analyticsService = createAnalyticsService(c);
+    const id = c.req.param('id');
+    const timeRange = c.req.query('period') || '24h';
+
+    try {
+      if (!analyticsSchemas.timeRange.safeParse(timeRange).success) {
+        return c.json({ error: 'Invalid time range' }, 400);
+      }
+
+      const stats = await analyticsService.getUrlStats(
+        id,
+        timeRange as TimeRange
+      );
+      return c.json(stats);
+    } catch (error) {
+      return handleAnalyticsError(c, error, 'Failed to get URL stats by ID');
+    }
+  },
+
+  exportUrlAnalytics: async (c: Context) => {
+    const analyticsService = createAnalyticsService(c);
+    const user = c.get('user');
+    const userId = user.id;
+    const timeRange = c.req.query('period') || '7d';
+
+    try {
+      if (!analyticsSchemas.timeRange.safeParse(timeRange).success) {
+        return c.json({ error: 'Invalid time range' }, 400);
+      }
+
+      const analytics = await analyticsService.getUserAnalytics(
+        userId,
+        timeRange as TimeRange
+      );
+      return c.json(analytics);
+    } catch (error) {
+      return handleAnalyticsError(c, error, 'Failed to export URL analytics');
     }
   },
 };

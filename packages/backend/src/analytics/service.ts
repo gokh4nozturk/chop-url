@@ -479,24 +479,11 @@ export class AnalyticsService {
     const timeCondition = getTimeRangeCondition(timeRange);
     const urlIds = userUrls.map((url) => url.id);
 
-    console.log('urlIds:', urlIds);
-    console.log('timeCondition:', timeCondition);
-
     // Get all events for user's URLs
     const eventResults = await this.database
       .select()
       .from(events)
       .where(and(inArray(events.urlId, urlIds), timeCondition));
-
-    console.log(
-      'SQL Query:',
-      this.database
-        .select()
-        .from(events)
-        .where(and(inArray(events.urlId, urlIds), timeCondition))
-        .toSQL()
-    );
-    console.log('eventResults:', eventResults);
 
     // Calculate total events and unique visitors
     const totalEvents = eventResults.length;

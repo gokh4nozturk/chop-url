@@ -10,6 +10,7 @@ const analyticsRouter = new OpenAPIHono<H>();
 
 analyticsRouter.use('*', auth());
 
+// Track events endpoint
 analyticsRouter.openapi(
   createRoute({
     method: 'post',
@@ -46,33 +47,7 @@ analyticsRouter.openapi(
   }
 );
 
-analyticsRouter.openapi(
-  createRoute({
-    method: 'get',
-    path: '/events/:urlId',
-    description: 'Get events for a URL by ID',
-    tags: ['Analytics Events'],
-    responses: {
-      200: {
-        description: 'Success',
-        content: {
-          'application/json': {
-            schema: analyticsSchemas.events,
-          },
-        },
-      },
-      ...errorResponseSchemas.serverError,
-      ...errorResponseSchemas.notFoundError,
-      ...errorResponseSchemas.authError,
-      ...errorResponseSchemas.badRequestError,
-    },
-  }),
-  // @ts-ignore
-  (c) => {
-    return analyticsHandlers.getEvents(c);
-  }
-);
-
+// Custom events endpoints
 analyticsRouter.openapi(
   createRoute({
     method: 'post',
@@ -112,8 +87,8 @@ analyticsRouter.openapi(
 analyticsRouter.openapi(
   createRoute({
     method: 'get',
-    path: '/custom-events/:userId',
-    description: 'Get custom events for a user',
+    path: '/me/custom-events',
+    description: 'Get custom events for the logged-in user',
     tags: ['Analytics/Custom Events'],
     responses: {
       200: {
@@ -136,12 +111,69 @@ analyticsRouter.openapi(
   }
 );
 
+// User analytics endpoints
 analyticsRouter.openapi(
   createRoute({
     method: 'get',
-    path: '/:shortId/stats',
+    path: '/me',
+    description: 'Get analytics for the logged-in user',
+    tags: ['Analytics/User Analytics'],
+    responses: {
+      200: {
+        description: 'Success',
+        content: {
+          'application/json': {
+            schema: analyticsSchemas.userAnalytics,
+          },
+        },
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.notFoundError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.badRequestError,
+    },
+  }),
+  // @ts-ignore
+  (c) => {
+    return analyticsHandlers.getUserAnalytics(c);
+  }
+);
+
+analyticsRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/export',
+    description: 'Export URL statistics data for the logged-in user',
+    tags: ['Analytics'],
+    responses: {
+      200: {
+        description: 'Success',
+        content: {
+          'application/json': {
+            schema: analyticsSchemas.analyticsResponse,
+          },
+        },
+      },
+      ...errorResponseSchemas.badRequestError,
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.notFoundError,
+      ...errorResponseSchemas.authError,
+      ...errorResponseSchemas.badRequestError,
+    },
+  }),
+  // @ts-ignore
+  (c) => {
+    return analyticsHandlers.exportUrlAnalytics(c);
+  }
+);
+
+// URL analytics endpoints - consolidated and standardized
+analyticsRouter.openapi(
+  createRoute({
+    method: 'get',
+    path: '/urls/:shortId/stats',
     description: 'Get statistics for a URL',
-    tags: ['Analytics/URL Events Analytics'],
+    tags: ['Analytics/URL Stats'],
     responses: {
       200: {
         description: 'Success',
@@ -166,9 +198,9 @@ analyticsRouter.openapi(
 analyticsRouter.openapi(
   createRoute({
     method: 'get',
-    path: '/:shortId/events',
+    path: '/urls/:shortId/events',
     description: 'Get events for a URL',
-    tags: ['Analytics/URL Events Analytics'],
+    tags: ['Analytics/URL Events'],
     responses: {
       200: {
         description: 'Success',
@@ -190,12 +222,13 @@ analyticsRouter.openapi(
   }
 );
 
+// Detailed URL analytics endpoints
 analyticsRouter.openapi(
   createRoute({
     method: 'get',
-    path: '/:shortId/geo',
+    path: '/urls/:shortId/geo',
     description: 'Get geographic statistics for a URL',
-    tags: ['Analytics/Detailed Analytics'],
+    tags: ['Analytics/URL Detailed Stats'],
     responses: {
       200: {
         description: 'Success',
@@ -220,9 +253,9 @@ analyticsRouter.openapi(
 analyticsRouter.openapi(
   createRoute({
     method: 'get',
-    path: '/:shortId/devices',
+    path: '/urls/:shortId/devices',
     description: 'Get device statistics for a URL',
-    tags: ['Analytics/Detailed Analytics'],
+    tags: ['Analytics/URL Detailed Stats'],
     responses: {
       200: {
         description: 'Success',
@@ -247,9 +280,9 @@ analyticsRouter.openapi(
 analyticsRouter.openapi(
   createRoute({
     method: 'get',
-    path: '/:shortId/utm',
+    path: '/urls/:shortId/utm',
     description: 'Get UTM statistics for a URL',
-    tags: ['Analytics/Detailed Analytics'],
+    tags: ['Analytics/URL Detailed Stats'],
     responses: {
       200: {
         description: 'Success',
@@ -274,9 +307,9 @@ analyticsRouter.openapi(
 analyticsRouter.openapi(
   createRoute({
     method: 'get',
-    path: '/:shortId/clicks',
+    path: '/urls/:shortId/clicks',
     description: 'Get click history for a URL',
-    tags: ['Analytics/Detailed Analytics'],
+    tags: ['Analytics/URL Detailed Stats'],
     responses: {
       200: {
         description: 'Success',
@@ -295,33 +328,6 @@ analyticsRouter.openapi(
   // @ts-ignore
   (c) => {
     return analyticsHandlers.getClickHistory(c);
-  }
-);
-
-analyticsRouter.openapi(
-  createRoute({
-    method: 'get',
-    path: '/:userId',
-    description: 'Get analytics for a user',
-    tags: ['Analytics/User Analytics'],
-    responses: {
-      200: {
-        description: 'Success',
-        content: {
-          'application/json': {
-            schema: analyticsSchemas.userAnalytics,
-          },
-        },
-      },
-      ...errorResponseSchemas.serverError,
-      ...errorResponseSchemas.notFoundError,
-      ...errorResponseSchemas.authError,
-      ...errorResponseSchemas.badRequestError,
-    },
-  }),
-  // @ts-ignore
-  (c) => {
-    return analyticsHandlers.getUserAnalytics(c);
   }
 );
 

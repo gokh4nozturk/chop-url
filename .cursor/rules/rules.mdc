@@ -142,8 +142,12 @@ const searchParams = await props.searchParams
 // Correct define
 import { H } from '@/types';
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
+import { auth } from '@/auth/middleware';
 
 const app = new OpenAPIHono<H>();
+
+// If we need use auth() middleware
+app.use('*', auth());
 
 const route = createRoute({
   method: 'get',
