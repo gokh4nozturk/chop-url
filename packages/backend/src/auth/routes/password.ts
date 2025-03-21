@@ -12,7 +12,7 @@ passwordRouter.use('*', auth());
 passwordRouter.openapi(
   createRoute({
     method: 'post',
-    path: '/request',
+    path: '/reset/request',
     description: 'Request password reset',
     tags: ['Password'],
     request: {

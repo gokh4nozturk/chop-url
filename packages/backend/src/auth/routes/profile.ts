@@ -12,7 +12,7 @@ profileRouter.use('*', auth());
 profileRouter.openapi(
   createRoute({
     method: 'put',
-    path: '/profile',
+    path: '/',
     description: 'Update user profile',
     tags: ['Profile'],
     request: {

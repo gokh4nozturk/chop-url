@@ -46,7 +46,7 @@ twoFactorRouter.openapi(
 twoFactorRouter.openapi(
   createRoute({
     method: 'post',
-    path: '/verify-setup',
+    path: '/setup/verify',
     description: 'Verify 2FA setup',
     tags: ['2FA'],
     request: {
@@ -105,7 +105,7 @@ twoFactorRouter.openapi(
 twoFactorRouter.openapi(
   createRoute({
     method: 'post',
-    path: '/verify-2fa',
+    path: '/verify',
     description: 'Verify 2FA code during login',
     tags: ['2FA'],
     request: {
@@ -139,7 +139,7 @@ twoFactorRouter.openapi(
 twoFactorRouter.openapi(
   createRoute({
     method: 'post',
-    path: '/enable-2fa',
+    path: '/enable',
     description: 'Enable 2FA for the user',
     tags: ['2FA'],
     request: {
@@ -173,7 +173,7 @@ twoFactorRouter.openapi(
 twoFactorRouter.openapi(
   createRoute({
     method: 'post',
-    path: '/disable-2fa',
+    path: '/disable',
     description: 'Disable 2FA for the user',
     tags: ['2FA'],
     request: {

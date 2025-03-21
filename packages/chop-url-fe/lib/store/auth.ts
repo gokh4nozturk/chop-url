@@ -138,13 +138,14 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         confirmPassword: string;
       }) => {
         try {
-          await apiClient.put('/auth/password', data);
+          await apiClient.put('/auth/profile/password', data);
         } catch (error) {
           console.error('Update password error:', error);
         }
       },
 
       refreshToken: async () => {
+        // TODO: Implement refresh token
         try {
           const currentToken = Cookies.get(COOKIE_NAME);
           if (!currentToken) {
@@ -284,6 +285,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
 
       logout: async () => {
+        // TODO: Implement logout
         try {
           await apiClient.post('/auth/logout');
         } catch (error) {
@@ -307,6 +309,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           throw error;
         }
       },
+
       verifyTwoFactorLogin: async (email: string, code: string) => {
         try {
           const response = await apiClient.post('/auth/2fa/verify', {
@@ -426,7 +429,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
       requestPasswordReset: async (email: string) => {
         try {
-          await apiClient.post('/auth/password/reset-request', {
+          await apiClient.post('/auth/password/reset/request', {
             email,
           });
         } catch (error) {

@@ -8,7 +8,7 @@ const waitlistRouter = new OpenAPIHono<H>();
 waitlistRouter.openapi(
   createRoute({
     method: 'post',
-    path: '/join',
+    path: '/',
     operationId: 'joinWaitlist',
     description: 'Join the waitlist',
     tags: ['Waitlist'],
