@@ -143,8 +143,30 @@ analyticsRouter.openapi(
   createRoute({
     method: 'get',
     path: '/export',
-    description: 'Export analytics data',
+    description: 'Export analytics data in various formats',
     tags: ['Analytics'],
+    parameters: [
+      {
+        name: 'period',
+        in: 'query',
+        schema: {
+          type: 'string',
+          enum: ['24h', '7d', '30d', '90d'],
+          default: '7d',
+        },
+        description: 'Time period for analytics data: 24h, 7d, 30d, 90d',
+      },
+      {
+        name: 'format',
+        in: 'query',
+        schema: {
+          type: 'string',
+          enum: ['json', 'csv'],
+          default: 'json',
+        },
+        description: 'Export format',
+      },
+    ],
     responses: {
       200: {
         description: 'Success',
@@ -152,9 +174,14 @@ analyticsRouter.openapi(
           'application/json': {
             schema: analyticsSchemas.analyticsResponse,
           },
+          'text/csv': {
+            schema: {
+              type: 'string',
+              format: 'binary',
+            },
+          },
         },
       },
-      ...errorResponseSchemas.badRequestError,
       ...errorResponseSchemas.serverError,
       ...errorResponseSchemas.notFoundError,
       ...errorResponseSchemas.authError,
@@ -173,6 +200,17 @@ analyticsRouter.openapi(
     method: 'get',
     path: '/:shortId/stats',
     description: 'Get statistics for a URL',
+    parameters: [
+      {
+        name: 'shortId',
+        in: 'path',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+        description: 'Short ID of the URL',
+      },
+    ],
     tags: ['Analytics'],
     responses: {
       200: {
@@ -200,6 +238,17 @@ analyticsRouter.openapi(
     method: 'get',
     path: '/:shortId/events',
     description: 'Get events for a URL',
+    parameters: [
+      {
+        name: 'shortId',
+        in: 'path',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+        description: 'Short ID of the URL',
+      },
+    ],
     tags: ['Analytics'],
     responses: {
       200: {
@@ -228,6 +277,17 @@ analyticsRouter.openapi(
     method: 'get',
     path: '/:shortId/geo',
     description: 'Get geographic statistics for a URL',
+    parameters: [
+      {
+        name: 'shortId',
+        in: 'path',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+        description: 'Short ID of the URL',
+      },
+    ],
     tags: ['Analytics - URL Detailed Stats'],
     responses: {
       200: {
@@ -255,6 +315,17 @@ analyticsRouter.openapi(
     method: 'get',
     path: '/:shortId/devices',
     description: 'Get device statistics for a URL',
+    parameters: [
+      {
+        name: 'shortId',
+        in: 'path',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+        description: 'Short ID of the URL',
+      },
+    ],
     tags: ['Analytics - URL Detailed Stats'],
     responses: {
       200: {
@@ -282,6 +353,17 @@ analyticsRouter.openapi(
     method: 'get',
     path: '/:shortId/utm',
     description: 'Get UTM statistics for a URL',
+    parameters: [
+      {
+        name: 'shortId',
+        in: 'path',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+        description: 'Short ID of the URL',
+      },
+    ],
     tags: ['Analytics - URL Detailed Stats'],
     responses: {
       200: {
@@ -309,6 +391,17 @@ analyticsRouter.openapi(
     method: 'get',
     path: '/:shortId/clicks',
     description: 'Get click history for a URL',
+    parameters: [
+      {
+        name: 'shortId',
+        in: 'path',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+        description: 'Short ID of the URL',
+      },
+    ],
     tags: ['Analytics - URL Detailed Stats'],
     responses: {
       200: {

@@ -6,6 +6,116 @@ import { AnalyticsService } from './service';
 import { DatabaseTableError, UrlNotFoundError } from './service';
 import { TimeRange } from './types';
 
+// Helper functions for exporting data
+const convertToCSV = (data: unknown): string => {
+  // If data is an object, wrap it in an array
+  const dataArray = Array.isArray(data) ? data : [data];
+
+  if (!dataArray || dataArray.length === 0) {
+    return '';
+  }
+
+  // For aggregated stats, create a flattened structure
+  const flattened = dataArray.map((stat) => {
+    const flatItem: Record<string, unknown> = {};
+
+    // Add basic stats
+    if ('totalEvents' in stat) flatItem.totalEvents = stat.totalEvents;
+    if ('uniqueVisitors' in stat) flatItem.uniqueVisitors = stat.uniqueVisitors;
+
+    // Add countries
+    if (stat.geoStats?.countries) {
+      for (const [country, count] of Object.entries(stat.geoStats.countries)) {
+        flatItem[`country_${country}`] = count;
+      }
+    } else if (Array.isArray(stat.countries)) {
+      for (const country of stat.countries) {
+        flatItem[`country_${country.name}`] = country.count;
+      }
+    }
+
+    // Add cities
+    if (stat.geoStats?.cities) {
+      for (const [city, count] of Object.entries(stat.geoStats.cities)) {
+        flatItem[`city_${city}`] = count;
+      }
+    } else if (Array.isArray(stat.cities)) {
+      for (const city of stat.cities) {
+        flatItem[`city_${city.name}`] = city.count;
+      }
+    }
+
+    // Add device info
+    if (stat.deviceStats?.devices) {
+      for (const [device, count] of Object.entries(stat.deviceStats.devices)) {
+        flatItem[`device_${device}`] = count;
+      }
+    } else if (Array.isArray(stat.devices)) {
+      for (const device of stat.devices) {
+        flatItem[`device_${device.name}`] = device.count;
+      }
+    }
+
+    // Add browser info
+    if (stat.deviceStats?.browsers) {
+      for (const [browser, count] of Object.entries(
+        stat.deviceStats.browsers
+      )) {
+        flatItem[`browser_${browser}`] = count;
+      }
+    } else if (Array.isArray(stat.browsers)) {
+      for (const browser of stat.browsers) {
+        flatItem[`browser_${browser.name}`] = browser.count;
+      }
+    }
+
+    // Add OS info
+    if (stat.deviceStats?.operatingSystems) {
+      for (const [os, count] of Object.entries(
+        stat.deviceStats.operatingSystems
+      )) {
+        flatItem[`os_${os}`] = count;
+      }
+    } else if (Array.isArray(stat.operatingSystems)) {
+      for (const os of stat.operatingSystems) {
+        flatItem[`os_${os.name}`] = os.count;
+      }
+    }
+
+    // Add clicks by date
+    if (Array.isArray(stat.clicksByDate)) {
+      for (const click of stat.clicksByDate) {
+        flatItem[`date_${click.name || click.date}`] =
+          click.value || click.count;
+      }
+    }
+
+    return flatItem;
+  });
+
+  // Get all headers
+  const headers = Array.from(
+    new Set(flattened.flatMap((item) => Object.keys(item)))
+  );
+
+  // Create CSV content
+  const csvRows = [];
+
+  // Add the headers
+  csvRows.push(headers.join(','));
+
+  // Add the data
+  for (const item of flattened) {
+    const values = headers.map((header) => {
+      const val = item[header] ?? '';
+      return typeof val === 'string' ? `"${val.replace(/"/g, '""')}"` : val;
+    });
+    csvRows.push(values.join(','));
+  }
+
+  return csvRows.join('\n');
+};
+
 // Create analytics service instance
 const createAnalyticsService = (c: Context) => {
   const db = createDb(c.env.DB);
@@ -226,11 +336,13 @@ export const analyticsHandlers = {
     }
   },
 
+  // Update the exportUrlAnalytics handler
   exportUrlAnalytics: async (c: Context) => {
     const analyticsService = createAnalyticsService(c);
     const user = c.get('user');
     const userId = user.id;
-    const timeRange = c.req.query('period') || '7d';
+    const timeRange = c.req.query('timeRange') || '7d';
+    const format = c.req.query('format') || 'json';
 
     try {
       if (!analyticsSchemas.timeRange.safeParse(timeRange).success) {
@@ -240,6 +352,27 @@ export const analyticsHandlers = {
       const analytics = await analyticsService.getUserAnalytics(
         userId,
         timeRange as TimeRange
+      );
+
+      const filename = `analytics_export_${
+        new Date().toISOString().split('T')[0]
+      }`;
+
+      // Export based on requested format
+      if (format.toLowerCase() === 'csv') {
+        c.header('Content-Type', 'text/csv');
+        c.header(
+          'Content-Disposition',
+          `attachment; filename="${filename}.csv"`
+        );
+        return c.body(convertToCSV(analytics));
+      }
+
+      // Default to JSON
+      c.header('Content-Type', 'application/json');
+      c.header(
+        'Content-Disposition',
+        `attachment; filename="${filename}.json"`
       );
       return c.json(analytics);
     } catch (error) {
