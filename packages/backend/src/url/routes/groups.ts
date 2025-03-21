@@ -79,7 +79,7 @@ urlGroupRouter.openapi(
 urlGroupRouter.openapi(
   createRoute({
     method: 'get',
-    path: '/list',
+    path: '/',
     summary: 'List all URL groups',
     description: 'List all URL groups for the authenticated user',
     tags: ['URL Groups'],

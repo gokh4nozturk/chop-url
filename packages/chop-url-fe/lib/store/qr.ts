@@ -74,7 +74,7 @@ export const useQRStore = create<QRState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const response = await apiClient.get<QRResponse>(`/qr/${urlId}`);
+      const response = await apiClient.get<QRResponse>(`/qr/url/${urlId}`);
 
       if (response.status === 204) {
         set({ status: response.status });

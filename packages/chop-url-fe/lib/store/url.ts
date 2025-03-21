@@ -126,7 +126,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   getUserUrls: async () => {
     try {
       set({ isLoading: true, error: null });
-      const { data } = await apiClient.get('/urls/list');
+      const { data } = await apiClient.get('/urls/management');
       set({ urls: data });
     } catch (error) {
       set({
@@ -144,7 +144,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   getUrlDetails: async (shortId: string) => {
     try {
       set({ isLoading: true, error: null });
-      const { data } = await apiClient.get(`/urls/${shortId}`);
+      const { data } = await apiClient.get(`/urls/management/${shortId}`);
       set({ urlDetails: data });
       return data;
     } catch (error) {
@@ -336,7 +336,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   getUserUrlGroups: async () => {
     try {
       set({ isLoading: true, error: null });
-      const { data } = await apiClient.get('/urls/groups/list');
+      const { data } = await apiClient.get('/urls/groups');
       set({ urlGroups: data });
     } catch (error) {
       set({
