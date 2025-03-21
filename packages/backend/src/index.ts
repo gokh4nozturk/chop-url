@@ -35,25 +35,6 @@ app.use('*', async (c, next) => {
   await next();
 });
 
-app.getOpenAPIDocument({
-  openapi: '3.1.0',
-  info: {
-    title: 'Chop URL API',
-    version: '1.0.0',
-    description: 'URL Shortener Service API Documentation',
-  },
-  servers: [
-    {
-      url: 'http://localhost:8787',
-      description: 'Development server',
-    },
-    {
-      url: 'https://api.chop-url.com',
-      description: 'Production server',
-    },
-  ],
-});
-
 // CORS middleware
 app.use(
   '*',
@@ -82,6 +63,34 @@ app.use(
     maxAge: 86400,
   })
 );
+
+// Register security scheme
+app.openAPIRegistry.registerComponent('securitySchemes', 'bearerAuth', {
+  type: 'http',
+  scheme: 'bearer',
+  bearerFormat: 'JWT',
+  description: 'JWT Authorization header using the Bearer scheme',
+});
+
+// OpenAPI schema endpoint
+app.getOpenAPIDocument({
+  openapi: '3.1.0',
+  info: {
+    title: 'Chop URL API',
+    version: '1.0.0',
+    description: 'URL Shortener Service API Documentation',
+  },
+  servers: [
+    {
+      url: 'http://localhost:8787',
+      description: 'Development server',
+    },
+    {
+      url: 'https://api.chop-url.com',
+      description: 'Production server',
+    },
+  ],
+});
 
 // OpenAPI schema endpoint
 app.doc('/api-docs/openapi.json', {
