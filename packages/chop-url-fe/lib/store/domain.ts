@@ -1,8 +1,8 @@
+import apiClient from '@/lib/api/client';
+import { ApiError } from '@/lib/api/error';
 import { toast } from 'sonner';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import apiClient from '../api/client';
-import { ApiError } from '../api/error';
 
 interface Domain {
   id: number;
@@ -90,7 +90,7 @@ export const useDomainStore = create<DomainState>()(
 
       try {
         set({ isLoading: true, error: null, isFetching: true });
-        const response = await apiClient.get('/api/domains');
+        const response = await apiClient.get('/domains');
         set({
           domains: response.data,
           lastFetch: now,
@@ -120,7 +120,7 @@ export const useDomainStore = create<DomainState>()(
       }
 
       try {
-        const response = await apiClient.get(`/api/domains/${domainId}/dns`);
+        const response = await apiClient.get(`/domains/${domainId}/dns`);
         set((state) => ({
           dnsRecords: {
             ...state.dnsRecords,
@@ -139,7 +139,7 @@ export const useDomainStore = create<DomainState>()(
     addDomain: async (domain: Partial<Domain>) => {
       try {
         console.log('Adding domain:', domain);
-        const response = await apiClient.post('/api/domains', domain);
+        const response = await apiClient.post('/domains', domain);
         console.log('Domain add response:', response.data);
         set((state) => ({
           domains: [...state.domains, response.data],
@@ -161,7 +161,7 @@ export const useDomainStore = create<DomainState>()(
 
     deleteDomain: async (domainId: number) => {
       try {
-        await apiClient.delete(`/api/domains/${domainId}`);
+        await apiClient.delete(`/domains/${domainId}`);
         set((state) => ({
           domains: state.domains.filter((d) => d.id !== domainId),
           dnsRecords: {
@@ -182,9 +182,7 @@ export const useDomainStore = create<DomainState>()(
 
     verifyDomain: async (domainId: number) => {
       try {
-        const response = await apiClient.post(
-          `/api/domains/${domainId}/verify`
-        );
+        const response = await apiClient.post(`/domains/${domainId}/verify`);
         if (response.data.verified) {
           set((state) => ({
             domains: state.domains.map((d) =>
@@ -210,7 +208,7 @@ export const useDomainStore = create<DomainState>()(
     addDnsRecord: async (domainId: number, record: Partial<DnsRecord>) => {
       try {
         const response = await apiClient.post(
-          `/api/domains/${domainId}/dns`,
+          `/domains/${domainId}/dns`,
           record
         );
         set((state) => ({
@@ -232,7 +230,7 @@ export const useDomainStore = create<DomainState>()(
 
     deleteDnsRecord: async (domainId: number, recordId: number) => {
       try {
-        await apiClient.delete(`/api/domains/${domainId}/dns/${recordId}`);
+        await apiClient.delete(`/domains/${domainId}/dns/${recordId}`);
         set((state) => ({
           dnsRecords: {
             ...state.dnsRecords,
@@ -254,7 +252,7 @@ export const useDomainStore = create<DomainState>()(
 
     requestSsl: async (domainId: number) => {
       try {
-        await apiClient.post(`/api/domains/${domainId}/ssl`);
+        await apiClient.post(`/domains/${domainId}/ssl`);
         set((state) => ({
           domains: state.domains.map((d) =>
             d.id === domainId ? { ...d, sslStatus: 'PENDING' } : d
@@ -275,7 +273,7 @@ export const useDomainStore = create<DomainState>()(
 
     checkSslStatus: async (domainId: number) => {
       try {
-        const response = await apiClient.get(`/api/domains/${domainId}/ssl`);
+        const response = await apiClient.get(`/domains/${domainId}/ssl`);
         set((state) => ({
           domains: state.domains.map((d) =>
             d.id === domainId ? { ...d, sslStatus: response.data.status } : d
@@ -296,7 +294,7 @@ export const useDomainStore = create<DomainState>()(
       settings: { forceSSL: boolean }
     ) => {
       try {
-        await apiClient.patch(`/api/domains/${domainId}/ssl`, settings);
+        await apiClient.patch(`/domains/${domainId}/ssl`, settings);
         set((state) => ({
           domains: state.domains.map((d) =>
             d.id === domainId

@@ -1,6 +1,6 @@
+import apiClient from '@/lib/api/client';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import apiClient from '../api/client';
 
 export type TimeRange = '24h' | '7d' | '30d' | '90d';
 
@@ -149,10 +149,10 @@ export const useAnalyticsStore = create<AnalyticsState>()(
 
           // Fetch all data in parallel
           const [{ data: urlStats }, { data: events }] = await Promise.all([
-            apiClient.get(`/api/analytics/urls/${shortId}/stats`, {
+            apiClient.get(`/analytics/urls/${shortId}/stats`, {
               params: { timeRange },
             }),
-            apiClient.get(`/api/analytics/urls/${shortId}/events`, {
+            apiClient.get(`/analytics/urls/${shortId}/events`, {
               params: { timeRange },
             }),
           ]);

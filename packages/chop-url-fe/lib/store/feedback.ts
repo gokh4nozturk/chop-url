@@ -1,12 +1,11 @@
 import apiClient from '@/lib/api/client';
-import axios from 'axios';
-import { AxiosError } from 'axios';
+import { ApiError } from '@/lib/api/error';
 import { create } from 'zustand';
 
 interface FeedbackState {
   feedback: Feedback[];
   isLoading: boolean;
-  error: AxiosError | null;
+  error: ApiError | null;
   sendFeedback: (feedback: Feedback) => Promise<void>;
 }
 
@@ -27,10 +26,10 @@ const useFeedbackStore = create<FeedbackState>((set) => ({
   sendFeedback: async (feedback: Feedback) => {
     set({ isLoading: true });
     try {
-      const response = await apiClient.post('/api/admin/feedback', feedback);
+      const response = await apiClient.post('/admin/feedback', feedback);
       set({ feedback: response.data });
     } catch (error) {
-      set({ error: error as AxiosError });
+      set({ error: error as ApiError });
     } finally {
       set({ isLoading: false });
     }

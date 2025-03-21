@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
 
 const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: `${API_BASE_URL}/api`,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

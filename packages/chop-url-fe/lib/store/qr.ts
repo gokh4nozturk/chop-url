@@ -1,6 +1,6 @@
 import apiClient from '@/lib/api/client';
+import { ApiError } from '@/lib/api/error';
 import axios from 'axios';
-import { AxiosError } from 'axios';
 import { create } from 'zustand';
 
 export interface QRCodeOptions {
@@ -27,7 +27,7 @@ interface QRState {
   qrCode: QRResponse | null;
   qrCodePublicUrl: string | null;
   logoPublicUrl: string | null;
-  error: Error | null;
+  error: ApiError | null;
   options: QRCodeOptions | null;
   status: number | null;
   getQRCode: (
@@ -74,7 +74,7 @@ export const useQRStore = create<QRState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const response = await apiClient.get<QRResponse>(`/api/qr/${urlId}`);
+      const response = await apiClient.get<QRResponse>(`/qr/${urlId}`);
 
       if (response.status === 204) {
         set({ status: response.status });
@@ -198,7 +198,7 @@ export const useQRStore = create<QRState>((set, get) => ({
   fetchPresignedUrl: async (urlId: string) => {
     try {
       set({ isLoading: true });
-      const { data } = await apiClient.post('/api/storage/presigned-url', {
+      const { data } = await apiClient.post('/storage/presigned-url', {
         path: `qr/${urlId}.svg`,
         operation: 'write',
       });
@@ -227,7 +227,7 @@ export const useQRStore = create<QRState>((set, get) => ({
         throw new Error(`Upload failed: ${response.status}`);
       }
 
-      const { data } = await apiClient.get('/api/storage/public-url', {
+      const { data } = await apiClient.get('/storage/public-url', {
         params: { path: `qr/${urlId}.svg` },
       });
 
@@ -250,7 +250,7 @@ export const useQRStore = create<QRState>((set, get) => ({
         },
       });
 
-      const { data } = await apiClient.get('/api/storage/public-url', {
+      const { data } = await apiClient.get('/storage/public-url', {
         params: { path: `qr/${urlId}-logo.svg` },
       });
 
@@ -272,7 +272,7 @@ export const useQRStore = create<QRState>((set, get) => ({
         imageUrl: get().qrCodePublicUrl,
       };
 
-      await apiClient.post('/api/qr', payload);
+      await apiClient.post('/qr', payload);
     } catch (error) {
       console.error('Error creating QR code:', error);
       throw error;
@@ -289,7 +289,7 @@ export const useQRStore = create<QRState>((set, get) => ({
         logoPosition: options.logoPosition,
       };
 
-      await apiClient.put(`/api/qr/${qrCodeId}`, payload);
+      await apiClient.put(`/qr/${qrCodeId}`, payload);
     } catch (error) {
       console.error('Error updating QR code:', error);
       throw error;

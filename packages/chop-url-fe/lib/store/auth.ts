@@ -90,7 +90,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           }
 
           // Fetch user data if token exists
-          const response = await apiClient.get('/api/auth/me');
+          const response = await apiClient.get('/auth/me');
           set({ user: response.data.user });
         } catch (error) {
           console.error('Session initialization error:', error);
@@ -101,7 +101,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
 
       getUser: async () => {
-        const response = await apiClient.get('/api/auth/me');
+        const response = await apiClient.get('/auth/me');
         set({ user: response.data.user });
       },
 
@@ -110,7 +110,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         name: string;
       }) => {
         try {
-          const response = await apiClient.put('/api/auth/profile', data);
+          const response = await apiClient.put('/auth/profile', data);
 
           if (response.status === 200) {
             set({ user: response.data.user });
@@ -138,7 +138,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         confirmPassword: string;
       }) => {
         try {
-          await apiClient.put('/api/auth/password', data);
+          await apiClient.put('/auth/password', data);
         } catch (error) {
           console.error('Update password error:', error);
         }
@@ -151,7 +151,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
             throw new Error('No token found');
           }
 
-          const response = await apiClient.post('/api/auth/token/refresh');
+          const response = await apiClient.post('/auth/token/refresh');
           const { user, token, expiresAt } = response.data;
 
           if (!token) {
@@ -195,7 +195,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await apiClient.post('/api/auth/login', {
+          const response = await apiClient.post('/auth/login', {
             email,
             password,
           });
@@ -244,7 +244,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       ) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await apiClient.post('/api/auth/register', {
+          const response = await apiClient.post('/auth/register', {
             email,
             password,
             confirmPassword,
@@ -285,7 +285,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 
       logout: async () => {
         try {
-          await apiClient.post('/api/auth/logout');
+          await apiClient.post('/auth/logout');
         } catch (error) {
           console.error('Logout error:', error);
         } finally {
@@ -297,7 +297,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 
       socialLogin: async (provider: string) => {
         try {
-          window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/oauth/${provider}`;
+          window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/oauth/${provider}`;
         } catch (error) {
           const authError: AuthError = {
             code: 'OAUTH_ERROR',
@@ -309,7 +309,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
       verifyTwoFactorLogin: async (email: string, code: string) => {
         try {
-          const response = await apiClient.post('/api/auth/2fa/verify', {
+          const response = await apiClient.post('/auth/2fa/verify', {
             email,
             code,
           });
@@ -342,7 +342,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       verifyEmail: async (token: string) => {
         try {
           set({ isLoading: true, error: null });
-          const response = await apiClient.post('/api/auth/email/verify', {
+          const response = await apiClient.post('/auth/email/verify', {
             token,
           });
           const user = get().user;
@@ -363,7 +363,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
       resendVerificationEmail: async () => {
         try {
-          await apiClient.post('/api/auth/email/resend-verification');
+          await apiClient.post('/auth/email/resend-verification');
         } catch (error) {
           console.error('Resend verification email error:', error);
         }
@@ -371,7 +371,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 
       setupTwoFactor: async () => {
         try {
-          const response = await apiClient.post('/api/auth/2fa/setup');
+          const response = await apiClient.post('/auth/2fa/setup');
           return response.data;
         } catch (error) {
           throw new Error(getErrorMessage(error));
@@ -379,14 +379,14 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
       verifyTwoFactor: async (code: string) => {
         try {
-          await apiClient.post('/api/auth/2fa/setup/verify', { code });
+          await apiClient.post('/auth/2fa/setup/verify', { code });
         } catch (error) {
           throw new Error(getErrorMessage(error));
         }
       },
       enableTwoFactor: async (code: string) => {
         try {
-          const response = await apiClient.post('/api/auth/2fa/enable', {
+          const response = await apiClient.post('/auth/2fa/enable', {
             code,
           });
           const { success } = response.data;
@@ -402,7 +402,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
       getRecoveryCodes: async () => {
         try {
-          const response = await apiClient.get('/api/auth/2fa/recovery-codes');
+          const response = await apiClient.get('/auth/2fa/recovery-codes');
           return response.data;
         } catch (error) {
           throw new Error(getErrorMessage(error));
@@ -410,7 +410,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
       disableTwoFactor: async (code: string) => {
         try {
-          const response = await apiClient.post('/api/auth/2fa/disable', {
+          const response = await apiClient.post('/auth/2fa/disable', {
             code,
           });
           const { success } = response.data;
@@ -426,7 +426,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
       requestPasswordReset: async (email: string) => {
         try {
-          await apiClient.post('/api/auth/password/reset-request', {
+          await apiClient.post('/auth/password/reset-request', {
             email,
           });
         } catch (error) {
@@ -439,7 +439,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         confirmPassword: string
       ) => {
         try {
-          await apiClient.put('/api/auth/password/reset', {
+          await apiClient.put('/auth/password/reset', {
             token,
             newPassword,
             confirmPassword,
@@ -451,7 +451,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       joinWaitList: async (data: WaitListInput) => {
         set({ isLoading: true, error: null });
         try {
-          await apiClient.post('/api/waitlist', data);
+          await apiClient.post('/waitlist', data);
           set({ error: null });
           navigate.dashboard();
         } catch (error) {

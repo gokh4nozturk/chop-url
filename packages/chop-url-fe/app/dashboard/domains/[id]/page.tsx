@@ -124,7 +124,7 @@ export default function DomainDetailsPage() {
       setIsChecking(true);
 
       // Gerçek API çağrısı
-      const response = await apiClient.get(`/api/domains/${domainId}/health`);
+      const response = await apiClient.get(`/domains/${domainId}/health`);
       setHealthData(response.data);
       setLastHealthCheck(new Date().toISOString());
 

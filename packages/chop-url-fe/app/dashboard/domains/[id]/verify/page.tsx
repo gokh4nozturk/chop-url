@@ -53,7 +53,7 @@ export default function DomainVerificationPage() {
   const fetchDomain = useCallback(async () => {
     try {
       setError(null);
-      const response = await apiClient.get(`/api/domains/${domainId}`);
+      const response = await apiClient.get(`/domains/${domainId}`);
       setDomain(response.data);
     } catch (error: unknown) {
       const apiError = error as ApiError;
@@ -69,7 +69,7 @@ export default function DomainVerificationPage() {
 
   const handleMethodChange = async (method: Domain['verificationMethod']) => {
     try {
-      await apiClient.patch(`/api/domains/${domainId}`, {
+      await apiClient.patch(`/domains/${domainId}`, {
         verificationMethod: method,
       });
       fetchDomain();
@@ -84,7 +84,7 @@ export default function DomainVerificationPage() {
   const handleVerify = async () => {
     try {
       setIsVerifying(true);
-      await apiClient.post(`/api/domains/${domainId}/verify`);
+      await apiClient.post(`/domains/${domainId}/verify`);
       toast.success('Domain verified', {
         description: 'Your domain has been verified successfully.',
       });

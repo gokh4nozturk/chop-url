@@ -102,7 +102,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   createShortUrl: async (url: string, options?: CreateUrlOptions) => {
     try {
       set({ isLoading: true, error: null });
-      const { data } = await apiClient.post('/api/urls/shorten', {
+      const { data } = await apiClient.post('/urls/shorten', {
         url,
         ...options,
       });
@@ -126,7 +126,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   getUserUrls: async () => {
     try {
       set({ isLoading: true, error: null });
-      const { data } = await apiClient.get('/api/urls/list');
+      const { data } = await apiClient.get('/urls/list');
       set({ urls: data });
     } catch (error) {
       set({
@@ -144,7 +144,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   getUrlDetails: async (shortId: string) => {
     try {
       set({ isLoading: true, error: null });
-      const { data } = await apiClient.get(`/api/urls/${shortId}`);
+      const { data } = await apiClient.get(`/urls/${shortId}`);
       set({ urlDetails: data });
       return data;
     } catch (error) {
@@ -167,7 +167,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       const { data } = await apiClient.get(
-        `/api/urls/${shortId}/analytics?period=${period}`
+        `/urls/${shortId}/analytics?period=${period}`
       );
       set({ urlStats: data });
     } catch (error) {
@@ -188,9 +188,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   getUrlVisits: async (shortId: string, period: Period) => {
     try {
       set({ isLoading: true, error: null });
-      await apiClient.get(
-        `/api/urls/${shortId}/analytics/visits?period=${period}`
-      );
+      await apiClient.get(`/urls/${shortId}/analytics/visits?period=${period}`);
     } catch (error) {
       set({
         error: {
@@ -209,7 +207,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   deleteUrl: async (shortId: string) => {
     try {
       set({ isLoading: true, error: null });
-      await apiClient.delete(`/api/urls/${shortId}`);
+      await apiClient.delete(`/urls/${shortId}`);
       set((state) => ({
         urls: state.urls.filter((url) => url.shortId !== shortId),
       }));
@@ -231,7 +229,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       const { data: updatedUrl } = await apiClient.patch(
-        `/api/urls/${shortId}`,
+        `/urls/${shortId}`,
         data
       );
       set((state) => ({
@@ -258,7 +256,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   createUrlGroup: async (name: string, description?: string) => {
     try {
       set({ isLoading: true, error: null });
-      const { data: group } = await apiClient.post('/api/urls/groups/create', {
+      const { data: group } = await apiClient.post('/urls/groups/create', {
         name,
         description,
       });
@@ -285,7 +283,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       const { data: updatedGroup } = await apiClient.put(
-        `/api/urls/groups/${groupId}`,
+        `/urls/groups/${groupId}`,
         data
       );
       set((state) => ({
@@ -312,7 +310,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   deleteUrlGroup: async (groupId: number) => {
     try {
       set({ isLoading: true, error: null });
-      await apiClient.delete(`/api/urls/groups/${groupId}`);
+      await apiClient.delete(`/urls/groups/${groupId}`);
       set((state) => ({
         urlGroups: state.urlGroups.filter((group) => group.id !== groupId),
         urls: state.urls.map((url) =>
@@ -338,7 +336,7 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
   getUserUrlGroups: async () => {
     try {
       set({ isLoading: true, error: null });
-      const { data } = await apiClient.get('/api/urls/groups/list');
+      const { data } = await apiClient.get('/urls/groups/list');
       set({ urlGroups: data });
     } catch (error) {
       set({
