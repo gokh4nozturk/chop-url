@@ -14,7 +14,6 @@ import qrRouter from '@/qr/routes';
 import storageRouter from '@/storage/routes';
 import { H } from '@/types';
 import {
-  analyticsRoutes as urlAnalyticsRoutes,
   managementRoutes,
   shorteningRoutes,
   urlGroupRouter,
@@ -158,7 +157,6 @@ app.route('/api/auth/2fa', twoFactorRouter);
 // URL routes
 app.route('/api/urls', shorteningRoutes);
 app.route('/api/urls/groups', urlGroupRouter);
-app.route('/api/urls/analytics', urlAnalyticsRoutes);
 app.route('/api/urls/management', managementRoutes);
 // Analytics routes
 app.route('/api/analytics', analyticsRoutes);

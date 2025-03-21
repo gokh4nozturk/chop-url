@@ -105,94 +105,6 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         set({ user: response.data.user });
       },
 
-      updateProfile: async (data: {
-        email: string;
-        name: string;
-      }) => {
-        try {
-          const response = await apiClient.put('/auth/profile', data);
-
-          if (response.status === 200) {
-            set({ user: response.data.user });
-          } else {
-            const authError: AuthError = {
-              code: 'UPDATE_PROFILE_ERROR',
-              message: getErrorMessage(response.data),
-            };
-            set({ error: authError });
-            throw new Error(getErrorMessage(response.data));
-          }
-        } catch (error) {
-          const authError: AuthError = {
-            code: 'UPDATE_PROFILE_ERROR',
-            message: getErrorMessage(error),
-          };
-          set({ error: authError });
-          throw error;
-        }
-      },
-
-      updatePassword: async (data: {
-        currentPassword: string;
-        newPassword: string;
-        confirmPassword: string;
-      }) => {
-        try {
-          await apiClient.put('/auth/profile/password', data);
-        } catch (error) {
-          console.error('Update password error:', error);
-        }
-      },
-
-      refreshToken: async () => {
-        // TODO: Implement refresh token
-        try {
-          const currentToken = Cookies.get(COOKIE_NAME);
-          if (!currentToken) {
-            throw new Error('No token found');
-          }
-
-          const response = await apiClient.post('/auth/token/refresh');
-          const { user, token, expiresAt } = response.data;
-
-          if (!token) {
-            throw new Error('No token received from server');
-          }
-
-          const tokenData: TokenData = {
-            token,
-            expiresAt: new Date(expiresAt),
-          };
-
-          Cookies.set(COOKIE_NAME, token, {
-            expires: new Date(expiresAt),
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            path: '/',
-          });
-
-          set({ user, tokenData });
-
-          // Schedule next token refresh
-          const refreshTime =
-            new Date(expiresAt).getTime() - Date.now() - TOKEN_REFRESH_BUFFER;
-          setTimeout(
-            () => {
-              get()
-                .refreshToken()
-                .catch((error) => {
-                  console.error('Token refresh error:', error);
-                  get().logout();
-                });
-            },
-            Math.max(refreshTime, 0)
-          );
-        } catch (error) {
-          get().logout();
-          throw error;
-        }
-      },
-
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
@@ -297,6 +209,94 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         }
       },
 
+      updateProfile: async (data: {
+        email: string;
+        name: string;
+      }) => {
+        try {
+          const response = await apiClient.put('/auth/profile', data);
+
+          if (response.status === 200) {
+            set({ user: response.data.user });
+          } else {
+            const authError: AuthError = {
+              code: 'UPDATE_PROFILE_ERROR',
+              message: getErrorMessage(response.data),
+            };
+            set({ error: authError });
+            throw new Error(getErrorMessage(response.data));
+          }
+        } catch (error) {
+          const authError: AuthError = {
+            code: 'UPDATE_PROFILE_ERROR',
+            message: getErrorMessage(error),
+          };
+          set({ error: authError });
+          throw error;
+        }
+      },
+
+      updatePassword: async (data: {
+        currentPassword: string;
+        newPassword: string;
+        confirmPassword: string;
+      }) => {
+        try {
+          await apiClient.put('/auth/profile/password', data);
+        } catch (error) {
+          console.error('Update password error:', error);
+        }
+      },
+
+      refreshToken: async () => {
+        // TODO: Implement refresh token
+        try {
+          const currentToken = Cookies.get(COOKIE_NAME);
+          if (!currentToken) {
+            throw new Error('No token found');
+          }
+
+          const response = await apiClient.post('/auth/token/refresh');
+          const { user, token, expiresAt } = response.data;
+
+          if (!token) {
+            throw new Error('No token received from server');
+          }
+
+          const tokenData: TokenData = {
+            token,
+            expiresAt: new Date(expiresAt),
+          };
+
+          Cookies.set(COOKIE_NAME, token, {
+            expires: new Date(expiresAt),
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+          });
+
+          set({ user, tokenData });
+
+          // Schedule next token refresh
+          const refreshTime =
+            new Date(expiresAt).getTime() - Date.now() - TOKEN_REFRESH_BUFFER;
+          setTimeout(
+            () => {
+              get()
+                .refreshToken()
+                .catch((error) => {
+                  console.error('Token refresh error:', error);
+                  get().logout();
+                });
+            },
+            Math.max(refreshTime, 0)
+          );
+        } catch (error) {
+          get().logout();
+          throw error;
+        }
+      },
+
       socialLogin: async (provider: string) => {
         try {
           window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/oauth/${provider}`;
@@ -342,6 +342,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           throw error;
         }
       },
+
       verifyEmail: async (token: string) => {
         try {
           set({ isLoading: true, error: null });
@@ -364,6 +365,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           set({ isLoading: false });
         }
       },
+
       resendVerificationEmail: async () => {
         try {
           await apiClient.post('/auth/email/resend-verification');
@@ -380,6 +382,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           throw new Error(getErrorMessage(error));
         }
       },
+
       verifyTwoFactor: async (code: string) => {
         try {
           await apiClient.post('/auth/2fa/setup/verify', { code });
@@ -387,6 +390,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           throw new Error(getErrorMessage(error));
         }
       },
+
       enableTwoFactor: async (code: string) => {
         try {
           const response = await apiClient.post('/auth/2fa/enable', {
@@ -403,6 +407,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           throw new Error(getErrorMessage(error));
         }
       },
+
       getRecoveryCodes: async () => {
         try {
           const response = await apiClient.get('/auth/2fa/recovery-codes');
@@ -411,6 +416,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           throw new Error(getErrorMessage(error));
         }
       },
+
       disableTwoFactor: async (code: string) => {
         try {
           const response = await apiClient.post('/auth/2fa/disable', {
@@ -427,6 +433,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           throw new Error(getErrorMessage(error));
         }
       },
+
       requestPasswordReset: async (email: string) => {
         try {
           await apiClient.post('/auth/password/reset/request', {
@@ -436,6 +443,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           console.error('Password reset request error:', error);
         }
       },
+
       resetPassword: async (
         token: string,
         newPassword: string,
@@ -451,6 +459,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           console.error('Password reset error:', error);
         }
       },
+
       joinWaitList: async (data: WaitListInput) => {
         set({ isLoading: true, error: null });
         try {

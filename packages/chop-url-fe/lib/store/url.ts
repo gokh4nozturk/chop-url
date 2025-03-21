@@ -5,7 +5,6 @@ import {
   IUrlError,
   IUrlGroup,
   IUrlStats,
-  Period,
   SortOption,
   UpdateUrlOptions,
 } from '@/lib/types';
@@ -29,8 +28,6 @@ interface IUrlStore {
   getUrlDetails: (shortId: string) => Promise<IUrl>;
   setSearchTerm: (term: string) => void;
   setSortOption: (option: SortOption) => void;
-  getUrlStats: (shortId: string, period: Period) => Promise<void>;
-  getUrlVisits: (shortId: string, period: Period) => Promise<void>;
   deleteUrl: (shortId: string) => Promise<void>;
   updateUrl: (shortId: string, data: UpdateUrlOptions) => Promise<void>;
   clearStore: () => void;
@@ -158,47 +155,6 @@ const useUrlStore = create<IUrlStore>((set, get) => ({
         },
       });
       throw error;
-    } finally {
-      set({ isLoading: false });
-    }
-  },
-
-  getUrlStats: async (shortId: string, period: Period) => {
-    try {
-      set({ isLoading: true, error: null });
-      const { data } = await apiClient.get(
-        `/urls/${shortId}/analytics?period=${period}`
-      );
-      set({ urlStats: data });
-    } catch (error) {
-      set({
-        error: {
-          code: 'FETCH_ERROR',
-          message:
-            error instanceof Error
-              ? error.message
-              : 'Failed to fetch URL stats',
-        },
-      });
-    } finally {
-      set({ isLoading: false });
-    }
-  },
-
-  getUrlVisits: async (shortId: string, period: Period) => {
-    try {
-      set({ isLoading: true, error: null });
-      await apiClient.get(`/urls/${shortId}/analytics/visits?period=${period}`);
-    } catch (error) {
-      set({
-        error: {
-          code: 'FETCH_ERROR',
-          message:
-            error instanceof Error
-              ? error.message
-              : 'Failed to fetch URL visits',
-        },
-      });
     } finally {
       set({ isLoading: false });
     }

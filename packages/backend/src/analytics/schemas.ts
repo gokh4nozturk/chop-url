@@ -137,16 +137,15 @@ const analyticsCommonResponseSchema = z.object({
 });
 
 // Analytics response schemas
-export const urlStatsResponseSchema =
+export const statsResponseSchema =
   analyticsCommonResponseSchema.openapi('UrlStatsResponse');
 
-export const eventsResponseSchema = z.array(z.any()).openapi('EventsResponse');
+export const eventsResponseSchema = z
+  .array(trackEventSchema)
+  .openapi('EventsResponse');
 export const customEventsResponseSchema = z
   .array(z.any())
   .openapi('CustomEventsResponse');
-export const urlEventsResponseSchema = z
-  .array(z.any())
-  .openapi('UrlEventsResponse');
 
 export const geoStatsResponseSchema = z
   .object({
@@ -182,8 +181,9 @@ export const clickHistoryResponseSchema = z
   )
   .openapi('ClickHistoryResponse');
 
-export const analyticsResponseSchema =
-  analyticsCommonResponseSchema.openapi('AnalyticsResponse');
+export const analyticsResponseSchema = z
+  .array(analyticsCommonResponseSchema)
+  .openapi('AnalyticsResponse');
 
 // Analytics-specific error schemas
 export const analyticsValidationErrorSchema = z
@@ -281,10 +281,9 @@ export const analyticsSchemas = {
   createCustomEvent: createCustomEventSchema,
   success: successResponseSchema,
   error: errorResponseSchema,
-  urlStats: urlStatsResponseSchema,
+  stats: statsResponseSchema,
   events: eventsResponseSchema,
   customEvents: customEventsResponseSchema,
-  urlEvents: urlEventsResponseSchema,
   geoStats: geoStatsResponseSchema,
   deviceStats: deviceStatsResponseSchema,
   utmStats: utmStatsResponseSchema,

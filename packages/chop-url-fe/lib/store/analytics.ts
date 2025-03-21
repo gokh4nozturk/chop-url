@@ -1,103 +1,25 @@
 import apiClient from '@/lib/api/client';
+import { ClickStats, IUrl, IUrlError, Period, UrlStats } from '@/lib/types';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
-export type TimeRange = '24h' | '7d' | '30d' | '90d';
-
-export interface DeviceInfo {
-  userAgent: string;
-  ip: string;
-  browser: string;
-  browserVersion: string;
-  os: string;
-  osVersion: string;
-  deviceType: 'desktop' | 'mobile' | 'tablet' | 'unknown';
-}
-
-export interface GeoInfo {
-  country: string;
-  city: string;
-  region: string;
-  regionCode: string;
-  timezone: string;
-  longitude: string;
-  latitude: string;
-  postalCode: string;
-}
-
-export interface EventProperties {
-  source: string | null;
-  medium: string | null;
-  campaign: string | null;
-  term: string | null;
-  content: string | null;
-  shortId: string;
-  originalUrl: string;
-}
-
-export interface Event {
-  id: number;
-  urlId: number;
-  userId?: number;
-  eventType: 'REDIRECT' | 'PAGE_VIEW' | 'CLICK' | 'CONVERSION' | 'CUSTOM';
-  eventName: string;
-  properties: string | null; // JSON string of EventProperties
-  deviceInfo: string | null; // JSON string of DeviceInfo
-  geoInfo: string | null; // JSON string of GeoInfo
-  referrer?: string;
-  createdAt: string;
-}
-
-export interface GeoStats {
-  countries: Record<string, number>;
-  cities: Record<string, number>;
-  regions: Record<string, number>;
-  timezones: Record<string, number>;
-}
-
-export interface UrlStats {
-  totalEvents: number;
-  uniqueVisitors: number;
-  lastEventAt: string | null;
-  url: {
-    id: number;
-    shortId: string;
-    originalUrl: string;
-    createdAt: string | null;
-  };
-}
-
-export interface DeviceStats {
-  browsers: Record<string, number>;
-  devices: Record<string, number>;
-  operatingSystems: Record<string, number>;
-}
-
-export interface UtmStats {
-  sources: Record<string, number>;
-  mediums: Record<string, number>;
-  campaigns: Record<string, number>;
-}
-
-export interface ClickStats {
-  name: string; // Date in YYYY-MM-DD format
-  value: number; // Number of clicks
-}
-
 interface AnalyticsState {
   isLoading: boolean;
-  error: Error | null;
+  error: Error | IUrlError | null;
   urlStats: Record<string, UrlStats>;
   events: Event[];
   clickHistory: ClickStats[];
-  timeRange: TimeRange;
+  period: Period;
   currentUrlId: string | null;
   isOffline: boolean;
   fetchAnalytics: (shortId: string) => Promise<void>;
-  setTimeRange: (range: TimeRange) => void;
+  setPeriod: (range: Period) => void;
   reset: () => void;
   addEvent: (event: Event) => void;
   clearEvents: () => void;
+  getUrlStats: (shortId: string, period: Period) => Promise<void>;
+  getUrlVisits: (shortId: string, period: Period) => Promise<void>;
+  getUrlDetails: (shortId: string) => Promise<IUrl>;
 }
 
 // Cache keys
@@ -114,7 +36,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
       urlStats: {},
       events: [],
       clickHistory: [],
-      timeRange: '7d',
+      period: '7d',
       currentUrlId: null,
       isOffline: false,
 
@@ -123,8 +45,8 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           // console.log('[Analytics] Fetching analytics for shortId:', shortId);
           set({ isLoading: true, error: null, currentUrlId: shortId });
 
-          const { timeRange } = get();
-          // console.log('[Analytics] Using time range:', timeRange);
+          const { period } = get();
+          // console.log('[Analytics] Using time range:', period);
 
           // Check if we're offline
           if (typeof window !== 'undefined' && !window.navigator.onLine) {
@@ -150,10 +72,10 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           // Fetch all data in parallel
           const [{ data: urlStats }, { data: events }] = await Promise.all([
             apiClient.get(`/analytics/${shortId}/stats`, {
-              params: { timeRange },
+              params: { period },
             }),
             apiClient.get(`/analytics/${shortId}/events`, {
-              params: { timeRange },
+              params: { period },
             }),
           ]);
 
@@ -209,11 +131,33 @@ export const useAnalyticsStore = create<AnalyticsState>()(
         }
       },
 
-      setTimeRange: (range: TimeRange) => {
-        // console.log('[Analytics] Setting time range:', range);
-        set({ timeRange: range, events: [] });
+      getUrlStats: async (shortId: string, period: Period) => {
+        try {
+          set({ isLoading: true, error: null });
+          const { data } = await apiClient.get(
+            `/analytics/${shortId}/stats?period=${period}`
+          );
+          set({ urlStats: data });
+        } catch (error) {
+          set({
+            error: {
+              code: 'FETCH_ERROR',
+              message:
+                error instanceof Error
+                  ? error.message
+                  : 'Failed to fetch URL stats',
+            },
+          });
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      setPeriod: (period: Period) => {
+        // console.log('[Analytics] Setting time period:', period);
+        set({ period: period, events: [] });
         const { urlStats } = get();
-        // Refresh all URLs when time range changes
+        // Refresh all URLs when time period changes
         for (const shortId of Object.keys(urlStats)) {
           get().fetchAnalytics(shortId);
         }

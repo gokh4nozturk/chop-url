@@ -179,7 +179,7 @@ analyticsRouter.openapi(
         description: 'Success',
         content: {
           'application/json': {
-            schema: analyticsSchemas.urlStats,
+            schema: analyticsSchemas.stats,
           },
         },
       },
@@ -206,7 +206,7 @@ analyticsRouter.openapi(
         description: 'Success',
         content: {
           'application/json': {
-            schema: analyticsSchemas.urlEvents,
+            schema: analyticsSchemas.events,
           },
         },
       },
