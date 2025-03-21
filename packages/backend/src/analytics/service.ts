@@ -20,6 +20,30 @@ import {
   UtmStats,
 } from './types';
 
+// Type definitions for parsed JSON objects
+interface DeviceInfoData {
+  ip?: string;
+  browser?: string;
+  device?: string;
+  os?: string;
+  [key: string]: unknown;
+}
+
+interface GeoInfoData {
+  country?: string;
+  city?: string;
+  region?: string;
+  timezone?: string;
+  [key: string]: unknown;
+}
+
+interface UtmPropertiesData {
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  [key: string]: unknown;
+}
+
 interface AnalyticsServiceConfig {
   database: ReturnType<typeof createDb>;
   wsService: WebSocketService;
@@ -121,8 +145,12 @@ export class AnalyticsService {
     }
   }
 
-  async getEvents(urlId: number) {
-    return this.database.select().from(events).where(eq(events.urlId, urlId));
+  async getEvents(urlId: number, timeRange: TimeRange) {
+    const timeCondition = this.getTimeRangeCondition(timeRange);
+    return this.database
+      .select()
+      .from(events)
+      .where(and(eq(events.urlId, urlId), timeCondition));
   }
 
   async getCustomEvents(userId: number) {
@@ -130,6 +158,29 @@ export class AnalyticsService {
       .select()
       .from(customEvents)
       .where(eq(customEvents.userId, userId));
+  }
+
+  // Helper method to safely parse JSON
+  private safeJsonParse<T>(jsonString: string | null, defaultValue: T): T {
+    if (!jsonString) return defaultValue;
+    try {
+      return JSON.parse(jsonString) as T;
+    } catch (error) {
+      this.logError('JSON parse error', error);
+      return defaultValue;
+    }
+  }
+
+  // Helper method for structured error logging
+  private logError(context: string, error: unknown, data?: unknown) {
+    const errorInfo = {
+      context,
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      data,
+    };
+
+    console.error(JSON.stringify(errorInfo));
   }
 
   private async ensureUrlExists(shortId: string) {
@@ -148,13 +199,18 @@ export class AnalyticsService {
 
   private async ensureTableExists(tableName: string) {
     try {
+      // Validate table name (whitelist approach)
+      const validTables = ['custom_events', 'events', 'urls'];
+      if (!validTables.includes(tableName)) {
+        throw new Error(`Invalid table name: ${tableName}`);
+      }
+
       const result = await this.database
         .select({ name: sql<string>`name` })
         .from(sql`sqlite_master`)
-        .where(sql`type = 'table' AND name = ${tableName}`)
-        .get();
+        .where(sql`type = 'table' AND name = ${tableName}`);
 
-      if (!result) {
+      if (!result.length) {
         // If table doesn't exist, create it
         if (tableName === 'custom_events') {
           await this.database.run(sql`
@@ -175,31 +231,68 @@ export class AnalyticsService {
     }
   }
 
+  // Generic function to process events for statistics
+  private processEvents<T>(
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    events: Array<{ [key: string]: any }>,
+    propertyKey: string,
+    fieldExtractor: (data: T) => Record<string, string>,
+    defaultValue: T
+  ): Record<string, number> {
+    // Type assertion for the initial accumulator
+    const initialAcc: Record<string, number> = {};
+
+    return events.reduce((acc: Record<string, number>, event) => {
+      if (!event[propertyKey]) return acc;
+
+      try {
+        const data = this.safeJsonParse<T>(
+          event[propertyKey] as string,
+          defaultValue
+        );
+        const fields = fieldExtractor(data);
+
+        for (const [key, value] of Object.entries(fields)) {
+          const normalizedValue = value || 'Unknown';
+          acc[normalizedValue] = (acc[normalizedValue] || 0) + 1;
+        }
+      } catch (error) {
+        this.logError(`Error processing ${propertyKey}`, error);
+      }
+
+      return acc;
+    }, initialAcc);
+  }
+
   async getUrlStats(shortId: string, timeRange: TimeRange): Promise<UrlStats> {
     try {
       const url = await this.ensureUrlExists(shortId);
       await this.ensureTableExists('events');
 
-      const timeCondition = getTimeRangeCondition(timeRange);
+      const timeCondition = this.getTimeRangeCondition(timeRange);
       const eventResults = await this.database
         .select()
         .from(events)
         .where(and(eq(events.urlId, url.id), timeCondition));
 
+      const uniqueIps = new Set<string>();
+      for (const event of eventResults) {
+        if (event.deviceInfo) {
+          try {
+            const deviceInfo = this.safeJsonParse<DeviceInfoData>(
+              event.deviceInfo,
+              {}
+            );
+            if (deviceInfo.ip) uniqueIps.add(deviceInfo.ip);
+          } catch (err) {
+            // Already handled in safeJsonParse
+          }
+        }
+      }
+
       const stats: UrlStats = {
         totalEvents: eventResults.length,
-        uniqueVisitors: new Set(
-          eventResults
-            .filter((e) => e.deviceInfo)
-            .map((e) => {
-              try {
-                const deviceInfo = JSON.parse(e.deviceInfo || '{}');
-                return deviceInfo.ip || 'unknown';
-              } catch {
-                return 'unknown';
-              }
-            })
-        ).size,
+        uniqueVisitors: uniqueIps.size,
         lastEventAt: eventResults[eventResults.length - 1]?.createdAt || null,
         url: {
           id: url.id,
@@ -226,27 +319,25 @@ export class AnalyticsService {
     timeRange: TimeRange,
     eventType?: string
   ) {
-    const url = await this.database
-      .select()
-      .from(urls)
-      .where(eq(urls.shortId, shortId))
-      .get();
+    try {
+      const url = await this.ensureUrlExists(shortId);
+      const timeCondition = this.getTimeRangeCondition(timeRange);
+      const conditions = [eq(events.urlId, url.id), timeCondition];
 
-    if (!url) {
-      throw new Error('URL not found');
+      if (eventType) {
+        conditions.push(eq(events.eventType, eventType as EventType));
+      }
+
+      return this.database
+        .select()
+        .from(events)
+        .where(and(...conditions));
+    } catch (error) {
+      if (error instanceof UrlNotFoundError) {
+        throw error;
+      }
+      throw new Error(`Failed to get URL events: ${(error as Error).message}`);
     }
-
-    const timeCondition = getTimeRangeCondition(timeRange);
-    const conditions = [eq(events.urlId, url.id), timeCondition];
-
-    if (eventType) {
-      conditions.push(eq(events.eventType, eventType as EventType));
-    }
-
-    return this.database
-      .select()
-      .from(events)
-      .where(and(...conditions));
   }
 
   async getGeoStats(shortId: string, timeRange: TimeRange): Promise<GeoStats> {
@@ -254,35 +345,38 @@ export class AnalyticsService {
       const url = await this.ensureUrlExists(shortId);
       await this.ensureTableExists('events');
 
-      const timeCondition = getTimeRangeCondition(timeRange);
+      const timeCondition = this.getTimeRangeCondition(timeRange);
       const eventResults = await this.database
         .select()
         .from(events)
         .where(and(eq(events.urlId, url.id), timeCondition));
 
-      const geoStats = eventResults.reduce(
-        (acc: GeoStats, event) => {
-          if (!event.geoInfo) return acc;
+      const geoStats: GeoStats = {
+        countries: {},
+        cities: {},
+        regions: {},
+        timezones: {},
+      };
 
-          try {
-            const geoInfo = JSON.parse(event.geoInfo);
-            const country = geoInfo.country || 'Unknown';
-            const city = geoInfo.city || 'Unknown';
-            const region = geoInfo.region || 'Unknown';
-            const timezone = geoInfo.timezone || 'Unknown';
+      for (const event of eventResults) {
+        if (!event.geoInfo) continue;
 
-            acc.countries[country] = (acc.countries[country] || 0) + 1;
-            acc.cities[city] = (acc.cities[city] || 0) + 1;
-            acc.regions[region] = (acc.regions[region] || 0) + 1;
-            acc.timezones[timezone] = (acc.timezones[timezone] || 0) + 1;
-          } catch (error) {
-            console.error('Error parsing geo info:', error);
-          }
+        try {
+          const geoInfo = this.safeJsonParse<GeoInfoData>(event.geoInfo, {});
+          const country = geoInfo.country || 'Unknown';
+          const city = geoInfo.city || 'Unknown';
+          const region = geoInfo.region || 'Unknown';
+          const timezone = geoInfo.timezone || 'Unknown';
 
-          return acc;
-        },
-        { countries: {}, cities: {}, regions: {}, timezones: {} }
-      );
+          geoStats.countries[country] = (geoStats.countries[country] || 0) + 1;
+          geoStats.cities[city] = (geoStats.cities[city] || 0) + 1;
+          geoStats.regions[region] = (geoStats.regions[region] || 0) + 1;
+          geoStats.timezones[timezone] =
+            (geoStats.timezones[timezone] || 0) + 1;
+        } catch (error) {
+          // Already handled in safeJsonParse
+        }
+      }
 
       return geoStats;
     } catch (error) {
@@ -296,374 +390,355 @@ export class AnalyticsService {
     }
   }
 
-  async getDeviceStats(shortId: string, timeRange: TimeRange) {
-    const url = await this.database
-      .select()
-      .from(urls)
-      .where(eq(urls.shortId, shortId))
-      .get();
+  async getDeviceStats(
+    shortId: string,
+    timeRange: TimeRange
+  ): Promise<DeviceStats> {
+    try {
+      const url = await this.ensureUrlExists(shortId);
+      const timeCondition = this.getTimeRangeCondition(timeRange);
+      const eventResults = await this.database
+        .select()
+        .from(events)
+        .where(and(eq(events.urlId, url.id), timeCondition));
 
-    if (!url) {
-      throw new Error('URL not found');
-    }
+      const deviceStats: DeviceStats = {
+        browsers: {},
+        devices: {},
+        operatingSystems: {},
+      };
 
-    const timeCondition = getTimeRangeCondition(timeRange);
-    const eventResults = await this.database
-      .select()
-      .from(events)
-      .where(and(eq(events.urlId, url.id), timeCondition));
-
-    const deviceStats = eventResults.reduce(
-      (
-        acc: {
-          browsers: Record<string, number>;
-          devices: Record<string, number>;
-          operatingSystems: Record<string, number>;
-        },
-        event
-      ) => {
-        if (!event.deviceInfo) return acc;
+      for (const event of eventResults) {
+        if (!event.deviceInfo) continue;
 
         try {
-          const deviceInfo = JSON.parse(event.deviceInfo);
+          const deviceInfo = this.safeJsonParse<DeviceInfoData>(
+            event.deviceInfo,
+            {}
+          );
           const browser = deviceInfo.browser || 'Unknown';
           const device = deviceInfo.device || 'Unknown';
           const os = deviceInfo.os || 'Unknown';
 
-          acc.browsers[browser] = (acc.browsers[browser] || 0) + 1;
-          acc.devices[device] = (acc.devices[device] || 0) + 1;
-          acc.operatingSystems[os] = (acc.operatingSystems[os] || 0) + 1;
+          deviceStats.browsers[browser] =
+            (deviceStats.browsers[browser] || 0) + 1;
+          deviceStats.devices[device] = (deviceStats.devices[device] || 0) + 1;
+          deviceStats.operatingSystems[os] =
+            (deviceStats.operatingSystems[os] || 0) + 1;
         } catch (error) {
-          console.error('Error parsing device info:', error);
+          // Already handled in safeJsonParse
         }
+      }
 
-        return acc;
-      },
-      { browsers: {}, devices: {}, operatingSystems: {} }
-    );
-
-    return deviceStats;
+      return deviceStats;
+    } catch (error) {
+      if (error instanceof UrlNotFoundError) {
+        throw error;
+      }
+      throw new Error(
+        `Failed to get device stats: ${(error as Error).message}`
+      );
+    }
   }
 
-  async getUtmStats(shortId: string, timeRange: TimeRange) {
-    const url = await this.database
-      .select()
-      .from(urls)
-      .where(eq(urls.shortId, shortId))
-      .get();
+  async getUtmStats(shortId: string, timeRange: TimeRange): Promise<UtmStats> {
+    try {
+      const url = await this.ensureUrlExists(shortId);
+      const timeCondition = this.getTimeRangeCondition(timeRange);
+      const eventResults = await this.database
+        .select()
+        .from(events)
+        .where(and(eq(events.urlId, url.id), timeCondition));
 
-    if (!url) {
-      throw new Error('URL not found');
-    }
-
-    const timeCondition = getTimeRangeCondition(timeRange);
-    const eventResults = await this.database
-      .select()
-      .from(events)
-      .where(and(eq(events.urlId, url.id), timeCondition));
-
-    const utmStats = eventResults.reduce(
-      (
-        acc: {
-          sources: Record<string, number>;
-          mediums: Record<string, number>;
-          campaigns: Record<string, number>;
-        },
-        event
-      ) => {
-        if (!event.properties) return acc;
-
-        const properties = JSON.parse(event.properties);
-        const source = properties.source || 'Direct';
-        const medium = properties.medium || 'None';
-        const campaign = properties.campaign || 'None';
-
-        acc.sources[source] = (acc.sources[source] || 0) + 1;
-        acc.mediums[medium] = (acc.mediums[medium] || 0) + 1;
-        acc.campaigns[campaign] = (acc.campaigns[campaign] || 0) + 1;
-
-        return acc;
-      },
-      {
+      const utmStats: UtmStats = {
         sources: {},
         mediums: {},
         campaigns: {},
-      }
-    );
+      };
 
-    return utmStats;
+      for (const event of eventResults) {
+        if (!event.properties) continue;
+
+        try {
+          const properties = this.safeJsonParse<UtmPropertiesData>(
+            event.properties,
+            {}
+          );
+          const source = properties.utm_source || 'Direct';
+          const medium = properties.utm_medium || 'None';
+          const campaign = properties.utm_campaign || 'None';
+
+          utmStats.sources[source] = (utmStats.sources[source] || 0) + 1;
+          utmStats.mediums[medium] = (utmStats.mediums[medium] || 0) + 1;
+          utmStats.campaigns[campaign] =
+            (utmStats.campaigns[campaign] || 0) + 1;
+        } catch (error) {
+          // Already handled in safeJsonParse
+        }
+      }
+
+      return utmStats;
+    } catch (error) {
+      if (error instanceof UrlNotFoundError) {
+        throw error;
+      }
+      throw new Error(`Failed to get UTM stats: ${(error as Error).message}`);
+    }
   }
 
   async getClickHistory(shortId: string, timeRange: TimeRange) {
-    const url = await this.database
-      .select()
-      .from(urls)
-      .where(eq(urls.shortId, shortId))
-      .get();
+    try {
+      const url = await this.ensureUrlExists(shortId);
+      const timeCondition = this.getTimeRangeCondition(timeRange);
+      const eventResults = await this.database
+        .select({
+          createdAt: events.createdAt,
+        })
+        .from(events)
+        .where(and(eq(events.urlId, url.id), timeCondition));
 
-    if (!url) {
-      throw new Error('URL not found');
-    }
+      // Group events by date
+      const clicksByDate: Record<string, number> = {};
 
-    const timeCondition = getTimeRangeCondition(timeRange);
-    const eventResults = await this.database
-      .select({
-        createdAt: events.createdAt,
-      })
-      .from(events)
-      .where(and(eq(events.urlId, url.id), timeCondition));
+      // Fill in dates with zero values first
+      const dates = this.getDatesInRange(timeRange);
+      for (const date of dates) {
+        clicksByDate[date] = 0;
+      }
 
-    // Group events by date
-    const clicksByDate = eventResults.reduce(
-      (acc: Record<string, number>, event) => {
-        if (!event.createdAt) return acc;
+      // Now count actual events
+      for (const event of eventResults) {
+        if (!event.createdAt) continue;
         const date = new Date(event.createdAt).toISOString().split('T')[0];
-        acc[date] = (acc[date] || 0) + 1;
-        return acc;
-      },
-      {}
-    );
+        clicksByDate[date] = (clicksByDate[date] || 0) + 1;
+      }
 
-    // Fill in missing dates with 0 clicks
-    const startDate = new Date();
-    switch (timeRange) {
-      case '24h':
-        startDate.setDate(startDate.getDate() - 1);
-        break;
-      case '7d':
-        startDate.setDate(startDate.getDate() - 7);
-        break;
-      case '30d':
-        startDate.setDate(startDate.getDate() - 30);
-        break;
-      case '90d':
-        startDate.setDate(startDate.getDate() - 90);
-        break;
+      return Object.entries(clicksByDate).map(([date, value]) => ({
+        name: date,
+        value,
+      }));
+    } catch (error) {
+      if (error instanceof UrlNotFoundError) {
+        throw error;
+      }
+      throw new Error(
+        `Failed to get click history: ${(error as Error).message}`
+      );
     }
-
-    const endDate = new Date();
-    const dates: string[] = [];
-    const currentDate = new Date(startDate);
-
-    while (currentDate <= endDate) {
-      dates.push(currentDate.toISOString().split('T')[0]);
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-
-    const filledClicksByDate = dates.map((date) => ({
-      name: date,
-      value: clicksByDate[date] || 0,
-    }));
-
-    return filledClicksByDate;
   }
 
   async getUserAnalytics(userId: number, timeRange: TimeRange) {
-    // Get all URLs for the user
-    const userUrls = await this.database
-      .select()
-      .from(urls)
-      .where(eq(urls.userId, userId));
+    try {
+      // Get all URLs for the user
+      const userUrls = await this.database
+        .select()
+        .from(urls)
+        .where(eq(urls.userId, userId));
 
-    if (!userUrls.length) {
-      return {
-        totalEvents: 0,
-        uniqueVisitors: 0,
-        geoStats: { countries: {}, cities: {}, regions: {}, timezones: {} },
-        deviceStats: { browsers: {}, devices: {}, operatingSystems: {} },
-        utmStats: { sources: {}, mediums: {}, campaigns: {} },
-        clicksByDate: [],
-      };
-    }
+      if (!userUrls.length) {
+        return {
+          totalEvents: 0,
+          uniqueVisitors: 0,
+          geoStats: { countries: {}, cities: {}, regions: {}, timezones: {} },
+          deviceStats: { browsers: {}, devices: {}, operatingSystems: {} },
+          utmStats: { sources: {}, mediums: {}, campaigns: {} },
+          clicksByDate: [],
+        };
+      }
 
-    const timeCondition = getTimeRangeCondition(timeRange);
-    const urlIds = userUrls.map((url) => url.id);
+      const timeCondition = this.getTimeRangeCondition(timeRange);
+      const urlIds = userUrls.map((url) => url.id);
 
-    // Get all events for user's URLs
-    const eventResults = await this.database
-      .select()
-      .from(events)
-      .where(and(inArray(events.urlId, urlIds), timeCondition));
+      // Get all events for user's URLs
+      const eventResults = await this.database
+        .select()
+        .from(events)
+        .where(and(inArray(events.urlId, urlIds), timeCondition));
 
-    // Calculate total events and unique visitors
-    const totalEvents = eventResults.length;
-    const uniqueVisitors = new Set(
-      eventResults
-        .filter((e) => e.deviceInfo)
-        .map((e) => {
+      // Calculate unique visitors
+      const uniqueIps = new Set<string>();
+      for (const event of eventResults) {
+        if (event.deviceInfo) {
           try {
-            const deviceInfo = JSON.parse(e.deviceInfo || '{}');
-            return deviceInfo.ip || 'unknown';
-          } catch {
-            return 'unknown';
+            const deviceInfo = this.safeJsonParse<DeviceInfoData>(
+              event.deviceInfo,
+              {}
+            );
+            if (deviceInfo.ip) uniqueIps.add(deviceInfo.ip);
+          } catch (err) {
+            // Already handled in safeJsonParse
           }
-        })
-    ).size;
+        }
+      }
 
-    // Process device stats
-    const deviceStats = eventResults.reduce(
-      (
-        acc: {
-          browsers: Record<string, number>;
-          devices: Record<string, number>;
-          operatingSystems: Record<string, number>;
-        },
-        event
-      ) => {
-        if (!event.deviceInfo) return acc;
+      // Process device stats
+      const deviceStats: DeviceStats = {
+        browsers: {},
+        devices: {},
+        operatingSystems: {},
+      };
+      const geoStats: GeoStats = {
+        countries: {},
+        cities: {},
+        regions: {},
+        timezones: {},
+      };
+      const utmStats: UtmStats = { sources: {}, mediums: {}, campaigns: {} };
 
-        try {
-          const deviceInfo = JSON.parse(event.deviceInfo);
-          const browser = deviceInfo.browser || 'Unknown';
-          const device = deviceInfo.device || 'Unknown';
-          const os = deviceInfo.os || 'Unknown';
+      // Process each event only once for all stats
+      for (const event of eventResults) {
+        // Process device info
+        if (event.deviceInfo) {
+          try {
+            const deviceInfo = this.safeJsonParse<DeviceInfoData>(
+              event.deviceInfo,
+              {}
+            );
+            const browser = deviceInfo.browser || 'Unknown';
+            const device = deviceInfo.device || 'Unknown';
+            const os = deviceInfo.os || 'Unknown';
 
-          acc.browsers[browser] = (acc.browsers[browser] || 0) + 1;
-          acc.devices[device] = (acc.devices[device] || 0) + 1;
-          acc.operatingSystems[os] = (acc.operatingSystems[os] || 0) + 1;
-        } catch (error) {
-          console.error('Error parsing device info:', error);
+            deviceStats.browsers[browser] =
+              (deviceStats.browsers[browser] || 0) + 1;
+            deviceStats.devices[device] =
+              (deviceStats.devices[device] || 0) + 1;
+            deviceStats.operatingSystems[os] =
+              (deviceStats.operatingSystems[os] || 0) + 1;
+          } catch (error) {
+            // Already handled in safeJsonParse
+          }
         }
 
-        return acc;
-      },
-      { browsers: {}, devices: {}, operatingSystems: {} }
-    );
+        // Process geo info
+        if (event.geoInfo) {
+          try {
+            const geoInfo = this.safeJsonParse<GeoInfoData>(event.geoInfo, {});
+            const country = geoInfo.country || 'Unknown';
+            const city = geoInfo.city || 'Unknown';
+            const region = geoInfo.region || 'Unknown';
+            const timezone = geoInfo.timezone || 'Unknown';
 
-    // Process geo stats with timezones
-    const geoStats = eventResults.reduce(
-      (
-        acc: {
-          countries: Record<string, number>;
-          cities: Record<string, number>;
-          regions: Record<string, number>;
-          timezones: Record<string, number>;
-        },
-        event
-      ) => {
-        if (!event.geoInfo) return acc;
-
-        try {
-          const geoInfo = JSON.parse(event.geoInfo);
-          const country = geoInfo.country || 'Unknown';
-          const city = geoInfo.city || 'Unknown';
-          const region = geoInfo.region || 'Unknown';
-          const timezone = geoInfo.timezone || 'Unknown';
-
-          acc.countries[country] = (acc.countries[country] || 0) + 1;
-          acc.cities[city] = (acc.cities[city] || 0) + 1;
-          acc.regions[region] = (acc.regions[region] || 0) + 1;
-          acc.timezones[timezone] = (acc.timezones[timezone] || 0) + 1;
-        } catch (error) {
-          console.error('Error parsing geo info:', error);
+            geoStats.countries[country] =
+              (geoStats.countries[country] || 0) + 1;
+            geoStats.cities[city] = (geoStats.cities[city] || 0) + 1;
+            geoStats.regions[region] = (geoStats.regions[region] || 0) + 1;
+            geoStats.timezones[timezone] =
+              (geoStats.timezones[timezone] || 0) + 1;
+          } catch (error) {
+            // Already handled in safeJsonParse
+          }
         }
 
-        return acc;
-      },
-      { countries: {}, cities: {}, regions: {}, timezones: {} }
-    );
+        // Process UTM properties
+        if (event.properties) {
+          try {
+            const properties = this.safeJsonParse<UtmPropertiesData>(
+              event.properties,
+              {}
+            );
+            const source = properties.utm_source || 'Direct';
+            const medium = properties.utm_medium || 'None';
+            const campaign = properties.utm_campaign || 'None';
 
-    // Process UTM stats
-    const utmStats = eventResults.reduce(
-      (
-        acc: {
-          sources: Record<string, number>;
-          mediums: Record<string, number>;
-          campaigns: Record<string, number>;
-        },
-        event
-      ) => {
-        if (!event.properties) return acc;
-
-        try {
-          const properties = JSON.parse(event.properties);
-          const source = properties.utm_source || 'direct';
-          const medium = properties.utm_medium || 'none';
-          const campaign = properties.utm_campaign || 'none';
-
-          acc.sources[source] = (acc.sources[source] || 0) + 1;
-          acc.mediums[medium] = (acc.mediums[medium] || 0) + 1;
-          acc.campaigns[campaign] = (acc.campaigns[campaign] || 0) + 1;
-        } catch (error) {
-          console.error('Error parsing UTM properties:', error);
+            utmStats.sources[source] = (utmStats.sources[source] || 0) + 1;
+            utmStats.mediums[medium] = (utmStats.mediums[medium] || 0) + 1;
+            utmStats.campaigns[campaign] =
+              (utmStats.campaigns[campaign] || 0) + 1;
+          } catch (error) {
+            // Already handled in safeJsonParse
+          }
         }
+      }
 
-        return acc;
-      },
-      { sources: {}, mediums: {}, campaigns: {} }
-    );
+      // Process click history
+      const clicksByDate: Record<string, number> = {};
 
-    // Process clicks by date
-    const clicksByDate = eventResults.reduce(
-      (acc: Record<string, number>, event) => {
-        if (!event.createdAt) return acc;
+      // Initialize with zero values
+      const dates = this.getDatesInRange(timeRange);
+      for (const date of dates) {
+        clicksByDate[date] = 0;
+      }
+
+      // Count events by date
+      for (const event of eventResults) {
+        if (!event.createdAt) continue;
         const date = new Date(event.createdAt).toISOString().split('T')[0];
-        acc[date] = (acc[date] || 0) + 1;
-        return acc;
-      },
-      {}
-    );
+        clicksByDate[date] = (clicksByDate[date] || 0) + 1;
+      }
 
-    // Fill in missing dates with 0 clicks
-    const startDate = new Date();
+      const filledClicksByDate = Object.entries(clicksByDate).map(
+        ([date, value]) => ({
+          name: date,
+          value,
+        })
+      );
+
+      return {
+        totalEvents: eventResults.length,
+        uniqueVisitors: uniqueIps.size,
+        geoStats,
+        deviceStats,
+        utmStats,
+        clicksByDate: filledClicksByDate,
+      };
+    } catch (error) {
+      throw new Error(
+        `Failed to get user analytics: ${(error as Error).message}`
+      );
+    }
+  }
+
+  // Helper function to get time range condition
+  private getTimeRangeCondition(timeRange: TimeRange) {
+    const now = new Date();
+    let startDate: Date;
+
     switch (timeRange) {
       case '24h':
-        startDate.setDate(startDate.getDate() - 1);
+        startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
         break;
       case '7d':
-        startDate.setDate(startDate.getDate() - 7);
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         break;
       case '30d':
-        startDate.setDate(startDate.getDate() - 30);
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         break;
       case '90d':
-        startDate.setDate(startDate.getDate() - 90);
+        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
         break;
     }
 
-    const endDate = new Date();
+    return sql`created_at >= ${startDate.toISOString()}`;
+  }
+
+  // Helper function to get all dates in a time range
+  private getDatesInRange(timeRange: TimeRange): string[] {
+    const now = new Date();
+    let startDate: Date;
+
+    switch (timeRange) {
+      case '24h':
+        startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        break;
+      case '7d':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case '30d':
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case '90d':
+        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        break;
+    }
+
     const dates: string[] = [];
     const currentDate = new Date(startDate);
 
-    while (currentDate <= endDate) {
+    while (currentDate <= now) {
       dates.push(currentDate.toISOString().split('T')[0]);
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    const filledClicksByDate = dates.map((date) => ({
-      name: date,
-      value: clicksByDate[date] || 0,
-    }));
-
-    return {
-      totalEvents,
-      uniqueVisitors,
-      geoStats,
-      deviceStats,
-      utmStats,
-      clicksByDate: filledClicksByDate,
-    };
+    return dates;
   }
-}
-
-function getTimeRangeCondition(timeRange: TimeRange) {
-  const now = new Date();
-  let startDate: Date;
-
-  switch (timeRange) {
-    case '24h':
-      startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      break;
-    case '7d':
-      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      break;
-    case '30d':
-      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      break;
-    case '90d':
-      startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-      break;
-  }
-
-  return sql`created_at >= ${startDate.toISOString()}`;
 }

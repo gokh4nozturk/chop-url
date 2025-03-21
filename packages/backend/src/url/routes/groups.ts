@@ -80,7 +80,7 @@ urlGroupRouter.openapi(
     method: 'get',
     path: '/',
     description: 'List all URL groups for the authenticated user',
-    tags: ['URL Groups'],
+    tags: ['URL - Groups'],
     responses: {
       200: {
         description: 'URL groups retrieved successfully',
@@ -114,7 +114,7 @@ urlGroupRouter.openapi(
     method: 'get',
     path: '/:id',
     description: 'Get a specific URL group by ID',
-    tags: ['URL Groups'],
+    tags: ['URL - Groups'],
     responses: {
       200: {
         description: 'URL group retrieved successfully',
@@ -161,7 +161,7 @@ urlGroupRouter.openapi(
     method: 'put',
     path: '/:id',
     description: 'Update a specific URL group by ID',
-    tags: ['URL Groups'],
+    tags: ['URL - Groups'],
     request: {
       body: {
         content: {
@@ -208,7 +208,7 @@ urlGroupRouter.openapi(
     method: 'delete',
     path: '/:id',
     description: 'Delete a specific URL group by ID',
-    tags: ['URL Groups'],
+    tags: ['URL - Groups'],
     responses: {
       200: {
         description: 'URL group deleted successfully',

@@ -19,7 +19,7 @@ shorteningRouter.openapi(
     method: 'post',
     path: '/shorten',
     description: 'Create a shortened URL',
-    tags: ['URL Shortening'],
+    tags: ['URL - Shortening'],
     responses: {
       200: {
         description: 'Success',
@@ -65,7 +65,7 @@ shorteningRouter.openapi(
     method: 'post',
     path: '/chop',
     description: 'Create a shortened URL (alternative endpoint)',
-    tags: ['URL Shortening'],
+    tags: ['URL - Shortening'],
     responses: {
       200: {
         description: 'Success',

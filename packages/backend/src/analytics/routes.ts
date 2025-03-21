@@ -16,7 +16,7 @@ analyticsRouter.openapi(
     method: 'post',
     path: '/events',
     description: 'Track an event',
-    tags: ['Analytics Events'],
+    tags: ['Analytics - Tracking'],
     request: {
       body: {
         content: {
@@ -53,7 +53,7 @@ analyticsRouter.openapi(
     method: 'post',
     path: '/custom-events',
     description: 'Create a custom event',
-    tags: ['Analytics/Custom Events'],
+    tags: ['Analytics - Custom Events'],
     request: {
       body: {
         content: {
@@ -87,9 +87,9 @@ analyticsRouter.openapi(
 analyticsRouter.openapi(
   createRoute({
     method: 'get',
-    path: '/me/custom-events',
-    description: 'Get custom events for the logged-in user',
-    tags: ['Analytics/Custom Events'],
+    path: '/custom-events',
+    description: 'Get custom events',
+    tags: ['Analytics - Custom Events'],
     responses: {
       200: {
         description: 'Success',
@@ -115,15 +115,15 @@ analyticsRouter.openapi(
 analyticsRouter.openapi(
   createRoute({
     method: 'get',
-    path: '/me',
-    description: 'Get analytics for the logged-in user',
-    tags: ['Analytics/User Analytics'],
+    path: '/',
+    description: 'Get analytics',
+    tags: ['Analytics'],
     responses: {
       200: {
         description: 'Success',
         content: {
           'application/json': {
-            schema: analyticsSchemas.userAnalytics,
+            schema: analyticsSchemas.analyticsResponse,
           },
         },
       },
@@ -143,7 +143,7 @@ analyticsRouter.openapi(
   createRoute({
     method: 'get',
     path: '/export',
-    description: 'Export URL statistics data for the logged-in user',
+    description: 'Export analytics data',
     tags: ['Analytics'],
     responses: {
       200: {
@@ -171,9 +171,9 @@ analyticsRouter.openapi(
 analyticsRouter.openapi(
   createRoute({
     method: 'get',
-    path: '/urls/:shortId/stats',
+    path: '/:shortId/stats',
     description: 'Get statistics for a URL',
-    tags: ['Analytics/URL Stats'],
+    tags: ['Analytics'],
     responses: {
       200: {
         description: 'Success',
@@ -198,9 +198,9 @@ analyticsRouter.openapi(
 analyticsRouter.openapi(
   createRoute({
     method: 'get',
-    path: '/urls/:shortId/events',
+    path: '/:shortId/events',
     description: 'Get events for a URL',
-    tags: ['Analytics/URL Events'],
+    tags: ['Analytics'],
     responses: {
       200: {
         description: 'Success',
@@ -226,9 +226,9 @@ analyticsRouter.openapi(
 analyticsRouter.openapi(
   createRoute({
     method: 'get',
-    path: '/urls/:shortId/geo',
+    path: '/:shortId/geo',
     description: 'Get geographic statistics for a URL',
-    tags: ['Analytics/URL Detailed Stats'],
+    tags: ['Analytics - URL Detailed Stats'],
     responses: {
       200: {
         description: 'Success',
@@ -253,9 +253,9 @@ analyticsRouter.openapi(
 analyticsRouter.openapi(
   createRoute({
     method: 'get',
-    path: '/urls/:shortId/devices',
+    path: '/:shortId/devices',
     description: 'Get device statistics for a URL',
-    tags: ['Analytics/URL Detailed Stats'],
+    tags: ['Analytics - URL Detailed Stats'],
     responses: {
       200: {
         description: 'Success',
@@ -280,9 +280,9 @@ analyticsRouter.openapi(
 analyticsRouter.openapi(
   createRoute({
     method: 'get',
-    path: '/urls/:shortId/utm',
+    path: '/:shortId/utm',
     description: 'Get UTM statistics for a URL',
-    tags: ['Analytics/URL Detailed Stats'],
+    tags: ['Analytics - URL Detailed Stats'],
     responses: {
       200: {
         description: 'Success',
@@ -307,9 +307,9 @@ analyticsRouter.openapi(
 analyticsRouter.openapi(
   createRoute({
     method: 'get',
-    path: '/urls/:shortId/clicks',
+    path: '/:shortId/clicks',
     description: 'Get click history for a URL',
-    tags: ['Analytics/URL Detailed Stats'],
+    tags: ['Analytics - URL Detailed Stats'],
     responses: {
       200: {
         description: 'Success',

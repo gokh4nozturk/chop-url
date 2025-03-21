@@ -14,7 +14,7 @@ alwaysApply: true
 
 ## Development Standards
 - Do not use ts type of any
-- Follow up biome rules
+- Follow up biome rules [biome.json](mdc:biome.json)
 - Use pnpm as workspace manager and package manager
 - Follow up [issues](mdc:https:/github.com/gokh4nozturk/chop-url/issues)
 - Follow up [wiki](mdc:https:/github.com/gokh4nozturk/chop-url/wiki)

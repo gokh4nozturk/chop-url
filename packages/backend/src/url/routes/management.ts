@@ -22,7 +22,7 @@ urlManagementRouter.openapi(
     method: 'get',
     path: '/',
     description: 'Get all URLs for the authenticated user',
-    tags: ['URL Management'],
+    tags: ['URL - Management'],
     responses: {
       200: {
         description: 'Success',
@@ -56,7 +56,7 @@ urlManagementRouter.openapi(
     method: 'get',
     path: '/:shortId',
     description: 'Get a specific URL by short ID',
-    tags: ['URL Management'],
+    tags: ['URL - Management'],
     responses: {
       200: {
         description: 'Success',
@@ -91,7 +91,7 @@ urlManagementRouter.openapi(
     method: 'patch',
     path: '/:shortId',
     description: 'Update a URL',
-    tags: ['URL Management'],
+    tags: ['URL - Management'],
     responses: {
       200: {
         description: 'Success',
@@ -128,7 +128,7 @@ urlManagementRouter.openapi(
     method: 'delete',
     path: '/:shortId',
     description: 'Delete a URL',
-    tags: ['URL Management'],
+    tags: ['URL - Management'],
     responses: {
       200: {
         description: 'Success',

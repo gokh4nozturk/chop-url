@@ -40,8 +40,12 @@ export const analyticsHandlers = {
   getEvents: async (c: Context) => {
     const analyticsService = createAnalyticsService(c);
     const urlId = Number(c.req.param('urlId'));
+    const timeRange = c.req.query('timeRange') || '7d';
 
-    const events = await analyticsService.getEvents(urlId);
+    const events = await analyticsService.getEvents(
+      urlId,
+      timeRange as TimeRange
+    );
     return c.json(events);
   },
 

@@ -77,20 +77,68 @@ export const errorResponseSchema = z
   })
   .openapi('ErrorResponse');
 
+const analyticsCommonResponseSchema = z.object({
+  totalClicks: z.number(),
+  uniqueVisitors: z.number(),
+  countries: z.array(
+    z.object({
+      name: z.string(),
+      count: z.number(),
+    })
+  ),
+  cities: z.array(
+    z.object({
+      name: z.string(),
+      count: z.number(),
+    })
+  ),
+  regions: z.array(
+    z.object({
+      name: z.string(),
+      count: z.number(),
+    })
+  ),
+  timezones: z.array(
+    z.object({
+      name: z.string(),
+      count: z.number(),
+    })
+  ),
+  referrers: z.array(
+    z.object({
+      name: z.string(),
+      count: z.number(),
+    })
+  ),
+  devices: z.array(
+    z.object({
+      name: z.string(),
+      count: z.number(),
+    })
+  ),
+  browsers: z.array(
+    z.object({
+      name: z.string(),
+      count: z.number(),
+    })
+  ),
+  operatingSystems: z.array(
+    z.object({
+      name: z.string(),
+      count: z.number(),
+    })
+  ),
+  clicksByDate: z.array(
+    z.object({
+      date: z.string(),
+      count: z.number(),
+    })
+  ),
+});
+
 // Analytics response schemas
-export const urlStatsResponseSchema = z
-  .object({
-    totalEvents: z.number(),
-    uniqueVisitors: z.number(),
-    lastEventAt: z.string().nullable(),
-    url: z.object({
-      id: z.number(),
-      shortId: z.string(),
-      originalUrl: z.string(),
-      createdAt: z.string(),
-    }),
-  })
-  .openapi('UrlStatsResponse');
+export const urlStatsResponseSchema =
+  analyticsCommonResponseSchema.openapi('UrlStatsResponse');
 
 export const eventsResponseSchema = z.array(z.any()).openapi('EventsResponse');
 export const customEventsResponseSchema = z
@@ -134,9 +182,8 @@ export const clickHistoryResponseSchema = z
   )
   .openapi('ClickHistoryResponse');
 
-export const userAnalyticsResponseSchema = z
-  .any()
-  .openapi('UserAnalyticsResponse');
+export const analyticsResponseSchema =
+  analyticsCommonResponseSchema.openapi('AnalyticsResponse');
 
 // Analytics-specific error schemas
 export const analyticsValidationErrorSchema = z
@@ -242,72 +289,10 @@ export const analyticsSchemas = {
   deviceStats: deviceStatsResponseSchema,
   utmStats: utmStatsResponseSchema,
   clickHistory: clickHistoryResponseSchema,
-  userAnalytics: userAnalyticsResponseSchema,
+  analyticsResponse: analyticsResponseSchema,
   // Error schemas
   validationError: analyticsValidationErrorSchema,
   urlNotFoundError: analyticsUrlNotFoundErrorSchema,
   dataError: analyticsDataErrorSchema,
   customEventValidationError: customEventValidationErrorSchema,
-
-  // Analytics response schema for consolidated URL analytics
-  analyticsResponse: z
-    .object({
-      totalClicks: z.number(),
-      uniqueVisitors: z.number(),
-      countries: z.array(
-        z.object({
-          name: z.string(),
-          count: z.number(),
-        })
-      ),
-      cities: z.array(
-        z.object({
-          name: z.string(),
-          count: z.number(),
-        })
-      ),
-      regions: z.array(
-        z.object({
-          name: z.string(),
-          count: z.number(),
-        })
-      ),
-      timezones: z.array(
-        z.object({
-          name: z.string(),
-          count: z.number(),
-        })
-      ),
-      referrers: z.array(
-        z.object({
-          name: z.string(),
-          count: z.number(),
-        })
-      ),
-      devices: z.array(
-        z.object({
-          name: z.string(),
-          count: z.number(),
-        })
-      ),
-      browsers: z.array(
-        z.object({
-          name: z.string(),
-          count: z.number(),
-        })
-      ),
-      operatingSystems: z.array(
-        z.object({
-          name: z.string(),
-          count: z.number(),
-        })
-      ),
-      clicksByDate: z.array(
-        z.object({
-          date: z.string(),
-          count: z.number(),
-        })
-      ),
-    })
-    .openapi('AnalyticsResponse'),
 };
