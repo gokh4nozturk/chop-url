@@ -1,6 +1,6 @@
 import { auth } from '@/auth/middleware';
 import { Env, Variables } from '@/types';
-import { errorResponseSchemas, handleError } from '@/utils/error';
+import { errorResponseSchemas } from '@/utils/error';
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { authHandlers } from '../handlers';
 import { authSchemas } from '../schemas';
@@ -40,13 +40,9 @@ twoFactorRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await authHandlers.setupTwoFactor(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return authHandlers.setupTwoFactor(c);
   }
 );
 
@@ -78,13 +74,9 @@ twoFactorRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await authHandlers.verifyTwoFactorSetup(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return authHandlers.verifyTwoFactorSetup(c);
   }
 );
 
@@ -107,13 +99,9 @@ twoFactorRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await authHandlers.getRecoveryCodes(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return authHandlers.getRecoveryCodes(c);
   }
 );
 
@@ -145,13 +133,9 @@ twoFactorRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await authHandlers.verifyTwoFactorLogin(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return authHandlers.verifyTwoFactorLogin(c);
   }
 );
 
@@ -183,13 +167,9 @@ twoFactorRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await authHandlers.enableTwoFactor(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return authHandlers.enableTwoFactor(c);
   }
 );
 
@@ -221,13 +201,9 @@ twoFactorRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await authHandlers.disableTwoFactor(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return authHandlers.disableTwoFactor(c);
   }
 );
 

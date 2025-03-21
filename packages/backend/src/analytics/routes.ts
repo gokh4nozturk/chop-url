@@ -43,16 +43,9 @@ analyticsRouter.openapi(
       ...errorResponseSchemas.badRequestError,
     },
   }),
-  async (c) => {
-    try {
-      // Get user analytics
-      const result = await analyticsHandlers.trackEvent(c);
-
-      // Ensure we return with a 200 status code
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return analyticsHandlers.trackEvent(c);
   }
 );
 
@@ -77,13 +70,9 @@ analyticsRouter.openapi(
       ...errorResponseSchemas.badRequestError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await analyticsHandlers.getEvents(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return analyticsHandlers.getEvents(c);
   }
 );
 
@@ -117,13 +106,9 @@ analyticsRouter.openapi(
       ...errorResponseSchemas.badRequestError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await analyticsHandlers.createCustomEvent(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return analyticsHandlers.createCustomEvent(c);
   }
 );
 
@@ -148,13 +133,9 @@ analyticsRouter.openapi(
       ...errorResponseSchemas.badRequestError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await analyticsHandlers.getCustomEvents(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return analyticsHandlers.getCustomEvents(c);
   }
 );
 
@@ -179,13 +160,9 @@ analyticsRouter.openapi(
       ...errorResponseSchemas.badRequestError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await analyticsHandlers.getUrlStats(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return analyticsHandlers.getUrlStats(c);
   }
 );
 
@@ -210,13 +187,9 @@ analyticsRouter.openapi(
       ...errorResponseSchemas.badRequestError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await analyticsHandlers.getUrlEvents(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return analyticsHandlers.getUrlEvents(c);
   }
 );
 
@@ -241,13 +214,9 @@ analyticsRouter.openapi(
       ...errorResponseSchemas.badRequestError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await analyticsHandlers.getGeoStats(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return analyticsHandlers.getGeoStats(c);
   }
 );
 
@@ -272,13 +241,9 @@ analyticsRouter.openapi(
       ...errorResponseSchemas.badRequestError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await analyticsHandlers.getDeviceStats(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return analyticsHandlers.getDeviceStats(c);
   }
 );
 
@@ -303,13 +268,9 @@ analyticsRouter.openapi(
       ...errorResponseSchemas.badRequestError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await analyticsHandlers.getUtmStats(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return analyticsHandlers.getUtmStats(c);
   }
 );
 
@@ -334,13 +295,9 @@ analyticsRouter.openapi(
       ...errorResponseSchemas.badRequestError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await analyticsHandlers.getClickHistory(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return analyticsHandlers.getClickHistory(c);
   }
 );
 
@@ -365,13 +322,9 @@ analyticsRouter.openapi(
       ...errorResponseSchemas.badRequestError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await analyticsHandlers.getUserAnalytics(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return analyticsHandlers.getUserAnalytics(c);
   }
 );
 

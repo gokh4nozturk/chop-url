@@ -43,13 +43,9 @@ emailRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await authHandlers.verifyEmail(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return authHandlers.verifyEmail(c);
   }
 );
 
@@ -85,13 +81,9 @@ emailRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await authHandlers.resendVerificationEmail(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return authHandlers.resendVerificationEmail(c);
   }
 );
 

@@ -53,13 +53,9 @@ waitlistRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await authHandlers.addToWaitlist(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return authHandlers.addToWaitlist(c);
   }
 );
 
@@ -92,13 +88,9 @@ waitlistRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await authHandlers.getWaitlistEntry(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return authHandlers.getWaitlistEntry(c);
   }
 );
 

@@ -15,8 +15,8 @@ const user = z
 // Login schemas
 const login = z
   .object({
-    email: z.string().email(),
-    password: z.string().min(8),
+    email: z.string().email().default('gokhaanozturk@gmail.com'),
+    password: z.string().min(8).default('12345678'),
     code: z.string().optional(),
   })
   .openapi('LoginRequest');

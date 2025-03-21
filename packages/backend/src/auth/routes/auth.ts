@@ -1,5 +1,5 @@
 import { Env, Variables } from '@/types';
-import { errorResponseSchemas, handleError } from '@/utils/error';
+import { errorResponseSchemas } from '@/utils/error';
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { authHandlers } from '../handlers';
 import { auth } from '../middleware';
@@ -28,13 +28,9 @@ authRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await authHandlers.getCurrentUser(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return authHandlers.getCurrentUser(c);
   }
 );
 
@@ -66,13 +62,9 @@ authRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await authHandlers.login(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return authHandlers.login(c);
   }
 );
 
@@ -104,13 +96,9 @@ authRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await authHandlers.register(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return authHandlers.register(c);
   }
 );
 

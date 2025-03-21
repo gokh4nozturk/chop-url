@@ -40,13 +40,9 @@ storageRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await generatePresignedUrlHandler(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return generatePresignedUrlHandler(c);
   }
 );
 
@@ -69,13 +65,9 @@ storageRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await getPublicUrlHandler(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return getPublicUrlHandler(c);
   }
 );
 

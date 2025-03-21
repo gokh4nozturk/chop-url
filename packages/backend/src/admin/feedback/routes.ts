@@ -53,13 +53,9 @@ feedbackRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await createFeedbackHandler(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return createFeedbackHandler(c);
   }
 );
 
@@ -82,13 +78,9 @@ feedbackRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await getAllFeedbackHandler(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return getAllFeedbackHandler(c);
   }
 );
 
@@ -111,13 +103,9 @@ feedbackRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await updateFeedbackStatusHandler(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return updateFeedbackStatusHandler(c);
   }
 );
 
@@ -140,13 +128,9 @@ feedbackRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await updateFeedbackPriorityHandler(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return updateFeedbackPriorityHandler(c);
   }
 );
 
@@ -167,13 +151,9 @@ feedbackRouter.openapi(
       },
     },
   }),
-  async (c) => {
-    try {
-      const result = await deleteFeedbackHandler(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return deleteFeedbackHandler(c);
   }
 );
 
@@ -196,13 +176,9 @@ feedbackRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await getFeedbackByIdHandler(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return getFeedbackByIdHandler(c);
   }
 );
 
@@ -227,13 +203,9 @@ feedbackRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await getUserFeedbackHandler(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return getUserFeedbackHandler(c);
   }
 );
 

@@ -44,13 +44,9 @@ passwordRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await authHandlers.requestPasswordReset(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return authHandlers.requestPasswordReset(c);
   }
 );
 
@@ -90,13 +86,9 @@ passwordRouter.openapi(
       ...errorResponseSchemas.authError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await authHandlers.resetPassword(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return authHandlers.resetPassword(c);
   }
 );
 

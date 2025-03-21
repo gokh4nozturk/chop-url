@@ -36,13 +36,9 @@ waitlistRouter.openapi(
       ...errorResponseSchemas.notFoundError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await getWaitListUsersHandler(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return getWaitListUsersHandler(c);
   }
 );
 
@@ -67,13 +63,9 @@ waitlistRouter.openapi(
       ...errorResponseSchemas.notFoundError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await approveWaitListUserHandler(c);
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return approveWaitListUserHandler(c);
   }
 );
 

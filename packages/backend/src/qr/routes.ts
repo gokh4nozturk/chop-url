@@ -39,14 +39,9 @@ qrRouter.openapi(
       ...errorResponseSchemas.notFoundError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await qrHandlers.createQRCode(c);
-
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return qrHandlers.createQRCode(c);
   }
 );
 
@@ -70,14 +65,9 @@ qrRouter.openapi(
       ...errorResponseSchemas.notFoundError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await qrHandlers.getQRCodeById(c);
-
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return qrHandlers.getQRCodeById(c);
   }
 );
 
@@ -110,14 +100,9 @@ qrRouter.openapi(
       ...errorResponseSchemas.notFoundError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await qrHandlers.updateQRCode(c);
-
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return qrHandlers.updateQRCode(c);
   }
 );
 
@@ -141,14 +126,9 @@ qrRouter.openapi(
       ...errorResponseSchemas.notFoundError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await qrHandlers.incrementDownloadCount(c);
-
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return qrHandlers.incrementDownloadCount(c);
   }
 );
 
@@ -172,14 +152,9 @@ qrRouter.openapi(
       ...errorResponseSchemas.notFoundError,
     },
   }),
-  async (c) => {
-    try {
-      const result = await qrHandlers.getQRCodeByUrlId(c);
-
-      return c.json(result, 200);
-    } catch (error) {
-      handleError(c, error);
-    }
+  // @ts-ignore
+  (c) => {
+    return qrHandlers.getQRCodeByUrlId(c);
   }
 );
 
