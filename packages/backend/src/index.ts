@@ -2,28 +2,27 @@ import feedbackRoutes from '@/admin/feedback/routes';
 import waitlistRoutes from '@/admin/waitlist/routes';
 import analyticsRoutes from '@/analytics/routes';
 import {
-  analyticsRoutes as urlAnalyticsRoutes,
-  managementRoutes,
-  shorteningRoutes,
-  urlGroupRouter,
-} from '@/url/routes';
-import { OpenAPIHono } from '@hono/zod-openapi';
-import { apiReference } from '@scalar/hono-api-reference';
-import { cors } from 'hono/cors';
-import {
   authRouter,
   emailRouter,
   oauthRouter,
   profileRouter,
   twoFactorRouter,
   waitlistRouter,
-} from './auth/routes';
-import { createDb } from './db/client';
-import { createDomainRoutes } from './domain/routes';
-import qrRouter from './qr/routes';
-import storageRouter from './storage/routes';
-import { H } from './types';
-import { WebSocketService } from './websocket/service';
+} from '@/auth/routes';
+import { createDb } from '@/db/client';
+import qrRouter from '@/qr/routes';
+import storageRouter from '@/storage/routes';
+import { H } from '@/types';
+import {
+  analyticsRoutes as urlAnalyticsRoutes,
+  managementRoutes,
+  shorteningRoutes,
+  urlGroupRouter,
+} from '@/url/routes';
+import { WebSocketService } from '@/websocket/service';
+import { OpenAPIHono } from '@hono/zod-openapi';
+import { apiReference } from '@scalar/hono-api-reference';
+import { cors } from 'hono/cors';
 
 const app = new OpenAPIHono<H>();
 const wsService = new WebSocketService();
