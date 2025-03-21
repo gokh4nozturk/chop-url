@@ -1,15 +1,11 @@
 import { authHandlers } from '@/auth/handlers';
 import { auth } from '@/auth/middleware';
 import { authSchemas } from '@/auth/schemas';
-import { Env, Variables } from '@/types';
-import { handleError } from '@/utils/error';
+import { H } from '@/types';
 import { errorResponseSchemas } from '@/utils/error';
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 
-const profileRouter = new OpenAPIHono<{
-  Bindings: Env;
-  Variables: Variables;
-}>();
+const profileRouter = new OpenAPIHono<H>();
 
 profileRouter.use('*', auth());
 

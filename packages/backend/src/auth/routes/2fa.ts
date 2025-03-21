@@ -1,14 +1,11 @@
 import { auth } from '@/auth/middleware';
-import { Env, Variables } from '@/types';
+import { H } from '@/types';
 import { errorResponseSchemas } from '@/utils/error';
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { authHandlers } from '../handlers';
 import { authSchemas } from '../schemas';
 
-const twoFactorRouter = new OpenAPIHono<{
-  Bindings: Env;
-  Variables: Variables;
-}>();
+const twoFactorRouter = new OpenAPIHono<H>();
 
 twoFactorRouter.use('*', auth());
 

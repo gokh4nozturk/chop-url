@@ -1,10 +1,10 @@
+import { H } from '@/types';
 import { Context } from 'hono';
 import { Database } from '../db/client';
-import { Env, Variables } from '../types';
 import { QRCodeService } from './service';
 import { CreateQRCodeData, UpdateQRCodeData } from './types.js';
 
-type AppContext = Context<{ Bindings: Env; Variables: Variables }>;
+type AppContext = Context<H>;
 
 // Create QR service instance
 const createQRService = (db: Database) => {

@@ -1,15 +1,12 @@
 import { auth } from '@/auth/middleware';
-import { Env, Variables } from '@/types';
+import { H } from '@/types';
 import { errorResponseSchemas, handleError } from '@/utils/error';
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 
 import { analyticsHandlers } from './handlers';
 import { analyticsSchemas } from './schemas';
 
-const analyticsRouter = new OpenAPIHono<{
-  Bindings: Env;
-  Variables: Variables;
-}>();
+const analyticsRouter = new OpenAPIHono<H>();
 
 analyticsRouter.use('*', auth());
 

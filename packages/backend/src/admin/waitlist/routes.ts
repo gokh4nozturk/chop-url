@@ -1,5 +1,5 @@
 import { auth } from '@/auth/middleware';
-import { Env, Variables } from '@/types';
+import { H } from '@/types';
 import { errorResponseSchemas, handleError } from '@/utils/error';
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import {
@@ -8,10 +8,7 @@ import {
 } from './handlers';
 import { approveResponseSchema, waitlistUsersResponseSchema } from './schemas';
 
-const waitlistRouter = new OpenAPIHono<{
-  Bindings: Env;
-  Variables: Variables;
-}>();
+const waitlistRouter = new OpenAPIHono<H>();
 
 waitlistRouter.use('*', auth());
 

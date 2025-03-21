@@ -22,10 +22,10 @@ import { createDb } from './db/client';
 import { createDomainRoutes } from './domain/routes';
 import qrRouter from './qr/routes';
 import storageRouter from './storage/routes';
-import { Env, Variables } from './types';
+import { H } from './types';
 import { WebSocketService } from './websocket/service';
 
-const app = new OpenAPIHono<{ Bindings: Env; Variables: Variables }>();
+const app = new OpenAPIHono<H>();
 const wsService = new WebSocketService();
 
 // Initialize DB middleware

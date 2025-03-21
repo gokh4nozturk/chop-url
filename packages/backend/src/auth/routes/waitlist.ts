@@ -1,12 +1,9 @@
 import { authHandlers } from '@/auth/handlers';
-import { Env, Variables } from '@/types';
-import { errorResponseSchemas, handleError } from '@/utils/error';
+import { H } from '@/types';
+import { errorResponseSchemas } from '@/utils/error';
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 
-const waitlistRouter = new OpenAPIHono<{
-  Bindings: Env;
-  Variables: Variables;
-}>();
+const waitlistRouter = new OpenAPIHono<H>();
 
 waitlistRouter.openapi(
   createRoute({

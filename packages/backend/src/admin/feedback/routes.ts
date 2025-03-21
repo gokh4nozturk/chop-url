@@ -1,5 +1,5 @@
 import { auth } from '@/auth/middleware';
-import { Env, Variables } from '@/types';
+import { H } from '@/types';
 import { errorResponseSchemas, handleError } from '@/utils/error';
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import {
@@ -17,10 +17,7 @@ import {
   successResponseSchema,
 } from './schemas';
 
-const feedbackRouter = new OpenAPIHono<{
-  Bindings: Env;
-  Variables: Variables;
-}>();
+const feedbackRouter = new OpenAPIHono<H>();
 
 feedbackRouter.use('*', auth());
 
