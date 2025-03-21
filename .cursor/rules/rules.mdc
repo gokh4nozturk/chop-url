@@ -124,16 +124,50 @@ const searchParams = await props.searchParams
 - Example of correct ordering:
   ```typescript
   // Correct order
-  app.get('/users/list', listUsersHandler);
+  app.get('/users', listUsersHandler);
   app.get('/users/:id', getUserByIdHandler);
   ```
 - Example of problematic ordering:
   ```typescript
   // Incorrect order - '/users/list' will never be reached
   app.get('/users/:id', getUserByIdHandler);
-  app.get('/users/list', listUsersHandler);
+  app.get('/users', listUsersHandler);
   ```
 - This applies to all route definitions in the codebase, including OpenAPIHono
+
+### Route Defining
+
+- Example of defining:
+```typescript
+// Correct define
+import { H } from '@/types';
+import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
+
+const app = new OpenAPIHono<H>();
+
+const route = createRoute({
+  method: 'get',
+  path: '/me',
+  description: 'Get current user profile',
+  tags: ['Auth'],
+  responses: {
+    200: {
+      description: 'Current user profile retrieved successfully',
+      content: {
+        'application/json': {
+          schema: authSchemas.userProfile,
+        },
+      },
+    },
+    ...errorResponseSchemas.serverError,
+    ...errorResponseSchemas.authError,
+  },
+})
+
+app.openapi(route, (c) => {
+    return authHandlers.getCurrentUser(c);
+  })
+```
 
 ### Error Handling
 
