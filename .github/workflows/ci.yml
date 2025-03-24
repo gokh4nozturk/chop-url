@@ -22,6 +22,11 @@ jobs:
         with:
           version: 8
           
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+          
       - name: Get pnpm store directory
         id: pnpm-cache
         shell: bash
@@ -59,6 +64,11 @@ jobs:
         uses: pnpm/action-setup@v3
         with:
           version: 8
+          
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
           
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -115,6 +125,11 @@ jobs:
         with:
           version: 8
           
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+          
       - name: Get pnpm store directory
         id: pnpm-cache
         shell: bash
@@ -165,6 +180,11 @@ jobs:
         with:
           version: 8
           
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+          
       - name: Get pnpm store directory
         id: pnpm-cache
         shell: bash
@@ -189,7 +209,7 @@ jobs:
           path: packages/chop-url-lib/dist
         
       - name: Build packages
-        run: pnpm build
+        run: pnpm build --filter=!example
 
   deploy:
     needs: build
@@ -220,6 +240,11 @@ jobs:
         uses: pnpm/action-setup@v3
         with:
           version: 8
+          
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
           
       - name: Get pnpm store directory
         id: pnpm-cache
