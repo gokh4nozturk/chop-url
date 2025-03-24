@@ -65,3 +65,13 @@ enabled = true
 
 [env.production.observability.logs]
 enabled = true
+
+# KV namespace
+[[kv_namespaces]]
+binding = "worker-ANALYTICS_KV_preview"
+id = "your_kv_namespace_id"
+preview_id = "your_preview_kv_namespace_id"
+
+[[env.production.kv_namespaces]]
+binding = "worker-ANALYTICS_KV"
+id = "your_kv_namespace_id"
