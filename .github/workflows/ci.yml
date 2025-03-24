@@ -209,7 +209,7 @@ jobs:
           path: packages/chop-url-lib/dist
         
       - name: Build packages
-        run: pnpm build --filter=!example
+        run: pnpm --filter=!example build
 
   deploy:
     needs: build
