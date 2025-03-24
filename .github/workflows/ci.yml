@@ -256,6 +256,11 @@ jobs:
           name: lib-build
           path: packages/chop-url-lib/dist
       
+      - name: Prepare wrangler.toml from example
+        run: |
+          cd packages/backend
+          cp wrangler.example.toml wrangler.toml
+          
       - name: Set Cloudflare credentials
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -314,6 +319,11 @@ jobs:
           name: lib-build
           path: packages/chop-url-lib/dist
       
+      - name: Prepare wrangler.toml from example
+        run: |
+          cd packages/chop-url-redirect
+          cp wrangler.example.toml wrangler.toml
+          
       - name: Set Cloudflare credentials
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

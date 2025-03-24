@@ -29,6 +29,9 @@ binding = "BUCKET"
 bucket_name = "your_bucket_name"
 preview_bucket_name = "your_preview_bucket_name"
 
+[env.production]
+name = "chop-url-backend"
+
 [env.production.vars]
 BASE_URL = "https://chop-url.com"
 FRONTEND_URL = "https://app.chop-url.com"
@@ -55,4 +58,4 @@ custom_domain = true
 enabled = true
 
 [env.production.observability.logs]
-enabled = true 
+enabled = true
