@@ -157,8 +157,11 @@ function deployPackage(packageName, env, options = {}) {
     return true;
   } catch (error) {
     logger.error(`${pkg.name} deployment failed: ${error.message}`);
-    if (VERBOSE && error.stdout) {
-      logger.debug(`Output: ${error.stdout.toString()}`);
+    if (error.stdout) {
+      logger.error(`Command output: ${error.stdout.toString()}`);
+    }
+    if (error.stderr) {
+      logger.error(`Command error output: ${error.stderr.toString()}`);
     }
     return false;
   }

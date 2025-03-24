@@ -267,8 +267,16 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: echo "Cloudflare credentials set"
         
+      - name: Debug wrangler.toml
+        run: |
+          echo "Checking wrangler.toml content"
+          cd packages/backend
+          cat wrangler.toml | grep -v SECRET
+          
       - name: Run deployment
-        run: pnpm run deploy -- -e prod backend --skip-validation
+        run: |
+          export DEBUG=true 
+          pnpm run deploy -- -e prod backend --skip-validation
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -330,8 +338,16 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: echo "Cloudflare credentials set"
         
+      - name: Debug wrangler.toml
+        run: |
+          echo "Checking wrangler.toml content"
+          cd packages/chop-url-redirect
+          cat wrangler.toml | grep -v SECRET
+          
       - name: Run deployment
-        run: pnpm run deploy -- -e prod redirect --skip-validation
+        run: |
+          export DEBUG=true
+          pnpm run deploy -- -e prod redirect --skip-validation
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
