@@ -70,46 +70,49 @@ pnpm deploy:all      # Deploy all services
 
 ## Deployment
 
-### Backend (Cloudflare Workers)
+Chop URL uses a specialized deployment system that can be used in both local development and CI/CD environments.
 
-1. Install Wrangler CLI:
+### Deployment Script
+
+We provide a powerful deployment CLI tool for deploying packages individually or all at once:
+
 ```bash
-pnpm add -g wrangler
+# Deploy all packages in production mode
+pnpm run deploy -- -e prod all
+
+# Deploy only backend in development mode
+pnpm run deploy -- -e dev backend
+
+# Deploy frontend in production mode
+pnpm run deploy -- -e prod frontend
 ```
 
-2. Login to Cloudflare:
-```bash
-wrangler login
-```
+### Available Options
 
-3. Create a D1 database:
-```bash
-wrangler d1 create chop_url_db
-```
+The deployment script supports several options:
 
-4. Update the database_id in `wrangler.toml`
+| Option | Description |
+|--------|-------------|
+| `-e, --environment <env>` | Deployment environment (`dev` or `prod`), default: `dev` |
+| `--skip-lib` | Skip building the library package |
+| `--skip-validation` | Skip environment variable validation (automatic in CI mode) |
 
-5. Deploy:
-```bash
-pnpm deploy:backend
-```
+### Environment Variables
 
-### Frontend (Vercel)
+Each package requires specific environment variables for deployment in production mode:
 
-1. Install Vercel CLI:
-```bash
-pnpm add -g vercel
-```
+#### Backend & Redirect Service
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
 
-2. Login to Vercel:
-```bash
-vercel login
-```
+#### Frontend
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
 
-3. Deploy:
-```bash
-pnpm deploy:frontend
-```
+### CI/CD Integration
+
+The deployment script is fully integrated with our GitHub Actions CI/CD pipeline. For CI runs, the script automatically detects the CI environment and adjusts its behavior accordingly.
 
 ## Environment Variables
 

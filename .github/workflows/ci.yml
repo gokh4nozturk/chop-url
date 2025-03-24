@@ -263,10 +263,11 @@ jobs:
         run: echo "Cloudflare credentials set"
         
       - name: Run deployment
-        run: pnpm run deploy:backend
+        run: pnpm run deploy -- -e prod backend --skip-validation
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CI: 'true'
 
   deploy-redirect:
     needs: build
@@ -320,10 +321,11 @@ jobs:
         run: echo "Cloudflare credentials set"
         
       - name: Run deployment
-        run: pnpm run deploy:redirect
+        run: pnpm run deploy -- -e prod redirect --skip-validation
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CI: 'true'
 
   deploy-frontend:
     needs: [deploy-backend, deploy-redirect]
@@ -378,8 +380,9 @@ jobs:
         run: echo "Vercel credentials set"
         
       - name: Run deployment
-        run: pnpm run deploy:frontend
+        run: pnpm run deploy -- -e prod frontend --skip-validation
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          CI: 'true'

@@ -5,15 +5,12 @@
     "dev": "pnpm -r dev",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
-    "deploy:lib": "cd packages/chop-url-lib && pnpm run build",
-    "deploy:backend:dev": "cd packages/backend && pnpm run deploy",
-    "deploy:redirect:dev": "cd packages/chop-url-redirect && pnpm run deploy",
-    "deploy:frontend:dev": "cd packages/chop-url-fe && pnpm run deploy",
-    "deploy:backend": "cd packages/backend && pnpm run deploy --env production",
-    "deploy:redirect": "cd packages/chop-url-redirect && pnpm run deploy --env production",
-    "deploy:frontend": "cd packages/chop-url-fe && pnpm run deploy --prod",
-    "deploy:all:dev": "pnpm run deploy:lib && pnpm run deploy:backend && pnpm run deploy:redirect && pnpm run deploy:frontend",
-    "deploy:all": "pnpm run deploy:lib && pnpm run deploy:backend:prod && pnpm run deploy:redirect:prod && pnpm run deploy:frontend:prod",
+
+    "deploy": "node scripts/deploy.js run",
+    "deploy:prod": "node scripts/deploy.js run -e prod all",
+    "deploy:dev": "node scripts/deploy.js run -e dev all",
+    "deploy:lib": "node scripts/deploy.js run lib",
+
     "format": "biome format .",
     "format:fix": "biome format --write .",
     "lint": "biome lint .",
@@ -26,6 +23,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.5.3",
+    "commander": "^13.1.0",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2"
   },
