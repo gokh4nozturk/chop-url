@@ -130,17 +130,20 @@ export default function Home() {
         );
       }
 
-      const response = await fetch('/api/shorten', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          url: urlToShorten,
-          customSlug: customSlug || undefined,
-        }),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/shorten`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            url: urlToShorten,
+            customSlug: customSlug || undefined,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
