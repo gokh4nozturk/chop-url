@@ -1,4 +1,9 @@
-import type { DeviceInfo, Event, EventProperties, GeoInfo } from '@/lib/types';
+import type {
+  DeviceInfo,
+  Event as EventType,
+  EventProperties,
+  GeoInfo,
+} from '@/lib/types';
 
 // Safe JSON parse utility
 export const safeJsonParse = <T>(
@@ -45,7 +50,7 @@ export const safeJsonParse = <T>(
   }
 };
 
-export const processDeviceStats = (events: Event[]) => {
+export const processDeviceStats = (events: EventType[]) => {
   const browsers: Record<string, number> = {};
   const operatingSystems: Record<string, number> = {};
   const devices: Record<string, number> = {};
@@ -86,7 +91,7 @@ export const processDeviceStats = (events: Event[]) => {
   return { browsers, operatingSystems, devices };
 };
 
-export const processEvents = (events: Event[]) => {
+export const processEvents = (events: EventType[]) => {
   const devices: Record<string, number> = {};
   const browsers: Record<string, number> = {};
   const operatingSystems: Record<string, number> = {};

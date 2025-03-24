@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAnalyticsStore } from '@/lib/store/analytics';
 import { useAuthStore } from '@/lib/store/auth';
 import useUrlStore from '@/lib/store/url';
-import { Event } from '@/lib/types';
+import { Event as EventType } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { BarChart, Globe, Link as LinkIcon, Loader2, Plus } from 'lucide-react';
 import Link from 'next/link';
@@ -184,7 +184,7 @@ export default function DashboardPage() {
               <CardTitle>Recent Activity</CardTitle>
             </CardHeader>
             <CardContent className="min-h-[220px]">
-              <ActivityFeed events={(events as unknown as Event[]) || []} />
+              <ActivityFeed events={(events as unknown as EventType[]) || []} />
             </CardContent>
           </Card>
         </motion.div>

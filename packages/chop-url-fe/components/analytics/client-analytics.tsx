@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/select';
 import { StatCard } from '@/components/ui/stat-card';
 import { useAnalyticsStore } from '@/lib/store/analytics';
-import type { Period } from '@/lib/types';
+import type { Event as EventType, Period } from '@/lib/types';
 import {
   processEvents,
   transformCityData,
@@ -68,7 +68,7 @@ export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
     );
   };
 
-  const stats = events ? processEvents(events as unknown as Event[]) : null;
+  const stats = events ? processEvents(events as EventType[]) : null;
 
   if (!stats) return null;
 

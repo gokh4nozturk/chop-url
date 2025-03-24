@@ -1,5 +1,5 @@
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Event } from '@/lib/types';
+import { Event as EventType } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import {
@@ -29,7 +29,7 @@ const iconAnimation = {
 };
 
 interface ActivityFeedProps {
-  events: Event[];
+  events: EventType[];
   className?: string;
 }
 
@@ -42,7 +42,7 @@ interface ActivityItem {
   color: string;
 }
 
-const processEvent = (event: Event): ActivityItem => {
+const processEvent = (event: EventType): ActivityItem => {
   const getEventIcon = (): LucideIcon => {
     switch (event.eventType) {
       case 'CLICK':

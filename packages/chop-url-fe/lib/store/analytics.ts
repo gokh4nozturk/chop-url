@@ -1,5 +1,12 @@
 import apiClient from '@/lib/api/client';
-import { ClickStats, IUrl, IUrlError, Period, UrlStats } from '@/lib/types';
+import {
+  ClickStats,
+  Event as EventType,
+  IUrl,
+  IUrlError,
+  Period,
+  UrlStats,
+} from '@/lib/types';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
@@ -7,7 +14,7 @@ interface AnalyticsState {
   isLoading: boolean;
   error: Error | IUrlError | null;
   urlStats: Record<string, UrlStats>;
-  events: Event[];
+  events: EventType[];
   clickHistory: ClickStats[];
   period: Period;
   currentUrlId: string | null;
@@ -15,7 +22,7 @@ interface AnalyticsState {
   fetchAnalytics: (shortId: string) => Promise<void>;
   setPeriod: (range: Period) => void;
   reset: () => void;
-  addEvent: (event: Event) => void;
+  addEvent: (event: EventType) => void;
   clearEvents: () => void;
   getUrlStats: (shortId: string, period: Period) => Promise<void>;
   getUrlVisits: (shortId: string, period: Period) => Promise<void>;
