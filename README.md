@@ -1,6 +1,6 @@
 # Chop URL
 
-[![CI/CD](https://github.com/gokh4nozturk/chop-url/actions/workflows/ci.yml/badge.svg)](https://github.com/gokh4nozturk/chop-url/actions/workflows/ci.yml)
+[![CI/CD](https://github.com/gokh4nozturk/chop-url/actions/workflows/ci.yml/badge.svg)](https://github.com/gokh4nozturk/chop-url/actions/workflows/ci.yml)  ![](https://api.checklyhq.com/v1/badges/checks/8dab41ef-69f8-4a6f-8ef4-53d788f0816f?style=flat&theme=default)
 
 A modern, scalable URL shortening service built with serverless architecture using Cloudflare Workers and Vercel.
 
