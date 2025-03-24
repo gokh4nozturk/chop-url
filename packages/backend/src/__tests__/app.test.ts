@@ -1,12 +1,19 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import { Hono } from 'hono';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { IUser } from '../auth/types.js';
 import app from '../index.js';
-import type { Env } from '../index.js';
+import { H } from '../types.js';
 
 type Variables = {
-  user: IUser;
+  user: {
+    id: number;
+    email: string;
+    name: string;
+    isEmailVerified: boolean;
+    isTwoFactorEnabled: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
 };
 
 let shouldSimulateDatabaseError = false;
@@ -43,8 +50,9 @@ interface TestResponse {
   createdAt: string;
 }
 
+// Path resolution issue fixed, now we can run tests
 describe('Backend Service', () => {
-  let testApp: Hono<{ Bindings: Env; Variables: Variables }>;
+  let testApp: Hono<H>;
 
   beforeEach(() => {
     shouldSimulateDatabaseError = false;
@@ -69,7 +77,7 @@ describe('Backend Service', () => {
       DB: mockDb,
       BASE_URL: 'http://localhost:8787',
       ENVIRONMENT: 'test',
-    };
+    } as H['Bindings'];
     const executionCtx = {
       waitUntil: vi.fn(),
       passThroughOnException: vi.fn(),
