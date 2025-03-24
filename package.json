@@ -6,14 +6,14 @@
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "deploy:lib": "cd packages/chop-url-lib && pnpm run build",
-    "deploy:backend": "cd packages/backend && pnpm run deploy",
-    "deploy:redirect": "cd packages/chop-url-redirect && pnpm run deploy",
-    "deploy:frontend": "cd packages/chop-url-fe && pnpm run deploy",
-    "deploy:backend:prod": "cd packages/backend && pnpm run deploy --env production",
-    "deploy:redirect:prod": "cd packages/chop-url-redirect && pnpm run deploy --env production",
-    "deploy:frontend:prod": "cd packages/chop-url-fe && pnpm run deploy --prod",
-    "deploy:all": "pnpm run deploy:lib && pnpm run deploy:backend && pnpm run deploy:redirect && pnpm run deploy:frontend",
-    "deploy:all:prod": "pnpm run deploy:lib && pnpm run deploy:backend:prod && pnpm run deploy:redirect:prod && pnpm run deploy:frontend:prod",
+    "deploy:backend:dev": "cd packages/backend && pnpm run deploy",
+    "deploy:redirect:dev": "cd packages/chop-url-redirect && pnpm run deploy",
+    "deploy:frontend:dev": "cd packages/chop-url-fe && pnpm run deploy",
+    "deploy:backend": "cd packages/backend && pnpm run deploy --env production",
+    "deploy:redirect": "cd packages/chop-url-redirect && pnpm run deploy --env production",
+    "deploy:frontend": "cd packages/chop-url-fe && pnpm run deploy --prod",
+    "deploy:all:dev": "pnpm run deploy:lib && pnpm run deploy:backend && pnpm run deploy:redirect && pnpm run deploy:frontend",
+    "deploy:all": "pnpm run deploy:lib && pnpm run deploy:backend:prod && pnpm run deploy:redirect:prod && pnpm run deploy:frontend:prod",
     "format": "biome format .",
     "format:fix": "biome format --write .",
     "lint": "biome lint .",
@@ -30,10 +30,7 @@
     "lint-staged": "^15.2.2"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "biome format --write",
-      "biome lint --apply"
-    ]
+    "*.{js,jsx,ts,tsx}": ["biome format --write", "biome lint --apply"]
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.750.0",

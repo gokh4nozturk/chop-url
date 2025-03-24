@@ -220,13 +220,13 @@ jobs:
         package: [backend, frontend, redirect]
         include:
           - package: backend
-            deploy_command: deploy:backend
+            deploy_script: deploy:backend
             requires_cloudflare: true
           - package: frontend
-            deploy_command: deploy:frontend
+            deploy_script: deploy:frontend
             requires_vercel: true
           - package: redirect
-            deploy_command: deploy:redirect
+            deploy_script: deploy:redirect
             requires_cloudflare: true
     steps:
       - uses: actions/checkout@v4
@@ -285,7 +285,7 @@ jobs:
         run: echo "Vercel credentials set"
         
       - name: Run deployment
-        run: pnpm ${{ matrix.deploy_command }}
+        run: pnpm run ${{ matrix.deploy_script }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ matrix.requires_cloudflare && secrets.CLOUDFLARE_API_TOKEN || '' }}
           CLOUDFLARE_ACCOUNT_ID: ${{ matrix.requires_cloudflare && secrets.CLOUDFLARE_ACCOUNT_ID || '' }}
