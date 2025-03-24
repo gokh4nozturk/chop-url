@@ -21,7 +21,8 @@
     "db:studio": "drizzle-kit studio",
     "log": "wrangler tail chop-url-backend-production --format pretty",
     "waitlist:list": "tsx scripts/waitlist.ts list",
-    "waitlist:approve": "tsx scripts/waitlist.ts approve"
+    "waitlist:approve": "tsx scripts/waitlist.ts approve",
+    "generate-openapi": "tsx scripts/generate-openapi.ts"
   },
   "keywords": ["url-shortener", "cloudflare-workers", "typescript"],
   "author": "Gokhan Ozturk",

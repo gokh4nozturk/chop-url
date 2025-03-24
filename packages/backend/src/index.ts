@@ -19,7 +19,7 @@ import {
   urlGroupRouter,
 } from '@/url/routes';
 import { WebSocketService } from '@/websocket/service';
-import { OpenAPIHono } from '@hono/zod-openapi';
+import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { apiReference } from '@scalar/hono-api-reference';
 import { cors } from 'hono/cors';
 
@@ -111,9 +111,27 @@ app.doc('/api-docs/openapi.json', {
 });
 
 // Health check endpoint
-app.get('/api/health', (c) => {
-  return c.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+// app.get('/api/health', (c) => {
+//   return c.json({ status: 'ok', timestamp: new Date().toISOString() });
+// });
+
+app.openapi(
+  createRoute({
+    path: '/api/health',
+    method: 'get',
+    summary: 'Health check',
+    description: 'Check if the server is running',
+    tags: ['health'],
+    responses: {
+      200: {
+        description: 'OK',
+      },
+    },
+  }),
+  (c) => {
+    return c.json({ status: 'ok', timestamp: new Date().toISOString() });
+  }
+);
 
 // WebSocket endpoint
 app.get('/ws', async (c) => {
