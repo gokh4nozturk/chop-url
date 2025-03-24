@@ -1,3 +1,4 @@
+import { resolve } from 'path';
 /// <reference types="vitest" />
 import { defineConfig } from 'vitest/config';
 
@@ -8,8 +9,13 @@ export default defineConfig({
     include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text'],
       exclude: ['**/node_modules/**', '**/dist/**', '**/__tests__/**'],
+    },
+  },
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, './src'),
     },
   },
 });

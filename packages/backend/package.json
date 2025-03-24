@@ -6,9 +6,9 @@
   "scripts": {
     "dev": "biome format --write . && wrangler dev src/index.ts --port 8787",
     "test": "vitest run",
-    "test:watch": "vitest watch",
-    "test:coverage": "vitest run --coverage",
-    "deploy": "wrangler deploy --minify src/index.ts",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run",
+    "lint": "biome lint ./src",
     "deploy:prod": "wrangler deploy --minify src/index.ts --env production",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "wrangler d1 migrations apply chop-url-db-local --remote",
