@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/select';
 import { StatCard } from '@/components/ui/stat-card';
 import { useAnalyticsStore } from '@/lib/store/analytics';
-import type { TimeRange } from '@/lib/store/analytics';
+import type { Period } from '@/lib/types';
 import {
   processEvents,
   transformCityData,
@@ -38,9 +38,9 @@ export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
     urlStats,
     events,
     clickHistory,
-    timeRange,
+    period,
     fetchAnalytics,
-    setTimeRange,
+    setPeriod,
   } = useAnalyticsStore();
 
   useEffect(() => {
@@ -63,12 +63,12 @@ export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
   const handleExport = (format: 'csv' | 'json') => {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL;
     window.open(
-      `${baseUrl}/analytics/urls/${shortId}/export?timeRange=${timeRange}&format=${format}`,
+      `${baseUrl}/analytics/urls/${shortId}/export?timeRange=${period}&format=${format}`,
       '_blank'
     );
   };
 
-  const stats = events ? processEvents(events) : null;
+  const stats = events ? processEvents(events as unknown as Event[]) : null;
 
   if (!stats) return null;
 
@@ -105,8 +105,8 @@ export default function ClientAnalytics({ shortId }: ClientAnalyticsProps) {
     <>
       <div className="flex items-center gap-2 justify-end">
         <Select
-          value={timeRange}
-          onValueChange={(value) => setTimeRange(value as TimeRange)}
+          value={period}
+          onValueChange={(value) => setPeriod(value as Period)}
         >
           <SelectTrigger className="w-[140px]">
             <SelectValue placeholder="Select range" />
