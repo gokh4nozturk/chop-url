@@ -1,0 +1,116 @@
+{
+  "siteMeta": {
+    "title": "Chop URL Documentation",
+    "description": "Documentation for Chop URL, a modern, scalable URL shortening service built with serverless architecture."
+  },
+  "publishOnMerge": true,
+  "subdomain": "docs",
+  "customDomain": "docs.chopurl.com",
+  "theme": "default",
+  "guides": [
+    {
+      "name": "Chop URL",
+      "sidebar": [
+        {
+          "path": "docs/README.md",
+          "type": "page"
+        },
+        {
+          "name": "User Guide",
+          "type": "folder",
+          "children": [
+            {
+              "path": "docs/USER_GUIDE.md",
+              "type": "page"
+            },
+            {
+              "name": "Links",
+              "type": "folder",
+              "children": [
+                {
+                  "path": "docs/links/create-links.md",
+                  "type": "page"
+                },
+                {
+                  "path": "docs/links/manage-links.md",
+                  "type": "page"
+                }
+              ]
+            },
+            {
+              "name": "Analytics",
+              "type": "folder",
+              "children": [
+                {
+                  "path": "docs/analytics/overview.md",
+                  "type": "page"
+                },
+                {
+                  "path": "docs/analytics/reports.md",
+                  "type": "page"
+                }
+              ]
+            },
+            {
+              "name": "Authentication",
+              "type": "folder",
+              "children": [
+                {
+                  "path": "docs/auth/overview.md",
+                  "type": "page"
+                },
+                {
+                  "path": "docs/auth/api-keys.md",
+                  "type": "page"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "API Reference",
+          "type": "folder",
+          "children": [
+            {
+              "name": "Backend API",
+              "path": "packages/backend/openapi.json",
+              "type": "reference"
+            },
+            {
+              "name": "Redirect Service",
+              "path": "packages/chop-url-redirect/openapi.json",
+              "type": "reference"
+            }
+          ]
+        },
+        {
+          "name": "Development",
+          "type": "folder",
+          "children": [
+            {
+              "path": "docs/CONTRIBUTING.md",
+              "type": "page"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "url": "packages/backend/openapi.json",
+      "title": "Backend API"
+    },
+    {
+      "url": "packages/chop-url-redirect/openapi.json",
+      "title": "Redirect Service"
+    }
+  ],
+  "siteConfig": {
+    "logo": {
+      "darkMode": "/assets/logo-light.svg",
+      "lightMode": "/assets/logo-dark.svg"
+    },
+    "footer": "© 2024 Chop URL. All rights reserved."
+  }
+}
