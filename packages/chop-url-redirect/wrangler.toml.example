@@ -12,7 +12,10 @@ database_name = "your-database-name"
 database_id = "your-database-id"
 
 [env.production]
-vars = { FRONTEND_URL = "https://your-production-domain.com" }
+name = "chop-url-redirect"
+
+[env.production.vars]
+FRONTEND_URL = "https://your-production-domain.com"
 
 [[env.production.d1_databases]]
 binding = "DB"
