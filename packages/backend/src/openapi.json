@@ -45,10 +45,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "id",
-          "email"
-        ]
+        "required": ["id", "email"]
       },
       "UserProfileResponse": {
         "type": "object",
@@ -57,9 +54,7 @@
             "$ref": "#/components/schemas/User"
           }
         },
-        "required": [
-          "user"
-        ]
+        "required": ["user"]
       },
       "LoginResponse": {
         "type": "object",
@@ -71,10 +66,7 @@
             "$ref": "#/components/schemas/User"
           }
         },
-        "required": [
-          "token",
-          "user"
-        ]
+        "required": ["token", "user"]
       },
       "LoginRequest": {
         "type": "object",
@@ -101,9 +93,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "token"
-        ]
+        "required": ["token"]
       },
       "RegisterRequest": {
         "type": "object",
@@ -123,11 +113,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "email",
-          "password",
-          "confirmPassword"
-        ]
+        "required": ["email", "password", "confirmPassword"]
       },
       "EmailVerificationResponse": {
         "type": "object",
@@ -136,9 +122,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "message"
-        ]
+        "required": ["message"]
       },
       "VerifyEmail": {
         "type": "object",
@@ -147,9 +131,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "token"
-        ]
+        "required": ["token"]
       },
       "ResendVerificationResponse": {
         "type": "object",
@@ -158,9 +140,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "message"
-        ]
+        "required": ["message"]
       },
       "OAuthUrlResponse": {
         "type": "object",
@@ -169,9 +149,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "url"
-        ]
+        "required": ["url"]
       },
       "OAuthCallbackResponse": {
         "type": "object",
@@ -183,10 +161,7 @@
             "$ref": "#/components/schemas/User"
           }
         },
-        "required": [
-          "token",
-          "user"
-        ]
+        "required": ["token", "user"]
       },
       "UpdateProfile": {
         "type": "object",
@@ -214,11 +189,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "currentPassword",
-          "newPassword",
-          "confirmPassword"
-        ]
+        "required": ["currentPassword", "newPassword", "confirmPassword"]
       },
       "WaitlistResponse": {
         "type": "object",
@@ -242,12 +213,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "id",
-          "email",
-          "name",
-          "createdAt"
-        ]
+        "required": ["id", "email", "name", "createdAt"]
       },
       "WaitlistRequestSchema": {
         "type": "object",
@@ -291,12 +257,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "id",
-          "email",
-          "name",
-          "createdAt"
-        ]
+        "required": ["id", "email", "name", "createdAt"]
       },
       "TwoFactorSetupResponse": {
         "type": "object",
@@ -311,10 +272,7 @@
             }
           }
         },
-        "required": [
-          "success",
-          "recoveryCodes"
-        ]
+        "required": ["success", "recoveryCodes"]
       },
       "TwoFactorSetupInitResponse": {
         "type": "object",
@@ -326,10 +284,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "qrCode",
-          "secret"
-        ]
+        "required": ["qrCode", "secret"]
       },
       "RecoveryCodesResponse": {
         "type": "object",
@@ -341,9 +296,7 @@
             }
           }
         },
-        "required": [
-          "recoveryCodes"
-        ]
+        "required": ["recoveryCodes"]
       },
       "TwoFactorLogin": {
         "type": "object",
@@ -357,10 +310,7 @@
             "maxLength": 6
           }
         },
-        "required": [
-          "token",
-          "code"
-        ]
+        "required": ["token", "code"]
       },
       "TwoFactorCode": {
         "type": "object",
@@ -371,9 +321,7 @@
             "maxLength": 6
           }
         },
-        "required": [
-          "code"
-        ]
+        "required": ["code"]
       },
       "UrlResponse": {
         "type": "object",
@@ -444,12 +392,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "id",
-          "name",
-          "userId",
-          "createdAt"
-        ]
+        "required": ["id", "name", "userId", "createdAt"]
       },
       "CreateUrlGroupRequest": {
         "type": "object",
@@ -462,9 +405,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "name"
-        ]
+        "required": ["name"]
       },
       "UpdateUrlGroupRequest": {
         "type": "object",
@@ -488,9 +429,7 @@
             }
           }
         },
-        "required": [
-          "urls"
-        ]
+        "required": ["urls"]
       },
       "SuccessResponse": {
         "type": "object",
@@ -499,9 +438,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "success"
-        ]
+        "required": ["success"]
       },
       "TrackEventSchema": {
         "type": "object",
@@ -514,13 +451,7 @@
           },
           "eventType": {
             "type": "string",
-            "enum": [
-              "REDIRECT",
-              "PAGE_VIEW",
-              "CLICK",
-              "CONVERSION",
-              "CUSTOM"
-            ]
+            "enum": ["REDIRECT", "PAGE_VIEW", "CLICK", "CONVERSION", "CUSTOM"]
           },
           "eventName": {
             "type": "string"
@@ -588,12 +519,7 @@
               },
               "deviceType": {
                 "type": "string",
-                "enum": [
-                  "desktop",
-                  "mobile",
-                  "tablet",
-                  "unknown"
-                ]
+                "enum": ["desktop", "mobile", "tablet", "unknown"]
               }
             },
             "required": [
@@ -649,11 +575,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "urlId",
-          "eventType",
-          "eventName"
-        ]
+        "required": ["urlId", "eventType", "eventName"]
       },
       "CreateCustomEventSchema": {
         "type": "object",
@@ -674,10 +596,7 @@
             }
           }
         },
-        "required": [
-          "userId",
-          "name"
-        ]
+        "required": ["userId", "name"]
       },
       "CustomEventsResponse": {
         "type": "array",
@@ -708,10 +627,7 @@
                     "type": "number"
                   }
                 },
-                "required": [
-                  "name",
-                  "count"
-                ]
+                "required": ["name", "count"]
               }
             },
             "cities": {
@@ -726,10 +642,7 @@
                     "type": "number"
                   }
                 },
-                "required": [
-                  "name",
-                  "count"
-                ]
+                "required": ["name", "count"]
               }
             },
             "regions": {
@@ -744,10 +657,7 @@
                     "type": "number"
                   }
                 },
-                "required": [
-                  "name",
-                  "count"
-                ]
+                "required": ["name", "count"]
               }
             },
             "timezones": {
@@ -762,10 +672,7 @@
                     "type": "number"
                   }
                 },
-                "required": [
-                  "name",
-                  "count"
-                ]
+                "required": ["name", "count"]
               }
             },
             "referrers": {
@@ -780,10 +687,7 @@
                     "type": "number"
                   }
                 },
-                "required": [
-                  "name",
-                  "count"
-                ]
+                "required": ["name", "count"]
               }
             },
             "devices": {
@@ -798,10 +702,7 @@
                     "type": "number"
                   }
                 },
-                "required": [
-                  "name",
-                  "count"
-                ]
+                "required": ["name", "count"]
               }
             },
             "browsers": {
@@ -816,10 +717,7 @@
                     "type": "number"
                   }
                 },
-                "required": [
-                  "name",
-                  "count"
-                ]
+                "required": ["name", "count"]
               }
             },
             "operatingSystems": {
@@ -834,10 +732,7 @@
                     "type": "number"
                   }
                 },
-                "required": [
-                  "name",
-                  "count"
-                ]
+                "required": ["name", "count"]
               }
             },
             "clicksByDate": {
@@ -852,10 +747,7 @@
                     "type": "number"
                   }
                 },
-                "required": [
-                  "date",
-                  "count"
-                ]
+                "required": ["date", "count"]
               }
             }
           },
@@ -895,10 +787,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "cities": {
@@ -913,10 +802,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "regions": {
@@ -931,10 +817,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "timezones": {
@@ -949,10 +832,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "referrers": {
@@ -967,10 +847,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "devices": {
@@ -985,10 +862,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "browsers": {
@@ -1003,10 +877,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "operatingSystems": {
@@ -1021,10 +892,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "name",
-                "count"
-              ]
+              "required": ["name", "count"]
             }
           },
           "clicksByDate": {
@@ -1039,10 +907,7 @@
                   "type": "number"
                 }
               },
-              "required": [
-                "date",
-                "count"
-              ]
+              "required": ["date", "count"]
             }
           }
         },
@@ -1094,12 +959,7 @@
             }
           }
         },
-        "required": [
-          "countries",
-          "cities",
-          "regions",
-          "timezones"
-        ]
+        "required": ["countries", "cities", "regions", "timezones"]
       },
       "DeviceStatsResponse": {
         "type": "object",
@@ -1123,11 +983,7 @@
             }
           }
         },
-        "required": [
-          "browsers",
-          "devices",
-          "operatingSystems"
-        ]
+        "required": ["browsers", "devices", "operatingSystems"]
       },
       "UtmStatsResponse": {
         "type": "object",
@@ -1151,11 +1007,7 @@
             }
           }
         },
-        "required": [
-          "sources",
-          "mediums",
-          "campaigns"
-        ]
+        "required": ["sources", "mediums", "campaigns"]
       },
       "ClickHistoryResponse": {
         "type": "array",
@@ -1169,10 +1021,7 @@
               "type": "number"
             }
           },
-          "required": [
-            "name",
-            "value"
-          ]
+          "required": ["name", "value"]
         }
       },
       "QRCodeResponse": {
@@ -1216,10 +1065,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "urlId",
-          "imageUrl"
-        ]
+        "required": ["urlId", "imageUrl"]
       },
       "UpdateQRCodeSchema": {
         "type": "object",
@@ -1246,9 +1092,7 @@
       "get": {
         "summary": "Health check",
         "description": "Check if the server is running",
-        "tags": [
-          "health"
-        ],
+        "tags": ["health"],
         "responses": {
           "200": {
             "description": "OK"
@@ -1259,9 +1103,7 @@
     "/api/auth/me": {
       "get": {
         "description": "Get current user profile",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "responses": {
           "200": {
             "description": "Current user profile retrieved successfully",
@@ -1293,10 +1135,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -1310,19 +1149,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -1333,9 +1166,7 @@
     "/api/auth/login": {
       "post": {
         "description": "Login with email and password",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1376,10 +1207,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -1393,19 +1221,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -1416,9 +1238,7 @@
     "/api/auth/logout": {
       "post": {
         "description": "Logout current user",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1452,10 +1272,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -1469,19 +1286,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -1492,9 +1303,7 @@
     "/api/auth/register": {
       "post": {
         "description": "Register a new user",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1535,10 +1344,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -1552,19 +1358,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -1575,9 +1375,7 @@
     "/api/auth/email/verify": {
       "post": {
         "description": "Verify email address",
-        "tags": [
-          "Email"
-        ],
+        "tags": ["Email"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1618,10 +1416,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -1635,19 +1430,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -1658,9 +1447,7 @@
     "/api/auth/email/resend-verification": {
       "post": {
         "description": "Resend verification email",
-        "tags": [
-          "Email"
-        ],
+        "tags": ["Email"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1701,10 +1488,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -1718,19 +1502,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -1741,9 +1519,7 @@
     "/api/auth/oauth/:provider": {
       "get": {
         "description": "Initiate OAuth flow",
-        "tags": [
-          "OAuth"
-        ],
+        "tags": ["OAuth"],
         "responses": {
           "200": {
             "description": "OAuth URL",
@@ -1775,10 +1551,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -1792,19 +1565,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -1815,9 +1582,7 @@
     "/api/auth/oauth/:provider/callback": {
       "get": {
         "description": "Handle OAuth callback",
-        "tags": [
-          "OAuth"
-        ],
+        "tags": ["OAuth"],
         "responses": {
           "200": {
             "description": "OAuth callback",
@@ -1849,10 +1614,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -1866,19 +1628,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -1889,9 +1645,7 @@
     "/api/auth/profile": {
       "put": {
         "description": "Update user profile",
-        "tags": [
-          "Profile"
-        ],
+        "tags": ["Profile"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1932,10 +1686,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -1949,19 +1700,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -1972,9 +1717,7 @@
     "/api/auth/profile/password": {
       "put": {
         "description": "Update user password",
-        "tags": [
-          "Profile"
-        ],
+        "tags": ["Profile"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2015,10 +1758,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2032,19 +1772,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2056,9 +1790,7 @@
       "post": {
         "operationId": "joinWaitlist",
         "description": "Join the waitlist",
-        "tags": [
-          "Waitlist"
-        ],
+        "tags": ["Waitlist"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2099,10 +1831,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2116,19 +1845,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2140,9 +1863,7 @@
       "get": {
         "operationId": "getWaitlistEntry",
         "description": "Get waitlist entry",
-        "tags": [
-          "Waitlist"
-        ],
+        "tags": ["Waitlist"],
         "responses": {
           "200": {
             "description": "Waitlist entry retrieved successfully",
@@ -2174,10 +1895,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2191,19 +1909,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2214,9 +1926,7 @@
     "/api/auth/2fa/setup": {
       "post": {
         "description": "Setup 2FA for the user",
-        "tags": [
-          "2FA"
-        ],
+        "tags": ["2FA"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2257,10 +1967,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2274,19 +1981,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2297,9 +1998,7 @@
     "/api/auth/2fa/setup/verify": {
       "post": {
         "description": "Verify 2FA setup",
-        "tags": [
-          "2FA"
-        ],
+        "tags": ["2FA"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2340,10 +2039,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2357,19 +2053,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2380,9 +2070,7 @@
     "/api/auth/2fa/recovery-codes": {
       "get": {
         "description": "Get 2FA recovery codes",
-        "tags": [
-          "2FA"
-        ],
+        "tags": ["2FA"],
         "responses": {
           "200": {
             "description": "2FA recovery codes retrieved successfully",
@@ -2414,10 +2102,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2431,19 +2116,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2454,9 +2133,7 @@
     "/api/auth/2fa/verify": {
       "post": {
         "description": "Verify 2FA code during login",
-        "tags": [
-          "2FA"
-        ],
+        "tags": ["2FA"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2497,10 +2174,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2514,19 +2188,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2537,9 +2205,7 @@
     "/api/auth/2fa/enable": {
       "post": {
         "description": "Enable 2FA for the user",
-        "tags": [
-          "2FA"
-        ],
+        "tags": ["2FA"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2580,10 +2246,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2597,19 +2260,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2620,9 +2277,7 @@
     "/api/auth/2fa/disable": {
       "post": {
         "description": "Disable 2FA for the user",
-        "tags": [
-          "2FA"
-        ],
+        "tags": ["2FA"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2663,10 +2318,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2680,19 +2332,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2703,9 +2349,7 @@
     "/api/urls/shorten": {
       "post": {
         "description": "Create a shortened URL",
-        "tags": [
-          "URL - Shortening"
-        ],
+        "tags": ["URL - Shortening"],
         "responses": {
           "200": {
             "description": "Success",
@@ -2726,18 +2370,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2762,10 +2401,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2779,19 +2415,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2802,9 +2432,7 @@
     "/api/urls/chop": {
       "post": {
         "description": "Create a shortened URL (alternative endpoint)",
-        "tags": [
-          "URL - Shortening"
-        ],
+        "tags": ["URL - Shortening"],
         "responses": {
           "200": {
             "description": "Success",
@@ -2825,18 +2453,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2861,10 +2484,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2878,19 +2498,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2901,9 +2515,7 @@
     "/api/urls/groups/create": {
       "post": {
         "description": "Create a new URL group",
-        "tags": [
-          "URL Groups"
-        ],
+        "tags": ["URL Groups"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2933,18 +2545,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2969,10 +2576,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -2986,18 +2590,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3011,19 +2610,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3034,9 +2627,7 @@
     "/api/urls/groups": {
       "get": {
         "description": "List all URL groups for the authenticated user",
-        "tags": [
-          "URL - Groups"
-        ],
+        "tags": ["URL - Groups"],
         "responses": {
           "200": {
             "description": "URL groups retrieved successfully",
@@ -3060,18 +2651,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3096,10 +2682,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3113,19 +2696,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3136,9 +2713,7 @@
     "/api/urls/groups/:id": {
       "get": {
         "description": "Get a specific URL group by ID",
-        "tags": [
-          "URL - Groups"
-        ],
+        "tags": ["URL - Groups"],
         "responses": {
           "200": {
             "description": "URL group retrieved successfully",
@@ -3159,18 +2734,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3195,10 +2765,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3212,18 +2779,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3237,19 +2799,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3258,9 +2814,7 @@
       },
       "put": {
         "description": "Update a specific URL group by ID",
-        "tags": [
-          "URL - Groups"
-        ],
+        "tags": ["URL - Groups"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -3290,18 +2844,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3326,10 +2875,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3343,18 +2889,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3368,19 +2909,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3389,9 +2924,7 @@
       },
       "delete": {
         "description": "Delete a specific URL group by ID",
-        "tags": [
-          "URL - Groups"
-        ],
+        "tags": ["URL - Groups"],
         "responses": {
           "200": {
             "description": "URL group deleted successfully",
@@ -3404,9 +2937,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "message"
-                  ]
+                  "required": ["message"]
                 }
               }
             }
@@ -3420,18 +2951,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3456,10 +2982,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3473,18 +2996,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3498,19 +3016,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3532,9 +3044,7 @@
             "description": "Short ID of the URL"
           }
         ],
-        "tags": [
-          "URL - Management"
-        ],
+        "tags": ["URL - Management"],
         "responses": {
           "200": {
             "description": "Success",
@@ -3555,18 +3065,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3591,10 +3096,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3608,18 +3110,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3633,19 +3130,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3667,9 +3158,7 @@
             "description": "Short ID of the URL"
           }
         ],
-        "tags": [
-          "URL - Management"
-        ],
+        "tags": ["URL - Management"],
         "responses": {
           "200": {
             "description": "Success",
@@ -3690,18 +3179,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3726,10 +3210,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3743,18 +3224,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3768,19 +3244,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3800,9 +3270,7 @@
             "description": "Short ID of the URL"
           }
         ],
-        "tags": [
-          "URL - Management"
-        ],
+        "tags": ["URL - Management"],
         "responses": {
           "200": {
             "description": "Success",
@@ -3823,18 +3291,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3859,10 +3322,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3876,18 +3336,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3901,19 +3356,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3933,9 +3382,7 @@
             "description": "Short ID of the URL"
           }
         ],
-        "tags": [
-          "URL - Management"
-        ],
+        "tags": ["URL - Management"],
         "responses": {
           "200": {
             "description": "Success",
@@ -3956,18 +3403,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -3992,10 +3434,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4009,18 +3448,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4034,19 +3468,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4057,9 +3485,7 @@
     "/api/analytics/events": {
       "post": {
         "description": "Track an event",
-        "tags": [
-          "Analytics - Tracking"
-        ],
+        "tags": ["Analytics - Tracking"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -4089,18 +3515,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4125,10 +3546,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4142,18 +3560,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4167,19 +3580,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4190,9 +3597,7 @@
     "/api/analytics/custom-events": {
       "post": {
         "description": "Create a custom event",
-        "tags": [
-          "Analytics - Custom Events"
-        ],
+        "tags": ["Analytics - Custom Events"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -4222,18 +3627,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4258,10 +3658,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4275,18 +3672,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4300,19 +3692,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4321,9 +3707,7 @@
       },
       "get": {
         "description": "Get custom events",
-        "tags": [
-          "Analytics - Custom Events"
-        ],
+        "tags": ["Analytics - Custom Events"],
         "responses": {
           "200": {
             "description": "Success",
@@ -4344,18 +3728,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4380,10 +3759,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4397,18 +3773,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4422,19 +3793,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4445,9 +3810,7 @@
     "/api/analytics": {
       "get": {
         "description": "Get analytics",
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "responses": {
           "200": {
             "description": "Success",
@@ -4468,18 +3831,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4504,10 +3862,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4521,18 +3876,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4546,19 +3896,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4569,21 +3913,14 @@
     "/api/analytics/export": {
       "get": {
         "description": "Export analytics data in various formats",
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "parameters": [
           {
             "name": "period",
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "24h",
-                "7d",
-                "30d",
-                "90d"
-              ],
+              "enum": ["24h", "7d", "30d", "90d"],
               "default": "7d"
             },
             "description": "Time period for analytics data: 24h, 7d, 30d, 90d"
@@ -4593,10 +3930,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "json",
-                "csv"
-              ],
+              "enum": ["json", "csv"],
               "default": "json"
             },
             "description": "Export format"
@@ -4628,18 +3962,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4664,10 +3993,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4681,18 +4007,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4706,19 +4027,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4740,9 +4055,7 @@
             "description": "Short ID of the URL"
           }
         ],
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "responses": {
           "200": {
             "description": "Success",
@@ -4763,18 +4076,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4799,10 +4107,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4816,18 +4121,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4841,19 +4141,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4875,9 +4169,7 @@
             "description": "Short ID of the URL"
           }
         ],
-        "tags": [
-          "Analytics"
-        ],
+        "tags": ["Analytics"],
         "responses": {
           "200": {
             "description": "Success",
@@ -4898,18 +4190,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4934,10 +4221,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4951,18 +4235,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -4976,19 +4255,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5010,9 +4283,7 @@
             "description": "Short ID of the URL"
           }
         ],
-        "tags": [
-          "Analytics - URL Detailed Stats"
-        ],
+        "tags": ["Analytics - URL Detailed Stats"],
         "responses": {
           "200": {
             "description": "Success",
@@ -5033,18 +4304,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5069,10 +4335,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5086,18 +4349,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5111,19 +4369,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5145,9 +4397,7 @@
             "description": "Short ID of the URL"
           }
         ],
-        "tags": [
-          "Analytics - URL Detailed Stats"
-        ],
+        "tags": ["Analytics - URL Detailed Stats"],
         "responses": {
           "200": {
             "description": "Success",
@@ -5168,18 +4418,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5204,10 +4449,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5221,18 +4463,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5246,19 +4483,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5280,9 +4511,7 @@
             "description": "Short ID of the URL"
           }
         ],
-        "tags": [
-          "Analytics - URL Detailed Stats"
-        ],
+        "tags": ["Analytics - URL Detailed Stats"],
         "responses": {
           "200": {
             "description": "Success",
@@ -5303,18 +4532,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5339,10 +4563,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5356,18 +4577,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5381,19 +4597,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5415,9 +4625,7 @@
             "description": "Short ID of the URL"
           }
         ],
-        "tags": [
-          "Analytics - URL Detailed Stats"
-        ],
+        "tags": ["Analytics - URL Detailed Stats"],
         "responses": {
           "200": {
             "description": "Success",
@@ -5438,18 +4646,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5474,10 +4677,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5491,18 +4691,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5516,19 +4711,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5539,9 +4728,7 @@
     "/api/storage/generate-presigned-url": {
       "post": {
         "description": "Generate a presigned URL for file upload/download",
-        "tags": [
-          "Storage"
-        ],
+        "tags": ["Storage"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -5554,16 +4741,11 @@
                   },
                   "operation": {
                     "type": "string",
-                    "enum": [
-                      "read",
-                      "write"
-                    ],
+                    "enum": ["read", "write"],
                     "default": "write"
                   }
                 },
-                "required": [
-                  "path"
-                ]
+                "required": ["path"]
               }
             }
           }
@@ -5582,16 +4764,11 @@
                     },
                     "operation": {
                       "type": "string",
-                      "enum": [
-                        "read",
-                        "write"
-                      ],
+                      "enum": ["read", "write"],
                       "default": "write"
                     }
                   },
-                  "required": [
-                    "path"
-                  ]
+                  "required": ["path"]
                 }
               }
             }
@@ -5616,10 +4793,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5633,19 +4807,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5656,9 +4824,7 @@
     "/api/storage/public-url": {
       "get": {
         "description": "Get a public URL for a file",
-        "tags": [
-          "Storage"
-        ],
+        "tags": ["Storage"],
         "responses": {
           "200": {
             "description": "Public URL retrieved successfully",
@@ -5672,9 +4838,7 @@
                       "minLength": 1
                     }
                   },
-                  "required": [
-                    "path"
-                  ]
+                  "required": ["path"]
                 }
               }
             }
@@ -5699,10 +4863,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5716,19 +4877,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5739,9 +4894,7 @@
     "/api/qr": {
       "post": {
         "description": "Create a QR code",
-        "tags": [
-          "QR Codes"
-        ],
+        "tags": ["QR Codes"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -5771,18 +4924,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5807,10 +4955,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5824,18 +4969,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5849,19 +4989,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5872,9 +5006,7 @@
     "/api/qr/:id": {
       "get": {
         "description": "Get a QR code by ID",
-        "tags": [
-          "QR Codes"
-        ],
+        "tags": ["QR Codes"],
         "responses": {
           "200": {
             "description": "QR code retrieved successfully",
@@ -5906,10 +5038,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5923,18 +5052,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5948,19 +5072,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -5969,9 +5087,7 @@
       },
       "put": {
         "description": "Update a QR code by ID",
-        "tags": [
-          "QR Codes"
-        ],
+        "tags": ["QR Codes"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -6012,10 +5128,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6029,18 +5142,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6054,19 +5162,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6077,9 +5179,7 @@
     "/api/qr/:id/download": {
       "post": {
         "description": "Increment download count",
-        "tags": [
-          "QR Codes"
-        ],
+        "tags": ["QR Codes"],
         "responses": {
           "200": {
             "description": "Download count incremented successfully",
@@ -6111,10 +5211,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6128,18 +5225,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6153,19 +5245,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6176,9 +5262,7 @@
     "/api/qr/url/:urlId": {
       "get": {
         "description": "Get QR code by URL ID",
-        "tags": [
-          "QR Codes"
-        ],
+        "tags": ["QR Codes"],
         "responses": {
           "200": {
             "description": "QR code retrieved successfully",
@@ -6210,10 +5294,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6227,18 +5308,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6252,19 +5328,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6275,9 +5345,7 @@
     "/api/admin/waitlist": {
       "get": {
         "description": "Get waitlist users",
-        "tags": [
-          "Admin Waitlist"
-        ],
+        "tags": ["Admin Waitlist"],
         "responses": {
           "200": {
             "description": "Waitlist users retrieved successfully",
@@ -6338,9 +5406,7 @@
                       }
                     }
                   },
-                  "required": [
-                    "waitListUsers"
-                  ]
+                  "required": ["waitListUsers"]
                 }
               }
             }
@@ -6354,18 +5420,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6390,10 +5451,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6407,18 +5465,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6432,19 +5485,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6455,9 +5502,7 @@
     "/api/admin/waitlist/approve": {
       "post": {
         "description": "Approve waitlist user",
-        "tags": [
-          "Admin Waitlist"
-        ],
+        "tags": ["Admin Waitlist"],
         "responses": {
           "200": {
             "description": "Waitlist user approved successfully",
@@ -6473,10 +5518,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "success",
-                    "message"
-                  ]
+                  "required": ["success", "message"]
                 }
               }
             }
@@ -6490,18 +5532,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6526,10 +5563,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6543,18 +5577,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6568,19 +5597,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6591,9 +5614,7 @@
     "/api/admin/feedback": {
       "post": {
         "description": "Submit feedback",
-        "tags": [
-          "Admin Feedback"
-        ],
+        "tags": ["Admin Feedback"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -6602,12 +5623,7 @@
                 "properties": {
                   "category": {
                     "type": "string",
-                    "enum": [
-                      "bug",
-                      "feature",
-                      "improvement",
-                      "other"
-                    ]
+                    "enum": ["bug", "feature", "improvement", "other"]
                   },
                   "title": {
                     "type": "string",
@@ -6621,18 +5637,10 @@
                   },
                   "priority": {
                     "type": "string",
-                    "enum": [
-                      "low",
-                      "medium",
-                      "high"
-                    ]
+                    "enum": ["low", "medium", "high"]
                   }
                 },
-                "required": [
-                  "category",
-                  "title",
-                  "description"
-                ]
+                "required": ["category", "title", "description"]
               }
             }
           }
@@ -6652,9 +5660,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "message"
-                  ]
+                  "required": ["message"]
                 }
               }
             }
@@ -6668,18 +5674,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6704,10 +5705,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6721,19 +5719,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6742,9 +5734,7 @@
       },
       "get": {
         "description": "Get all feedback",
-        "tags": [
-          "Admin Feedback"
-        ],
+        "tags": ["Admin Feedback"],
         "responses": {
           "200": {
             "description": "Feedback retrieved successfully",
@@ -6769,28 +5759,15 @@
                       },
                       "category": {
                         "type": "string",
-                        "enum": [
-                          "bug",
-                          "feature",
-                          "improvement",
-                          "other"
-                        ]
+                        "enum": ["bug", "feature", "improvement", "other"]
                       },
                       "status": {
                         "type": "string",
-                        "enum": [
-                          "open",
-                          "in_progress",
-                          "closed"
-                        ]
+                        "enum": ["open", "in_progress", "closed"]
                       },
                       "priority": {
                         "type": "string",
-                        "enum": [
-                          "low",
-                          "medium",
-                          "high"
-                        ]
+                        "enum": ["low", "medium", "high"]
                       },
                       "createdAt": {
                         "type": "string"
@@ -6835,10 +5812,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6852,19 +5826,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6875,9 +5843,7 @@
     "/api/admin/feedback/:id/status": {
       "patch": {
         "description": "Update feedback status",
-        "tags": [
-          "Admin Feedback"
-        ],
+        "tags": ["Admin Feedback"],
         "responses": {
           "200": {
             "description": "Feedback status updated successfully",
@@ -6893,9 +5859,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "message"
-                  ]
+                  "required": ["message"]
                 }
               }
             }
@@ -6920,10 +5884,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6937,19 +5898,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -6960,9 +5915,7 @@
     "/api/admin/feedback/:id/priority": {
       "patch": {
         "description": "Update feedback priority",
-        "tags": [
-          "Admin Feedback"
-        ],
+        "tags": ["Admin Feedback"],
         "responses": {
           "200": {
             "description": "Feedback priority updated successfully",
@@ -6978,9 +5931,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "message"
-                  ]
+                  "required": ["message"]
                 }
               }
             }
@@ -7005,10 +5956,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -7022,19 +5970,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -7045,9 +5987,7 @@
     "/api/admin/feedback/:id": {
       "delete": {
         "description": "Delete feedback",
-        "tags": [
-          "Admin Feedback"
-        ],
+        "tags": ["Admin Feedback"],
         "responses": {
           "200": {
             "description": "Feedback deleted successfully",
@@ -7063,9 +6003,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "message"
-                  ]
+                  "required": ["message"]
                 }
               }
             }
@@ -7074,9 +6012,7 @@
       },
       "get": {
         "description": "Get feedback by ID  ",
-        "tags": [
-          "Admin Feedback"
-        ],
+        "tags": ["Admin Feedback"],
         "responses": {
           "200": {
             "description": "Feedback retrieved successfully",
@@ -7101,28 +6037,15 @@
                       },
                       "category": {
                         "type": "string",
-                        "enum": [
-                          "bug",
-                          "feature",
-                          "improvement",
-                          "other"
-                        ]
+                        "enum": ["bug", "feature", "improvement", "other"]
                       },
                       "status": {
                         "type": "string",
-                        "enum": [
-                          "open",
-                          "in_progress",
-                          "closed"
-                        ]
+                        "enum": ["open", "in_progress", "closed"]
                       },
                       "priority": {
                         "type": "string",
-                        "enum": [
-                          "low",
-                          "medium",
-                          "high"
-                        ]
+                        "enum": ["low", "medium", "high"]
                       },
                       "createdAt": {
                         "type": "string"
@@ -7167,10 +6090,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -7184,19 +6104,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -7207,9 +6121,7 @@
     "/api/admin/feedback/user/:id": {
       "get": {
         "description": "Get feedback by user ID",
-        "tags": [
-          "Admin Feedback"
-        ],
+        "tags": ["Admin Feedback"],
         "responses": {
           "200": {
             "description": "Feedback retrieved successfully",
@@ -7234,28 +6146,15 @@
                       },
                       "category": {
                         "type": "string",
-                        "enum": [
-                          "bug",
-                          "feature",
-                          "improvement",
-                          "other"
-                        ]
+                        "enum": ["bug", "feature", "improvement", "other"]
                       },
                       "status": {
                         "type": "string",
-                        "enum": [
-                          "open",
-                          "in_progress",
-                          "closed"
-                        ]
+                        "enum": ["open", "in_progress", "closed"]
                       },
                       "priority": {
                         "type": "string",
-                        "enum": [
-                          "low",
-                          "medium",
-                          "high"
-                        ]
+                        "enum": ["low", "medium", "high"]
                       },
                       "createdAt": {
                         "type": "string"
@@ -7289,18 +6188,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "BAD_REQUEST"
-                      ]
+                      "enum": ["BAD_REQUEST"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -7325,10 +6219,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -7342,18 +6233,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "RESOURCE_NOT_FOUND"
-                      ]
+                      "enum": ["RESOURCE_NOT_FOUND"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
@@ -7367,19 +6253,13 @@
                   "properties": {
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR",
-                        "DATABASE_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR", "DATABASE_ERROR"]
                     },
                     "message": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "code",
-                    "message"
-                  ]
+                  "required": ["code", "message"]
                 }
               }
             }
