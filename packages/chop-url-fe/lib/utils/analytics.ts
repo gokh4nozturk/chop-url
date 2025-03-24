@@ -1,9 +1,4 @@
-import type {
-  DeviceInfo,
-  Event,
-  EventProperties,
-  GeoInfo,
-} from '@/lib/store/analytics';
+import type { DeviceInfo, Event, EventProperties, GeoInfo } from '@/lib/types';
 
 // Safe JSON parse utility
 export const safeJsonParse = <T>(
