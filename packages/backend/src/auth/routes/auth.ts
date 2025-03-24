@@ -71,6 +71,35 @@ authRouter.openapi(
 authRouter.openapi(
   createRoute({
     method: 'post',
+    path: '/logout',
+    description: 'Logout current user',
+    tags: ['Auth'],
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: authSchemas.logout,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Logout successful',
+      },
+      ...errorResponseSchemas.serverError,
+      ...errorResponseSchemas.authError,
+    },
+  }),
+  // @ts-ignore
+  (c) => {
+    return authHandlers.logout(c);
+  }
+);
+
+authRouter.openapi(
+  createRoute({
+    method: 'post',
     path: '/register',
     description: 'Register a new user',
     tags: ['Auth'],

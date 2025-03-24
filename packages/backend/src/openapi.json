@@ -94,6 +94,17 @@
           }
         }
       },
+      "Logout": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
       "RegisterRequest": {
         "type": "object",
         "properties": {
@@ -1344,6 +1355,82 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "UNAUTHORIZED",
+                        "INVALID_TOKEN",
+                        "NO_TOKEN",
+                        "EXPIRED_TOKEN"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "INTERNAL_SERVER_ERROR",
+                        "DATABASE_ERROR"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "description": "Logout current user",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Logout"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logout successful"
           },
           "401": {
             "description": "Unauthorized",

@@ -252,11 +252,18 @@ export const authValidationErrorSchema = z
   })
   .openapi('AuthValidationErrorSchema');
 
+const logout = z
+  .object({
+    token: z.string(),
+  })
+  .openapi('Logout');
+
 // Export all schemas
 export const authSchemas = {
   user,
   login,
   loginResponse,
+  logout,
   register,
   twoFactorCode,
   twoFactorLogin,

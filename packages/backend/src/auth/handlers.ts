@@ -42,6 +42,13 @@ export const authHandlers = {
     return c.json(response);
   },
 
+  logout: async (c: Context) => {
+    const service = createAuthService(c);
+    const { token } = await c.req.json<z.infer<typeof authSchemas.logout>>();
+    await service.logout(token);
+    return c.json({ message: 'Logout successful' });
+  },
+
   register: async (c: Context) => {
     const service = createAuthService(c);
     const data = await c.req.json<z.infer<typeof authSchemas.register>>();

@@ -284,6 +284,10 @@ export class AuthService {
     };
   }
 
+  async logout(token: string): Promise<void> {
+    await this.db.delete(sessions).where(eq(sessions.token, token)).run();
+  }
+
   async verifySession(token: string): Promise<IUser | null> {
     // Find session
     const session = await this.db
