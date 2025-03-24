@@ -3,6 +3,7 @@
 import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';
+import { fileURLToPath } from 'url';
 import { program } from 'commander';
 
 // Configuration
@@ -163,6 +164,9 @@ function deployPackage(packageName, env, options = {}) {
   }
 }
 
+// Filter out any '--' argument which might be passed when script is called from npm
+const args = process.argv.filter((arg) => arg !== '--');
+
 // Initialize CLI
 program
   .name('deploy')
@@ -171,13 +175,8 @@ program
 
 // Add deploy command
 program
-  .command('run')
+  .command('run [package]')
   .description('Deploy one or all packages')
-  .argument(
-    '[package]',
-    'Package to deploy (lib, backend, redirect, frontend, or all)',
-    'all'
-  )
   .option(
     '-e, --environment <env>',
     'Deployment environment (dev or prod)',
@@ -186,6 +185,8 @@ program
   .option('--skip-lib', 'Skip building the library package', false)
   .option('--skip-validation', 'Skip environment validation', false)
   .action((packageName, options) => {
+    // Set default package name to 'all' if not provided
+    const pkgName = packageName || 'all';
     const env = options.environment;
     const skipValidation = options.skipValidation || CI_MODE;
 
@@ -194,20 +195,20 @@ program
     );
 
     // Display the deployment plan
-    if (packageName === 'all') {
+    if (pkgName === 'all') {
       logger.info('Deployment plan:');
       if (!options.skipLib) logger.info('  1. Build library package');
       logger.info(`  ${!options.skipLib ? '2' : '1'}. Deploy backend package`);
       logger.info(`  ${!options.skipLib ? '3' : '2'}. Deploy redirect package`);
       logger.info(`  ${!options.skipLib ? '4' : '3'}. Deploy frontend package`);
     } else {
-      logger.info(`Deploying package: ${packageName}`);
+      logger.info(`Deploying package: ${pkgName}`);
     }
 
     // Always build lib first if deploying backend, redirect, frontend or all
     // unless --skip-lib flag is set
-    if (!options.skipLib && (packageName === 'all' || packageName !== 'lib')) {
-      logger.step(1, packageName === 'all' ? 4 : 2, 'Building library package');
+    if (!options.skipLib && (pkgName === 'all' || pkgName !== 'lib')) {
+      logger.step(1, pkgName === 'all' ? 4 : 2, 'Building library package');
       const libSuccess = deployPackage('lib', 'build', { skipValidation });
       if (!libSuccess) {
         logger.error('Library build failed, stopping deployment');
@@ -215,7 +216,7 @@ program
       }
     }
 
-    if (packageName === 'all') {
+    if (pkgName === 'all') {
       // Deploy all packages in the correct order
       const stepOffset = options.skipLib ? 0 : 1;
 
@@ -243,14 +244,14 @@ program
         logger.error('Frontend deployment failed');
         process.exit(1);
       }
-    } else if (packages[packageName]) {
+    } else if (packages[pkgName]) {
       // Deploy specific package
-      const success = deployPackage(packageName, env, { skipValidation });
+      const success = deployPackage(pkgName, env, { skipValidation });
       if (!success && env === 'prod') {
         process.exit(1);
       }
     } else {
-      logger.error(`Unknown package "${packageName}"`);
+      logger.error(`Unknown package "${pkgName}"`);
       logger.info('Available packages: lib, backend, redirect, frontend, all');
       process.exit(1);
     }
@@ -258,13 +259,5 @@ program
     logger.success('Deployment completed successfully!');
   });
 
-// Parse command-line arguments or export functions for testing
-if (require.main === module) {
-  program.parse(process.argv);
-} else {
-  module.exports = {
-    deployPackage,
-    validateEnvironment,
-    validatePackagePath,
-  };
-}
+// Execute the program
+program.parse(args);

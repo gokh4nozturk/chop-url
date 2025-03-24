@@ -1,6 +1,7 @@
 {
   "name": "chop-url",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "pnpm -r dev",
     "build": "pnpm -r build",
