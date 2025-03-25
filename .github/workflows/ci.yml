@@ -50,6 +50,9 @@ jobs:
       - name: Check formatting
         run: pnpm format
 
+      - name: mado-action
+        uses: akiomik/mado@v0.2.2
+
   build-lib:
     runs-on: ubuntu-latest
     steps:
