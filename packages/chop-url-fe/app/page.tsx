@@ -131,7 +131,7 @@ export default function Home() {
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/shorten`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/chop`,
         {
           method: 'POST',
           headers: {
