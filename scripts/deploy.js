@@ -135,20 +135,9 @@ function readWranglerConfig(packagePath, env) {
     const wranglerPath = join(process.cwd(), packagePath, 'wrangler.toml');
 
     if (existsSync(wranglerPath)) {
-      const wranglerContent = readFileSync(wranglerPath, 'utf8');
-      const config = parseToml(wranglerContent);
-
-      // Get configuration for the specific environment or use default
-      const envConfig =
-        env === 'prod' && config.env && config.env.production
-          ? config.env.production
-          : config;
-
-      // We'll only use the account ID, not the API token to use wrangler's login
-      return {
-        CLOUDFLARE_ACCOUNT_ID:
-          envConfig.vars?.ACCOUNT_ID || config.vars?.ACCOUNT_ID,
-      };
+      // Artık sadece wrangler.toml'un var olup olmadığını kontrol ediyoruz
+      // API token veya account ID'yi çıkarmaya gerek yok
+      return {}; // Boş bir obje dönüyoruz çünkü artık değer döndürmek zorunda değiliz
     }
   } catch (error) {
     logger.debug(`Failed to read wrangler.toml: ${error.message}`);
@@ -174,7 +163,7 @@ const packages = {
       dev: 'pnpm run dev',
       prod: 'pnpm run deploy:prod',
     },
-    requiredEnvVars: ['CLOUDFLARE_ACCOUNT_ID'],
+    requiredEnvVars: [],
     configReader: readWranglerConfig,
   },
   redirect: {
@@ -182,9 +171,9 @@ const packages = {
     path: 'packages/chop-url-redirect',
     commands: {
       dev: 'pnpm run dev',
-      prod: 'pnpm run deploy --env production',
+      prod: 'pnpm run deploy:prod',
     },
-    requiredEnvVars: ['CLOUDFLARE_ACCOUNT_ID'],
+    requiredEnvVars: [],
     configReader: readWranglerConfig,
   },
   frontend: {
@@ -230,32 +219,8 @@ function validateEnvironment(packageName, env, skipValidation = false) {
     return false;
   }
 
-  // Skip environment variable validation for 'dev' environment or if skipValidation is true
-  if (env === 'dev' || skipValidation) return true;
-
-  // Try to read config from config files if available
-  if (pkg.configReader) {
-    const configValues = pkg.configReader(pkg.path, env);
-
-    // Temporarily add the config values to process.env
-    for (const [key, value] of Object.entries(configValues)) {
-      if (value) process.env[key] = value;
-    }
-  }
-
-  // Check if any required environment variables are missing
-  const missingEnvVars = pkg.requiredEnvVars.filter(
-    (envVar) => !process.env[envVar]
-  );
-
-  if (missingEnvVars.length > 0) {
-    logger.error(`Missing required environment variables for ${pkg.name}:`);
-    for (const envVar of missingEnvVars) {
-      logger.error(`  - ${envVar}`);
-    }
-    return false;
-  }
-
+  // Artık ortam değişkeni kontrolü yapmaya gerek yok
+  // Her servis kendi CLI aracıyla login olacak
   return true;
 }
 
