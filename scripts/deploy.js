@@ -257,6 +257,51 @@ function deployPackage(packageName, env, options = {}) {
 
   logger.info(`Deploying ${pkg.name}...`);
 
+  // For Vercel deployments, ensure token is present
+  if (packageName === 'frontend' && env === 'prod') {
+    // Debug environment variables
+    logger.debug(`VERCEL_TOKEN exists: ${Boolean(process.env.VERCEL_TOKEN)}`);
+    logger.debug(`VERCEL_ORG_ID: ${process.env.VERCEL_ORG_ID}`);
+    logger.debug(`VERCEL_PROJECT_ID: ${process.env.VERCEL_PROJECT_ID}`);
+
+    // Create .vercel/project.json if needed for CI
+    if (CI_MODE && process.env.VERCEL_ORG_ID && process.env.VERCEL_PROJECT_ID) {
+      try {
+        const projectJsonPath = join(process.cwd(), pkg.path, '.vercel');
+        if (!existsSync(projectJsonPath)) {
+          execSync(`mkdir -p ${projectJsonPath}`, { stdio: 'pipe' });
+        }
+
+        const projectJson = {
+          orgId: process.env.VERCEL_ORG_ID,
+          projectId: process.env.VERCEL_PROJECT_ID,
+        };
+
+        const projectJsonFilePath = join(projectJsonPath, 'project.json');
+
+        // Only write if file doesn't exist or content is different
+        if (!existsSync(projectJsonFilePath)) {
+          logger.info('Creating project.json file for Vercel deployment');
+          execSync(
+            `echo '${JSON.stringify(projectJson)}' > ${projectJsonFilePath}`,
+            { stdio: 'pipe' }
+          );
+        }
+      } catch (error) {
+        logger.warn(`Failed to create project.json: ${error.message}`);
+      }
+    }
+
+    if (!process.env.VERCEL_TOKEN) {
+      logger.error(
+        'VERCEL_TOKEN environment variable is required for Vercel deployments'
+      );
+      if (CI_MODE) {
+        return false;
+      }
+    }
+  }
+
   try {
     logger.debug(`> cd ${pkg.path} && ${command}`);
     execSync(`cd ${pkg.path} && ${command}`, {
