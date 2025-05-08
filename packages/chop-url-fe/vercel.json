@@ -3,6 +3,7 @@
   "buildCommand": "pnpm run build",
   "installCommand": "pnpm install",
   "framework": "nextjs",
+  "outputDirectory": ".next",
   "builds": [
     {
       "src": "package.json",
