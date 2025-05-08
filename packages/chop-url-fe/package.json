@@ -9,8 +9,8 @@
     "lint": "next lint",
     "clean": "rm -rf .next/cache",
     "prepare-vercel": "node scripts/prepare-vercel.js",
-    "deploy": "pnpm run clean && pnpm run prepare-vercel && vercel --token ${VERCEL_TOKEN}",
-    "deploy:prod": "pnpm run clean && pnpm run prepare-vercel && vercel --prod --token ${VERCEL_TOKEN}",
+    "deploy": "pnpm run clean && pnpm run prepare-vercel && vercel",
+    "deploy:prod": "pnpm run clean && pnpm run prepare-vercel && vercel --prod",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage"

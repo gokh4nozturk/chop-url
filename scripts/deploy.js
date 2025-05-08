@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { execSync } from 'child_process';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { program } from 'commander';
@@ -33,6 +33,130 @@ const colors = CI_MODE
       dim: '\x1b[2m',
     };
 
+// Helper function to parse TOML files
+function parseToml(content) {
+  // Very basic TOML parser for our needs
+  const result = {};
+  const lines = content.split('\n');
+  let currentSection = result;
+  let currentSectionName = '';
+
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+
+    // Skip comments and empty lines
+    if (trimmedLine === '' || trimmedLine.startsWith('#')) continue;
+
+    // Section headers [section] or [[section]]
+    if (trimmedLine.startsWith('[') && trimmedLine.endsWith(']')) {
+      const sectionName = trimmedLine.replace(/\[|\]/g, '').trim();
+
+      // Handle nested sections like [env.production]
+      if (sectionName.includes('.')) {
+        const parts = sectionName.split('.');
+        let current = result;
+
+        for (let i = 0; i < parts.length; i++) {
+          const part = parts[i];
+          if (i === parts.length - 1) {
+            current[part] = current[part] || {};
+            currentSection = current[part];
+            currentSectionName = sectionName;
+          } else {
+            current[part] = current[part] || {};
+            current = current[part];
+          }
+        }
+      } else {
+        result[sectionName] = result[sectionName] || {};
+        currentSection = result[sectionName];
+        currentSectionName = sectionName;
+      }
+      continue;
+    }
+
+    // Key-value pairs
+    if (trimmedLine.includes('=')) {
+      const [key, ...valueParts] = trimmedLine.split('=');
+      const trimmedKey = key.trim();
+      const value = valueParts.join('=').trim();
+
+      // Handle string values (remove quotes)
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        currentSection[trimmedKey] = value.slice(1, -1);
+      }
+      // Handle boolean values
+      else if (value === 'true' || value === 'false') {
+        currentSection[trimmedKey] = value === 'true';
+      }
+      // Handle numeric values
+      else if (!Number.isNaN(Number(value))) {
+        currentSection[trimmedKey] = Number(value);
+      }
+      // Default to string
+      else {
+        currentSection[trimmedKey] = value;
+      }
+    }
+  }
+
+  return result;
+}
+
+// Function to read Vercel project configuration
+function readVercelConfig(packagePath) {
+  try {
+    const projectJsonPath = join(
+      process.cwd(),
+      packagePath,
+      '.vercel/project.json'
+    );
+
+    if (existsSync(projectJsonPath)) {
+      const projectJson = JSON.parse(readFileSync(projectJsonPath, 'utf8'));
+      return {
+        VERCEL_ORG_ID: projectJson.orgId,
+        VERCEL_PROJECT_ID: projectJson.projectId,
+      };
+    }
+  } catch (error) {
+    logger.debug(`Failed to read Vercel config: ${error.message}`);
+  }
+
+  return {};
+}
+
+// Function to read Cloudflare configuration from wrangler.toml
+function readWranglerConfig(packagePath, env) {
+  try {
+    const wranglerPath = join(process.cwd(), packagePath, 'wrangler.toml');
+
+    if (existsSync(wranglerPath)) {
+      const wranglerContent = readFileSync(wranglerPath, 'utf8');
+      const config = parseToml(wranglerContent);
+
+      // Get configuration for the specific environment or use default
+      const envConfig =
+        env === 'prod' && config.env && config.env.production
+          ? config.env.production
+          : config;
+
+      // We'll only use the account ID, not the API token to use wrangler's login
+      return {
+        CLOUDFLARE_ACCOUNT_ID:
+          envConfig.vars?.ACCOUNT_ID || config.vars?.ACCOUNT_ID,
+      };
+    }
+  } catch (error) {
+    logger.debug(`Failed to read wrangler.toml: ${error.message}`);
+  }
+
+  return {};
+}
+
 // Define packages and their deploy commands
 const packages = {
   lib: {
@@ -50,7 +174,8 @@ const packages = {
       dev: 'pnpm run dev',
       prod: 'pnpm run deploy:prod',
     },
-    requiredEnvVars: ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID'],
+    requiredEnvVars: ['CLOUDFLARE_ACCOUNT_ID'],
+    configReader: readWranglerConfig,
   },
   redirect: {
     name: 'Redirect Service',
@@ -59,7 +184,8 @@ const packages = {
       dev: 'pnpm run dev',
       prod: 'pnpm run deploy --env production',
     },
-    requiredEnvVars: ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID'],
+    requiredEnvVars: ['CLOUDFLARE_ACCOUNT_ID'],
+    configReader: readWranglerConfig,
   },
   frontend: {
     name: 'Frontend App',
@@ -68,7 +194,8 @@ const packages = {
       dev: 'pnpm run dev',
       prod: 'pnpm run deploy --prod',
     },
-    requiredEnvVars: ['VERCEL_TOKEN', 'VERCEL_ORG_ID', 'VERCEL_PROJECT_ID'],
+    requiredEnvVars: [],
+    configReader: readVercelConfig,
   },
 };
 
@@ -85,7 +212,7 @@ const logger = {
     console.log(`${colors.cyan}[${step}/${total}] ${colors.reset}${message}`),
 };
 
-function validateEnvironment(packageName, env) {
+function validateEnvironment(packageName, env, skipValidation = false) {
   const pkg = packages[packageName];
 
   if (!pkg) {
@@ -93,13 +220,28 @@ function validateEnvironment(packageName, env) {
     return false;
   }
 
+  // Special case for library package which uses 'build' instead of 'dev' or 'prod'
+  if (packageName === 'lib' && env === 'build') {
+    return true;
+  }
+
   if (env !== 'dev' && env !== 'prod') {
     logger.error(`Invalid environment: ${env}. Must be 'dev' or 'prod'`);
     return false;
   }
 
-  // Skip environment variable validation for 'dev' environment
-  if (env === 'dev') return true;
+  // Skip environment variable validation for 'dev' environment or if skipValidation is true
+  if (env === 'dev' || skipValidation) return true;
+
+  // Try to read config from config files if available
+  if (pkg.configReader) {
+    const configValues = pkg.configReader(pkg.path, env);
+
+    // Temporarily add the config values to process.env
+    for (const [key, value] of Object.entries(configValues)) {
+      if (value) process.env[key] = value;
+    }
+  }
 
   // Check if any required environment variables are missing
   const missingEnvVars = pkg.requiredEnvVars.filter(
@@ -132,17 +274,20 @@ function validatePackagePath(pkg) {
 function deployPackage(packageName, env, options = {}) {
   const { skipValidation = false } = options;
   const pkg = packages[packageName];
+
+  // Handle special case for lib package which uses 'build' command
   const commandKey = packageName === 'lib' ? 'build' : env;
   const command = pkg.commands[commandKey];
 
   if (!command) {
-    logger.error(`No ${env} command defined for ${pkg.name}`);
+    logger.error(`No ${commandKey} command defined for ${pkg.name}`);
     return false;
   }
 
   if (!skipValidation) {
     if (!validatePackagePath(pkg)) return false;
-    if (!validateEnvironment(packageName, env)) return false;
+    if (!validateEnvironment(packageName, commandKey, skipValidation))
+      return false;
   }
 
   logger.info(`Deploying ${pkg.name}...`);
