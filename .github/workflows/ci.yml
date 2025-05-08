@@ -452,7 +452,7 @@ jobs:
         run: echo "Vercel credentials set"
         
       - name: Run deployment
-        run: pnpm dlx vercel deploy --token ${{ secrets.VERCEL_TOKEN }} --org-id ${{ secrets.VERCEL_ORG_ID }} --project-id ${{ secrets.VERCEL_PROJECT_ID }}
+        run: pnpm dlx vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --yes
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
