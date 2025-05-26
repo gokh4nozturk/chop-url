@@ -150,7 +150,7 @@ export const authHandlers = {
       throw new Error('Email service configuration error');
     }
     const user = c.get('user');
-    await service.resendVerificationEmail(user.id);
+    await service.resendVerificationEmail(user);
     return c.json({ message: 'Verification email sent successfully' });
   },
 

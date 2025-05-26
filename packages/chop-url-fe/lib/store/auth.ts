@@ -15,10 +15,7 @@ interface WaitListInput {
 
 interface AuthActions {
   getUser: () => Promise<void>;
-  updateProfile: (data: {
-    email: string;
-    name: string;
-  }) => Promise<void>;
+  updateProfile: (data: { email: string; name: string }) => Promise<void>;
   updatePassword: (data: {
     currentPassword: string;
     newPassword: string;
@@ -209,10 +206,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         }
       },
 
-      updateProfile: async (data: {
-        email: string;
-        name: string;
-      }) => {
+      updateProfile: async (data: { email: string; name: string }) => {
         try {
           const response = await apiClient.put('/auth/profile', data);
 
@@ -346,9 +340,23 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       verifyEmail: async (token: string) => {
         try {
           set({ isLoading: true, error: null });
-          const response = await apiClient.post('/auth/email/verify', {
+          // Get userId from URL search params
+          const searchParams = new URLSearchParams(window.location.search);
+          const userId = searchParams.get('userId');
+
+          if (!token) {
+            throw new Error('Verification token is missing');
+          }
+
+          if (!userId) {
+            throw new Error('User ID is missing from the verification link');
+          }
+
+          await apiClient.post('/auth/email/verify', {
             token,
+            userId: parseInt(userId, 10),
           });
+
           const user = get().user;
           if (user) {
             set({ user: { ...user, isEmailVerified: true } });
@@ -368,9 +376,15 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 
       resendVerificationEmail: async () => {
         try {
+          const user = get().user;
+          if (!user || !user.email) {
+            throw new Error('User email not available');
+          }
+
           await apiClient.post('/auth/email/resend-verification');
         } catch (error) {
           console.error('Resend verification email error:', error);
+          throw error;
         }
       },
 

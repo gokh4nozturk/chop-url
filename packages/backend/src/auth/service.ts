@@ -920,66 +920,11 @@ export class AuthService {
   }
 
   async verifyEmail(token: string, userId: number): Promise<void> {
-    // Check rate limit
-    await this.checkRateLimit(
-      userId,
-      'system',
-      AuthAttemptType.EMAIL_VERIFICATION
-    );
-
-    // Get and verify token
-    const verificationRecord = await this.db
-      .select()
-      .from(emailVerifications)
-      .where(
-        and(
-          eq(emailVerifications.userId, userId),
-          eq(emailVerifications.token, token),
-          eq(emailVerifications.isUsed, false)
-        )
-      )
-      .get();
-
-    if (!verificationRecord) {
-      throw new AuthError(
-        AuthErrorCode.INVALID_TOKEN,
-        'Invalid or expired verification token'
-      );
-    }
-
-    if (new Date(verificationRecord.expiresAt) < new Date()) {
-      throw new AuthError(
-        AuthErrorCode.INVALID_TOKEN,
-        'Verification token has expired'
-      );
-    }
-
-    // Mark token as used and verify email
-    await this.db
-      .update(emailVerifications)
-      .set(withSchema({ isUsed: true }))
-      .where(eq(emailVerifications.id, verificationRecord.id))
-      .run();
-
-    await this.db
-      .update(users)
-      .set(withSchema({ isEmailVerified: true }))
-      .where(eq(users.id, userId))
-      .run();
-
-    // Record successful attempt
-    await this.recordAuthAttempt(
-      userId,
-      'system',
-      AuthAttemptType.EMAIL_VERIFICATION,
-      true,
-      token
-    );
-  }
-
-  async resendVerificationEmail(userId: number): Promise<void> {
     try {
-      console.log('Starting resendVerificationEmail for userId:', userId);
+      console.log('Starting verifyEmail for token and userId:', {
+        token,
+        userId,
+      });
 
       // Check rate limit
       await this.checkRateLimit(
@@ -987,12 +932,66 @@ export class AuthService {
         'system',
         AuthAttemptType.EMAIL_VERIFICATION
       );
-      console.log('Rate limit check passed');
 
-      await this.sendVerificationEmail(userId);
-      console.log('Email sent successfully');
+      // Get and verify token
+      const verificationRecord = await this.db
+        .select()
+        .from(emailVerifications)
+        .where(
+          and(
+            eq(emailVerifications.userId, userId),
+            eq(emailVerifications.token, token),
+            eq(emailVerifications.isUsed, false)
+          )
+        )
+        .get();
+
+      console.log('Found verification record:', verificationRecord);
+
+      if (!verificationRecord) {
+        throw new AuthError(
+          AuthErrorCode.INVALID_TOKEN,
+          'Invalid or expired verification token'
+        );
+      }
+
+      if (new Date(verificationRecord.expiresAt) < new Date()) {
+        throw new AuthError(
+          AuthErrorCode.INVALID_TOKEN,
+          'Verification token has expired'
+        );
+      }
+
+      // Mark token as used and verify email
+      await this.db
+        .update(emailVerifications)
+        .set(withSchema({ isUsed: true }))
+        .where(eq(emailVerifications.id, verificationRecord.id))
+        .run();
+
+      console.log('Token marked as used');
+
+      await this.db
+        .update(users)
+        .set(withSchema({ isEmailVerified: true }))
+        .where(eq(users.id, userId))
+        .run();
+
+      console.log('User email marked as verified');
+
+      // Record successful attempt
+      await this.recordAuthAttempt(
+        userId,
+        'system',
+        AuthAttemptType.EMAIL_VERIFICATION,
+        true,
+        token
+      );
+
+      console.log('Email verification completed successfully');
     } catch (error) {
-      console.error('Error in resendVerificationEmail:', {
+      console.error('Error in verifyEmail:', {
+        token,
         userId,
         error: error instanceof Error ? error.message : error,
         stack: error instanceof Error ? error.stack : undefined,
@@ -1001,25 +1000,53 @@ export class AuthService {
     }
   }
 
-  private async sendVerificationEmail(userId: number): Promise<void> {
+  async resendVerificationEmail(user: IUser): Promise<void> {
     try {
-      console.log('Starting sendVerificationEmail for userId:', userId);
+      console.log('Starting resendVerificationEmail for userId:', user.id);
 
-      // Get user
-      const user = await this.db
-        .select({ email: users.email, name: users.name })
-        .from(users)
-        .where(eq(users.id, userId))
-        .get();
+      // Check rate limit
+      await this.checkRateLimit(
+        user.id,
+        'system',
+        AuthAttemptType.EMAIL_VERIFICATION
+      );
+      console.log('Rate limit check passed');
 
-      console.log('User query result:', user);
+      await this.sendVerificationEmail(user);
+      console.log('Email sent successfully');
+    } catch (error) {
+      console.error('Error in resendVerificationEmail:', {
+        userId: user.id,
+        error: error instanceof Error ? error.message : error,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      throw error;
+    }
+  }
+
+  private async sendVerificationEmail(user: IUser): Promise<void> {
+    try {
+      console.log('Starting sendVerificationEmail for userId:', user.id);
 
       if (!user) {
         throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found');
       }
 
-      // Generate verification token
-      const token = await this.createEmailVerification(userId);
+      // First, delete any existing unused verification tokens for this user
+      await this.db
+        .delete(emailVerifications)
+        .where(
+          and(
+            eq(emailVerifications.userId, user.id),
+            eq(emailVerifications.isUsed, false)
+          )
+        )
+        .run();
+
+      console.log('Cleared existing verification tokens');
+
+      // Generate a new verification token
+      const token = crypto.randomUUID();
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24);
 
@@ -1030,7 +1057,7 @@ export class AuthService {
         .insert(emailVerifications)
         .values(
           withSchema({
-            userId,
+            userId: user.id,
             token,
             expiresAt: expiresAt.toISOString(),
           })
@@ -1039,13 +1066,13 @@ export class AuthService {
 
       console.log('Token saved to database');
 
-      // Create verification link
-      const verificationLink = `${this.config.frontendUrl}/auth/verify-email?token=${token}&userId=${userId}`;
+      // Create verification link - ensure userId is included
+      const verificationLink = `${this.config.frontendUrl}/auth/verify-email?token=${token}&userId=${user.id}`;
       console.log('Generated verification link:', verificationLink);
 
       // Send email
       await this.emailService.sendVerificationEmail(
-        { email: user.email, name: user.name, id: userId },
+        { email: user.email, name: user.name, id: user.id },
         token,
         this.config.frontendUrl
       );
@@ -1053,7 +1080,7 @@ export class AuthService {
 
       // Record attempt
       await this.recordAuthAttempt(
-        userId,
+        user.id,
         'system',
         AuthAttemptType.EMAIL_VERIFICATION,
         true,
@@ -1062,7 +1089,7 @@ export class AuthService {
       console.log('Auth attempt recorded');
     } catch (error) {
       console.error('Error in sendVerificationEmail:', {
-        userId,
+        userId: user.id,
         error: error instanceof Error ? error.message : error,
         stack: error instanceof Error ? error.stack : undefined,
       });
@@ -1071,21 +1098,9 @@ export class AuthService {
   }
 
   private async createEmailVerification(userId: number): Promise<string> {
-    const token = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-    await this.db
-      .insert(emailVerifications)
-      .values(
-        withSchema({
-          userId,
-          token,
-          expiresAt: expiresAt.toISOString(),
-        })
-      )
-      .run();
-
-    return token;
+    // This method is deprecated and no longer used
+    // We handle token creation directly in sendVerificationEmail
+    return crypto.randomUUID();
   }
 
   async getOAuthUrl(provider: OAuthProvider): Promise<string> {

@@ -56,8 +56,8 @@ emailRouter.openapi(
         content: {
           'application/json': {
             schema: z
-              .object({ message: z.string() })
-              .openapi('ResendVerificationResponse'),
+              .object({ email: z.string().email() })
+              .openapi('ResendVerificationRequest'),
           },
         },
       },
