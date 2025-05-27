@@ -12,16 +12,15 @@ import {
 } from '@/components/ui/select';
 import { StatCard } from '@/components/ui/stat-card';
 import apiClient from '@/lib/api/client';
+import { cn } from '@/lib/utils';
 import { transformDataForPieChart } from '@/lib/utils/analytics';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  Activity,
   BarChart2,
-  Clock,
   Download,
   Globe,
   Link2,
-  Loader2,
+  RefreshCw,
   User,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
@@ -48,7 +47,7 @@ interface AnalyticsResponse {
   clicksByDate: Array<{ name: string; value: number }>;
 }
 
-const REFRESH_INTERVAL = 30000; // 30 seconds
+// const REFRESH_INTERVAL = 120000; // 120 seconds
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('7d');
@@ -59,10 +58,11 @@ export default function AnalyticsPage() {
   );
 
   const fetchAnalytics = useCallback(async () => {
+    setIsLoading(true);
     try {
       setError(null);
       const { data } = await apiClient.get<AnalyticsResponse>(
-        `/analytics/user?timeRange=${timeRange}`
+        `/analytics?timeRange=${timeRange}`
       );
 
       if (!data) {
@@ -79,11 +79,7 @@ export default function AnalyticsPage() {
   }, [timeRange]);
 
   useEffect(() => {
-    setIsLoading(true);
     fetchAnalytics();
-
-    const interval = setInterval(fetchAnalytics, REFRESH_INTERVAL);
-    return () => clearInterval(interval);
   }, [fetchAnalytics]);
 
   return (
@@ -114,7 +110,12 @@ export default function AnalyticsPage() {
               fetchAnalytics();
             }}
           >
-            <Loader2 className={`${isLoading ? 'animate-spin' : ''} h-4 w-4`} />
+            <RefreshCw
+              className={cn(
+                isLoading && 'animate-spin repeat-infinite',
+                'h-4 w-4'
+              )}
+            />
           </Button>
 
           <Button
@@ -160,7 +161,7 @@ export default function AnalyticsPage() {
         <StatCard
           title="Top Country"
           value={
-            analyticsData?.geoStats.countries
+            analyticsData?.geoStats?.countries
               ? Object.entries(analyticsData.geoStats.countries).sort(
                   ([, a], [, b]) => b - a
                 )[0]?.[0] || '-'
@@ -169,7 +170,8 @@ export default function AnalyticsPage() {
           icon={Globe}
           loading={isLoading}
           subtitle={
-            analyticsData?.geoStats.countries
+            analyticsData?.geoStats?.countries &&
+            Object.keys(analyticsData.geoStats.countries).length
               ? `${(
                   (Object.entries(analyticsData.geoStats.countries).sort(
                     ([, a], [, b]) => b - a
@@ -183,7 +185,7 @@ export default function AnalyticsPage() {
         <StatCard
           title="Top Referrer"
           value={
-            analyticsData?.utmStats.sources
+            analyticsData?.utmStats?.sources
               ? Object.entries(analyticsData.utmStats.sources).sort(
                   ([, a], [, b]) => b - a
                 )[0]?.[0] || '-'
@@ -192,7 +194,8 @@ export default function AnalyticsPage() {
           icon={Link2}
           loading={isLoading}
           subtitle={
-            analyticsData?.utmStats.sources
+            analyticsData?.utmStats?.sources &&
+            Object.keys(analyticsData.utmStats.sources).length
               ? `${(
                   (Object.entries(analyticsData.utmStats.sources).sort(
                     ([, a], [, b]) => b - a
