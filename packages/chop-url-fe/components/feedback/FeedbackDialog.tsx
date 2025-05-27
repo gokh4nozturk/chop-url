@@ -30,6 +30,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import useFeedbackStore from '@/lib/store/feedback';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { CircleCheck, CircleDot, CirclePlus, CircleX } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -102,10 +103,30 @@ export function FeedbackDialog() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="bug">Bug Report</SelectItem>
-                      <SelectItem value="feature">Feature Request</SelectItem>
-                      <SelectItem value="improvement">Improvement</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="bug">
+                        <div className="flex items-center">
+                          <CircleX className="mr-2 size-4 text-destructive" />
+                          Bug Report
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="feature">
+                        <div className="flex items-center">
+                          <CirclePlus className="mr-2 size-4 text-emerald-800" />
+                          Feature Request
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="improvement">
+                        <div className="flex items-center">
+                          <CircleCheck className="mr-2 size-4 text-emerald-500" />
+                          Improvement
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="other">
+                        <div className="flex items-center">
+                          <CircleDot className="mr-2 size-4 text-muted-foreground" />
+                          Other
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
