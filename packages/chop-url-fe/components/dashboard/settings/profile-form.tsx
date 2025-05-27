@@ -1,5 +1,6 @@
 'use client';
 
+import { SubmitButton } from '@/components/submit-button';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -20,7 +21,8 @@ import {
 import { useAuthStore } from '@/lib/store/auth';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mail } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Loader2, Mail } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
@@ -39,7 +41,8 @@ const profileFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export function ProfileForm() {
-  const { user, updateProfile, resendVerificationEmail } = useAuthStore();
+  const { user, updateProfile, resendVerificationEmail, isLoading } =
+    useAuthStore();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -99,7 +102,7 @@ export function ProfileForm() {
                             className={cn(
                               'size-4',
                               user?.isEmailVerified
-                                ? 'text-green-500'
+                                ? 'text-emerald-500'
                                 : 'text-red-500'
                             )}
                           />
@@ -144,7 +147,13 @@ export function ProfileForm() {
             </FormItem>
           )}
         />
-        <Button type="submit">Update profile</Button>
+        <SubmitButton
+          disabled={isLoading}
+          loading={isLoading}
+          className="min-w-36"
+        >
+          Update profile
+        </SubmitButton>
       </form>
     </Form>
   );

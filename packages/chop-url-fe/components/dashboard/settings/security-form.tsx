@@ -1,6 +1,7 @@
 'use client';
 
 import { TwoFactorSwitch } from '@/components/dashboard/settings/two-factor-switch';
+import { SubmitButton } from '@/components/submit-button';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -13,7 +14,10 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useAuthStore } from '@/lib/store/auth';
+import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
@@ -35,7 +39,7 @@ const securityFormSchema = z
 type SecurityFormValues = z.infer<typeof securityFormSchema>;
 
 export function SecurityForm() {
-  const { updatePassword } = useAuthStore();
+  const { updatePassword, isLoading } = useAuthStore();
 
   const form = useForm<SecurityFormValues>({
     resolver: zodResolver(securityFormSchema),
@@ -109,7 +113,13 @@ export function SecurityForm() {
             )}
           />
           <TwoFactorSwitch />
-          <Button type="submit">Update security settings</Button>
+          <SubmitButton
+            disabled={isLoading}
+            loading={isLoading}
+            className="min-w-48"
+          >
+            Update security settings
+          </SubmitButton>
         </form>
       </Form>
     </>

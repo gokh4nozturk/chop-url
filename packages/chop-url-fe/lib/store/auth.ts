@@ -98,8 +98,19 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
 
       getUser: async () => {
-        const response = await apiClient.get('/auth/me');
-        set({ user: response.data.user });
+        set({ isLoading: true, error: null });
+        try {
+          const response = await apiClient.get('/auth/me');
+          set({ user: response.data.user });
+        } catch (error) {
+          const authError: AuthError = {
+            code: 'GET_USER_ERROR',
+            message: getErrorMessage(error),
+          };
+          set({ error: authError, user: null });
+        } finally {
+          set({ isLoading: false });
+        }
       },
 
       login: async (email: string, password: string) => {
@@ -195,18 +206,20 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 
       logout: async () => {
         // TODO: Implement logout
+        set({ isLoading: true, error: null });
         try {
           await apiClient.post('/auth/logout');
         } catch (error) {
           console.error('Logout error:', error);
         } finally {
           Cookies.remove(COOKIE_NAME, { path: '/' });
-          set({ user: null, tokenData: null, error: null });
+          set({ user: null, tokenData: null, error: null, isLoading: false });
           navigate.auth();
         }
       },
 
       updateProfile: async (data: { email: string; name: string }) => {
+        set({ isLoading: true, error: null });
         try {
           const response = await apiClient.put('/auth/profile', data);
 
@@ -227,6 +240,8 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           };
           set({ error: authError });
           throw error;
+        } finally {
+          set({ isLoading: false });
         }
       },
 
@@ -235,10 +250,13 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         newPassword: string;
         confirmPassword: string;
       }) => {
+        set({ isLoading: true, error: null });
         try {
           await apiClient.put('/auth/profile/password', data);
         } catch (error) {
           console.error('Update password error:', error);
+        } finally {
+          set({ isLoading: false });
         }
       },
 
@@ -292,6 +310,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
 
       socialLogin: async (provider: string) => {
+        set({ isLoading: true, error: null });
         try {
           window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/oauth/${provider}`;
         } catch (error) {
@@ -301,10 +320,13 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           };
           set({ error: authError });
           throw error;
+        } finally {
+          set({ isLoading: false });
         }
       },
 
       verifyTwoFactorLogin: async (email: string, code: string) => {
+        set({ isLoading: true, error: null });
         try {
           const response = await apiClient.post('/auth/2fa/verify', {
             email,
@@ -334,12 +356,14 @@ export const useAuthStore = create<AuthState & AuthActions>()(
             },
           });
           throw error;
+        } finally {
+          set({ isLoading: false });
         }
       },
 
       verifyEmail: async (token: string) => {
+        set({ isLoading: true, error: null });
         try {
-          set({ isLoading: true, error: null });
           // Get userId from URL search params
           const searchParams = new URLSearchParams(window.location.search);
           const userId = searchParams.get('userId');
@@ -375,6 +399,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       },
 
       resendVerificationEmail: async () => {
+        set({ isLoading: true, error: null });
         try {
           const user = get().user;
           if (!user || !user.email) {
@@ -385,27 +410,36 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         } catch (error) {
           console.error('Resend verification email error:', error);
           throw error;
+        } finally {
+          set({ isLoading: false });
         }
       },
 
       setupTwoFactor: async () => {
+        set({ isLoading: true, error: null });
         try {
           const response = await apiClient.post('/auth/2fa/setup');
           return response.data;
         } catch (error) {
           throw new Error(getErrorMessage(error));
+        } finally {
+          set({ isLoading: false });
         }
       },
 
       verifyTwoFactor: async (code: string) => {
+        set({ isLoading: true, error: null });
         try {
           await apiClient.post('/auth/2fa/setup/verify', { code });
         } catch (error) {
           throw new Error(getErrorMessage(error));
+        } finally {
+          set({ isLoading: false });
         }
       },
 
       enableTwoFactor: async (code: string) => {
+        set({ isLoading: true, error: null });
         try {
           const response = await apiClient.post('/auth/2fa/enable', {
             code,
@@ -419,19 +453,25 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           }
         } catch (error) {
           throw new Error(getErrorMessage(error));
+        } finally {
+          set({ isLoading: false });
         }
       },
 
       getRecoveryCodes: async () => {
+        set({ isLoading: true, error: null });
         try {
           const response = await apiClient.get('/auth/2fa/recovery-codes');
           return response.data;
         } catch (error) {
           throw new Error(getErrorMessage(error));
+        } finally {
+          set({ isLoading: false });
         }
       },
 
       disableTwoFactor: async (code: string) => {
+        set({ isLoading: true, error: null });
         try {
           const response = await apiClient.post('/auth/2fa/disable', {
             code,
@@ -445,16 +485,21 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           }
         } catch (error) {
           throw new Error(getErrorMessage(error));
+        } finally {
+          set({ isLoading: false });
         }
       },
 
       requestPasswordReset: async (email: string) => {
+        set({ isLoading: true, error: null });
         try {
           await apiClient.post('/auth/password/reset/request', {
             email,
           });
         } catch (error) {
           console.error('Password reset request error:', error);
+        } finally {
+          set({ isLoading: false });
         }
       },
 
@@ -463,6 +508,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         newPassword: string,
         confirmPassword: string
       ) => {
+        set({ isLoading: true, error: null });
         try {
           await apiClient.put('/auth/password/reset', {
             token,
@@ -471,6 +517,8 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           });
         } catch (error) {
           console.error('Password reset error:', error);
+        } finally {
+          set({ isLoading: false });
         }
       },
 

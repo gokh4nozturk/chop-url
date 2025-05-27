@@ -17,7 +17,7 @@ export default function VerifyEmailPage() {
 }
 
 function VerifyEmailContent() {
-  const { user, verifyEmail, isLoading, error } = useAuthStore();
+  const { verifyEmail, isLoading, error } = useAuthStore();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const [isVerified, setIsVerified] = useState(false);
@@ -74,7 +74,7 @@ function VerifyEmailContent() {
             </>
           ) : isVerified ? (
             <>
-              <Check className="mx-auto h-8 w-8 text-green-500" />
+              <Check className="mx-auto h-12 w-12 text-emerald-500" />
               <h1 className="text-2xl font-semibold tracking-tight">
                 Email Verified
               </h1>
