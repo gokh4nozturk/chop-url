@@ -11,22 +11,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          
+          node-version: "20"
+
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
           version: 8
-          
+
       - name: Install Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
-          
+
       - name: Get pnpm store directory
         id: pnpm-cache
         shell: bash
@@ -40,13 +40,13 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
-          
+
       - name: Install dependencies
         run: pnpm install
-        
+
       - name: Run linting
         run: pnpm lint
-        
+
       - name: Check formatting
         run: pnpm format
 
@@ -54,22 +54,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          
+          node-version: "20"
+
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
           version: 8
-          
+
       - name: Install Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
-          
+
       - name: Get pnpm store directory
         id: pnpm-cache
         shell: bash
@@ -83,13 +83,13 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
-          
+
       - name: Install dependencies
         run: pnpm install
-        
+
       - name: Build lib package
         run: cd packages/chop-url-lib && pnpm run build
-        
+
       - name: Upload lib build
         uses: actions/upload-artifact@v4
         with:
@@ -114,22 +114,22 @@ jobs:
             test_dir: packages/chop-url-redirect
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          
+          node-version: "20"
+
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
           version: 8
-          
+
       - name: Install Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
-          
+
       - name: Get pnpm store directory
         id: pnpm-cache
         shell: bash
@@ -143,7 +143,7 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
-          
+
       - name: Install dependencies
         run: pnpm install
 
@@ -152,12 +152,12 @@ jobs:
         with:
           name: lib-build
           path: packages/chop-url-lib/dist
-        
+
       - name: Run tests
         run: |
           cd ${{ matrix.test_dir }}
           pnpm run test:coverage
-        
+
       - name: Show coverage
         run: |
           echo "## ${{ matrix.package }} Test Coverage" >> $GITHUB_STEP_SUMMARY
@@ -169,22 +169,22 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          
+          node-version: "20"
+
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
           version: 8
-          
+
       - name: Install Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
-          
+
       - name: Get pnpm store directory
         id: pnpm-cache
         shell: bash
@@ -198,7 +198,7 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
-          
+
       - name: Install dependencies
         run: pnpm install
 
@@ -207,7 +207,7 @@ jobs:
         with:
           name: lib-build
           path: packages/chop-url-lib/dist
-        
+
       - name: Build packages
         run: pnpm --filter=!example build
 
@@ -217,22 +217,22 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          
+          node-version: "20"
+
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
           version: 8
-          
+
       - name: Install Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
-          
+
       - name: Get pnpm store directory
         id: pnpm-cache
         shell: bash
@@ -246,7 +246,7 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
-          
+
       - name: Install dependencies
         run: pnpm install
 
@@ -255,7 +255,7 @@ jobs:
         with:
           name: lib-build
           path: packages/chop-url-lib/dist
-      
+
       - name: Prepare wrangler.toml from example
         run: |
           cd packages/backend
@@ -263,23 +263,23 @@ jobs:
           echo 'main = "src/index.ts"' >> wrangler.toml
           echo 'compatibility_date = "2024-02-04"' >> wrangler.toml
           echo 'compatibility_flags = ["nodejs_compat"]' >> wrangler.toml
-          
+
           # Production environment settings
           echo '[env.production]' >> wrangler.toml
           echo 'name = "chop-url-backend"' >> wrangler.toml
-          
+
           # Routes
           echo '[[routes]]' >> wrangler.toml
           echo 'pattern = "api.chop-url.com"' >> wrangler.toml
           echo 'custom_domain = true' >> wrangler.toml
-          
+
           # Logs
           echo '[observability.logs]' >> wrangler.toml
           echo 'enabled = true' >> wrangler.toml
-          
+
           echo '[env.production.observability.logs]' >> wrangler.toml
           echo 'enabled = true' >> wrangler.toml
-          
+
       - name: Set Cloudflare credentials
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -287,23 +287,23 @@ jobs:
         run: |
           echo "CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}" >> $GITHUB_ENV
           echo "CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID}" >> $GITHUB_ENV
-          
+
       - name: Verify Cloudflare credentials
         run: |
           cd packages/backend
           npx wrangler whoami
-          
+
       - name: Debug wrangler.toml
         run: |
           cd packages/backend
           cat wrangler.toml
-          
+
       - name: Run deployment
         run: pnpm run deploy -- -e prod backend --skip-validation
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CI: 'true'
+          CI: "true"
 
   deploy-redirect:
     needs: build
@@ -311,22 +311,22 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          
+          node-version: "20"
+
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
           version: 8
-          
+
       - name: Install Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
-          
+
       - name: Get pnpm store directory
         id: pnpm-cache
         shell: bash
@@ -340,7 +340,7 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
-          
+
       - name: Install dependencies
         run: pnpm install
 
@@ -349,7 +349,7 @@ jobs:
         with:
           name: lib-build
           path: packages/chop-url-lib/dist
-      
+
       - name: Prepare wrangler.toml from example
         run: |
           cd packages/chop-url-redirect
@@ -357,23 +357,23 @@ jobs:
           echo 'main = "src/index.ts"' >> wrangler.toml
           echo 'compatibility_date = "2024-02-04"' >> wrangler.toml
           echo 'compatibility_flags = ["nodejs_compat"]' >> wrangler.toml
-          
+
           # Production environment settings
           echo '[env.production]' >> wrangler.toml
           echo 'name = "chop-url-redirect"' >> wrangler.toml
-          
+
           # Routes
           echo '[[routes]]' >> wrangler.toml
           echo 'pattern = "chop-url.com"' >> wrangler.toml
           echo 'custom_domain = true' >> wrangler.toml
-          
+
           # Logs
           echo '[observability.logs]' >> wrangler.toml
           echo 'enabled = true' >> wrangler.toml
-          
+
           echo '[env.production.observability.logs]' >> wrangler.toml
           echo 'enabled = true' >> wrangler.toml
-          
+
       - name: Set Cloudflare credentials
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -381,46 +381,46 @@ jobs:
         run: |
           echo "CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}" >> $GITHUB_ENV
           echo "CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID}" >> $GITHUB_ENV
-          
+
       - name: Verify Cloudflare credentials
         run: |
           cd packages/chop-url-redirect
           npx wrangler whoami
-          
+
       - name: Debug wrangler.toml
         run: |
           cd packages/chop-url-redirect
           cat wrangler.toml
-          
+
       - name: Run deployment
         run: pnpm run deploy -- -e prod redirect --skip-validation
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CI: 'true'
+          CI: "true"
 
   deploy-frontend:
     needs: [deploy-backend, deploy-redirect]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: false
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          
+          node-version: "20"
+
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
           version: 8
-          
+
       - name: Install Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
-          
+
       - name: Get pnpm store directory
         id: pnpm-cache
         shell: bash
@@ -434,7 +434,7 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
-          
+
       - name: Install dependencies
         run: pnpm install
 
@@ -443,18 +443,18 @@ jobs:
         with:
           name: lib-build
           path: packages/chop-url-lib/dist
-      
+
       - name: Set Vercel credentials
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: echo "Vercel credentials set"
-        
+
       - name: Run deployment
         run: pnpm dlx vercel deploy --token ${{ secrets.VERCEL_TOKEN }} --yes
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          CI: 'true'
+          CI: "true"
