@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   BarChart2,
-  Earth,
+  // Earth,
   Folder,
   Home,
   Link2,
